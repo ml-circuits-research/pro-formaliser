@@ -267,3 +267,34 @@ Numeric measurement phrases can also use a native English cue with
 matches. For example, “17 pixels wide” binds the written number and unit to
 each independently licensed numeric width key. A world can use the same
 construction with its own property label and units.
+
+## Types written as compound nouns
+
+A world can say which noun a closed catalog property qualifies. The reader
+then recognizes the catalog value immediately before that noun. For example,
+this declaration licenses both “quartz quilloscope” and “silicon quilloscope”
+when the existing vocabulary identifies a quilloscope as a device.
+
+```sop
+@medium w.request.key tab=workbench family=device name=device.medium head=candidate value=quartz value=silicon
+@kind pro.reader.nominal_class tab=workbench family=device attribute=device.medium noun="quilloscope"
+```
+
+The request retains the original target and copies the compound into the
+property’s source words. A quoted title or a second occurrence of the target
+noun makes this particular reading ineligible.
+
+## Fixed on/off frames
+
+An English frame with a fixed value can bind a named property when its
+alias resolves through a native slot and the request catalog admits the
+value. When the request and language worlds use different symbols for
+the same state, declare the two values explicitly.
+
+```sop
+@visible pro.reader.fixed_property tab=diagram family=chart attribute=chart.show_values on_value=show off_value=hide
+```
+
+The catalog's `means` identifies the backing slot. An explicit `slot`
+can supply that link when the catalog omits it. If both appear, they must
+identify the same slot. A later interpreter can resolve a contextual owner.

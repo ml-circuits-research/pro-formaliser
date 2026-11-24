@@ -20,7 +20,7 @@ function one(wire, key) {
 }
 
 // Only learn meanings paired with an explicit surface in the same training request.
-export function learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes, openPairs) {
+export function learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes, openPairs, sceneConstructs) {
   const counts = new Map();
   function add(phrase, data) {
     if (!phrase || data.some(x => x === undefined)) return;
@@ -34,6 +34,7 @@ export function learnLexicon(rows, context, forms, modifiers, nominalPhrases, mo
   for (const {text,sop} of rows) {
     let wires;
     try { wires = parse(sop); } catch { continue; }
+    sceneConstructs?.observe(text,wires);
     for (const req of wires.filter(w => w.type === 'w.request.request')) {
       const act = one(req, 'act'), mood = one(req, 'mood');
       add(one(req, 'predicate'), ['act', act, mood ?? '']);

@@ -1,3 +1,4 @@
+import { compileFixedProperties } from './fixed-properties.mjs';
 import { nominalPositionForms } from './nominal-phrases.mjs';
 import { spatialAliases } from './spatial-aliases.mjs';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -17,7 +18,7 @@ const types = new Set([
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
-  'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
+  'pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue', 'w.lang.en.number',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
@@ -500,6 +501,20 @@ function compile(facts) {
     }
   }
 
+  const nominalClasses = new Map();
+  for (const wire of facts('pro.reader.nominal_class')) {
+    const family=one(wire,'family'), tab=one(wire,'tab'), attribute=one(wire,'attribute');
+    const key=requestKeys.find(k => k.tab===tab && k.family===family && k.name===attribute);
+    if (!key?.head.split('+').some(h=>h==='class' || h==='candidate')) continue;
+    const forms=nominalClasses.get(family) ?? new Map();
+    nominalClasses.set(family,forms);
+    for (const value of key.values) {
+      for (const noun of values(wire,'noun')) {
+        const words=phrase(label(value)+' '+noun).split(' ');
+        index(forms,words[0],{words,attribute,value});
+      }
+    }
+  }
   const selectorKeys = new Map();
   for (const wire of facts('pro.reader.identity')) {
     const family = one(wire,'family'), tab = one(wire,'tab'), name = one(wire,'attribute');
@@ -546,7 +561,12 @@ function compile(facts) {
     preservationBindings: facts('pro.reader.preservation').map(wire => ({
       family:one(wire,'family'), attribute:one(wire,'attribute'), concept:one(wire,'concept'),
     })),
-    spatialBindings, selectorKeys, identityAssignmentVerbs,
+    fixedProperties:compileFixedProperties(facts,requestKeys),
+    nominalClasses, spatialBindings, selectorKeys, identityAssignmentVerbs,
+    predicateTransferFacts:{
+      verbs:facts('k.actions.verb'), frames:facts('w.lang.en.frame'),
+      parts:facts('w.lang.en.part'), fixed:facts('w.lang.en.fixed'),
+    },
     nominalPositions:nominalPositionForms(facts,requestKeys),
     instanceBindings: facts('pro.reader.instance_code').map(wire => ({
       family:one(wire,'family'), prefix:one(wire,'prefix')?.toLowerCase(),

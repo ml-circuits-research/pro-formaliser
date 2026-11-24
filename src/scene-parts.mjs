@@ -1,9 +1,11 @@
+import { learnedSceneBoundary } from './scene-constructs.mjs';
+
 const nounStart = new Set(['indefinite','quantified']);
 const word = /^[\p{L}\p{M}\p{N}_]+$/u;
 const terminal = new Set(['.','!','?']);
 const separators = new Set(['list-or-clause','coordination']);
 
-export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, isAct} = {}) {
+export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, isAct, constructs} = {}) {
   const head = visible ?? ts.map(([key])=>key);
   const chars = Array.from(text);
   const span = (from,to)=>chars.slice(ts[from]?.[2] ?? chars.length,ts[to-1]?.[3] ?? chars.length).join('').trim();
@@ -34,40 +36,48 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
           (!hasProperty || sort===phrase)
           ? [{family,sort:sort || undefined,end:j}] : []);
         if (targets.length && !hasProperty) return targets;
-        if (targets.length && !ambiguous.length) ambiguous=targets;
+        if (targets.length && (!ambiguous.length || j>ambiguous[0].end)) ambiguous=targets;
       }
     }
     return ambiguous;
   }
 
   let start=0, predicate, prefix;
-  while (worlds.fillerPhrases.has(head[start])) start++;
-  if (start && head[start]===',') start++;
-  for (const lead of prefixes?.get(head[start]) ?? []) {
-    if (lead.every((key,i)=>head[start+i]===key)) {
-      start+=lead.length;
-      if (head[start]===',') start++;
+  while (worlds.fillerPhrases.has(head[start]) || start &&
+    ([',','-','—','–'].includes(head[start]) || worlds.joiners[head[start]]==='addition')) start++;
+  if (constructs) {
+    const cut=learnedSceneBoundary(head,worlds,constructs,nominal);
+    if (!cut) return null;
+    prefix=span(0,cut);
+    start=cut+1;
+  }
+  if (!prefix) {
+    for (const lead of prefixes?.get(head[start]) ?? []) {
+      if (lead.every((key,i)=>head[start+i]===key)) {
+        start+=lead.length;
+        if (head[start]===',') start++;
+        break;
+      }
+    }
+    for (let end=start+1;end<Math.min(ts.length,start+8);end++) {
+      if (!head.slice(start,end).every(key=>word.test(key))) break;
+      if (!nominal(end) || !lookup(forms(start,end)).some(([role,act,mood])=>role==='act' && act==='make' &&
+        (!mood || mood==='do'))) continue;
+      predicate=span(start,end);
+      start=end;
       break;
     }
-  }
-  for (let end=start+1;end<Math.min(ts.length,start+8);end++) {
-    if (!head.slice(start,end).every(key=>word.test(key))) break;
-    if (!nominal(end) || !lookup(forms(start,end)).some(([role,act,mood])=>role==='act' && act==='make' &&
-      (!mood || mood==='do'))) continue;
-    predicate=span(start,end);
-    start=end;
-    break;
-  }
 
-  // A title or a preposed setting remains outside the object clauses. An
-  // ordinary concrete nominal before “with” owns its part list.
-  const colon=head.findIndex((key,i)=>i>start && key===':' && nominal(i+1));
-  if (colon>=0 || !nouns(start,ts.length).length) {
-    const end=colon>=0 ? colon : head.findIndex((key,i)=>i>start &&
-      (key===',' || partMarker(i)) && nominal(i+1));
-    if (end<0 || !nominal(start) && !hasSpatialLead(start) || colon<0 && nouns(start,end).length) return null;
-    prefix=span(0,end);
-    start=end+1;
+    // A title or a preposed setting remains outside the object clauses. An
+    // ordinary concrete nominal before “with” owns its part list.
+    const colon=head.findIndex((key,i)=>i>start && key===':' && nominal(i+1));
+    if (colon>=0 || !nouns(start,ts.length).length) {
+      const end=colon>=0 ? colon : head.findIndex((key,i)=>i>start &&
+        (key===',' || partMarker(i)) && nominal(i+1));
+      if (end<0 || !nominal(start) && !hasSpatialLead(start) || colon<0 && nouns(start,end).length) return null;
+      prefix=span(0,end);
+      start=end+1;
+    }
   }
 
   const parts=[],inputs=[],items=[];

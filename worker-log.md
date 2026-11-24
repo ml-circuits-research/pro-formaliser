@@ -59,3 +59,7 @@
 ## Identities and spatial meaning
 - Bound selected identities, repeated qualified nouns and scene positions using native world declarations and local source evidence.
 - Full test gate passed. 41.4% reasonable on the same 1,000 requests, previously 40.8%. See eval/THOUSAND-AUDIT.md.
+
+## Open and fixed grammatical constructions
+- Bound compound noun types and fixed frame values, transferred compatible predicate alternatives, and recognized corroborated list constructions.
+- Full test gate passed. 41.8% reasonable on the same 1,000 requests, previously 41.4%. See eval/THOUSAND-AUDIT.md.

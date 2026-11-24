@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import { createReader } from '../src/runtime.mjs';
 import { parse } from '../src/schema.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
+import { createSceneConstructLearner } from '../src/scene-constructs.mjs';
 
 const decode=value=>value?.startsWith('"') ? JSON.parse(value) : value;
 const first=(wire,key)=>decode(wire.attrs[key]?.[0]);
@@ -110,4 +111,38 @@ test('a context-only scene header requires corroborated local training evidence'
   ]);
   assert.ok(corroborated.some(c=>c.sop.includes('attribute=gallery.location value=atrium')));
   assert.ok(corroborated.every(c=>!c.sop.includes('value=courtyard')));
+});
+
+test('learned scene constructors separate setting and list after a display-shaped wrapper',async()=>{
+  const worlds=loadWorlds();
+  const ctor=createSceneConstructLearner(worlds);
+  const scope=subject=>'Show me a '+subject+' scene at dusk';
+  function observe(subject,kinds) {
+    const words=scope(subject);
+    const parts=kinds.map(kind=>'a '+kind);
+    ctor.observe(words+': '+parts.join(', '),parse([
+      '@r w.request.request act=change mood=do words='+JSON.stringify(words)+' predicate=Show',
+      '@t w.request.target request=$r family=page mode=existing fill=context',
+      '@c w.request.constraint request=$r on=attribute attribute=page.scene value='+subject,
+      ...parts.flatMap((part,i)=>[
+        '@r'+i+' w.request.request act=make mood=do words='+JSON.stringify(part),
+        '@t'+i+' w.request.target request=$r'+i+' family=drawn mode=new sort='+kinds[i],
+      ]),
+    ].join('\n')));
+  }
+  observe('garden',['cat','bird']);
+  assert.deepEqual(ctor.finish(),[]);
+  observe('garden',['cat','dog']);
+  const sceneConstructs=ctor.finish();
+  const reader=createReader({...model,sceneConstructs},worlds);
+  try {
+    const text='Show me a garden scene at noon: a bird, and a dog.';
+    const answer=await reader.propose(text);
+    const complete=answer.candidates.find(c=>c.sop.includes('@scene.setting')&&c.sop.includes('sort=bird')&&c.sop.includes('sort=dog'));
+    assert.ok(complete);
+    assert.doesNotMatch(complete.sop,/sort=garden/);
+    assert.match(complete.sop,/text="Show me a garden scene at noon"/);
+    const questions=await reader.propose('Show me a garden scene at noon: a bird, and a dog?');
+    assert.ok(questions.candidates.every(c=>!c.sop.includes('@scene.setting')));
+  } finally { await reader.close(); }
 });

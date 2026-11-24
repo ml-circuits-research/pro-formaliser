@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Native value frames, compound target types and predicate transfer
+
+On the paired 1,000 requests, at least one proposal was reasonable on 41.8% (previously 41.4%). On the full holdout, 641 proposal sets contained the reference semantic wire set, previously 634. The first-choice WebMeet checker rejected 252 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)
+
 ## Identities, repeated nouns and spatial meaning
 
 On the paired 1,000 requests, at least one proposal was reasonable on 41.4% (previously 40.8%). On the full holdout, 634 proposal sets contained the reference semantic wire set, previously 634. The first-choice WebMeet checker rejected 253 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)

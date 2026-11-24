@@ -90,3 +90,7 @@
 @reader.diagram.node.identity pro.reader.identity tab=diagram family=node attribute=node.ids
 @reader.document.block.identity pro.reader.identity tab=document family=block attribute=block.ids
 @reader.document.section.identity pro.reader.identity tab=document family=section attribute=section.ids
+
+@reader.diagram.chart.grid.visibility pro.reader.fixed_property tab=diagram family=chart attribute=chart.grid on_value=show off_value=hide
+@reader.diagram.chart.values.visibility pro.reader.fixed_property tab=diagram family=chart attribute=chart.show_values on_value=show off_value=hide
+@reader.diagram.chart.kind pro.reader.nominal_class tab=diagram family=chart attribute=chart.type noun="chart" noun="plot" noun="graph"

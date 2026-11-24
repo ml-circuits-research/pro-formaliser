@@ -1,3 +1,6 @@
+import { createPredicateTransfer } from './predicate-transfer.mjs';
+import { fixedPropertyReadings } from './fixed-properties.mjs';
+import { nominalClassReading } from './nominal-class.mjs';
 import { identitySelectorReadings } from './identity-selectors.mjs';
 import { openPairReadings } from './open-pairs.mjs';
 import { clauseQualifiers } from './clause-qualifiers.mjs';
@@ -49,6 +52,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     Object.values(grammar).flatMap(frames=>frames.map(f=>f.prefix[0]))));
   const phraseHeads=new Set(Object.keys(model.nominalPhrases ?? {}).map(k=>JSON.parse(k)[3]));
   const knownModifiers=new Set(Object.keys(model.modifiers ?? {}).map(k=>JSON.parse(k)[1]));
+  const predicateTransfer=createPredicateTransfer(model.examples,worlds);
   const nearExample = createNearExample(model.examples,{discourse:worlds.discourse});
   const transfer = createTransfer(model.examples, {
     resolveValue:valueResolver(worlds,model.lexicon,model.forms), fillerPhrases:worlds.discourse,
@@ -85,6 +89,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const max = template.pattern.reduce((n,x) => n + (x.max ?? 1), 0);
     add(buckets, anchor, {min,max,template});
   }
+  const classHeads = new Set([...(worlds.nominalClasses?.values() ?? [])].flatMap(forms => [...forms.keys()]));
   const positionHeads = new Set([...(worlds.nominalPositions?.values() ?? [])].flatMap(forms => [...forms.keys()]));
   const worker = prologWorker(new URL('../prolog/formalise.pl',import.meta.url));
   async function read(text) {
@@ -177,6 +182,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     for (const candidate of contextualTargets) retain(candidate);
     // Add independent constructions after the ranked Prolog proposals so that
     // a new surface form cannot evict an older reading from its bounded search.
+    if (!scope.restricted) for (const candidate of predicateTransfer(text)) retain(candidate);
     if (!exact.length) for (const candidate of nearExample(text)) retain({...candidate,source:'near-example'});
     for (const candidate of postfixSetQuestions(text,ts,worlds,hits,quotes)) retain(candidate);
     if (!scope.restricted && ts.some(t=>worlds.scopeGrammar.universalHeads.has(t[0]))) {
@@ -235,6 +241,17 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         retain(candidate);
         const qualified = nominalNumberReading(text,candidate,worlds.nominalNumbers,quotes,model.modifiers);
         if (qualified) retain(qualified);
+      }
+    }
+    if (!scope.restricted && worlds.fixedProperties?.has(ts[0]?.[0])) {
+      for (const candidate of [undefined,...candidates]) {
+        for (const reading of fixedPropertyReadings(text,ts,quotes,candidate,worlds)) retain(reading);
+      }
+    }
+    if (!scope.restricted && ts.some(([key]) => classHeads.has(key))) {
+      for (const candidate of [...candidates]) {
+        const reading=nominalClassReading(text,ts,quotes,candidate,worlds);
+        if (reading) retain(reading);
       }
     }
     if (!scope.restricted && ts.some(([key]) => positionHeads.has(key))) {
@@ -319,10 +336,15 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     return {...best,alternatives:rest};
   }
   const enumerationPlans = (text,ts = tokens(text)) => {
-    const scene=sceneParts(text,ts,worlds,{...sequenceOptions,learned:model.lexicon,visible:visibleTokens(Array.from(text),ts)});
+    const options={...sequenceOptions,learned:model.lexicon,visible:visibleTokens(Array.from(text),ts)};
+    const scene=sceneParts(text,ts,worlds,options);
     const enumeration=enumeratedParts(text,ts,worlds,{prefixes:sequenceOptions.prefixes,learned:model.lexicon});
-    if (!enumeration) return scene ? [scene] : [];
-    return scene?.prefix ? [enumeration,scene] : [enumeration];
+    const plans=enumeration ? (scene?.prefix ? [enumeration,scene] : [enumeration]) : (scene ? [scene] : []);
+    if (model.sceneConstructs) {
+      const extra=sceneParts(text,ts,worlds,{...options,constructs:model.sceneConstructs});
+      if (extra && !plans.some(p=>JSON.stringify(p)===JSON.stringify(extra))) plans.push(extra);
+    }
+    return plans;
   };
   async function readEnumeration(text, base, plans) {
     if (!plans.length || base[conditionalScope]) return base;

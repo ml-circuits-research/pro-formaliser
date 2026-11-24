@@ -86,3 +86,19 @@
 @pro.reader.identity.tab core.slot of=pro.reader.identity key=tab kind=atom required=true
 @pro.reader.identity.family core.slot of=pro.reader.identity key=family kind=atom required=true
 @pro.reader.identity.attribute core.slot of=pro.reader.identity key=attribute kind=atom required=true
+
+# Translate a native on/off construction to a closed property in the request catalog.
+@pro.reader.fixed_property core.type of=pro.reader.fixed_property closed=true
+@pro.reader.fixed_property.tab core.slot of=pro.reader.fixed_property key=tab kind=atom required=true
+@pro.reader.fixed_property.family core.slot of=pro.reader.fixed_property key=family kind=atom required=true
+@pro.reader.fixed_property.attribute core.slot of=pro.reader.fixed_property key=attribute kind=atom required=true
+@pro.reader.fixed_property.slot core.slot of=pro.reader.fixed_property key=slot kind=atom
+@pro.reader.fixed_property.on_value core.slot of=pro.reader.fixed_property key=on_value kind=atom
+@pro.reader.fixed_property.off_value core.slot of=pro.reader.fixed_property key=off_value kind=atom
+
+# A written class value directly modifying this noun selects a catalog subtype.
+@pro.reader.nominal_class core.type of=pro.reader.nominal_class closed=true
+@pro.reader.nominal_class.tab core.slot of=pro.reader.nominal_class key=tab kind=atom required=true
+@pro.reader.nominal_class.family core.slot of=pro.reader.nominal_class key=family kind=atom required=true
+@pro.reader.nominal_class.attribute core.slot of=pro.reader.nominal_class key=attribute kind=atom required=true
+@pro.reader.nominal_class.noun core.slot of=pro.reader.nominal_class key=noun kind=string many=true required=true
