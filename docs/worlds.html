@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extend with SOP worlds | pro-formaliser</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="sidebar" aria-label="Documentation">
+    <div class="brand">pro-formaliser</div>
+    <div class="subtitle">SWI-Prolog → SOP Lang</div>
+    <ul>
+      <li><a href="index.html">Overview</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a class="active" aria-current="page" href="worlds.html">Extend with SOP worlds</a></li>
+      <li><a href="spelling.html">Spelling</a></li>
+      <li><a href="context.html">Contextual estimator</a></li>
+      <li><a href="evaluation.html">Evaluation and reproduction</a></li>
+      <li><a href="decisions.html">Design history</a></li>
+    </ul>
+  </nav>
+  <main>
+    <h1>Extend the reader with declarations</h1>
+    <p>Place additional SOP facts in a file or directory and set <code>SOP_WORLDS</code>. On Linux the variable accepts colon-separated paths. The loader processes directory entries in sorted order, and later declarations with the same wire type and ID replace earlier declarations. Start a new CLI process after editing the overlay. For programmatic use, <code>loadWorlds({paths})</code> builds an explicit snapshot for <code>createReader(model, worlds)</code>. <a href="../src/worlds.mjs">World loader</a></p>
+    <h2>Map declarations to reader behavior</h2>
+    <table>
+    <thead><tr><th scope="col">Declaration</th><th scope="col">Behavior</th></tr></thead>
+    <tbody>
+    <tr><th scope="row"><code>k.actions.act</code>, verb aliases and <code>core.word</code></th><td>Introduce predicates and surface forms. Known words also enter the spelling vocabulary.</td></tr>
+    <tr><th scope="row"><code>std.schema.kind</code> and optional <code>pro.reader.target</code></th><td>Supply target families and allowed acts. Explicit target bindings can specify family, sort, tab and target mode.</td></tr>
+    <tr><th scope="row"><code>k.actions.role</code>, verb value frames and <code>w.lang.en.prep</code></th><td>Describe supported role markers and spatial relations. The lexical fallback uses these declarations to distinguish direct targets from nominal spatial anchors and to produce grounded selector or result constraints for supported attachments.</td></tr>
+    <tr><th scope="row"><code>pro.reader.spatial</code></th><td>Matches a family and tab to a class key for canonical spatial relations and a <code>fill+span</code> key for grounded anchor phrases.</td></tr>
+    <tr><th scope="row"><code>w.request.key</code> and declared values</th><td>Supply typed properties within a target family. Key/value aliases can name a closed value. Explicit labels can also ground new decimal numbers or quoted spans for corresponding key types.</td></tr>
+    <tr><th scope="row"><code>w.reader.en.binding</code>, <code>filter</code> and <code>feature</code></th><td>Select facts by type, filter them and project a spelling and canonical interpretation from fields or a wire ID. For equality constraints the projected value must resolve to a compatible key in the target family.</td></tr>
+    </tbody>
+    </table>
+    <h2>Try a new domain without retraining</h2>
+    <p>Save the worked workbench overlay as <code>workbench.sop</code>. The overlay declares a <code>calibrate</code> act, a <code>fluxometer</code> target, and a finish property with an alias for the canonical value <code>frosted</code>. The guide also shows how to obtain those aliases from filtered facts of a new type and how to add number and span keys. <a href="../resources/worlds.md">Worked overlay and binding contract</a> · <a href="../resources/pro.reader/schema.sop">Target and spatial binding schema</a></p>
+    <pre><code>SOP_WORLDS=./workbench.sop node bin/formalise.mjs --worlds-only --json   "calibrate the fluxometer surface finish fine texture"
+SOP_WORLDS=./workbench.sop node bin/spell.mjs --json "Calibrate the fluxometer"</code></pre>
+    <p>For the request, inspect the act, target, key/value and source evidence. If a surface phrase still resolves to several keys or values in the selected family, the reader preserves it as unread. For spelling, the new domain word is recognized through the same overlay. The existing contracts cover these operations without a dataset model. A new semantic operation requires an interpreter. <a href="../test/worlds.test.mjs">Runtime extension tests</a></p>
+  </main>
+</body>
+</html>

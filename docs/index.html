@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Overview | pro-formaliser</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="sidebar" aria-label="Documentation">
+    <div class="brand">pro-formaliser</div>
+    <div class="subtitle">SWI-Prolog → SOP Lang</div>
+    <ul>
+      <li><a class="active" aria-current="page" href="index.html">Overview</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="worlds.html">Extend with SOP worlds</a></li>
+      <li><a href="spelling.html">Spelling</a></li>
+      <li><a href="context.html">Contextual estimator</a></li>
+      <li><a href="evaluation.html">Evaluation and reproduction</a></li>
+      <li><a href="decisions.html">Design history</a></li>
+    </ul>
+  </nav>
+  <main>
+    <h1>English to SOP Lang with Prolog</h1>
+    <p><strong>pro-formaliser</strong> reads English requests into SOP Lang <code>w.request</code> circuits. It combines examples learned from WebMeet with declarative facts loaded from SOP worlds. A separate English spellchecker can run independently or prepare text before formalisation. SWI-Prolog performs symbolic matching and ranking, and Node prepares candidates and verifies resulting circuits with the native SOP world engine.</p>
+    <p>A circuit can contain a request act and mood, a target, lookup hints for existing objects, constraints, and wires that preserve filler or unread evidence. The result is a ranked interpretation of the utterance. Live entity lookup, tool execution and a generic reasoner are outside this experiment’s implementation.</p>
+    <h2>Quick start</h2>
+    <p>Run from the repository root. Setup installs pinned tooling and knowledge in <code>.cache/</code> without root access on the documented Ubuntu environment.</p>
+    <pre><code>tools/setup
+export PATH="$PWD/.cache/node/bin:$PATH"
+npm test
+node bin/spell.mjs --json "Teh diagram"
+node bin/formalise.mjs --worlds-only --json "create an object"</code></pre>
+    <p>The full reproduction recipe includes training, text-only and tab-aware evaluation, and sampling independent review cases. <a href="evaluation.html#reproduction">Reproduce the experiment</a> · <a href="../README.md">Repository README</a></p>
+    <h2>Read the experiment</h2>
+    <ul>
+    <li><a href="architecture.html">Architecture</a> follows the utterance through training, candidate generation, ranking and validation.</li>
+    <li><a href="worlds.html">Extend with SOP worlds</a> explains how to add vocabulary, families, keys and bindings.</li>
+    <li><a href="spelling.html">Spelling</a> covers edit generation, correction decisions and observed failures.</li>
+    <li><a href="context.html">Contextual estimator</a> explains how Prolog ranks intact request circuits against live context.</li>
+    <li><a href="evaluation.html">Evaluation and reproduction</a> explains metrics, independent audits and how to rerun the experiments.</li>
+    <li><a href="decisions.html">Design history and open issues</a> records implemented fixes and limitations exposed by evaluation.</li>
+    </ul>
+  </main>
+</body>
+</html>

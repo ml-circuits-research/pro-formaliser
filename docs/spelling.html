@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spelling | pro-formaliser</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="sidebar" aria-label="Documentation">
+    <div class="brand">pro-formaliser</div>
+    <div class="subtitle">SWI-Prolog → SOP Lang</div>
+    <ul>
+      <li><a href="index.html">Overview</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="worlds.html">Extend with SOP worlds</a></li>
+      <li><a class="active" aria-current="page" href="spelling.html">Spelling</a></li>
+      <li><a href="context.html">Contextual estimator</a></li>
+      <li><a href="evaluation.html">Evaluation and reproduction</a></li>
+      <li><a href="decisions.html">Design history</a></li>
+    </ul>
+  </nav>
+  <main>
+    <h1>Independent English spellchecker</h1>
+    <p>The spellchecker operates independently of the formaliser. It reads text from the command line or stdin, uses the English dictionary and SOP vocabulary, and enumerates replacements for eligible tokens. <a href="../bin/spell.mjs">Spelling CLI</a> · <a href="../resources/spell/README.md">Dictionaries and licenses</a></p>
+    <pre><code>node bin/spell.mjs --json "Teh diagram"
+node bin/formalise.mjs --tab drawing --spell --json "make teh house blue"</code></pre>
+    <h2>Generate and rank a correction</h2>
+    <p>The edit model generates one insertion, deletion, substitution or adjacent swap. Candidate scores combine corpus frequency with edit weights. Swaps and doubled-letter edits receive a higher prior. Optional context uses adjacent words from the original text and training-only pair counts to adjust lexical evidence for unknown words. The extended model uses local phrase counts and token frequency to protect plausible unknown words. It can also correct an eligible dictionary word when the neighboring phrase strongly favors a one-edit alternative. A 3× lead over the next candidate is required for an automatic replacement when a runner-up exists. <a href="../prolog/spell.pl">Prolog candidates</a> · <a href="../src/spell.mjs">Spelling API</a></p>
+    <p>The JSON response provides the revised text, corrections and ambiguities. Ranges use UTF-16 start and exclusive end offsets into the original input. Candidate spellings preserve initial capitalization. With <code>--spell --json</code>, formalisation returns the original input and spelling details alongside evidence grounded in the corrected input.</p>
+    <h2>Training and evaluation</h2>
+    <p><code>node tools/train-spelling.mjs</code> builds the optional context model from pinned WebMeet training rows, including word, pair and triple counts. The training pass also protects words corroborated by annotations. The evaluation measures recovery from deterministic one-edit injections, including a separate set that changes a word into another dictionary word. The independent audit judges edits made to unmodified utterances. Without the extended model, dictionary words pass through unchanged. Learned protection and caller-provided protected words also preserve legitimate spellings. Multi-edit errors and joined or split words exceed single-edit generation. <a href="../tools/train-spelling.mjs">Context training</a> · <a href="evaluation.html#spelling">Spelling results</a></p>
+  </main>
+</body>
+</html>

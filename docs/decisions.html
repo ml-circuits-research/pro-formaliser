@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design history | pro-formaliser</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="sidebar" aria-label="Documentation">
+    <div class="brand">pro-formaliser</div>
+    <div class="subtitle">SWI-Prolog → SOP Lang</div>
+    <ul>
+      <li><a href="index.html">Overview</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="worlds.html">Extend with SOP worlds</a></li>
+      <li><a href="spelling.html">Spelling</a></li>
+      <li><a href="context.html">Contextual estimator</a></li>
+      <li><a href="evaluation.html">Evaluation and reproduction</a></li>
+      <li><a class="active" aria-current="page" href="decisions.html">Design history</a></li>
+    </ul>
+  </nav>
+  <main>
+    <h1>Design decisions and unresolved issues</h1>
+    <h2>First release</h2>
+    <p>Commit <code>9596a53</code> introduced repo-local SWI-Prolog and Node tooling, a one-edit spelling checker and a learned English-to-SOP reader. It established a normalized-text holdout before measuring, so the exact same normalized utterance could never appear in both training and test. The first text-only run matched all semantic wires for 93 of 1,915 rows. <a href="../worker-log.md">Worker log</a> · <a href="../eval/RESULTS.md">Measured baseline</a></p>
+    <h2>Runtime knowledge and scoped grounding</h2>
+    <p>Commit <code>73e150f</code> added declarative runtime bindings, schema-aware substitution, request composition and copied-evidence checks. New world facts can supply vocabulary and typed constraints without retraining. Optional word pairs and protected terms improved spelling on the held-out injection benchmark. <a href="../resources/worlds.md">World binding contract</a> · <a href="../eval/RESULTS.md">Measured changes</a></p>
+    <table>
+    <thead><tr><th scope="col">Issue</th><th scope="col">Implemented response and remaining limitation</th></tr></thead>
+    <tbody>
+    <tr><th scope="row">Ungrounded or wrong-scope transfer</th><td>Align slots to source evidence, resolve their values by schema and check evidence within each request. Guards avoid applying lexical result constraints across negation or clause boundaries. Target attachment and selection-versus-mutation errors still occur.</td></tr>
+    <tr><th scope="row">Several explicit actions</th><td>Split on supported sequence boundaries and validate the recomposed graph. The review still exposes lost counts and anchors in complex multi-step placements.</td></tr>
+    <tr><th scope="row">Vocabulary absent from training</th><td>Interpret world bindings at runtime and reuse the resulting vocabulary for spelling. New relation or reasoning mechanisms still require reader logic.</td></tr>
+    <tr><th scope="row">Wrong family across tabs</th><td>Use application tab as a ranking preference while keeping alternatives. The tab-aware benchmark reduced checker errors from 208 to 20 on the same held-out rows. Text-only evaluation exposes how often application context matters.</td></tr>
+    <tr><th scope="row">Wrong correction of rare words</th><td>Use dictionary and world vocabulary, protected words and contextual ranking. The spelling audit still found harmful edits on legitimate or domain-specific expressions such as <code>deco</code> and <code>hatless</code>.</td></tr>
+    </tbody>
+    </table>
+    <h2>Independent contextual ranking and role attachment</h2>
+    <p>The text formaliser and context estimator now run as separate stages. A schema tab preference can be weighed alongside compatible live entities and prior turns. The estimator reports the selected index, ranking and reasons while preserving valid alternatives. Lexical attachment uses supported action role markers and spatial relations from SOP facts. These cues help distinguish a direct target from an anchor and a selection constraint from a requested change. They do not supply an instance lookup result. <a href="context.html">Contextual estimator</a> · <a href="../prolog/roles.pl">Role attachment rules</a></p>
+    <p>A learned lexical association had supplied the sort <code>roof</code> for the pronoun <code>it</code>. Declared headless references now keep the thing unresolved while preserving the wording of a spatial relation and its anchor. A family-specific key requires a grounded family. On six targeted drawing examples the worlds-only reader produced the intended distinctions on all six. With the trained model, four won and two still lost to a learned template for a part. This is a diagnostic set selected during development. <a href="../test/roles.test.mjs">Role regressions</a></p>
+    <p>Structural validation and evidence checks leave semantic questions open. Pronoun resolution, source-to-target attachment and full preservation of modifiers are recurring problems in the independent review. Normalized-text holdouts measure variation within WebMeet. Template-grouped or independently collected evaluations would test broader generalisation. The experiment produces request circuits for subsequent interpretation and execution. <a href="../eval/SEMANTIC-AUDIT.md">Semantic review</a> · <a href="../eval/SPELL-AUDIT.md">Spelling audit</a></p>
+    <h2>WebMeet key validation</h2>
+    <p>The first role-aware run identified 327 constraints that represented a spatial relation but omitted the application key. The SOP type checker accepted these wires. WebMeet requires an attribute on each constraint. The reader now grounds the relation and its landmark separately using the request key declarations and retains an unread phrase when the family or keys are unresolved. The landmark has its own lookup. <a href="../src/relation-keys.mjs">Key resolution</a> · <a href="../resources/worlds.md">Custom spatial bindings</a></p>
+    <h2>Keeping the experiment current</h2>
+    <p>For a change in reader behavior, record the triggering utterance or benchmark failure here, link its regression and describe the remaining limitation. Update the affected architecture or interface page. For measured changes, add the dataset and knowledge revisions, split, input context, denominators and adjudication sample in the evaluation report. Preserve prior measurements for comparison. <a href="evaluation.html">Reproduction and evaluation</a></p>
+  </main>
+</body>
+</html>

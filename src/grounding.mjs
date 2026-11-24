@@ -88,13 +88,16 @@ export function constraintGrounder() {
 
 // An example or template may inherit a label error or stale contextual state.
 // Check copied evidence inside the owning request before returning that reading.
-export function evidenceInText(text, sop) {
+export function evidenceInText(text, sop, worlds) {
   const wires = parse(sop);
   const scopes = new Map(wires.filter(w => w.type === 'w.request.request')
     .map(w => ['$'+w.id,w.attrs.words?.length ? decode(w.attrs.words[0]) : text]));
   for (const {type,attrs} of wires) {
     if (['w.request.clock','w.request.previous','w.request.context'].includes(type)) return false;
     const scope = scopes.get(attrs.request?.[0]) ?? text;
+    if (type === 'w.request.target' && attrs.sort && worlds?.isReference?.(decode(attrs.sort_words?.[0] ?? attrs.sort[0]))) {
+      return false;
+    }
     for (const [key,vs] of Object.entries(attrs)) {
       const literal = key === 'predicate' || key === 'words' || key.endsWith('_words') ||
         (['text','name','description','ids'].includes(key) && type !== 'w.request.clock');

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { tokens } from '../src/lexicon.mjs';
+import { createEstimator } from '../src/estimate.mjs';
 import { createReader } from '../src/runtime.mjs';
 import { parse, validate } from '../src/schema.mjs';
 import { spellcheck } from '../src/spell.mjs';
@@ -81,6 +82,14 @@ test('formalises new domain and key declarations from an overlay without retrain
       'on=attribute attribute="sample.finish" value="frosted" operator=eq phase=result key_words="surface finish" words="fine texture"', 0],
   ]);
   assert.deepEqual(worlds.familyTabs.sample, ['workbench']);
+  const estimator = createEstimator(worlds);
+  try {
+    const candidates = ['drawn','sample'].map(family=>({sop:
+      '@r w.request.request act=make predicate=create\n@t w.request.target request=$r family='+family+' mode=new'}));
+    for (const context of [{tab:'workbench'},{turns:[{text:'Let us discuss the fluxometer'}]}]) {
+      assert.equal((await estimator.estimate(candidates,context)).selectedIndex,1);
+    }
+  } finally { await estimator.close(); }
   assert.deepEqual(worlds.properties('lens opening'), [
     { family: 'sample', attribute: 'sample.aperture', kind: 'number' },
   ]);

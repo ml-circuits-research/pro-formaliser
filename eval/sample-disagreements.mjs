@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { normalizeText } from '../src/corpus.mjs';
 
-const [input,prefix] = process.argv.slice(2);
+const [input,prefix,edition = '1'] = process.argv.slice(2);
 if (!input || !prefix) throw Error('Expected a benchmark details JSONL and output prefix');
 const digest = (salt, text) => createHash('sha256').update(salt + '\0' + text).digest('hex');
 const families = new Map();
@@ -18,10 +18,10 @@ for (const line of readFileSync(input,'utf8').trimEnd().split('\n')) {
 }
 const blind = [], key = [];
 for (const [family,group] of [...families].sort()) {
-  const ranked = [...group].sort(([a],[b]) => digest('audit-1',a).localeCompare(digest('audit-1',b)));
+  const ranked = [...group].sort(([a],[b]) => digest('audit-'+edition,a).localeCompare(digest('audit-'+edition,b)));
   for (const [,row] of ranked.slice(0,6)) {
     const id = blind.length+1;
-    const aIsModel = (parseInt(digest('side-1',row.text).slice(0,2),16) % 2) === 0;
+    const aIsModel = (parseInt(digest('side-'+edition,row.text).slice(0,2),16) % 2) === 0;
     const pair = [row.prediction.sop,row.sop];
     if (!aIsModel) pair.reverse();
     blind.push({id,text:row.text,A:pair[0],B:pair[1]});

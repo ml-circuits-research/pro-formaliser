@@ -7,8 +7,8 @@ import { tokens } from './lexicon.mjs';
 const pinned = fileURLToPath(new URL('../.cache/knowledge/docs/worlds/', import.meta.url));
 const types = new Set([
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
-  'k.actions.act', 'k.actions.verb', 'w.request.key', 'pro.reader.target',
-  'w.lang.en.det', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
+  'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial',
+  'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
   'w.reader.en.binding', 'w.reader.en.feature', 'w.reader.en.filter',
 ]);
 const wireStart = /^[\t ]*[@?][^\s]+[\t ]+([^\s#]+)/gm;
@@ -102,7 +102,7 @@ function* boundLexicon(facts) {
 
 function compile(facts) {
   const knownWords = new Set();
-  const acts = new Map(), targets = new Map(), constraints = new Map();
+  const acts = new Map(), targets = new Map(), constraints = new Map(), markers = new Map();
   const familyTabs = new Map();
   const determiners = new Map(), joiners = new Map(), negatives = new Set(), fillerPhrases = new Set(), discourse = [];
   const actFacts = facts('k.actions.act');
@@ -113,12 +113,14 @@ function compile(facts) {
     head: one(wire, 'head'), values: values(wire, 'value'), means: one(wire, 'means'),
   })).filter(key => key.tab && key.family && key.name && key.head);
   const keysByOwner = new Map();
-  const slotOwners = new Map();
+  const slotOwners = new Map(), slotNames = new Map();
   for (const wire of facts('core.slot')) {
     const owner = one(wire, 'of'), key = one(wire, 'key');
     if (!owner || !key) continue;
     slotOwners.set(wire.id, owner);
     slotOwners.set(owner + '.' + key, owner);
+    slotNames.set(wire.id, key);
+    slotNames.set(owner + '.' + key, key);
   }
   const aliases = new Map();
   const valuesBySlot = new Map();
@@ -154,11 +156,46 @@ function compile(facts) {
     }
   }
 
+  const references = new Set();
+  for (const wire of facts('w.lang.en.pron')) {
+    if (!values(wire, 'case').includes('object') || !values(wire, 'refers').includes('thing')) continue;
+    for (const text of values(wire, 'text')) references.add(phrase(text));
+  }
+  for (const wire of facts('w.lang.en.anaphor')) {
+    if (!['none', 'one'].includes(one(wire, 'head'))) continue;
+    for (const text of values(wire, 'text')) references.add(phrase(text));
+  }
+
+  const spatial = new Map();
+  for (const wire of facts('w.lang.en.prep')) {
+    const relation = one(wire, 'rel');
+    const space = one(wire, 'space');
+    if (!relation || !space || Number(one(wire, 'arity') ?? 1) !== 1) continue;
+    for (const text of values(wire, 'text')) {
+      const form = phrase(text);
+      index(spatial, form, relation);
+      index(markers, form, ['marker', '*', 'spatial', relation, 0]);
+    }
+  }
+  for (const wire of facts('k.actions.role')) {
+    const act = one(wire, 'act'), role = one(wire, 'name'), holds = one(wire, 'holds');
+    if (!actNames.has(act) || !role || !holds || one(wire, 'needed') === 'true') continue;
+    for (const text of values(wire, 'marker')) {
+      const form = phrase(text);
+      for (const relation of (holds === 'place' ? spatial.get(form) : undefined) ?? ['']) {
+        index(markers, form, ['marker', act, role, relation, 0]);
+      }
+    }
+  }
+
   for (const wire of facts('k.actions.verb')) {
     const act = one(wire, 'act');
     for (const text of values(wire, 'text')) {
       spell(text);
-      if (actNames.has(act)) index(acts, phrase(text), ['act', act, '', 0]);
+      if (!actNames.has(act)) continue;
+      const form = phrase(text);
+      index(acts, form, ['act', act, '', 0]);
+      if (one(wire, 'complement') === 'value') index(markers, form, ['frame', act, 'value', '', 0]);
     }
   }
 
@@ -223,10 +260,23 @@ function compile(facts) {
   // A bare value needs a single declared key in its family. An explicit key
   // surface can disambiguate otherwise overlapping value banks.
   const compatibleValues = new Map(), propertyLabels = new Map();
+  const canonicalSlots = new Map();
   for (const key of requestKeys) {
+    if (slotNames.get(key.means) === key.name.split('.').at(-1)) {
+      canonicalSlots.set(JSON.stringify([key.family, key.means]), key);
+    }
+  }
+  for (const key of requestKeys) {
+    const canonical = canonicalSlots.get(JSON.stringify([key.family, key.means]));
     const heads = new Set(key.head.split('+'));
+    const canonicalHeads = new Set(canonical?.head.split('+'));
+    // Prefer the canonical slot spelling for a narrower key with the same
+    // value bank. Equal or incompatible key declarations remain ambiguous.
+    const alias = canonicalHeads.size > heads.size && [...heads].every(head => canonicalHeads.has(head)) &&
+      canonical.values.length === key.values.length && key.values.every(value => canonical.values.includes(value));
+    const attribute = alias ? canonical.name : key.name;
     const keyAliases = [...(aliases.get(key.means) ?? []), ...(aliases.get(key.name) ?? [])];
-    const concepts = new Set([key.name, key.means, ...keyAliases].filter(Boolean));
+    const concepts = new Set([key.name, key.means, slotNames.get(key.means), ...keyAliases].filter(Boolean));
     for (const concept of concepts) keyAliases.push(...(properties.get(concept) ?? []));
     const keyForms = new Set([label(key.name.split('.').at(-1)), ...keyAliases]);
     const kinds = [];
@@ -234,7 +284,7 @@ function compile(facts) {
     if (heads.has('span')) kinds.push('quoted');
     for (const text of keyForms) {
       const surface = phrase(text);
-      if (surface) index(propertyLabels, JSON.stringify([surface, key.family]), { attribute: key.name, kinds });
+      if (surface) index(propertyLabels, JSON.stringify([surface, key.family]), { attribute, kinds });
     }
     const candidate = heads.has('candidate');
     if (!heads.has('class') && !candidate) continue;
@@ -251,7 +301,7 @@ function compile(facts) {
     for (const { text, value, open } of forms) {
       const valueEvidence = text !== value ? ` words=${quote(text)}` : '';
       const openValue = open && key.values.length ? ' open_value=true' : '';
-      const body = `on=attribute attribute=${quote(key.name)} value=${quote(value)} operator=eq phase=result${openValue}`;
+      const body = `on=attribute attribute=${quote(attribute)} value=${quote(value)} operator=eq phase=result${openValue}`;
       for (const keyText of keyForms) {
         const surface = phrase(`${keyText} ${text}`);
         const evidence = ` key_words=${quote(keyText)}${valueEvidence}`;
@@ -306,13 +356,19 @@ function compile(facts) {
 
   return {
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
+    spatialBindings: facts('pro.reader.spatial').map(wire => ({
+      tab: one(wire, 'tab'), family: one(wire, 'family'),
+      relationKey: one(wire, 'relation_key'), anchorKey: one(wire, 'anchor_key'),
+    })),
     determiners: Object.fromEntries(determiners),
     joiners: Object.fromEntries(joiners),
     familyTabs: Object.fromEntries([...familyTabs].map(([family, tabs]) => [family, [...new Set(tabs)]])),
     lexicon: Object.fromEntries(acts),
     properties: surface => propertiesBySurface.get(surface) ?? [],
+    isReference: text => references.has(phrase(text)),
     lookup(surface, activeActs = actNames) {
-      const entries = [...(acts.get(surface) ?? []), ...(constraints.get(surface) ?? [])];
+      const entries = [...(acts.get(surface) ?? []), ...(constraints.get(surface) ?? []), ...(markers.get(surface) ?? [])];
+      if (references.has(surface)) entries.push(['reference', '*', 'thing', '', 0]);
       for (const { family, sort, mode, acts } of targets.get(surface) ?? []) {
         for (const act of acts) {
           if (!activeActs.has(act)) continue;

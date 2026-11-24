@@ -99,3 +99,32 @@ unresolved.
 The optional [target binding schema](pro.reader/schema.sop) declares the fields of
 `pro.reader.target` for SOP tooling. The reader can also run this example with
 `--worlds-only`, which skips loading a trained model.
+
+## Spatial relation keys
+
+The lexical reader can attach a grounded nominal anchor to the direct
+target using supported English spatial prepositions. Declare a
+`pro.reader.spatial` fact to assign the relation and anchor keys for a
+target family and tab. The relation key must have a `class` head and
+list the canonical relations it accepts. The anchor key must have a
+`fill+span` head with no closed value bank. Both keys must belong to the
+declared family in the same tab.
+
+```sop
+@workbench.instrument.direction w.request.key tab=workbench family=instrument name=instrument.direction head=class value=near
+@workbench.instrument.landmark w.request.key tab=workbench family=instrument name=instrument.landmark head="fill+span"
+@workbench.instrument.spatial pro.reader.spatial tab=workbench family=instrument relation_key=instrument.direction anchor_key=instrument.landmark
+```
+
+The relation constraint carries the canonical value and retains the words
+that express it. A separate selector constraint carries the original
+anchor phrase and is linked to a page lookup. A family with explicit
+bindings for a tab uses those bindings. The pinned worlds also support
+the conventional `<family>.anchor` key paired with a class bank at
+`<family>.relation` or `<family>.position`. If the reader cannot ground
+a target family or find a unique declared pair for a relation, it retains
+the spatial phrase as unread. When a pronoun refers to an existing
+thing, additional hypotheses can each propose a family with uniquely
+licensed spatial keys. Those targets have `fill=context` and retain
+an unresolved thing lookup. The text-only reader keeps the unresolved
+reading first.

@@ -1,5 +1,5 @@
 # Optional bindings between an application's declared kinds and w.request targets.
-@pro.reader core.module name=pro.reader version=1 exports=target
+@pro.reader core.module name=pro.reader version=1 exports=target exports=spatial
 @pro.reader.target core.type of=pro.reader.target closed=true
 @pro.reader.target.of core.slot of=pro.reader.target key=of kind=atom
 @pro.reader.target.family core.slot of=pro.reader.target key=family kind=atom required=true
@@ -8,3 +8,10 @@
 @pro.reader.target.text core.slot of=pro.reader.target key=text kind=atom kind=string many=true
 @pro.reader.target.act core.slot of=pro.reader.target key=act kind=atom kind=string many=true
 @pro.reader.target.tab core.slot of=pro.reader.target key=tab kind=atom
+
+# Slot names for a family's spatial relation and its grounded nominal anchor.
+@pro.reader.spatial core.type of=pro.reader.spatial closed=true
+@pro.reader.spatial.tab core.slot of=pro.reader.spatial key=tab kind=atom required=true
+@pro.reader.spatial.family core.slot of=pro.reader.spatial key=family kind=atom required=true
+@pro.reader.spatial.relation_key core.slot of=pro.reader.spatial key=relation_key kind=atom required=true
+@pro.reader.spatial.anchor_key core.slot of=pro.reader.spatial key=anchor_key kind=atom required=true

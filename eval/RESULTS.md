@@ -17,20 +17,27 @@ The primary measurement uses bucket 0. A second model was trained from scratch w
 | Input and split | Rows | Exact | Full wires | All semantic wires | Alternative only | Act/mood | Wire F1 | Checker errors / emitted |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | First release, text, bucket 0 | 1,915 | 92 | 92 | 93 (4.86%) | 19 | 1,134 | 21.02% | 174 / 1,914 |
-| Current, text, bucket 0 | 1,915 | 381 | 473 | 519 (27.10%) | 82 | 1,277 | 41.94% | 208 / 1,912 |
-| Current, text, bucket 1 | 2,027 | 356 | 425 | 471 (23.24%) | 63 | 1,342 | 38.04% | 201 / 2,021 |
-| Current, text + tab, bucket 0 | 1,915 | 415 | 511 | 558 (29.14%) | 44 | 1,285 | 43.57% | 20 / 1,912 |
+| Runtime-world release, text, bucket 0 | 1,915 | 381 | 473 | 519 (27.10%) | 82 | 1,277 | 41.94% | 208 / 1,912 |
+| Runtime-world release, text, bucket 1 | 2,027 | 356 | 425 | 471 (23.24%) | 63 | 1,342 | 38.04% | 201 / 2,021 |
+| Runtime-world release, text + tab, bucket 0 | 1,915 | 415 | 511 | 558 (29.14%) | 44 | 1,285 | 43.57% | 20 / 1,912 |
+| Independent layers, text, bucket 0 | 1,915 | 381 | 473 | 523 (27.31%) | 83 | 1,263 | 41.78% | 211 / 1,912 |
+| Independent layers, text, bucket 1 | 2,027 | 356 | 425 | 470 (23.19%) | 70 | 1,301 | 37.74% | 196 / 2,021 |
+| Independent layers, text + tab, bucket 0 | 1,915 | 415 | 511 | 562 (29.35%) | 44 | 1,270 | 43.21% | 17 / 1,912 |
 
-The current primary run used 187,106 training rows and 1,867 held-out normalized texts. It returned matched constructions on 715 rows, partial readings on 1,197, and unresolved readings on 3. The checker warned on 1,134 emitted text/circuit pairs. For the annotations it reported 0 errors and 416 warnings. Knowledge revision was `ba7cbcf2ab78b8b99d077e8958013d52618c6d04`.
+The current primary run used 187,106 training rows and 1,867 held-out normalized texts. It produced 715 matched constructions, 1,197 partial readings and 3 unresolved rows. The checker warned on 1,122 emitted pairs. The annotations had 0 errors and 416 warnings. Knowledge revision was `ba7cbcf2ab78b8b99d077e8958013d52618c6d04`.
 
 | Area | Primary rows | Complete semantic matches | Wire F1 | Replication rows | Complete semantic matches | Wire F1 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| calendar | 74 | 52 | 86.2% | 73 | 57 | 88.8% |
-| diagram | 768 | 150 | 37.7% | 766 | 111 | 33.3% |
-| document | 112 | 23 | 49.6% | 265 | 24 | 23.9% |
-| drawing | 961 | 294 | 40.3% | 923 | 279 | 38.4% |
+| calendar | 74 | 52 | 85.8% | 73 | 57 | 88.7% |
+| diagram | 768 | 152 | 37.2% | 766 | 110 | 32.0% |
+| document | 112 | 23 | 49.4% | 265 | 24 | 22.9% |
+| drawing | 961 | 296 | 40.4% | 923 | 279 | 38.7% |
 
-The remaining errors include choosing the wrong family for the application, losing modifiers and binding a constraint to the wrong object or part of a request. The independent [blind semantic audit](SEMANTIC-AUDIT.md) checks disagreements without treating the annotation as authoritative. These results measure variation within WebMeet. A test grouped by template or a separately collected set of natural utterances would measure a harder form of generalisation.
+On the primary split, the generator emitted multiple distinct readings on 1,909 rows. The annotation’s complete semantic signature occurred in the retained set for 606/1,915 (31.64%). This bounds what any reranker of these candidates could achieve on this metric. The tab experiment used identical candidate circuits and retained all alternatives on every row. It changed the winner on 207 rows, gaining 39 full matches and losing none relative to the current text-only run. There were 122 decisions uniquely favored by tab evidence, 1,787 ties or insufficient contextual support, three single candidates, and three unresolved rows. These counts measure the tab signal only. WebMeet supplies no labeled multi-turn history in this experiment.
+
+Compared with the runtime-world release, text-only structural agreement moved from 519 to 523 on bucket 0 and from 471 to 470 on bucket 1. Both text-only wire F1s and act/mood counts fell. The independently ranked tab condition improved full matches and checker errors, while its wire F1 also fell. This is a targeted improvement in role handling and candidate visibility, with mixed aggregate semantic effects. An initial role-aware ablation had 503 checker errors including 327 missing-key violations. Resolving relation and anchor keys removed that new violation category.
+
+The remaining errors include choosing the wrong family for the application, losing modifiers and binding a constraint to the wrong object or part of a request. The [release blind audit](ROLE-AUDIT.md) sampled 12 new disagreements across the four areas. The LLM judge preferred the annotation in 11 and found one ambiguous. Only seven annotations were judged fully adequate. The [earlier blind audit](SEMANTIC-AUDIT.md) records earlier conditions. These results measure variation within WebMeet. A test grouped by template or a separately collected set of natural utterances would measure a harder form of generalisation.
 
 ## Spelling
 
@@ -41,8 +48,9 @@ The benchmark injects one reproducible deletion, insertion or substitution at an
 | Original release | 806 | 77 | 1,011 | 104 |
 | Word frequencies and SOP vocabulary | 1,230 | 162 | 502 | 117 |
 | With training-only word pairs and protected terms | 1,369 | 93 | 432 | 114 |
+| With phrase evidence and guarded real-word edits | **1,594** | **40** | **260** | **100** |
 
-The contextual model uses only bucket 0 training rows. An independent [LLM audit of 24 sampled edits](SPELL-AUDIT.md) assessed whether changes to the original utterances corrected an error or introduced one.
+The phrase model restored 49 of the 182 dictionary-valid corruptions in the mixed benchmark and 519 of 1,891 in a separate dictionary-valid challenge, with zero wrong replacements at the injected position in either subset. The mixed challenge also registered 89 edits outside the injected position. Two were additional edits compared with spelling the corresponding uncorrupted utterance. The contextual model uses only bucket 0 training rows. An independent [LLM audit of 24 sampled edits](SPELL-AUDIT.md) assessed whether changes to the original utterances corrected an error or introduced one.
 
 ## Reproduction
 
@@ -56,4 +64,5 @@ node eval/benchmark.mjs --details .cache/primary.jsonl
 node eval/benchmark.mjs --bucket 1 --model .cache/replication-model.json --report .cache/replication.json --details .cache/replication.jsonl
 node eval/benchmark.mjs --context tab --model .cache/tab-model.json --report .cache/tab.json
 node eval/sample-disagreements.mjs .cache/replication.jsonl .cache/blind
+node eval/sample-disagreements.mjs .cache/primary.jsonl .cache/role-blind role-release
 ```
