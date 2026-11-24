@@ -1,0 +1,6 @@
+# Pragmatic sentences that can follow an independently delimited request.
+@pro.reader.trailing_discourse core.type of=pro.reader.trailing_discourse closed=true
+@pro.reader.trailing_discourse.text core.slot of=pro.reader.trailing_discourse key=text kind=string required=true many=true
+
+@reader.trailing.acknowledgement pro.reader.trailing_discourse text="I appreciate it" text="that would help" text="that would be helpful" text="much appreciated"
+@reader.trailing.thanks pro.reader.trailing_discourse text=thanks text="thank you" text="thanks in advance" text="many thanks"

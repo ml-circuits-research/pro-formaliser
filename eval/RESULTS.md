@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Shared properties, named members and trailing discourse
+
+On the paired 1,000 requests, at least one proposal was reasonable on 45.0% (previously 44.4%). On the full holdout, 660 proposal sets contained the reference semantic wire set, previously 659. The first-choice WebMeet checker rejected 264 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)
+
 ## Native request alternations, affected targets and property owners
 
 On the paired 1,000 requests, at least one proposal was reasonable on 44.4% (previously 43.8%). On the full holdout, 659 proposal sets contained the reference semantic wire set, previously 651. The first-choice WebMeet checker rejected 264 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)

@@ -75,3 +75,7 @@
 ## Native request alternations, affected targets and property owners
 - Applied native request alternations to complete grounded bodies, preserved explicit property owners and read requests with an affected object before the past participle.
 - Full test gate passed. 44.4% reasonable on the same 1,000 requests, previously 43.8%. See eval/THOUSAND-AUDIT.md.
+
+## Shared properties, named members and trailing discourse
+- SWI-Prolog binds coordinated properties and named members. The reader retains numerical qualifiers, courtesy tails and multi-request scopes.
+- Full test gate passed. 45.0% reasonable on the same 1,000 requests, previously 44.4%. See eval/THOUSAND-AUDIT.md.

@@ -248,9 +248,18 @@ its `to` pattern is one contiguous part of `from` with the same single capture.
 ```
 
 A matching body is read as a literal substring. An additional proposal
-requires a complete single request, a compatible question reading when
-appropriate, and grounded body evidence. Its request words preserve the
-whole submitted utterance.
+requires grounded body evidence, a compatible question reading when
+appropriate, and a request for every recognized clause boundary. A single
+request carries the whole submitted utterance. Several requests keep
+their own local words.
+
+Declare courtesy phrases that can follow a sentence boundary with
+`pro.reader.trailing_discourse`. The body can include several requests.
+The reader keeps the written closing phrase on a filler wire.
+
+```sop
+@reader.trailing.thanks pro.reader.trailing_discourse text=thanks text="thank you"
+```
 
 ## Affected object requests
 
@@ -269,6 +278,43 @@ keyword to an open span key. For “I need Review deleted from my schedule,”
 the source can supply the meeting family for the written name and use
 “my schedule” as the selector value, with “from my schedule” as evidence. A source phrase without a matching
 declaration stays unread when the affected target is grounded independently.
+
+## Explicit member actions
+
+A `pro.reader.member_action` frame declares the role that a complete list of
+named members plays under a native action. Its key must be an open
+`candidate` or `span` in the declared tab and family. Use `phase=result` for
+a new target or `phase=selector` for an existing one. Declare each accepted
+`separator` and any optional final `suffix`.
+
+```sop
+@reader.diagram.group.members pro.reader.member_action tab=diagram family=group act=group mode=new key=group.ids phase=result separator=and separator=with suffix=together
+```
+
+Prolog requires a unique full list with at least two distinct members.
+Members can be quoted names, capitalized labels or codes licensed in
+the tab. Each member keeps its written value.
+
+## Coordinated effects
+
+A `pro.reader.coordinated_effects` declaration gives the order of one
+`owner`, two `effect` or `verbal_effect` parts, one `join`, and any literal
+words. The owner must have an existing-target reading, and both effects
+must come from distinct catalog keys with value banks in that owner’s
+family. A `verbal_effect` also requires a change verb reading.
+
+```sop
+@reader.effects.make pro.reader.coordinated_effects part=make part=owner part=effect part=join part=effect
+```
+
+## Numeric qualifiers
+
+A numeric key in an existing target’s catalog can license a nearby label
+followed by an explicit number, as in “set n1 width 180 height ninety.”
+The reader copies the label and preserves written cardinal evidence. A
+selection or removal uses selectors. A change or placement uses results.
+When an explicit pronoun leaves the target unresolved, compatible
+families can carry a page lookup on separate alternatives.
 
 ## Ordered argument sequences
 

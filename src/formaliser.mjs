@@ -1,3 +1,7 @@
+import { numberedQualifierReadings } from './numbered-qualifier.mjs';
+import { coordinatedPacket,effectReading } from './coordinated-effects.mjs';
+import { discourseBody } from './trailing-discourse.mjs';
+import { memberActionPackets,memberActionReadings } from './member-actions.mjs';
 import { affectedTargetCandidates } from './affected-target.mjs';
 import { ownerPropertyReadings } from './owner-property.mjs';
 import { serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
@@ -163,7 +167,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
     const propertyCommands=scope.restricted || quotes.length ? undefined : propertyCommandPacket(text,ts,model.propertyCommands);
     const argumentSequences=scope.restricted || quotes.length ? [] : sequencePacket(ts,worlds);
-    const request = {text,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const memberActions=scope.restricted ? [] : memberActionPackets(text,ts,quotes,worlds);
+    const coordinatedEffects=scope.restricted || quotes.length ? undefined : coordinatedPacket(ts,worlds,model.lexicon);
+    const request = {text,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -295,6 +301,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (reading) retain(reading);
       }
     }
+    if (!scope.restricted && ts.some(([key])=>/\d/u.test(key) || worlds.nominalNumbers.has(key))) {
+      for (const candidate of [...candidates]) for (const reading of numberedQualifierReadings(text,candidate,worlds)) retain(reading);
+    }
+    for (const proof of response.coordinatedEffects ?? []) retain(effectReading(text,ts,proof));
+    for (const reading of memberActionReadings(text,response.memberActions ?? [],worlds)) retain(reading);
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
     if (response.proofs.length) {
       for (const c of candidates) {
@@ -428,31 +439,52 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     return mergeReadings(base,readings,
       complete || base.status==='matched' && results.some(r=>r.status!=='matched'));
   }
+  async function wrapped(text) {
+    const base=await formalise(text);
+    const {alternatives,[conditionalScope]:conditional,...first}=base;
+    const candidates=first.sop ? [first,...alternatives] : [];
+    const bodies=languageFrames ? alternateBodies(text,worlds.alternations) : [];
+    if (!bodies.length || conditional) return candidates;
+    const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
+    for (const body of bodies) {
+      const {alternatives,...head}=await formalise(body.text);
+      const boundaries=sequenceParts(body.text,tokens(body.text),worlds.joiners,sequenceOptions);
+      for (const choice of [head,...alternatives]) {
+        if (!choice.sop || choice.sop.includes(' w.request.unread ')) continue;
+        const wires=parse(choice.sop), requests=wires.filter(w=>w.type==='w.request.request');
+        if (!requests.length || requests.length<boundaries.length ||
+            requests.length>1 && requests.some(r=>!r.attrs.words)) continue;
+        const [request]=requests;
+        if (body.mode==='question' && !['ask','check'].includes(request.attrs.mood?.[0]) && request.attrs.act?.[0]!=='ask') continue;
+        const evidence=evidenceReport(body.text,wires,worlds.evidenceVocabulary);
+        if (evidence.missing.length || evidence.counts.uncovered) continue;
+        if (requests.length===1) request.attrs.words=[JSON.stringify(text)];
+        const sop=serialize(wires);
+        const key=admissibleKey(text,sop);
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          candidates.push({sop,status:choice.status,source:'language-alternation'});
+        }
+      }
+    }
+    return candidates;
+  }
   return {
     async formalise(text) {
-      const result = await formalise(text);
-      const {alternatives,[conditionalScope]:_conditional,...first} = result;
-      const candidates = result.sop ? [first,...alternatives] : [];
-      // Native alternations license an additional reading of a literal part of
-      // the utterance. Keep the outer wording as evidence for the whole request.
-      const bodies=languageFrames ? alternateBodies(text,worlds.alternations) : [];
-      const seen=bodies.length && new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
-      for (const body of bodies) {
-        const {alternatives,...head}=await formalise(body.text);
-        for (const choice of [head,...alternatives]) {
-          if (!choice.sop || choice.sop.includes(' w.request.unread ')) continue;
-          const wires=parse(choice.sop), requests=wires.filter(w=>w.type==='w.request.request');
-          if (requests.length!==1) continue;
-          const [request]=requests;
-          if (body.mode==='question' && !['ask','check'].includes(request.attrs.mood?.[0]) && request.attrs.act?.[0]!=='ask') continue;
-          const evidence=evidenceReport(body.text,wires,worlds.evidenceVocabulary);
-          if (evidence.missing.length || evidence.counts.uncovered) continue;
-          request.attrs.words=[JSON.stringify(text)];
-          const sop=serialize(wires);
-          const key=admissibleKey(text,sop);
+      const candidates=await wrapped(text);
+      const body=discourseBody(text,worlds.trailingDiscourse);
+      if (body) {
+        const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
+        const steps=sequenceParts(body.text,tokens(body.text),worlds.joiners,sequenceOptions);
+        for (const candidate of await wrapped(body.text)) {
+          const wires=parse(candidate.sop);
+          if (steps.length>wires.filter(w=>w.type==='w.request.request').length) continue;
+          let id='courtesy';
+          while (wires.some(w=>w.id===id)) id+='_';
+          wires.push({id,type:'w.request.filler',attrs:{text:[JSON.stringify(body.suffix)]}});
+          const sop=serialize(wires),key=admissibleKey(text,sop);
           if (key && !seen.has(key)) {
-            seen.add(key);
-            candidates.push({sop,status:choice.status,source:'language-alternation'});
+            seen.add(key);candidates.push({sop,status:candidate.status,source:'trailing-discourse'});
           }
         }
       }

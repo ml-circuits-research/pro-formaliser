@@ -116,3 +116,11 @@
 @reader.english.affected pro.reader.affected_lead text="I need" text="I want" text="I would like" text="I'd like" text="I'll have" text="I will have"
 @reader.calendar.meeting_source pro.reader.affected_source act=remove family=meeting marker=from keyword=calendar attribute=meeting.calendar
 @reader.calendar.schedule_source pro.reader.affected_source act=remove family=meeting marker=from keyword=schedule attribute=meeting.calendar
+
+@reader.diagram.group.members pro.reader.member_action tab=diagram family=group act=group mode=new key=group.ids phase=result separator=and separator=with suffix=together
+
+# Two independently licensed properties of one explicit existing object.
+@reader.effects.suggestion pro.reader.coordinated_effects part="how about" part=effect part=join part=effect part=on part=owner
+@reader.effects.verb pro.reader.coordinated_effects part=verbal_effect part=join part=effect part=owner
+@reader.effects.make pro.reader.coordinated_effects part=make part=owner part=effect part=join part=effect
+@reader.effects.turn pro.reader.coordinated_effects part=turn part=owner part=effect part=join part=effect
