@@ -168,7 +168,7 @@ sample	source	row	grade	reference_issue	review_note
 167	drawing/scenes-16.csv	1369	L3	0	Creates yellow triangle named Luna
 168	diagram/charts-04.csv	3044	L2c	0	Binds the linear x scale in the second clause but leaves the first clause’s negative inversion instruction ungrounded.
 169	diagram/charts-01.csv	446	L4	0	Creates pie of class distribution by department
-170	drawing/scenes-13.csv	652	L1c	0	Identifies hair and both traits, but uses red and curly as selectors rather than applying them and leaves the girl unbound.
+170	drawing/scenes-13.csv	652	L4	0	Applies the stated curly red hair as one result trait on the existing girl.
 171	drawing/scenes-05.csv	1148	L2c	0	Removal targets hills but omits rear-only scope
 172	drawing/scenes-16.csv	3566	L3	0	Draws red circle named bush
 173	calendar/meetings-07.csv	246	L2b	0	Single remove request no longer treats the background as a question, but leaves Focus pod unbound.
@@ -197,7 +197,7 @@ sample	source	row	grade	reference_issue	review_note
 196	diagram/nodes-06.csv	1639	L3	0	Adds green Check billing ellipse
 197	drawing/scenes-08.csv	4342	L4	0	Creates boat, kid and fish with distinct relations and facing directions
 198	document/text-02.csv	2244	L4	0	Creates a Budget heading and a paragraph containing the exact requested text.
-199	drawing/scenes-24.csv	570	L2c	0	Mirrors House horizontally but omits y=80
+199	drawing/scenes-24.csv	570	L4	0	Sets the y position to 80 and the mirror to horizontal on the same House.
 200	drawing/scenes-07.csv	1019	L1c	0	Grounds the second boy and leftward relation, but treats the green shirt as a separate landmark.
 201	document/text-01.csv	599	L4	0	Replaces Travel blog with exact text
 202	drawing/scenes-05.csv	1350	L2c	0	Identifies girl but misses left-only persistent state
@@ -420,7 +420,7 @@ sample	source	row	grade	reference_issue	review_note
 419	diagram/charts-02.csv	1308	L2a	0	One grid option survives, but the bar-width change is absent.
 420	diagram/nodes-01.csv	2798	L4	0	Boldens the named Pack label and sets its words navy in a separate edit.
 421	drawing/scenes-04.csv	460	L2c	0	Creates stars in the sky region, but omits the requested abundance.
-422	diagram/nodes-03.csv	1409	L4	0	A copy proposal targets the picture alone.
+422	diagram/nodes-03.csv	1409	L3	0	The exact reference copies the existing picture alone; its qualifier adds no further action.
 423	diagram/charts-05.csv	2411	L2c	1	Recognizes scatter-chart creation but leaves the two fields, least-squares fit, gridlines and zero baseline unread.
 424	drawing/placement-06.csv	4749	L3	0	Exact house on the hill.
 425	drawing/objects-04.csv	289	L3	0	Exact rook creation.
@@ -883,7 +883,7 @@ sample	source	row	grade	reference_issue	review_note
 882	document/text-01.csv	4327	L3	0	Topic and word count.
 883	drawing/placement-02.csv	3997	L4	1	Creates the tiny bird on the fence facing left, turns the fence bird right and preserves the rest of the scene in order.
 884	diagram/charts-04.csv	2306	L2a	0	Both chart changes missing.
-885	drawing/placement-01.csv	1455	L2c	0	The cat has a native bottom-left region, but the tree's three-hand-width downward move still introduces an unintended full turn.
+885	drawing/placement-01.csv	1455	L4	0	Creates a small cat in the bottom-left and moves the tree down exactly three hand-widths. Equality preserves the requested distance despite redundant unread emphasis.
 886	drawing/placement-02.csv	407	L2c	0	Second change misses cream as applied paper shade.
 887	diagram/charts-03.csv	764	L2b	1	Cannot bind source change and destination chart.
 888	document/text-01.csv	218	L4	0	Replaces named passage with exact content.

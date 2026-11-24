@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Coordinated properties, endpoint selectors and transfer of descriptions
+
+Reader revision `cf23f06` offered at least one reasonable proposal for 48.5% of the paired 1,000 requests, up from 48.2%. Three requests gained a reasonable proposal, and none lost one. Across the full holdout, 674 sets contained the reference semantic wire set, previously 667. The reference-tab checker rejected 254 of 1,891 nonempty first choices in both runs. These measurements use the default worlds. The optional relation module and vocabulary overlay have separate public-reader probes. [Grades and reproduction](THOUSAND-AUDIT.md)
+
 ## Independent bucket 37 replication
 
 On a separate 1,000-request sample, reasonable proposal coverage increased from 36.8% to 41.1%, with 43 paired gains and no observed losses. The comparison uses the early baseline and the scoped-command release. [Replication protocol and grades](REPLICATION-37.md)

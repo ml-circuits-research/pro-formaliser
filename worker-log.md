@@ -123,3 +123,6 @@
 ## Grounded endpoints and properties
 - Public reader now binds ordered endpoint selectors and multiple explicit measurements for one owner. Transfer can rebind a uniquely grounded description containing a typed variable.
 - All 262 tests passed, including unrelated overlays and negative cases. Replayed integration examples and published the observed improvements in integration-review.responses.md.
+
+## Paired holdout for cf23f06
+- Reran the full bucket and graded changes on the same 1,000 requests. Reasonable proposals increased from 48.2% to 48.5% with no losses. See eval/THOUSAND-AUDIT.md.
