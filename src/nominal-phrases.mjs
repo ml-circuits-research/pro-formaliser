@@ -15,7 +15,7 @@ const word = /^[\p{L}\p{M}\p{N}_]+$/u;
 const normalize = text => tokens(text).map(token => token[0]).join(' ');
 const modeKey = (target, request) => [field(target, 'family'), field(request, 'act'), field(target, 'mode')];
 const encode = value => /^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u.test(value) ? value : JSON.stringify(value);
-const allowedFields = new Set(['id', 'request', 'attribute', 'on', 'value', 'words', 'operator', 'phase']);
+const allowedFields = new Set(['id', 'request', 'attribute', 'on', 'value', 'words', 'key_words', 'open_value', 'operator', 'phase']);
 const allowedOperators = new Set(['eq', 'region', 'degree']);
 const boundary = /^[,.;:!?—–，。！？；：]$/u;
 
@@ -26,38 +26,145 @@ function nounPosition(ts, head) {
   if (matches.length === 1) return [matches[0], matches[0] + words.length];
 }
 
-export function createNominalPhraseLearner() {
+function matchesAt(ts, from, words) {
+  return words.every((token, i) => ts[from+i]?.[0]===token);
+}
+
+function lexicalWords(text) {
+  const words=text && normalize(text).split(' ');
+  return words?.length && words.length<=8 && words.every(token=>word.test(token)) ? words : undefined;
+}
+
+function catalogAllows(worlds,family,key,value) {
+  return !worlds || worlds.requestKeys.some(prop=>prop.family===family && prop.name===key &&
+    prop.head.split('+').some(h=>h==='class' || h==='candidate') &&
+    (!prop.values.length || prop.values.includes(value)));
+}
+
+function anchoredPart(wire,ts,at,worlds) {
+  const value=lexicalWords(field(wire,'value'));
+  const marker=lexicalWords(field(wire,'key_words'));
+  if (wire.attrs.words) {
+    const words=lexicalWords(field(wire,'words'));
+    if (!words || !matchesAt(ts,at,words)) return;
+    return words;
+  }
+  if (!value || wire.attrs.key_words && !marker) return;
+  if (!marker) return matchesAt(ts,at,value) ? value : undefined;
+  const limit=Math.min(ts.length,at+8);
+  const addresses=words=>Array.from({length:Math.max(0,limit-at-words.length+1)},(_,i)=>at+i)
+    .filter(i=>matchesAt(ts,i,words));
+  const candidates=new Map();
+  for (const a of addresses(value)) {
+    for (const b of addresses(marker)) {
+      if (a<b+marker.length && b<a+value.length) continue;
+      const stop=Math.max(a+value.length,b+marker.length);
+      const words=ts.slice(at,stop).map(t=>t[0]);
+      if (!words.every((form,i)=> {
+        const p=at+i;
+        return p>=a&&p<a+value.length || p>=b&&p<b+marker.length ||
+          word.test(form) && !worlds?.joiners[form] && !worlds?.negatives.has(form) &&
+          !worlds?.scopeGrammar.conditionals.has(form) && worlds?.evidenceVocabulary.grammar.has(form);
+      })) continue;
+      candidates.set(words.join(' '),words);
+    }
+  }
+  return candidates.size===1 ? [...candidates.values()][0] : undefined;
+}
+
+function partsAt(wires,ts,at,worlds,family,mode) {
+  const options=[];
+  for (const wire of wires) {
+    const key=field(wire,'attribute'), value=field(wire,'value'), on=field(wire,'on');
+    const operator=field(wire,'operator') ?? 'eq', phase=field(wire,'phase') ?? 'result';
+    if (!key || !value || !on || wire.attrs.value?.length!==1 || (wire.attrs.words?.length ?? 0)>1 ||
+        (wire.attrs.key_words?.length ?? 0)>1 || on==='place') continue;
+    const words=anchoredPart(wire,ts,at,worlds);
+    if (!words) continue;
+    const marker=lexicalWords(field(wire,'key_words'));
+    if (wire.attrs.key_words && (!marker || !words.some((_,i)=>marker.every((token,j)=>words[i+j]===token)))) continue;
+    if (!catalogAllows(worlds,family,key,value)) continue;
+    if (words.length===1 && !wire.attrs.words && !marker && worlds?.requestKeys.some(prop=>
+      prop.family===family && prop.name!==key && prop.values.includes(value))) continue;
+    const usable=(mode!=='new' || phase==='result') && allowedOperators.has(operator) &&
+      Object.keys(wire.attrs).every(name=>allowedFields.has(name));
+    options.push({words,meaning:usable && JSON.stringify([key,value,on,operator,phase])});
+  }
+  return options;
+}
+
+function uniqueParts(parts) {
+  return [...new Map(parts.map(part=>[JSON.stringify([part.words,part.meaning]),part])).values()];
+}
+
+function groundedPlacementEnd(wires,ts,at,worlds,family) {
+  if (!worlds?.spatialBindings) return;
+  const lead=ts[at]?.[0];
+  const bridge=worlds.evidenceVocabulary.grammar.has(lead) && !worlds.negatives.has(lead) &&
+    !worlds.joiners[lead] && !worlds.scopeGrammar.conditionals.has(lead);
+  const bounds=new Map();
+  const relations=wires.filter(w=>field(w,'on')==='place' && field(w,'operator')==='relation' &&
+    w.attrs.value?.length===1 && !w.attrs.want);
+  for (const {relationKey,anchorKey} of worlds.spatialBindings.filter(binding=>binding.family===family)) {
+    const markers=relations.filter(w=>field(w,'attribute')===relationKey);
+    const anchors=relations.filter(w=>field(w,'attribute')===anchorKey && field(w,'phase')==='selector');
+    for (const marker of markers) {
+      const prefix=lexicalWords(field(marker,'words') ?? field(marker,'value'));
+      if (!prefix) continue;
+      for (const anchor of anchors) {
+        const name=lexicalWords(field(anchor,'value'));
+        if (!name) continue;
+        const coversName=prefix.length>name.length && name.every((word,i)=>prefix[prefix.length-name.length+i]===word);
+        const words=coversName ? prefix : [...prefix,...name];
+        const positions=ts.flatMap((_,i)=>matchesAt(ts,i,words) ? [i] : []);
+        const [start]=positions;
+        if (positions.length===1 && (start===at || bridge && start===at+1)) {
+          const end=start+words.length;
+          const meaning=JSON.stringify([start,end,relationKey,anchorKey,field(marker,'value'),field(marker,'phase'),name]);
+          bounds.set(meaning,end);
+        }
+      }
+    }
+  }
+  return bounds.size===1 ? [...bounds.values()][0] : undefined;
+}
+
+export function createNominalPhraseLearner(worlds) {
   const observations = new Map();
   return {
-    observe(text, target, constraint, request) {
+    observe(text, target, constraints, request) {
       const active = modeKey(target, request);
-      const head = noun(target), surface = field(constraint, 'words');
-      const key = field(constraint, 'attribute'), value = field(constraint, 'value');
-      const on = field(constraint, 'on'), operator = field(constraint, 'operator') ?? 'eq';
-      const phase = field(constraint, 'phase') ?? 'result';
-      if (!active[0] || !active[1] || !['new', 'existing'].includes(active[2]) ||
-          !head || !surface || !value || !key || !on || constraint.attrs.value.length !== 1 ||
-          constraint.attrs.words.length !== 1) return;
-      const phrase = normalize(surface), words = phrase.split(' ');
-      if (words.length < 2 || words.length > 8 || !words.every(token => word.test(token))) return;
-      const ts = tokens(text), at = nounPosition(ts, head)?.[1];
-      if (at === undefined || !words.every((token, i) => ts[at + i]?.[0] === token)) return;
-      const start = ts[at][2], end = ts[at + words.length - 1][3];
-      if (quotedSpans(text).some(q => q.start < end && q.end > start)) return;
-      const identity = JSON.stringify([...active, words[0]]);
-      const group = observations.get(identity) ?? new Map();
-      observations.set(identity, group);
-      const usable = allowedOperators.has(operator) && on !== 'place' &&
-        Object.keys(constraint.attrs).every(name => allowedFields.has(name));
-      const semantics = usable && JSON.stringify([key, value, on, operator, phase]);
-      const witness = normalize(text);
-      const sort = field(target, 'sort') ?? head;
-      const witnesses = group.get(phrase) ?? new Map();
-      group.set(phrase, witnesses);
-      const entry = witnesses.get(witness);
-      if (!entry) witnesses.set(witness, {semantics, sort:normalize(sort)});
-      else if (entry.semantics !== semantics) entry.semantics = false;
-      else if (entry.sort !== normalize(sort)) entry.sort = undefined;
+      const head = noun(target);
+      if (!active[0] || !active[1] || !['new', 'existing'].includes(active[2]) || !head) return;
+      const ts=tokens(text), position=nounPosition(ts,head);
+      if (!position) return;
+      const [start,after]=position, quotes=quotedSpans(text);
+      const owned=(Array.isArray(constraints) ? constraints : [constraints])
+        .filter(w=>!w.attrs.request || field(w,'request')==='$'+request.id);
+      const witness=ts.map(t=>t[0]).join(' '), sort=normalize(field(target,'sort') ?? head);
+      for (let at=after;at<ts.length;) {
+        const parts=uniqueParts(partsAt(owned,ts,at,worlds,active[0],active[2]));
+        if (!parts.length) {
+          const end=groundedPlacementEnd(owned,ts,at,worlds,active[0]);
+          if (!end || quotes.some(q=>q.start<ts[end-1][3] && q.end>ts[start][2])) break;
+          at=end;
+          continue;
+        }
+        if (parts.some(({words})=>quotes.some(q=>q.start<ts[at+words.length-1][3] && q.end>ts[start][2]))) break;
+        for (const {words,meaning} of parts) {
+          const identity=JSON.stringify([...active,words[0]]);
+          const group=observations.get(identity) ?? new Map();
+          observations.set(identity,group);
+          const phrase=words.join(' '), witnesses=group.get(phrase) ?? new Map();
+          group.set(phrase,witnesses);
+          const entry=witnesses.get(witness);
+          if (!entry) witnesses.set(witness,{semantics:meaning,sort});
+          else if (entry.semantics!==meaning) entry.semantics=false;
+          else if (entry.sort!==sort) entry.sort=undefined;
+        }
+        if (parts.length!==1 || !parts[0].meaning) break;
+        at+=parts[0].words.length;
+      }
     },
     finish() {
       return Object.fromEntries([...observations].flatMap(([id, group]) => {
@@ -148,7 +255,7 @@ export function nominalPositionForms(facts, requestKeys) {
 
 export function nominalPhraseReadings(text, ts, quotes, candidate, forms, worlds) {
   if (!forms || !candidate.sop) return [];
-  const wires = parse(candidate.sop);
+  let wires = parse(candidate.sop);
   const targets = wires.filter(w => w.type === targetType), requests = wires.filter(w => w.type === requestType);
   if (targets.length !== 1 || requests.length !== 1) return [];
   const [target] = targets, [request] = requests;
@@ -158,20 +265,44 @@ export function nominalPhraseReadings(text, ts, quotes, candidate, forms, worlds
   if (!head || !family || !act || field(target, 'request') !== ref || !['new', 'existing'].includes(mode)) return [];
   const position = nounPosition(ts, head);
   if (!position) return [];
-  const [start, at] = position;
-  const entries = forms[JSON.stringify([family, act, mode, ts[at]?.[0]])];
-  if (!entries) return [];
-  const matches = entries.filter(([words]) => words.every((token, i) => ts[at + i]?.[0] === token));
-  // Competing forms with a common prefix may express different scopes.
-  if (matches.length !== 1) return [];
-  const reading=attachPhrase(text,ts,quotes,wires,request,target,start,at,matches[0],worlds);
-  return reading ? [reading] : [];
+  const [start,after] = position;
+  const learned=at=>(forms[JSON.stringify([family,act,mode,ts[at]?.[0]])] ?? [])
+    .filter(([words])=>matchesAt(ts,at,words));
+  const owned=()=>wires.filter(w=>w.type===constraintType && field(w,'request')===ref);
+  const grounded=at=>uniqueParts(partsAt(owned(),ts,at,worlds,family,mode));
+  const placement=at=>groundedPlacementEnd(owned(),ts,at,worlds,family);
+  let revised;
+  for (let at=after;at<ts.length;) {
+    const options=learned(at), existing=grounded(at);
+    if (options.length>1 || existing.length>1) break;
+    const [entry]=options, [covered]=existing;
+    if (covered) {
+      if (!covered.meaning || entry && (covered.words.join(' ')!==entry[0].join(' ') ||
+          covered.meaning!==JSON.stringify(entry.slice(1)))) break;
+      at+=covered.words.length;
+      continue;
+    }
+    if (!entry) {
+      const end=placement(at);
+      if (!end) break;
+      at=end;
+      continue;
+    }
+    const next=at+entry[0].length;
+    const following=learned(next).length===1 || grounded(next).some(part=>part.meaning) || Boolean(placement(next));
+    const attached=attachPhrase(text,ts,quotes,wires,request,target,start,at,entry,worlds,following);
+    if (!attached?.sop) break;
+    revised=attached;
+    wires=parse(attached.sop);
+    at=next;
+  }
+  return revised ? [revised] : [];
 }
 
-function attachPhrase(text, ts, quotes, wires, request, target, start, at, entry, worlds) {
+function attachPhrase(text, ts, quotes, wires, request, target, start, at, entry, worlds, followed = false) {
   const [keys, key, value, on, operator, requestedPhase]=entry;
   const family=field(target,'family'), ref='$'+request.id;
-  if (!separatesPhrase(ts, at + keys.length, worlds)) return;
+  if (!followed && !separatesPhrase(ts, at + keys.length, worlds)) return;
   const fromChar = ts[at][2], toChar = ts[at + keys.length - 1][3];
   const headChar = ts[start][2];
   if (quotes.some(q => q.start < toChar && q.end > headChar)) return;
@@ -192,9 +323,7 @@ function attachPhrase(text, ts, quotes, wires, request, target, start, at, entry
     }
     return false;
   })) return;
-  if (!worlds.requestKeys.some(prop => prop.family === family && prop.name === key &&
-    prop.head.split('+').some(h => h === 'class' || h === 'candidate') &&
-    (!prop.values.length || prop.values.includes(value)))) return;
+  if (!catalogAllows(worlds,family,key,value)) return;
 
   const constraints = wires.filter(w => w.type === constraintType);
   if (constraints.some(w => field(w, 'attribute') === key) ||

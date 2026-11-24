@@ -406,9 +406,159 @@ function* excerpts(example, observeHeading) {
   }
 }
 
-function headingIndex(envelope, determiners) {
+function composedHeadingIndex(determiners, fillerPhrases) {
+  const shells=new Map(), maxFragments=4;
+  const embedded=new Map();
+  const attributes=new Set(['request','on','attribute','value','words','key_words','operator','phase','want','open_value']);
+  const ornament=new Set(fillerPhrases.flatMap(declaration=>typeof declaration!=='string' &&
+    ['filler','politeness','interjection'].includes(declaration.class) && tokens(declaration.text).length===1
+    ? [tokens(declaration.text)[0].key] : []));
+  const normal=ts=>ts.map(({key})=>Object.hasOwn(determiners,key) ? '<'+determiners[key]+'>' : key).join(' ');
+  const unsafe=text=>unsafeOpen.test(text) || /\b(?:if|unless|provided|whether|until|when)\b/iu.test(text);
+  const role=attrs=>JSON.stringify(Object.entries(attrs).filter(([key])=>!['value','key_words','open_value'].includes(key)).sort());
+  function remember(table,key,entry,source) {
+    const record=table.get(key) ?? {...entry,sources:new Set()};
+    if (!table.has(key)) table.set(key,record);
+    if (record.sources.size<2) record.sources.add(source);
+  }
+  function piecesIn(ts,constraints) {
+    return constraints.map(w=>{
+      if (w.attrs.value?.length!==1 || Object.keys(w.attrs).some(key=>!attributes.has(key))) return;
+      const literal=first(w,'words') ?? first(w,'value');
+      const locations=spans(ts,literal);
+      if (locations.length!==1) return;
+      const [[start,end]]=locations;
+      const key=first(w,'attribute'), slice=ts.slice(start,end);
+      if (!key || !slice.some(({key})=>word.test(key)) ||
+          w.attrs.key_words?.some(value=>!spans(slice,decode(value)).length)) return;
+      return {start,end,w,key};
+    });
+  }
+  function rememberPiece(table,ts,start,stop,w,key,source) {
+    const phrase=normal(ts.slice(start,stop));
+    const attrs=Object.fromEntries(Object.entries(w.attrs).filter(([k])=>!['request','words'].includes(k)));
+    const signature=JSON.stringify([phrase,attrs]);
+    remember(table,signature,{phrase,length:stop-start,key,attrs},source);
+  }
+  function observeEmbedded(text,request,target,constraints,input,start) {
+    if (first(request,'act')!=='make' || first(target,'mode')!=='new' ||
+        ![undefined,'do'].includes(first(request,'mood')) || unsafe(text)) return;
+    const noun=first(target,'sort_words') ?? first(target,'family_words') ?? first(target,'sort');
+    if (!noun) return;
+    const ts=tokens(text), positions=spans(ts,noun);
+    if (positions.length!==1) return;
+    const cut=ts.slice(0,positions[0][0]).findLastIndex(({key})=>key==='with' || key===':');
+    if (cut<1) return;
+    const source=normal(tokens(input.slice(start+ts[cut].start)));
+    for (const part of piecesIn(ts.slice(0,cut),constraints)) {
+      if (!part || !part.w.attrs.words || ![undefined,'eq'].includes(first(part.w,'operator')) ||
+          ![undefined,'result'].includes(first(part.w,'phase')) || ![undefined,'yes'].includes(first(part.w,'want'))) continue;
+      rememberPiece(embedded,ts,part.start,part.end,part.w,part.key,source);
+    }
+  }
+  function observe(text,request,wires,constraints,source) {
+    if (constraints.length>maxFragments || unsafe(text)) return;
+    const bare=wires.filter(w=>!constraints.includes(w));
+    if (bare.some(w=>Object.keys(w.attrs).some(key=>
+      !(w===request && ['words','predicate'].includes(key)) &&
+      (evidence(w.type,key) || literalFields.has(key) || ['sort','count','ordinal','quantifier','quantity'].includes(key))))) return;
+    const ts=tokens(text), predicate=first(request,'predicate');
+    const fragments=piecesIn(ts,constraints);
+    if (fragments.some(part=>!part) || new Set(fragments.map(part=>part.key)).size!==fragments.length) return;
+    fragments.sort((a,b)=>a.start-b.start);
+    if (fragments.some((part,i)=>i && fragments[i-1].end>part.start)) return;
+    const before=ts.slice(0,fragments[0].start);
+    const predicateSpan=predicate ? spans(before,predicate) : [];
+    if (predicate && predicateSpan.length!==1) return;
+    const meaning=JSON.stringify(signatures(bare,true));
+    const record=shells.get(meaning) ?? {leads:new Map(),pieces:new Map(),bare};
+    if (!shells.has(meaning)) shells.set(meaning,record);
+    const trailing=ts.slice(fragments.at(-1).end);
+    if (trailing.some(({key})=>word.test(key))) return;
+    const lead=normal(before);
+    const leadKey=JSON.stringify([lead,predicateSpan[0]]);
+    remember(record.leads,leadKey,{lead,length:before.length,predicate:predicateSpan[0]},source);
+    for (const [i,{start,end,w,key}] of fragments.entries()) {
+      const after=fragments[i+1]?.start ?? end;
+      // A short annotated linker can extend an operand's surface, but a
+      // later typed operand keeps its own evidence and position.
+      const ends=[end];
+      const gap=ts.slice(end,after);
+      if (gap.length && gap.length<=2 && gap.every(({key})=>word.test(key))) ends.push(after);
+      for (const stop of ends) rememberPiece(record.pieces,ts,start,stop,w,key,source);
+    }
+  }
+  function find(text) {
+    if (unsafe(text)) return [];
+    const ts=tokens(text);
+    if (!ts.length || ts.length>36) return [];
+    const proposals=new Map();
+    for (const {leads,pieces,bare} of shells.values()) {
+      const byFirst=new Map();
+      const contextualRoles=new Set([...pieces.values()].filter(piece=>piece.sources.size>=2).map(piece=>role(piece.attrs)));
+      for (const piece of [...pieces.values(),...[...embedded.values()].filter(piece=>contextualRoles.has(role(piece.attrs)))]) {
+        if (piece.sources.size<2) continue;
+        const first=piece.phrase.split(' ')[0];
+        if (!byFirst.has(first)) byFirst.set(first,[]);
+        byFirst.get(first).push(piece);
+      }
+      const analyses=new Map();
+      let steps=0;
+      function cover(position,parts,predicate) {
+        if (++steps>256 || analyses.size>1) return;
+        if (position===ts.length && parts.length>=2) {
+          const key=JSON.stringify([predicate,[...parts].sort((a,b)=>a.key.localeCompare(b.key)).map(part=>part.attrs)]);
+          analyses.set(key,{parts,predicate});
+          return;
+        }
+        if (parts.length>=maxFragments) return;
+        if (parts.length && ts[position]?.key===',') position++;
+        const next=ts[position];
+        if (!next) return;
+        for (const piece of byFirst.get(normal([next])) ?? []) {
+          if (parts.some(part=>part.key===piece.key) || normal(ts.slice(position,position+piece.length))!==piece.phrase) continue;
+          const words=rawSpan(text,ts,position,position+piece.length);
+          cover(position+piece.length,[...parts,{...piece,words}],predicate);
+        }
+      }
+      for (const lead of leads.values()) {
+        if (lead.sources.size<2) continue;
+        const afterOrnaments=ts.findIndex(({key})=>!ornament.has(key));
+        for (const start of new Set([0,Math.max(0,afterOrnaments)])) {
+          if (start && !lead.predicate || normal(ts.slice(start,start+lead.length))!==lead.lead) continue;
+          const predicate=lead.predicate && rawSpan(text,ts,lead.predicate[0]+start,lead.predicate[1]+start);
+          cover(start+lead.length,[],predicate);
+        }
+      }
+      if (steps>256 || analyses.size!==1) continue;
+      const [{parts,predicate}]=analyses.values();
+      const request=bare.find(w=>w.type===requestsType);
+      const ids=new Map(bare.map((w,i)=>[w.id,'setting.'+(i+1)]));
+      const revised=bare.map(w=>{
+        const attrs=Object.fromEntries(Object.entries(w.attrs).filter(([key])=>w!==request || key!=='predicate')
+          .map(([key,values])=>[key,values.map(value=>value.startsWith('$') ? '$'+ids.get(value.slice(1)) : value)]));
+        if (w===request) {
+          attrs.words=[JSON.stringify(text)];
+          if (predicate) attrs.predicate=[JSON.stringify(predicate)];
+        }
+        return {...w,id:ids.get(w.id),attrs};
+      });
+      const assembled=[...revised,...parts.map(({attrs,words},i)=>({
+        id:'setting.value.'+(i+1),type:'w.request.constraint',
+        attrs:{...attrs,request:['$'+ids.get(request.id)],words:[JSON.stringify(words)]},
+      }))];
+      const sop=serialize(assembled);
+      proposals.set(JSON.stringify(signatures(assembled,true)),{sop,source:'scene-heading',support:2,status:'matched'});
+    }
+    return [...proposals.values()];
+  }
+  return {observe,observeEmbedded,find};
+}
+
+function headingIndex(envelope, determiners, fillerPhrases) {
   const proposals=new Map();
   const bareForms=new Set();
+  const composed=composedHeadingIndex(determiners,fillerPhrases);
   const signature=text=>tokens(text).map(token=>token.key).join(' ');
   function formOf(bodyTokens,wires,constraints) {
     const slots=new Map();
@@ -446,6 +596,7 @@ function headingIndex(envelope, determiners) {
   function observe(text,request,wires,input,start) {
     const targets=wires.filter(w=>w.type==='w.request.target');
     const constraints=wires.filter(w=>w.type==='w.request.constraint');
+    if (targets.length===1) composed.observeEmbedded(text,request,targets[0],constraints,input,start);
     if (targets.length!==1 || !constraints.length || first(targets[0],'mode')!=='existing' ||
         first(targets[0],'fill')!=='context' || ['last','world'].includes(first(request,'refers')) ||
         ['ask','check','propose'].includes(first(request,'mood'))) return;
@@ -455,6 +606,7 @@ function headingIndex(envelope, determiners) {
     if (constraints.some(w=>!w.attrs.value?.length || ![undefined,'eq'].includes(first(w,'operator')) ||
         ![undefined,'result'].includes(first(w,'phase')) || ![undefined,'yes'].includes(first(w,'want')))) return;
 
+    composed.observe(text,request,wires,constraints,signature(input.slice(start+text.length).replace(/[.!?]+$/u,'')));
     const ts=tokens(text), predicate=first(request,'predicate');
     const occurrences=predicate ? spans(ts,predicate) : [];
     if (predicate && (occurrences.length!==1 || ts[occurrences[0][0]].start!==envelope(text).core[0]?.start)) return;
@@ -488,18 +640,19 @@ function headingIndex(envelope, determiners) {
     }
   }
   function find(text) {
-    return [...(proposals.get(signature(text))?.values() ?? [])].flatMap(({sources,wires,bare,form})=>{
+    const exact=[...(proposals.get(signature(text))?.values() ?? [])].flatMap(({sources,wires,bare,form})=>{
       if (sources.size<2 || !bare && !bareForms.has(form)) return [];
       const scoped=wires.map(w=>w.type===requestsType ? {...w,attrs:{...w.attrs,words:[JSON.stringify(text)]}} : w);
       return [{sop:serialize(scoped),source:'scene-heading',support:sources.size,status:'matched'}];
     });
+    return [...exact,...composed.find(text)];
   }
   return {observe,find};
 }
 
 export function createTransfer(examples, { resolveValue, fillerPhrases = [], determiners = {} } = {}) {
   const envelope = makeEnvelope(fillerPhrases);
-  const headings=headingIndex(envelope,determiners);
+  const headings=headingIndex(envelope,determiners,fillerPhrases);
   const postings = new Map();
   const indexed = [];
   function index(example) {

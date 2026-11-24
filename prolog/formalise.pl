@@ -5,6 +5,7 @@
 :- use_module(library(readutil)).
 :- use_module(library(pcre)).
 :- use_module(properties).
+:- use_module(property_commands).
 :- use_module(roles).
 :- use_module(language_frames).
 :- initialization(main, main).
@@ -30,7 +31,7 @@ answer(Q, _{candidates:Answers,proofs:Proofs}) :-
     keysort(Tagged, ByBinding), group_pairs_by_key(ByBinding, Groups),
     findall(C, member(_-[C|_],Groups), Reps),
     append(Head,Reps,Combined), maplist(clean_candidate,Combined,Clean),
-    list_to_set(Clean, Answers).
+    property_commands(Q, PropertyCommands), append(Clean,PropertyCommands,All), list_to_set(All, Answers).
 
 clean_candidate(C, Clean) :- (del_dict(binding,C,_,Clean) -> true ; Clean=C).
 

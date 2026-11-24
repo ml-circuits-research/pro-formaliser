@@ -1,3 +1,4 @@
+import { propertyCommandLearner } from './property-commands.mjs';
 import { createSceneConstructLearner } from './scene-constructs.mjs';
 import { createOpenPairLearner } from './open-pairs.mjs';
 import { predicateModeLearner } from './predicate-modes.mjs';
@@ -313,14 +314,15 @@ export function train(rows) {
   const context = contextLearner();
   const forms = slotForms();
   const modifiers=modifierLearner(loadWorlds());
-  const nominalPhrases=createNominalPhraseLearner();
+  const nominalPhrases=createNominalPhraseLearner(loadWorlds());
   const modes=predicateModeLearner();
   const openPairs=createOpenPairLearner(loadWorlds());
   const sceneConstructs=createSceneConstructLearner(loadWorlds());
-  const lexicon = learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes, openPairs, sceneConstructs);
+  const commands=propertyCommandLearner(loadWorlds());
+  const lexicon = learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes, openPairs, sceneConstructs, commands);
   for (const [phrase, records] of Object.entries(learnConstraints(rows))) {
     if (!Object.hasOwn(lexicon, phrase)) Object.defineProperty(lexicon, phrase, {value:[],enumerable:true});
     lexicon[phrase].push(...records);
   }
-  return { version: 1, examples, templates, lexicon, sceneConstructs:sceneConstructs.finish(), openPairs:openPairs.finish(), predicateModes:modes.finish(), modifiers:modifiers.finish(), nominalPhrases:nominalPhrases.finish(), forms:forms.finish(), context: context.finish() };
+  return { version: 1, examples, templates, lexicon, sceneConstructs:sceneConstructs.finish(), propertyCommands:commands.finish(), openPairs:openPairs.finish(), predicateModes:modes.finish(), modifiers:modifiers.finish(), nominalPhrases:nominalPhrases.finish(), forms:forms.finish(), context: context.finish() };
 }

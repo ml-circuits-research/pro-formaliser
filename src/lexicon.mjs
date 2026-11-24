@@ -20,7 +20,7 @@ function one(wire, key) {
 }
 
 // Only learn meanings paired with an explicit surface in the same training request.
-export function learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes, openPairs, sceneConstructs) {
+export function learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes, openPairs, sceneConstructs, commands) {
   const counts = new Map();
   function add(phrase, data) {
     if (!phrase || data.some(x => x === undefined)) return;
@@ -35,6 +35,7 @@ export function learnLexicon(rows, context, forms, modifiers, nominalPhrases, mo
     let wires;
     try { wires = parse(sop); } catch { continue; }
     sceneConstructs?.observe(text,wires);
+    commands?.observe(text,wires);
     for (const req of wires.filter(w => w.type === 'w.request.request')) {
       const act = one(req, 'act'), mood = one(req, 'mood');
       add(one(req, 'predicate'), ['act', act, mood ?? '']);
@@ -50,10 +51,11 @@ export function learnLexicon(rows, context, forms, modifiers, nominalPhrases, mo
         const scope = one(req,'words') ?? text;
         openPairs?.observe(text,req,w,wires.filter(c=>c.type==='w.request.constraint'));
         forms.observe(family,'sort',one(w,'sort_words') ?? sort,sort,scope);
-        for (const c of wires) {
-          if (c.type !== 'w.request.constraint' || one(c,'request') !== '$' + req.id || c.attrs.value?.length !== 1) continue;
+        const ownedConstraints=wires.filter(c=>c.type==='w.request.constraint' && one(c,'request')==='$'+req.id);
+        nominalPhrases?.observe(scope,w,ownedConstraints,req);
+        for (const c of ownedConstraints) {
+          if (c.attrs.value?.length !== 1) continue;
           modifiers?.observe(scope,w,c);
-          nominalPhrases?.observe(scope,w,c,req);
           const value = one(c,'value');
           forms.observe(family,one(c,'attribute'),one(c,'words') ?? value,value,scope);
         }

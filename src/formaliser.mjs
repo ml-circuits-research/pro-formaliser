@@ -1,3 +1,4 @@
+import { propertyCommandPacket } from './property-commands.mjs';
 import { createPredicateTransfer } from './predicate-transfer.mjs';
 import { fixedPropertyReadings } from './fixed-properties.mjs';
 import { nominalClassReading } from './nominal-class.mjs';
@@ -151,7 +152,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const exact = examples.get(text) ?? [];
     const transfers = exact.length ? [] : transfer(text);
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
-    const request = {text,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const propertyCommands=scope.restricted || quotes.length ? undefined : propertyCommandPacket(text,ts,model.propertyCommands);
+    const request = {text,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);

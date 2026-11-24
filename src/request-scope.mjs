@@ -13,7 +13,10 @@ function leadEnd(ts, start, forms, boundary = ()=>true) {
   return start;
 }
 
-function hasMutatingHead(ts, start, worlds) {
+function hasMutatingHead(ts, start, worlds, hits) {
+  const offset=ts[start]?.[2];
+  if (offset!==undefined && hits.some(([from,to,[role,act,mood,count]])=>
+    from===offset && to<=ts.at(-1)[3] && role==='act' && act!=='ask' && mood==='do' && count>=2)) return true;
   for (let end=start+1; end <= Math.min(start+8,ts.length); end++) {
     if (worlds.lookup(joined(ts,start,end)).some(([role,act,mood]) =>
       role==='act' && act!=='ask' && mood!=='ask' && mood!=='check')) return true;
@@ -68,7 +71,7 @@ function speech(ts, start, worlds, hits) {
     const politeEnd=leadEnd(ts,start,worlds.literalGrammar?.leads);
     if (politeEnd>start+2) return {intent:'proposal',lead:ts.slice(start,politeEnd),after:politeEnd};
     if (politeEnd===start+2 && addressees.has(second) &&
-        hasMutatingHead(ts,firstContent(ts.slice(politeEnd),worlds)+politeEnd,worlds)) return {};
+        hasMutatingHead(ts,firstContent(ts.slice(politeEnd),worlds)+politeEnd,worlds,hits)) return {};
   }
   // A bare do/have form before a named argument also introduces an imperative.
   if (plainImperatives.has(head) && ts.at(-1)?.[0]!=='?' && !subjects.has(second)) return {};

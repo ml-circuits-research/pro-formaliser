@@ -161,3 +161,15 @@ test('native wh facts and overlay condition words extensibly drive scope',async 
   assert.equal(rows(question,'request')[0].question,'where');
   assert.equal((await reader.propose('Paint the object red in case I can verify it.')).candidateCount,0);
 });
+
+test('an attested command after a modal addressee can still request an action',async t=>{
+  const text='Could you enamel the object blue?';
+  const sop=[change.replace('predicate=paint','predicate=enamel'),color('blue')].join('\n');
+  const trained={...model([{text,sop,count:1}]),lexicon:{enamel:[['act','change','do',3]]}};
+  const reader=createReader(trained);
+  t.after(()=>reader.close());
+  assert.ok((await reader.propose(text)).candidates.some(c=>rows(c,'request').some(r=>r.act==='change') &&
+    rows(c,'constraint').some(r=>r.phase==='result' && r.value==='blue')));
+  const question=await reader.propose('Could she enamel the object blue?');
+  assert.ok(question.candidates.every(c=>rows(c,'request').every(r=>r.act==='ask')));
+});

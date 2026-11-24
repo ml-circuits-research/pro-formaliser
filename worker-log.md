@@ -63,3 +63,7 @@
 ## Open and fixed grammatical constructions
 - Bound compound noun types and fixed frame values, transferred compatible predicate alternatives, and recognized corroborated list constructions.
 - Full test gate passed. 41.8% reasonable on the same 1,000 requests, previously 41.4%. See eval/THOUSAND-AUDIT.md.
+
+## Grounded descriptive and property phrases
+- Composed independently grounded setting fragments and local edits. SWI-Prolog joins learned command leads to compatible complete property phrases.
+- Full test gate passed. 42.7% reasonable on the same 1,000 requests, previously 41.8%. See eval/THOUSAND-AUDIT.md.
