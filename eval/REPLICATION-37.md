@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Participants and placement at 69b504b
+
+All-staged original coverage reaches **44.7%**, including a four-object fountain scene and a weekly chart. Default coverage reaches **44.4%**. [Row judgments](PARTICIPANT-REPLAY.tsv)
+
 ## Predicate order at f5c3c82
 
 On the same independent 1,000 original texts, the all-staged result is **44.5%**, with **44.2%** on default worlds. [Row review](PREDICATE-ORDER-REPLAY.tsv)

@@ -1,5 +1,18 @@
 # Transfer to novel operands and alternate word order
 
+## Preposed destinations and noun–verb ambiguity
+
+Reader `07c8721` completes **11/12 familiar forms** and **7/12 reordered forms** with all staged worlds. Both directed destinations anchored to the barn and window now work when written before the command. Prolog reads the anchor, direction and direct object at their original offsets. The reader also recognizes “the bridge” as a landmark in the tree exception, even though the vocabulary allows “bridge” as a verb.
+
+| Construction | Familiar, all staged | Reordered, all staged | Familiar, chart pilot only | Reordered, chart pilot only |
+| --- | ---: | ---: | ---: | ---: |
+| Chart threshold | 3/3 | 3/3 | 3/3 | 3/3 |
+| Directed proximity | 2/3 | 2/3 | 0/3 | 0/3 |
+| Set exception | 3/3 | 2/3 | 1/3 | 1/3 |
+| Explicit member list | 3/3 | 0/3 | 3/3 | 0/3 |
+
+The remaining failures include the diamond landmark, a two-command reformulation of the tree exception and all three lists with preposed members. This challenge has already informed development. Its percentages measure regression coverage on these word orders.
+
 ## Reordered predicates and typed quantified targets
 
 On reader `f5c3c82`, all staged worlds complete **10/12 familiar forms (83.3%)** and **5/12 reordered forms (41.7%)**. These are the same 12 pairs defined before the changes. They now serve as regression cases. The random 1,000-request results are reported separately in [RESULTS.md](RESULTS.md).

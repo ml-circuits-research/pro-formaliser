@@ -2,6 +2,37 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Participant and location attachment
+
+On reader `69b504b`, **54.1%** of the 1,000 primary requests have at least one reasonable reading with all staged worlds and spelling (previously 53.9%). On the independent 1,000 original requests, coverage reached **44.7%** (previously 44.5%). The frozen models, sample order and grading rules are unchanged. Comparing the complete proposal sets across all seven profiles found additions and no removals. The third sample kept every proposal set unchanged. LLM reviewers inspected the changed circuits.
+
+| Profile | Primary original | Primary including spelling | Independent original |
+| --- | ---: | ---: | ---: |
+| Default | 51.2% | 52.7% | 44.4% |
+| All staged worlds | 52.7% | **54.1%** | **44.7%** |
+
+| Grade | All staged worlds, original or corrected |
+| --- | ---: |
+| L0 – Fail | 1.3% |
+| L1 – Wrong | 9.3% |
+| L2 – Incomplete | 35.3% |
+| L3 – Identical and reasonable | 20.5% |
+| L4 – Reasonable alternative | 33.6% |
+
+Both primary gains also appear on the original text. The campfire scene now includes the two seated children and two logs with their colours, sizes and anchors. The independent gains are the weekly chart and a four-object fountain scene. In a reasonable fountain circuit the bench is near the fountain with “next to” as evidence, and “just” remains unread. On low wording overlap with training, original-text coverage reached 42.7% and 33.0% on the two samples. Identified material reference issues reached **24.4%**. **3.6%** of primary requests have both a material issue and a reasonable proposal. The newly identified issue is the value `carrying` used as the object held.
+
+An explicit participant can now stay attached to its owner as a result. Primary #602 gains the tall woman, held picnic basket, and written contextual place “there”. A separate declaration supplies period, aggregation and measure for a chart in either order. The independent request for a line chart of weekly order totals now has a complete reading. A preposed location inside an object list can belong to either neighbour when the world declares the relation and the circuit contains a lookup for its written landmark. [Changes and whole-request judgments](PARTICIPANT-REPLAY.tsv)
+
+### What the missing-field comparison measures
+
+The previous 83.2% measured exact reference result fields on a reviewed subset. A missing field is a lead for investigation. Its meaning can be present elsewhere. In the two samples 34 screened cases lacked the reference's `drawn.count` field, yet 24 included a count or quantity on a target in at least one proposal. In 18 a single proposal matched every such missing cardinal to the same target sort, family, mode and action as the reference. For example, three yellow stars and two suitcases were already counted. We kept the cardinal grammar. Inspecting the remaining cases exposed a different problem: when a location comes between two members of a list, it can describe the following member. The new reading retains the preceding-member interpretation too.
+
+### Can the reader understand the pieces when the sentence boundaries are supplied?
+
+On the current original-text primary replay, 65 failed or incomplete requests without a flagged reference issue had two or more distinct, ordered, verbatim clause spans in the annotation. The reader ran again independently on each of their 151 written clauses, using the same frozen model and worlds. For 28 clauses, reading the clause alone recovered all measured reference obligations that were absent together from every individual action reading on the whole input. In 10 requests, every clause then had a structural match available from one of the two runs. For 88 clauses, both runs still missed an obligation. The comparison allows extra facts and does not verify links between clauses. These counts prioritize tests of clause composition and do not add to the reasonable score. [Diagnostic and input contract](clause-isolation.mjs)
+
+For reproduction, stream aligned JSON Lines with `text`, `sample`, the current original-text `grade`, boolean `referenceIssue`, the `reference` SOP and the public reader's `candidates`. Run with `SOP_WORLDS=sop-worlds node eval/clause-isolation.mjs .cache/region5-bucket0.json`. The inference step receives only the source span. The diagnostic uses the annotation to find the boundary and assess the resulting circuit.
+
 ## Predicate order and quantified targets
 
 Reader `f5c3c82` ran on the same frozen models and 1,000-request samples. Each spelling profile generated proposals from the original and corrected text. Reviewers examined every changed proposal set. On the primary sample with all staged worlds and spelling, **L0 Fail 1.3%, L1 Wrong 9.4%, L2 Incomplete 35.4%, L3 Identical and reasonable 20.5%, L4 Reasonable alternative 33.4%**. Material reference issues remain at 24.3%. A reasonable proposal coexists with a flagged reference on 3.5% of all requests. [Paired verdicts](PREDICATE-ORDER-REPLAY.tsv)

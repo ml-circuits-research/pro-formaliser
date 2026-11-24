@@ -1,0 +1,11 @@
+profile	sample	source	row	previous	current	reference_note	reason
+primary	427	drawing/scenes-04.csv	1032	L1c	L4		A new circuit creates the large red campfire in the middle, two small right-facing children sitting beside it, and two medium brown logs immediately beside it.
+primary	602	drawing/placement-01.csv	3075	L2c	L4	The reference uses the verb carrying as the held object and omits the written destination there.	A new circuit creates a tall woman, assigns a picnic basket as the object she carries, and preserves there as the written contextual destination.
+primary-spell	427	drawing/scenes-04.csv	1032	L1c	L4		The complete original-input circuit retains the middle campfire, both sitting right-facing children, and both medium brown logs immediately beside the fire.
+primary-spell	602	drawing/placement-01.csv	3075	L2c	L4	The reference uses the verb carrying as the held object and omits the written destination there.	The union contains the complete original-input circuit with the tall woman, the carried picnic basket, and the contextual destination there.
+replica	508	drawing/scenes-04.csv	1227	0	1		One circuit creates the large grey fountain at the middle, the medium sitting man, four small grey pigeons, and the medium brown bench. The man, pigeons and bench each have a grounded relation to the fountain. The bench's proximity intensifier remains unread.
+replica	727	diagram/charts-05.csv	756	0	1		A new circuit creates a line chart of orders, sums the orders, and groups the totals by week.
+base-primary	427	drawing/scenes-04.csv	1032	L1c	L4		A single scene proposal binds the large red centered campfire, two small right-facing seated kids and two medium brown logs, with both groups anchored to the campfire.
+default-spell	427	drawing/scenes-04.csv	1032	0	1		The spelling union includes the full three-object scene with both counts, sizes, pose, facing, colors and anchor relations.
+base-replica	508	drawing/scenes-04.csv	1227	0	1		A single scene proposal binds the centered grey fountain, seated man, four small grey pigeons, and medium brown bench with their own placements and sizes. The bench binds near the fountain with written next to and leaves just unread.
+base-replica	727	diagram/charts-05.csv	756	0	1		A new line-chart proposal binds sum of orders by week with every written role.

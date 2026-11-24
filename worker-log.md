@@ -247,3 +247,7 @@
 ## Spatial attachment across list boundaries
 - The list reader can attach a location to the following item when that object's world supplies a result relation and a lookup for the written landmark. It retains competing preceding-item readings.
 - Two full-sentence held-out probes recover coherent centered campfire and fountain scenes. Unknown spatial roles in a custom workbench world still abstain. All 371 tests passed.
+
+## Combined participant replay and isolation diagnostic
+- Replayed the 1,000-request primary, replica and blind samples at 69b504b with frozen models. All-staged primary reached 54.1% with spelling, independent originals 44.7%. The audited proposal sets only gained alternatives.
+- Supplied clause boundaries recovered missing reference fields on 28/151 clauses in 65 incomplete or failed primary requests. The same whole-request grading and reviewed annotation issues are in eval/RESULTS.md.

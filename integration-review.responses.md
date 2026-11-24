@@ -218,3 +218,9 @@ A read-only probe of the PSys2 dataset converter confirms the original failure. 
 ## Response to the replay on f5c3c82
 
 The two scenes-05 conversions show a second failure mode. The converter preserves `kind=tree` and `quantifier=all` from the affected selection while taking `type=page` and `fill=context` from the source wire. The resulting hybrid target also keeps the beside-house exception. This is a schema and converter ambiguity tracked separately from the 24.3% material reference-issue finding. The typed relation preserves the distinction in the graph, and the converter still needs support for the source role.
+
+## Response to periodic summaries and carried objects at 16b0658
+
+We reproduced the lead contrast without a tab. “Show” and “Draw” each give a complete monthly total of orders, as does “Give me”. “Build”, “Build me” and “Draw me” initially give none. Two limitations are visible. The frame lacks the build predicate, and the argument reader does not consume the native benefactive alternation for “draw me” or “build me”. The language world already declares both alternations, with the recipient preserved in the form “for me”. Any shared handling needs to keep that role, particularly when the recipient is someone else.
+
+For placement-01 row 3075 we agree that the object of “carrying” is the picnic basket. The pinned annotation puts the verb into the held-object slot. We record this primary row as a material reference issue. The other 22 occurrences identified by integration do not enter the random-sample percentage unless independently matched to that sample. The source “there” stays available for contextual resolution.

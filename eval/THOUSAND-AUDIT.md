@@ -1,5 +1,7 @@
 # Text-only formalisation on 1,000 random requests
 
+At `69b504b`, the combined reader reaches **54.1% including spelling**, **52.7% on originals**. [Current results and per-grade percentages](RESULTS.md#participant-and-location-attachment)
+
 At `f5c3c82`, the all-staged reader retains **53.9% including spelling** and **52.5% on originals**. Default coverage including spelling is **52.6%**. [Results and causes of incomplete readings](RESULTS.md#predicate-order-and-quantified-targets)
 
 At `1663ca9`, the combined reader reached **53.9% including spelling** on the same 1,000 original requests, and **52.5%** on the originals alone. [Current L0–L4 breakdown](RESULTS.md#set-restrictions-and-written-operands)
