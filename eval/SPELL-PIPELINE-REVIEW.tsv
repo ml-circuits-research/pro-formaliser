@@ -1,0 +1,49 @@
+sample	edits	original_reasonable	corrected_reasonable	corrected_text_seen_in_training
+48	centredd → centred	0	1	1
+86	sohw → show	0	0	0
+100	parrt → part	0	0	1
+150	paargraph → paragraph	0	0	1
+154	strnig → string	0	1	1
+168	invertde → inverted	0	0	0
+174	darw → draw	0	1	1
+200	psuh → push	0	0	0
+231	givee → give, eacn → each	0	0	1
+243	penncil → pencil	1	1	1
+276	overlaping → overlapping	0	0	0
+278	hwite → white	0	1	1
+288	Gie → Give	0	0	0
+308	lfet → left	0	1	1
+341	clera → clear	1	1	1
+353	medum → medium	1	1	0
+371	bexes → boxes	0	0	1
+392	berret → beret	0	1	1
+397	rof → row	0	0	0
+418	teh → the	0	0	0
+420	bodl → bold, ink → in	1	0	0
+428	ermove → remove	0	0	0
+431	vaaates → vacates	0	0	0
+506	aree → are, uneeven → uneven, vrrtically → vertically	0	1	1
+532	coould → could	1	1	1
+533	tnet → tent	0	0	0
+543	ekep → keep	0	1	0
+546	biggger → bigger	0	0	1
+554	amke → make	1	1	1
+592	theeater → theater	0	1	1
+623	baot → boat	1	1	0
+654	fwer → fewer	0	0	1
+674	rightt → right	0	0	0
+685	haeding → heading	0	0	0
+699	littel → little	0	1	1
+709	ekep → keep	0	0	0
+728	meadwo → meadow	1	1	0
+730	widde → wide	1	1	1
+756	loiks → looks, somothly → smoothly	1	1	1
+771	pummpkin → pumpkin	0	1	1
+792	islland → island	0	1	1
+841	levles → levels	0	0	0
+852	thickess → thickness	0	0	0
+866	saften → soften	1	1	1
+911	tunr → turn	1	1	0
+945	quicko → quick, clugtered → cluttered	1	1	0
+978	Enerrgy → Energy	0	0	0
+993	coolur → colour	0	1	1

@@ -48,3 +48,11 @@ the 11 new or different replacements on the original held-out rows found
 nine plausible repairs, one ambiguous replacement (`rof` → `row` in “add a
 rof”), and one harmful replacement (`ink` → `in` in “bodl the Pack label
 and ink the words navy”).
+
+## Effect on the original 1,000 requests
+
+At reader revision `d093cf3`, adding readings of the corrected text to those of the original raised reasonable coverage from 48.8% to **50.1%**. Replacing the original outright gave 50.0%. These are judgments on the actual WebMeet utterances. The earlier spelling-only experiment injected errors.
+
+The independent word corrector edited 4.8% of requests. Review compared both complete candidate sets on every changed utterance. The other 95.2% kept the same text and inherited the frozen reader verdict. Twelve of thirteen gains reproduced a normalized training utterance after correction. Among the remaining cases, correcting “ekep” to “keep” recovered a standing instruction. Correcting “ink” to “in” lost the requested navy lettering when the original reading was discarded. [Paired decisions on edited requests](SPELL-PIPELINE-REVIEW.tsv)
+
+To repeat the comparison, use the request order and frozen model in the primary audit at the reader revision above. Build the spelling context with `tools/train-spelling.mjs` on the same WebMeet revision and bucket 0 exclusion. Run each request through the independent speller, pass each distinct surface through the same text-only reader, and score whether either returned a complete faithful circuit. Conversation history, the reference tab and injected errors were absent. [Primary sampling instructions](THOUSAND-AUDIT.md)

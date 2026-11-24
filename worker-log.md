@@ -146,3 +146,6 @@
 
 ## Paired review for d093cf3
 - Replayed both 1,000-request samples. Reasonable proposals rose to 48.8% and 41.6%, with no observed losses. See eval/THOUSAND-AUDIT.md and eval/REPLICATION-37.md for judgments.
+
+## Original wording, analytical roles and orientation landmarks
+- The spelling pipeline now retains original and corrected proposals with per-surface evidence. Public replay matched the reviewed union on all 48 edited inputs. Analytical frames and the opt-in landmark key passed separate-world controls and the integrated gate (293 tests). See eval/SPELL-AUDIT.md and integration-review.responses.md.

@@ -109,6 +109,10 @@ test('promotes the grounded pilot relation without losing preceding effects or t
     assert.equal(result.selectedIndex,0);
     assert.ok(result.ranking.every(row=>row.reasons.every(r=>r.signal!=='grounded_relation_extension')));
   }
+  const separateReadings=await estimator.estimate([partial,typed],{tab:'diagram'},
+    {utterances:[photo+' now',photo]});
+  assert.ok(separateReadings.ranking.every(row=>
+    row.reasons.every(r=>r.signal!=='grounded_relation_extension')));
   const conflictingPartial={sop:partial.sop.replace('value="6.5 inches"','value="6.5 inches" measure=6.5 unit="second"')};
   const conflicting=await estimator.estimate([conflictingPartial,typed],{tab:'diagram'},{utterance:photo});
   assert.ok(conflicting.ranking.every(row=>row.reasons.every(r=>r.signal!=='grounded_relation_extension')));

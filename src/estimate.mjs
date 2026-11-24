@@ -294,15 +294,25 @@ export function createEstimator(worlds = loadWorlds()) {
   }
   let worker;
   return {
-    async estimate(candidates, context = {}, {utterance} = {}) {
+    async estimate(candidates, context = {}, {utterance,utterances} = {}) {
       if (!Array.isArray(candidates)) throw Error('Expected an array of candidates');
       const descriptions = [], invalidIndices = [];
+      const byUtterance = new Map();
       candidates.forEach((c,i)=>{
-        const description = describe(c,i,utterance);
-        if (description) descriptions.push(description);
-        else invalidIndices.push(i);
+        const surface=utterances?.[i] ?? utterance;
+        const description = describe(c,i,surface);
+        if (!description) {
+          invalidIndices.push(i);
+          return;
+        }
+        descriptions.push(description);
+        if (surface) {
+          const group=byUtterance.get(surface) ?? [];
+          group.push(description);
+          byUtterance.set(surface,group);
+        }
       });
-      if (utterance) relationPeers(descriptions,utterance,worlds);
+      for (const [surface,group] of byUtterance) relationPeers(group,surface,worlds);
       worker ??= prologWorker(new URL('../prolog/estimate.pl',import.meta.url));
       const result = await worker.request({candidates:descriptions.map(d=>d.packet),context:discussion(context)});
       return {...result,invalidIndices};

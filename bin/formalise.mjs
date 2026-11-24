@@ -2,8 +2,6 @@
 import { parseArgs } from 'node:util';
 import { readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
-import { originalEvidence } from '../src/evidence.mjs';
-import { spellcheck } from '../src/spell.mjs';
 import { createReader } from '../src/runtime.mjs';
 
 const {values,positionals} = parseArgs({allowPositionals:true, options:{
@@ -13,19 +11,9 @@ if (!values.batch && !positionals.length) throw Error('Usage: node bin/formalise
 const reader = createReader(values['worlds-only'] ? undefined : JSON.parse(readFileSync(values.model,'utf8')),undefined,{languageFrames:!values['no-language-frames']});
 const defaultContext = values.context ? JSON.parse(readFileSync(values.context,'utf8')) : undefined;
 async function formalise(text, tab = values.tab, context = defaultContext) {
-  if (!values.pipeline && tab===undefined && context===undefined) {
-    const spelling = values.spell ? spellcheck(text) : undefined;
-    const result = await reader.propose(spelling?.text ?? text,{evidence:values.evidence});
-    if (spelling && values.evidence) {
-      for (const c of result.candidates) c.evidence=originalEvidence(c.evidence,text,spelling.corrections);
-    }
-    return spelling ? {...result,original:text,spelling} : result;
-  }
-  if (!values.spell) return reader.formalise(text,{tab,context,evidence:values.evidence});
-  const spelling = spellcheck(text);
-  const result=await reader.formalise(spelling.text,{tab,context,evidence:values.evidence});
-  if (result.evidence) result.evidence=originalEvidence(result.evidence,text,spelling.corrections);
-  return {...result,original:text,spelling};
+  const options={evidence:values.evidence,spell:values.spell};
+  if (!values.pipeline && tab===undefined && context===undefined) return reader.propose(text,options);
+  return reader.formalise(text,{...options,tab,context});
 }
 try {
   if (values.batch) {

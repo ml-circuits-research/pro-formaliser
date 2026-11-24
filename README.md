@@ -34,7 +34,7 @@ New facts using those contracts work with an existing trained model or with `--w
 
 ## Interpreting results
 
-The independent spellchecker enumerates single-edit candidates in Prolog, uses word frequencies and optionally neighbouring words, and returns original offsets, replacements and alternatives. `tools/train-spelling.mjs` builds optional word-pair and centered phrase counts and a list of domain words corroborated by training annotations. Published SOP vocabulary is available independently of that model. With `--spell --json`, the reader includes the original input, edits, and the circuit grounded in the corrected text. [Spelling resources and model](resources/spell/README.md)
+The independent spellchecker enumerates single-edit candidates in Prolog, uses word frequencies and optionally neighbouring words, and returns original offsets, replacements and alternatives. `tools/train-spelling.mjs` builds optional word-pair and centered phrase counts and a list of domain words corroborated by training annotations. Published SOP vocabulary is available independently of that model. With `--spell --json`, the reader includes the original input, edits, and proposals from both readings. The public reader supports the same opt-in with `{spell:true}` on `propose` and `formalise`. [Spelling resources and model](resources/spell/README.md)
 
 The reader considers exact examples, learned patterns, alignments to examples or self-contained clauses, and partial readings assembled from predicates, targets and constraints. Alignment can change a slot when its value is grounded in the input and compatible with the field. Explicit sequence boundaries can compose separate request graphs. A supplied `--tab` gives a preference to compatible interpretations. Alternatives are retained. Copied evidence must occur within its request, and the resulting SOP is checked against the request schema and available acts.
 
@@ -44,7 +44,7 @@ Use `--pipeline` to return a leading circuit with alternatives. With text alone 
 
 ## Check a proposed interpretation
 
-Run `node bin/formalise.mjs --evidence "delete the triangle"` to see which words support each proposed circuit. The report distinguishes grounded, unread, uncovered, grammar, filler and ambiguous occurrences. Offsets are UTF-16 indices in the formaliser input. With `--spell`, this input is the corrected text. Each token and supporting span also has offsets into the original input. The catalog section checks the supplied tab when present.
+Run `node bin/formalise.mjs --evidence "delete the triangle"` to see which words support each proposed circuit. The report distinguishes grounded, unread, uncovered, grammar, filler and ambiguous occurrences. Offsets are UTF-16 indices in the input used for each proposal. With `--spell`, `spellingReading` identifies that input and `spellingReadings` lists the readings that produced the circuit. Each token and supporting span also has offsets into the original input. The catalog section checks the supplied tab when present.
 
 To inspect a circuit supplied by another reader, pipe JSON containing `text`, `sop` and an optional `tab` to `node bin/check-reading.mjs`. Schema validity, source evidence, domain keys and linguistic conflicts are reported separately. Supported native English frames can license a verb and capture its argument spans. A compatible frame supplies a preference. A predicate found only inside a quoted argument is rejected during generation. [Language knowledge](docs/language.html) · [Diagnosing a failure](docs/diagnosis.html)
 

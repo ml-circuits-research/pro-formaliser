@@ -151,7 +151,7 @@ export function sequenceReading(text,candidate,proof) {
   return {sop:serialize([...consumeUnread(wires,text,start,end),...additions]),source:'argument-sequence',status:candidate.status};
 }
 
-export function sequenceFrameReading(text,proof) {
+export function sequenceFrameReading(text,proof,extraBindings=[]) {
   if (!proof.owned) return;
   const chars=Array.from(text), span=(start,end)=>chars.slice(start,end).join('');
   const {ownerKey,ownerValue,predicateStart,predicateEnd,utteranceEnd}=proof.owned;
@@ -167,7 +167,7 @@ export function sequenceFrameReading(text,proof) {
   if (proof.mode==='existing') lines.push('@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page');
   const bindings=proof.bindings.flatMap(binding=>binding===owner ?
     (ownerKey ? [[ownerKey,ownerValue,start,end]] : []) : binding[0]===unreadPart ? [] : [binding]);
-  for (const [i,[key,canonical,a,b]] of bindings.entries()) {
+  for (const [i,[key,canonical,a,b]] of [...bindings,...extraBindings].entries()) {
     const words=span(a,b),value=canonical || words;
     lines.push('@r1.arg'+i+' w.request.constraint request=$r1 on=attribute attribute='+encode(key)+
       ' value='+(canonical && atom.test(canonical) ? canonical : encode(value))+
