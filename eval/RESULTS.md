@@ -2,6 +2,22 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Separating a destination from an existing position
+
+Reader `773f5ec` now gives “place it just right of Fridge” a circuit that moves the referenced object to the right of the named node. The previous circuit used that position to select what to move. The new circuit leaves “just” unread, so this request moves from L1 wrong detail to L2 incomplete. Across all 1,000 primary inputs, all previously reasonable alternatives survived. With all staged worlds, the original texts yielded **52.1%** reasonable and the original or corrected texts **53.5%**. [Changed requests](DESTINATION-REPLAY.tsv)
+
+On the independent 1,000 original texts, all staged worlds reached **44.4%**, the same as the native target inventory alone. Four proposal sets changed. Each remained incomplete. On requests with low wording overlap with training, all staged worlds gave 41.9% reasonable in primary and 32.5% in replication, compared with 41.9% and 32.2% in the default reader. [Comparison method](TRAINING-OVERLAP.md)
+
+| Grade on primary with all worlds and spelling | Percentage |
+| --- | ---: |
+| L0 – Fail | 1.3% |
+| L1 – Wrong | 9.4% |
+| L2 – Incomplete | 35.8% |
+| L3 – Reasonable and identical | 20.5% |
+| L4 – Reasonable alternative | 33.0% |
+
+Inspection against the published catalog found eight primary reference circuits that store an actual spatial position in the node’s semantic relationship property. Seven were newly flagged, bringing the share of primary requests with an identified material reference issue to **24.2%**. On **3.3%** of all primary requests, a material reference issue coexisted with at least one reasonable proposal in the combined reader. The remainder includes cases where both sides missed something. These are identified issues in the pinned sample. [Affected references](NODE-POSITION-REFERENCES.tsv)
+
 ## Native vocabulary and all staged worlds
 
 At reader `22dbc70`, the same 1,000 primary requests were read without a suggested tab or conversation context. A request passes if any one proposal conveys it in full. Percentages are semantic judgments by LLM reviewers. The three profiles share the trained model.

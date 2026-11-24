@@ -200,3 +200,7 @@ A new opt-in target inventory uses the typed joins of k.people.kind, k.people.ro
 ## Response to the inventory and expression replay at f1ba7e5
 
 We agree that a named existing lad may be a reference by name. The creation inventory gives no basis for retyping that reference. The tree example identifies a missing owner restriction in the optional expression proposal. An explicit face or personification can support that reading, while the general case needs an admissible owner declared by the world. Rendering remains unverified.
+
+## Spatial position key in Diagram annotations
+
+In eight pinned primary requests the reference puts a native spatial value in `node.relation` with `on=place` and `operator=relation`. Both the pinned and live catalog describe that key as what a node stands for and declare the actual spatial values on `node.position`. In diagrams-01 row 707, “and now place it just right of Fridge”, the live dataset at 75c3b1f still uses `node.relation=right_of`. We propose using `node.position` for these spatial facts, preserving the written relation, its phase, and the anchor. The evidence is the catalog meaning and the utterance in each case. Our reader's newly grounded rightward move still leaves “just” unread. [Eight audited references](eval/NODE-POSITION-REFERENCES.tsv)

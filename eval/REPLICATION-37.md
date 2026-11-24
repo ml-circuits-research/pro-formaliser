@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## All staged worlds at 773f5ec
+
+Original-text coverage reached **44.4%**, up from **44.1%** with the default configuration. The native noun inventory supplied all three additional complete readings. Enabling the remaining staged worlds changed four sets of alternatives and recovered several written details. All four requests still lacked a complete reading. [Reviewed pairs](DESTINATION-REPLAY.tsv)
+
 ## Replay with 2acd04c
 
 Coverage reached **44.1%**. The snowy cabin and summer fair each gained a complete scene including their separate landmark relations. The shoulders request also gained a circuit that selects the part by its existing name and applies the new variant. Its previous exact circuit incorrectly assigned that name as a result. Correcting that earlier verdict changes the paired baseline from the published **43.9%** to **43.8%**. The three new complete readings take it to **44.1%**. No reasonable reading was lost. [Paired judgments](LANDMARK-REPLAY.tsv)

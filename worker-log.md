@@ -215,3 +215,6 @@
 
 ## Destination of a direct-pronoun move
 - The native spatial relation and the licensed action can now ground the destination of “place it just right of Fridge”. The original selector survives. Eight contrast inputs retained all old proposals, including removal, query and source clauses. The full gate passed all 351 tests.
+
+## Independent all-world replication
+- All staged worlds reached 44.4% on replica original text and 53.5% on primary including spelling. The destination repair improved one primary grade from wrong to incomplete. The unfamiliar-wording cohorts reached 41.9% and 32.5% on original text. Seven newly identified reference issues are documented in the integration response.

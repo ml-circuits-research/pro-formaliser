@@ -1,0 +1,6 @@
+profile	sample	source	row	previous	current	reason
+primary-all	876	diagram/diagrams-01.csv	707	L1c	L2c	The new circuit places the contextual object right of Fridge and preserves the named anchor. It leaves “just” unread, missing the requested immediate proximity.
+replica-all	174	drawing/scenes-06.csv	1163	0	0	The retained dog and shirt recoloring still leave the instruction to stay strictly inside the lines unread. The added alternatives also misread “lines” as a separate edit.
+replica-all	544	drawing/scenes-04.csv	828	0	0	The new circuit adds the girl's kneeling pose and preserves her placement by the sandcastle. It still treats yellow as the object in both the sandcastle and hat clauses.
+replica-all	827	drawing/scenes-06.csv	2067	0	0	New alternatives recognize the curious expression as a selector on an existing face. They still lack a circuit that creates the teacher, three desks, cage, and curious hamster with their requested details and placements.
+replica-all	983	drawing/placement-01.csv	3084	0	0	A new circuit creates the small left-facing bird perched on the fence. It still looks up the middle as a separate object instead of binding the canvas region.

@@ -1,0 +1,9 @@
+sample	source	row	previous_reference_issue	spatial_value	utterance
+241	diagram/diagrams-01.csv	808	0	near	drag Send not far from Inbox because that is the order the two steps happen in when the diagram is read aloud
+412	diagram/diagrams-01.csv	781	0	next_to	could you move Flask alongside Slide so the flow reads from top to bottom, and leave a small even gap between them so the labels do not touch
+472	diagram/diagrams-01.csv	736	0	next_to	would you shift Pond right next to Hill
+475	diagram/diagrams-01.csv	741	0	next_to	what if we reposition Sample right next to Slide
+563	diagram/diagrams-01.csv	1023	0	below	could you reposition Tray flush under Kettle
+615	diagram/diagrams-01.csv	754	1	next_to	this diagram works better if Scope sits alongside Slide and the label stays readable
+692	diagram/diagrams-01.csv	1331	0	above	Review above e2
+876	diagram/diagrams-01.csv	707	0	right_of	and now place it just right of Fridge
