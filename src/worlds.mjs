@@ -1,3 +1,4 @@
+import {compileDiscourseReasons} from './discourse-reason.mjs';
 import {sequenceObjectPronouns} from './sequence-reference.mjs';
 import {compileNominalNumbers} from './nominal-number.mjs';
 import {compileNativePropertyFrames} from './native-property-frames.mjs';
@@ -567,6 +568,7 @@ function compile(facts) {
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
     nominalNumbers:compileNominalNumbers(facts),
     sequenceObjectPronouns:sequenceObjectPronouns(facts),
+    discourseReasons:compileDiscourseReasons(facts),
     singularArticles:new Set(facts('w.lang.en.det').filter(w=>one(w,'kind')==='article' &&
       one(w,'number')==='sg' && one(w,'definite')==='no').flatMap(w=>values(w,'text').map(phrase))),
     stativeVerbAliases:stativeVerbAliases(facts),

@@ -95,3 +95,7 @@
 ## Local references, additive counts and property questions
 - Bound local pronouns, additive counts and native property questions. Limited whole-clause substitutions in learned title patterns.
 - Full test gate passed. 48.0% reasonable on the same 1,000 requests, previously 47.5%. See eval/THOUSAND-AUDIT.md.
+
+## Scoped commands and catalog operands
+- Grounded definite spatial anchors, typed substitutions and independent commands following negative motivations.
+- Full test gate passed. 48.2% reasonable on the same 1,000 requests, previously 48.0%. See eval/THOUSAND-AUDIT.md.

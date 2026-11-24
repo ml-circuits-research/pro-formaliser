@@ -86,6 +86,33 @@ test('asks both native property orders and numeric quantities without emitting a
   }
 });
 
+test('unifies the qualitative value with an existing owner in native imperative and modal frames',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,attribute,value,predicate] of [
+    ['Make the cat blue','drawn.colour','blue','Make'],
+    ['The link should be dashed','link.style','dashed','should'],
+    ['The cat should be tiny','drawn.size','tiny','should'],
+  ]) {
+    const {candidates}=await reader.propose(text);
+    const wires=result(candidates,attribute);
+    assert.ok(wires,text);
+    const constraint=typed(wires,'constraint');
+    assert.equal(field(constraint,'value'),value,text);
+    assert.equal(field(constraint,'key_words'),undefined,text);
+    assert.equal(field(typed(wires,'request'),'predicate'),predicate,text);
+    assert.equal(field(typed(wires,'target'),'mode'),'existing',text);
+  }
+  for (const [text,family] of [
+    ['The cat is blue','drawn'],['The cat should not be blue','drawn'],
+    ['Make the chart horizontal','chart'],['Make the node medium','node'],
+    ['Make the cat "blue"','drawn'],
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(native(candidates).every(wires=>field(typed(wires,'target'),'family')!==family),text);
+  }
+});
+
 test('reads fresh native frame and catalog roles in an overlay',async t=>{
   const dir=mkdtempSync(fileURLToPath(new URL('../.cache/native-prop-',import.meta.url)));
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
@@ -97,6 +124,9 @@ test('reads fresh native frame and catalog roles in an overlay',async t=>{
     '@w.studio.module.response core.slot of=w.studio.module key=response enum=linear enum=logarithmic',
     '@response w.request.key tab=studio family=module name=module.response head=class value=linear value=logarithmic means=w.studio.module.response',
     '@alias core.word text=log means=logarithmic of=w.studio.module.response',
+    '@w.studio.module.feed core.slot of=w.studio.module key=feed enum=logscale enum=fixed',
+    '@feed w.request.key tab=studio family=module name=module.feed head=class value=logscale value=fixed means=w.studio.module.feed',
+    '@feedAlias core.word text=log means=logscale of=w.studio.module.feed',
     '@affect k.actions.verb text=reassign act=change complement=value',
     '@frame w.lang.en.frame name=lab.assign act=change mode=set needs=attrs role=attribute role=thing role=value',
     '@v w.lang.en.part frame=lab.assign at=1 is=verb act=change',
@@ -128,4 +158,7 @@ test('reads fresh native frame and catalog roles in an overlay',async t=>{
   assert.ok(question);
   assert.equal(field(typed(question,'target'),'description'),'the goniometer');
   assert.equal(field(typed(question,'request'),'asked_words'),'response');
+  const qualitative=await reader.propose('The goniometer should be log');
+  assert.deepEqual(new Set(native(qualitative.candidates).map(wires=>field(typed(wires,'constraint'),'attribute'))),
+    new Set(['module.response','module.feed']));
 });

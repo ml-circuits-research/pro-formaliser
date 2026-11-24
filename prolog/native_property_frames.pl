@@ -12,16 +12,19 @@ property_frame(Packet,Proof) :-
     member(Frame,Packet.frames),
     length(Packet.words,End),
     walk(Frame.pattern,Packet,0,End,Frame.act,_Family,_Key,Roles),
-    memberchk("thing"-Owner,Roles), memberchk("attribute"-Attribute,Roles),
+    memberchk("thing"-Owner,Roles),
     memberchk("predicate"-Predicate,Roles),
-    Base=_{act:Frame.act,frame:Frame.name,owner:Owner,attribute:Attribute,predicate:Predicate},
+    Base=_{act:Frame.act,frame:Frame.name,owner:Owner,predicate:Predicate},
     ( get_dict(questions,Frame,Questions) ->
+      memberchk("attribute"-Attribute,Roles),
       ( Frame.numberOnly == false ; Attribute.numeric == true ),
-      put_dict(questionKinds,Base,Questions,Proof)
-    ; memberchk("value"-Value,Roles),
-      ( Frame.numberOnly == false ; Value.numeric == true ),
+      Proof=Base.put(_{attribute:Attribute,questionKinds:Questions})
+    ; ( memberchk("qualitative"-Value,Roles) -> Assign=Base
+      ; memberchk("attribute"-Attribute,Roles), memberchk("value"-Value,Roles),
+        ( Frame.numberOnly == false ; Value.numeric == true ),
+        Assign=Base.put(attribute,Attribute) ),
       ( Packet.question == false ; memberchk("lead"-_,Roles) ),
-      put_dict(value,Base,Value,Proof) ).
+      put_dict(value,Assign,Value,Proof) ).
 
 walk([],_,End,End,_,_,_,[]).
 walk([Part|Rest],Packet,At,End,Act,Family,Key,Roles) :-
@@ -38,6 +41,8 @@ event("attribute",Packet,At,_,Family,Key,Event) :-
     member(Event,Packet.attrs), Event.a=:=At, Family=Event.family, Key=Event.key.
 event("value",Packet,At,_,Family,Key,Event) :-
     member(Event,Packet.values), Event.a=:=At, Family=Event.family, Key=Event.key.
+event("qualitative",Packet,At,_,Family,Key,Event) :-
+    member(Event,Packet.qualitative), Event.a=:=At, Family=Event.family, Key=Event.key.
 
 eat([],_,At,At).
 eat([Word|Rest],Input,At,End) :-

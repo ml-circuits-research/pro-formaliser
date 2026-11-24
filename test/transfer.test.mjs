@@ -162,3 +162,22 @@ test('keeps declared filler and contextual framing in exact input spelling', () 
   assert.deepEqual(lookup("Don't, move the circle with, uh, care"), []);
   assert.deepEqual(lookup('move the circle with, uh, care; delete it'), []);
 });
+
+test('keeps a written predicate with adjacent independently typed arguments',()=>{
+  const lookup=createTransfer([{
+    text:'paint sphere red',
+    sop:request+' predicate=paint\n'+target+' sort=sphere\n'+
+      '@c w.request.constraint request=$r on=attribute attribute=shape.colour value=red',
+  }],{
+    typedSlot:field=>field.key==='sort' || field.attribute==='shape.colour',
+    resolveValue({key,surface}) {
+      if (key==='sort' && surface==='cube') return 'cube';
+      if (key==='value' && surface==='deep blue') return 'blue';
+    },
+  });
+  const [found]=lookup('paint cube deep blue');
+  assert.match(found.sop,/sort=cube/);
+  assert.match(found.sop,/value=blue words="deep blue"/);
+  assert.deepEqual(lookup('paint street deep blue'),[]);
+  assert.deepEqual(lookup('erase cube deep blue'),[]);
+});

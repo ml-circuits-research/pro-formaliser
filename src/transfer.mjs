@@ -206,10 +206,21 @@ function valueFor(field, oldSurface, surface, delimited, resolveValue) {
   if (typeof value === 'string' && value.length) return value;
 }
 
-function align(example, source, text, { core: input, extras }, resolveValue, envelope) {
+function align(example, source, text, { core: input, extras }, resolveValue, envelope, typedSlot) {
   const { wires, fields, starts, fillers } = prepare(example, source, envelope) ?? {};
   if (!wires) return [];
   const memo = new Map();
+
+  // Preserve the original search independently of the short command reading.
+  // Only a written, unchanged predicate licenses adjacent catalog arguments.
+  const requests=wires.filter(w=>w.type==='w.request.request');
+  const predicate=first(requests[0], 'predicate');
+  const predicateLength=predicate ? tokens(predicate).length : 0;
+  const typedCommand=typedSlot && requests.length===1 && predicateLength && input.length<=12 &&
+    !wires.some(w=>w.type==='w.request.unread') &&
+    spans(source,predicate).some(([start])=>start===0) && predicateLength<=input.length &&
+    source.slice(0,predicateLength).every((token,index)=>token.key===input[index].key);
+  let catalogOnly=false;
 
   function paths(i, j) {
     if (i === source.length || j === input.length) {
@@ -223,21 +234,22 @@ function align(example, source, text, { core: input, extras }, resolveValue, env
       for (const rest of paths(i + 1, j + 1)) out.push([{ from: i, to: j, after: j + 1, end: i + 1 }, ...rest]);
     }
     const slot = starts.get(i);
-    if (!slot || out.length >= 2) return out;
+    if (!slot || out.length >= 2 || catalogOnly && !slot.fields.every(field=>typedSlot(field))) return out;
     const end = slot.span[1];
     const oldSurface = rawSpan(example.text, source, i, end);
     const limit = Math.min(input.length, j + Math.max(12, end - i));
     for (let after = j + 1; after <= limit && out.length < 2; after++) {
       // A substituted span must have an unchanged right boundary.
-      if (end < source.length && source[end].key !== input[after]?.key) continue;
+      if (end < source.length && source[end].key !== input[after]?.key &&
+          !(catalogOnly && starts.get(end)?.fields.every(field=>typedSlot(field)))) continue;
       if (end === source.length && after !== input.length) continue;
       const surface = rawSpan(text, input, j, after);
       if (literal(surface.toLowerCase()) === literal(oldSurface.toLowerCase())) continue;
       const delimited = quoted(source, slot.span) && quoted(input, [j, after]);
       const values = slot.fields.map(field => valueFor(field, oldSurface, surface, delimited, resolveValue));
-      if (values.some(value => value === undefined)) continue;
+      if (values.some((value,index)=>value===undefined || catalogOnly && !typedSlot(slot.fields[index],value))) continue;
       for (const rest of paths(end, after)) {
-        if (rest[0]?.slot) continue;
+        if (rest[0]?.slot && !catalogOnly) continue;
         out.push([{ from: i, to: j, after, end, slot, values }, ...rest]);
       }
     }
@@ -245,11 +257,20 @@ function align(example, source, text, { core: input, extras }, resolveValue, env
   }
 
   const results = [];
-  for (const path of paths(0, 0)) {
+  const ordinary=paths(0,0);
+  const proposals=ordinary.map(path=>({path,typed:false}));
+  if (typedCommand) {
+    memo.clear();
+    catalogOnly=true;
+    for (const path of paths(0,0)) proposals.push({path,typed:true});
+  }
+  for (const {path,typed} of proposals) {
     const anchors = path.filter(step => !step.slot && word.test(source[step.from].key)).length;
     const changed = path.filter(step => step.slot)
       .reduce((total, step) => total + Math.max(step.end - step.from, step.after - step.to), 0);
-    if (changed && (anchors < 2 || anchors * 2 < changed)) continue;
+    if (!typed && changed && (anchors < 2 || anchors * 2 < changed)) continue;
+    if (typed && (!changed || !anchors ||
+        path.some(step=>step.slot && step.from<predicateLength))) continue;
     const startsAt = new Map(path.map(step => [step.from, step.to]));
     const endsAt = new Map(path.map(step => [step.end, step.after]));
     const rewritten = new Map();
@@ -319,7 +340,9 @@ function align(example, source, text, { core: input, extras }, resolveValue, env
       if (context) attrs.request = ['$' + root];
       copy.push({ id, type: context ? 'w.request.unread' : 'w.request.filler', attrs });
     }
-    results.push({ sop: serialize(copy), similarity: anchors / Math.max(1, anchors + changed), unread: unread.join(' ') });
+    const sop=serialize(copy);
+    if (typed && results.some(result=>result.sop===sop)) continue;
+    results.push({ sop, similarity: anchors / Math.max(1, anchors + changed), unread: unread.join(' ') });
   }
   return results;
 }
@@ -650,7 +673,7 @@ function headingIndex(envelope, determiners, fillerPhrases) {
   return {observe,find};
 }
 
-export function createTransfer(examples, { resolveValue, fillerPhrases = [], determiners = {} } = {}) {
+export function createTransfer(examples, { resolveValue, typedSlot, fillerPhrases = [], determiners = {} } = {}) {
   const envelope = makeEnvelope(fillerPhrases);
   const headings=headingIndex(envelope,determiners,fillerPhrases);
   const postings = new Map();
@@ -694,7 +717,7 @@ export function createTransfer(examples, { resolveValue, fillerPhrases = [], det
       const {example} = indexed[index];
       if (text === example.text && !example.excerpt) continue;
       try {
-        for (const { sop, similarity, unread } of align(example, envelope(example.text).core, text, input, resolveValue, envelope)) {
+        for (const { sop, similarity, unread } of align(example, envelope(example.text).core, text, input, resolveValue, envelope, typedSlot)) {
           const support = example.count ?? 1;
           const previous = candidates.get(sop);
           if (!previous || similarity > previous.similarity) {

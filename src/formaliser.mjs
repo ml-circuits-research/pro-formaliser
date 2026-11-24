@@ -1,3 +1,5 @@
+import {spatialAnchorReadings} from './spatial-anchor.mjs';
+import {discourseReason,discourseReasonReading} from './discourse-reason.mjs';
 import {sequenceReferenceReadings} from './sequence-reference.mjs';
 import {nativePropertyPacket,nativePropertyReadings} from './native-property-frames.mjs';
 import {preservationAdjunct,preservationAdjunctReading} from './preservation-adjunct.mjs';
@@ -118,8 +120,21 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   const knownModifiers=new Set(Object.keys(model.modifiers ?? {}).map(k=>JSON.parse(k)[1]));
   const predicateTransfer=createPredicateTransfer(model.examples,worlds);
   const nearExample = createNearExample(model.examples,{discourse:worlds.discourse});
+  const closedKeys=new Map();
+  for (const {family,name,values} of worlds.requestKeys) {
+    if (!values.length) continue;
+    const key=JSON.stringify([family,name]), bank=closedKeys.get(key) ?? new Set();
+    for (const value of values) bank.add(value);
+    closedKeys.set(key,bank);
+  }
   const transfer = createTransfer(model.examples, {
     resolveValue:valueResolver(worlds,model.lexicon,model.forms), fillerPhrases:worlds.discourse,
+    typedSlot(field,value) {
+      if (field.key==='sort') return true;
+      const bank=closedKeys.get(JSON.stringify([field.family,field.attribute]));
+      return field.key==='value' && !field.open && bank?.has(field.value) &&
+        (value===undefined || bank.has(value));
+    },
     determiners:worlds.determiners,
   });
   const targetRoles=[...new Set(worlds.languageFrames.bindings.filter(b=>b.type==='w.request.target').map(b=>b.role))];
@@ -578,6 +593,17 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   return {
     async formalise(text) {
       const candidates=await wrapped(text);
+      const reason=discourseReason(text,worlds);
+      if (reason) {
+        const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),false))));
+        const steps=sequenceParts(reason.body,tokens(reason.body),worlds.joiners,sequenceOptions);
+        for (const candidate of await wrapped(reason.body)) {
+          if (steps.length && parse(candidate.sop).filter(w=>w.type==='w.request.request').length<steps.length) continue;
+          const reading=discourseReasonReading(reason,candidate);
+          const key=reading && admissibleKey(text,reading.sop) && JSON.stringify(signatures(parse(reading.sop),false));
+          if (key && !seen.has(key)) {seen.add(key);candidates.push(reading);}
+        }
+      }
       const body=discourseBody(text,worlds.trailingDiscourse);
       if (body) {
         const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
@@ -621,6 +647,12 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const candidate of [...candidates,...additional.values()]) {
         if (candidate.sop.indexOf(' w.request.request')===candidate.sop.lastIndexOf(' w.request.request')) continue;
         for (const reading of sequenceReferenceReadings(text,candidate,worlds,permit)) {
+          const key=admissibleKey(text,reading.sop);
+          if (key) additional.set(key,reading);
+        }
+      }
+      for (const candidate of [...candidates,...additional.values()]) {
+        for (const reading of spatialAnchorReadings(text,candidate,worlds,permit)) {
           const key=admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
         }
