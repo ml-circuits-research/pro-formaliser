@@ -28,7 +28,7 @@ node bin/formalise.mjs --tab drawing --spell --json "make teh house blue"
 
 ## Extend the reader with SOP
 
-Set `SOP_WORLDS` to one or more SOP files or directories and start the CLI again. The same declarations feed spelling and formalisation. An action with verb aliases supplies predicates. A domain kind supplies target vocabulary. A request key and its value bindings supply typed constraints. A declarative reader binding can select facts of a new type, apply filters, and project their fields into surface words and canonical values. See the [overlay format and worked example](resources/worlds.md) and the optional [target binding schema](resources/pro.reader/schema.sop).
+Set `SOP_WORLDS` to one or more SOP files or directories and start the CLI again. The same declarations feed spelling and formalisation. An action with verb aliases supplies predicates. A domain kind supplies target vocabulary. A request key and its value bindings supply typed constraints. A declarative reader binding can select facts of a new type, apply filters, and project their fields into surface words and canonical values. See the [overlay format and worked example](resources/worlds.md) and the optional [target binding schema](sop-worlds/pro.reader/schema.sop).
 
 New facts using those contracts work with an existing trained model or with `--worlds-only`. The JavaScript reader API can also load an explicit snapshot with `loadWorlds({paths})` and pass it to `createReader(model, worlds)`. A new semantic operation outside the implemented contracts still needs an interpreter. The emitted circuit vocabulary in this release is `w.request`.
 

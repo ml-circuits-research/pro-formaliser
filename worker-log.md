@@ -103,3 +103,7 @@
 ## Optional worlds for upstream integration
 - Staged scoped vocabulary, English property frames and the additive w.relational module in sop-worlds/.
 - Verified public-reader behavior and native relational schema acceptance/rejection. Full gate passed (257 tests). The standard benchmark excludes this staging folder.
+
+## Centralized handover and integration review
+- Moved the ten bundled reader files under sop-worlds and updated their consumers. The full gate passed (257 tests).
+- Replayed all six integration observations through the public reader and recorded decisions in integration-review.responses.md.

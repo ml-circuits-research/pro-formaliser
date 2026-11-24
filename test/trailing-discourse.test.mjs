@@ -9,7 +9,7 @@ function compile(...sources) {
   return compileTrailingDiscourse(type=>wires.filter(wire=>wire.type===type));
 }
 
-const base=readFileSync(new URL('../resources/pro.reader/discourse.sop',import.meta.url),'utf8');
+const base=readFileSync(new URL('../sop-worlds/pro.reader/discourse.sop',import.meta.url),'utf8');
 
 test('a declared final sentence preserves imperative, question and sequential body evidence',()=>{
   const index=compile(base);

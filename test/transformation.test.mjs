@@ -11,7 +11,7 @@ import {loadWorlds} from '../src/worlds.mjs';
 import {compileTransformations,transformationReadings} from '../src/transformation.mjs';
 
 const worlds=loadWorlds();
-const facts=parse(readFileSync(new URL('../resources/pro.reader/transformation.sop',import.meta.url),'utf8')+
+const facts=parse(readFileSync(new URL('../sop-worlds/pro.reader/transformation.sop',import.meta.url),'utf8')+
   '\n@house k.objects.object name=house\n@boat k.objects.object name=boat\n'+
   '@brick k.styles.material name=brick\n@glass k.styles.material name=glass\n'+
   '@red_brick core.word text="red brick" means=brick of=k.styles.material.name');

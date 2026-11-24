@@ -5,7 +5,7 @@ The formaliser and spellchecker load the world snapshot installed by
 additional `.sop` files or directories, separated by the platform path
 delimiter (`:` on Linux). Directory entries are loaded in sorted order.
 Later declarations with the same wire type and ID replace earlier ones.
-The reader also discovers bundled SOP files under `resources/pro.reader/`
+The reader also discovers bundled SOP files under `sop-worlds/pro.reader/`
 before applying the optional overlays. Restart the command to load new facts.
 
 ```sh
@@ -97,7 +97,7 @@ keeps the label in `key_words` and the source quotation in `words`.
 When the same label identifies different keys for a family, it stays
 unresolved.
 
-The optional [target binding schema](pro.reader/schema.sop) declares the fields of
+The optional [target binding schema](../sop-worlds/pro.reader/schema.sop) declares the fields of
 `pro.reader.target` for SOP tooling. The reader can also run this example with
 `--worlds-only`, which skips loading a trained model.
 
@@ -120,7 +120,7 @@ declared family in the same tab.
 The relation constraint carries the canonical value and retains the words
 that express it. A separate selector constraint carries the original
 anchor phrase and is linked to a page lookup. The supported example worlds
-supply their own bindings in [linguistic-roles.sop](pro.reader/linguistic-roles.sop).
+supply their own bindings in [linguistic-roles.sop](../sop-worlds/pro.reader/linguistic-roles.sop).
 If the reader cannot ground a target family or find a unique declared pair
 for a relation, it retains the spatial phrase as unread. When a pronoun refers to an existing
 thing, additional hypotheses can each propose a family with uniquely
@@ -271,7 +271,7 @@ preservation `value`. A `remainder` names a written residual scope such as
 “the rest of the scene.” A separate existing-target lookup carries that scope
 or a written name. A compatible `pro.reader.preservation` binding and
 closed catalog value are required for the preceding target family.
-[Retention declarations](pro.reader/retention.sop) · [Preservation tests](../test/preservation-adjunct.test.mjs)
+[Retention declarations](../sop-worlds/pro.reader/retention.sop) · [Preservation tests](../test/preservation-adjunct.test.mjs)
 
 ## Transformations
 
@@ -328,7 +328,7 @@ Use `pro.reader.owner_inventory` with `tab`, `family`, `act` and `provider`
 to license owner nouns from a native fact type. A candidate key with an empty
 value bank can accept written content when its `means` resolves to a native
 slot of kind `string` with no value restrictions.
-[Owner inventory example](pro.reader/owner-inventory.sop)
+[Owner inventory example](../sop-worlds/pro.reader/owner-inventory.sop)
 
 ## Request and question alternations
 
@@ -436,7 +436,7 @@ Subsequent words remain unread. Use `part="$unread"` to preserve a bounded
 operand when the frame identifies its wording but the catalog lacks a data
 role for it. This lets another operand in the same request receive a typed
 binding, such as the field controlling the colour of scatter points.
-[Owned argument frames](pro.reader/argument-frames.sop)
+[Owned argument frames](../sop-worlds/pro.reader/argument-frames.sop)
 
 ## Anchorless directional results
 

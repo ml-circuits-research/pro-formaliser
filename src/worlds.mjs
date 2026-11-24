@@ -672,7 +672,7 @@ export function loadWorlds({ paths = (process.env.SOP_WORLDS ?? '').split(delimi
     pinnedFiles = [...worldFiles(pinned, false)];
     baseFacts = new Map();
     loadPinned(baseFacts, types);
-    const local = fileURLToPath(new URL('../resources/pro.reader/', import.meta.url));
+    const local = fileURLToPath(new URL('../sop-worlds/pro.reader/', import.meta.url));
     for (const file of worldFiles(local, true)) collect(baseFacts, file);
     pinnedProviders = providerTypes(baseFacts);
     loadPinned(baseFacts, new Set([...pinnedProviders].filter(type => !types.has(type))));
