@@ -1,6 +1,6 @@
 # Text-only formalisation on 1,000 random requests
 
-**51.0%** of the original requests had at least one reasonable proposal, up from **50.9%**. Accepting proposals from either original or spell-corrected text reaches **52.3%**. All 48 corrected-input outputs matched the previous replay. [Spelling audit](SPELL-AUDIT.md)
+**51.1%** of the original requests had at least one reasonable proposal, up from **51.0%**. Accepting proposals from either original or spell-corrected text reaches **52.6%** after replaying all 50 edited requests. [Spelling audit](SPELL-AUDIT.md)
 
 | Formaliser grade | Previous | Current |
 | --- | ---: | ---: |
@@ -9,19 +9,19 @@
 | L1b – Wrong target | 2.2% | 2.2% |
 | L1c – Wrong detail or role | 3.8% | 3.8% |
 | L1d – Invented instruction | 1.6% | 1.6% |
-| L2a – Missing action or step | 6.1% | 6.0% |
+| L2a – Missing action or step | 6.0% | 6.0% |
 | L2b – Missing target or reference | 10.0% | 10.0% |
-| L2c – Missing value, placement or condition | 22.2% | 22.2% |
+| L2c – Missing value, placement or condition | 22.2% | 22.1% |
 | L3 – Reasonable and identical | 20.9% | 20.9% |
-| L4 – Reasonable alternative | 30.0% | 30.1% |
+| L4 – Reasonable alternative | 30.1% | 30.2% |
 
-Reviewers flagged material reference issues on 23.4% of requests. On 2.9% of requests, a reasonable proposal coexisted with a material reference issue. Differences in identifiers or another defensible interpretation alone do not count as a reference issue. [One grade and rationale per request](THOUSAND-GRADES.tsv) · [Shared grading legend v1.2](https://github.com/ml-circuits-research/webmeet-dataset/blob/172299f/LEGEND.md)
+Reviewers flagged material reference issues on 23.5% of requests. On 2.9% of requests, a reasonable proposal coexisted with a material reference issue. Differences in identifiers or another defensible interpretation alone do not count as a reference issue. [One grade and rationale per request](THOUSAND-GRADES.tsv) · [Shared grading legend v1.2](https://github.com/ml-circuits-research/webmeet-dataset/blob/172299f/LEGEND.md)
 
-The evening library request gained a complete interpretation of its setting and all requested objects. Another request gained the correct title but still moves a hat in place of an axis. It remains L1b. [Review of changed sets](EFFECT-SEQUENCE-REPLAY.tsv)
+The new orchard circuit puts the press on the far left, places the apples deep in it, preserves all requested objects and keeps the foreground instruction. The aquarium now puts both the penguin and fish on the ledge. The default catalog still lacks the requested curious expression. [Paired semantic judgments](LANDMARK-REPLAY.tsv)
 
 ## Reproduction and interpretation
 
-The current reader `25579ab` used the same frozen models on three lots of 1,000. Reader revision `1a7dffa` was replayed through the public batch CLI on all 1,000 ordered inputs using the frozen model from the preceding full bucket run. Thirteen proposal sets changed. We also retrained on the 187,106 rows outside bucket 0 and ran the full 1,915-row benchmark. The serialized model matched the frozen one byte for byte. The public CLI and the full benchmark produced the same proposal set on every one of these 1,000 audited requests. Benchmark bucket 0 contains 1,915 rows held out by normalized-text group at WebMeet revision `a85de79`. It trains on the other groups and runs inference without a tab, spelling correction, or conversation history. Score one request across its original proposals. L3 requires a reasonable candidate with exact reference text after trimming and line-ending normalization. L4 includes reasonable alternatives. Requests and reference labels can be noisy. LLM reviewers saw the annotations, assessed disjoint subsets, and used compact circuit displays and original SOP for inspection. No human adjudication was performed.
+Reader `2acd04c` trained a separate model outside each of buckets 0, 37 and 73, then ran the text-only CLI on the same three lots of 1,000. Reader revision `1a7dffa` was replayed through the public batch CLI on all 1,000 ordered inputs using the frozen model from the preceding full bucket run. Thirteen proposal sets changed. We also retrained on the 187,106 rows outside bucket 0 and ran the full 1,915-row benchmark. The serialized model matched the frozen one byte for byte. The public CLI and the full benchmark produced the same proposal set on every one of these 1,000 audited requests. Benchmark bucket 0 contains 1,915 rows held out by normalized-text group at WebMeet revision `a85de79`. It trains on the other groups and runs inference without a tab, spelling correction, or conversation history. Score one request across its original proposals. L3 requires a reasonable candidate with exact reference text after trimming and line-ending normalization. L4 includes reasonable alternatives. Requests and reference labels can be noisy. LLM reviewers saw the annotations, assessed disjoint subsets, and used compact circuit displays and original SOP for inspection. No human adjudication was performed.
 
 ```sh
 node eval/benchmark.mjs --bucket 0 --context text --model .cache/bindings-model.json --report .cache/bindings.json --details .cache/bindings.jsonl
@@ -36,6 +36,6 @@ eligible = [i for i in range(1915) if i not in prior]
 indices = random.Random(20261125).sample(eligible, 1000)
 ```
 
-This paired comparison uses the same requests as the previous release. Unchanged sets retain their previous judgments. Reviewers reassessed additions and losses with the reference visible. Some earlier failures informed development, so the change measures progress on this sample. [Previous release](https://github.com/ml-circuits-research/pro-formaliser/blob/3423982/eval/THOUSAND-AUDIT.md) · [Independent replication](REPLICATION-37.md)
+This paired comparison uses the same requests as the previous release. Unchanged sets retain their previous judgments. Reviewers reassessed additions and losses with the reference visible. Some earlier failures informed development, so the change measures progress on this sample. [Previous release](https://github.com/ml-circuits-research/pro-formaliser/blob/6f596ff/eval/THOUSAND-AUDIT.md) · [Independent replication](REPLICATION-37.md)
 
 The paired comparison tool accepts the old and new benchmark details and the baseline grading table. It verifies the identity of each request and reference, then lists complete retained, removed and added proposals for changed sets. [Comparison tool](changed-proposals.py)

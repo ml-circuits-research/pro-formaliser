@@ -1,14 +1,14 @@
 # Does the reader handle unfamiliar wording?
 
-On the primary sample, 40.8% of requests with little shared wording had a reasonable proposal. On the second sample the figure was 31.4%. A request with different wording can still describe a familiar task. These figures measure similarity of the words only.
+On the primary sample, 41.9% of requests with little shared wording had a reasonable proposal. On the second sample the figure was 32.2%. A request with different wording can still describe a familiar task. These figures measure similarity of the words only.
 
 | Wording shared with the closest training request | Primary sample, reasonable | Second sample, reasonable |
 | --- | ---: | ---: |
-| Low (under 0.4) | 40.8% (149/365) | 31.4% (120/382) |
-| Moderate (0.4 to below 0.8) | 56.3% (342/607) | 48.7% (281/577) |
-| High (0.8 and above) | 46.4% (13/28) | 63.4% (26/41) |
+| Low (under 0.4) | 41.9% (153/365) | 32.2% (123/382) |
+| Moderate (0.4 to below 0.8) | 56.8% (345/607) | 50.4% (291/577) |
+| High (0.8 and above) | 46.4% (13/28) | 65.9% (27/41) |
 
-Version `1a7dffa`, original text, no discussion context or suggested tab. Each row uses the reviewed reasonable-proposal judgment for its sample. The script compares every sampled request against all distinct training utterances outside its normalized-text holdout group. It tokenizes normalized words and numbers, adds start and end boundaries, and measures the fraction of distinct consecutive three-token sequences in common (intersection divided by union). It assigns a band using the largest similarity to any one training utterance. The high-similarity groups are small. Length, subject matter and task complexity can also differ across bands. [Primary audit](THOUSAND-AUDIT.md) · [Second audit](REPLICATION-37.md)
+Version `2acd04c`, original text, no discussion context or suggested tab. Each row uses the reviewed reasonable-proposal judgment for its sample. The script compares every sampled request against all distinct training utterances outside its normalized-text holdout group. It tokenizes normalized words and numbers, adds start and end boundaries, and measures the fraction of distinct consecutive three-token sequences in common (intersection divided by union). It assigns a band using the largest similarity to any one training utterance. The high-similarity groups are small. Length, subject matter and task complexity can also differ across bands. [Primary audit](THOUSAND-AUDIT.md) · [Second audit](REPLICATION-37.md)
 
 Run `.cache/node/bin/node eval/training-overlap.mjs` after project setup. Record the reader revision together with the result because the grading tables evolve. [Implementation](training-overlap.mjs)
 
@@ -37,3 +37,6 @@ Two follow-up experiments tested ways to recover the missing facts. On 20 incomp
 We also learned local left/right token boundaries for open and numeric values using the frozen primary training model. The strict run required the same action, family, target mode, property and value type across at least six distinct training values with four left and two right context tokens. It proposed six pairs across the primary sample and no previously missing correct pair. Shortening the context to two left and one right token while requiring eight distinct training values produced one new wrong pair, reading “go” as a drawn object's action when the speaker wanted to remove a named part. This pilot was excluded from the reader. It tests a local span method with those evidence requirements; it leaves other learning approaches open.
 
 On the preceding primary replay (`42b5a0e`), 40 of 1,000 sets included an out-of-bank class value marked open, including 27 sets already judged reasonable. Removing those candidates outright would leave one request with no proposal and eliminate six reasonable exact matches. Inspection found that some contested encodings carry a real missing relationship or condition, while others combine unrelated facts into the wrong property. The new compound-effect path checks its source values before reuse. A global cleanup needs separate representations for the recoverable meanings.
+
+
+In a follow-up transfer probe, a dependency parser found a contiguous noun-headed prepositional phrase in 73 of 338 screened incomplete single-action requests. Copying an attached phrase into an existing typed target required a separately grounded result, a licensed action and family, and no remaining unread span. Only one new circuit survived these conditions. It read “into line” as placement relative to a physical object named line, although the request asks for top-edge alignment. We left this transfer out of the reader. The reviewed failures also include phrases that actually identify an owner or belong to a written chart name.

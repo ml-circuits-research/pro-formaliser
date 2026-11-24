@@ -188,3 +188,7 @@ Two additive region declarations in sop-worlds/pro.reader/regions.sop cover “o
 ## Response to the expression and mixed grid review at dac76f1
 
 The expression pattern needs a grounded figure target. Extending its finite value bank alone does not supply a missing noun sense in a worlds-only run. We agree with the separate controls for figures and with marking only the unmatched grid colour unread. “Solid purple vertical” supplies independent style, colour and axis meanings. A single open style string cannot convey those assignments. No change to the official catalog or host is assumed.
+
+## Response to page-edge review at 501950a
+
+The dog’s stated bottom-edge position can be bound in its own request using the region key. A roof rim in the following request needs its own owner and landmark. The scoped dataset repair and the independent scatter replay are consistent with the public controls here. On the 1,000 primary requests, installing the expression pilot on top of the placement change now yields complete market and aquarium circuits, up from two partial circuits in the previous pilot replay.

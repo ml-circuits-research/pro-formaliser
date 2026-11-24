@@ -161,3 +161,15 @@ test('standalone CLI accepts stdin and returns JSON with ranked alternatives', (
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout), spellcheck('Teh speling.\n'));
 });
+
+test('restores a missing space only when neighbouring words corroborate the split',()=>{
+  const context={counts:{},pairs:{},total:1,wordCounts:{},allPairs:{'damp soil':8},triples:{'the damp soil':4}};
+  const input='🪴 Touch the dampsoil here.';
+  const result=spellcheck(input,{context});
+  assert.equal(result.text,'🪴 Touch the damp soil here.');
+  const edit=result.corrections.find(c=>c.replacement==='damp soil');
+  assert.equal(input.slice(edit.start,edit.end),'dampsoil');
+  assert.equal(spellcheck('Touch the Dampsoil here.',{context}).corrections.some(c=>c.replacement.includes(' ')),false);
+  assert.equal(spellcheck('Touch the dampsoil here.',{context,knownWords:['dampsoil']}).changed,false);
+  assert.equal(spellcheck('Touch the dampsoil here.',{context:{...context,triples:{}}}).corrections.some(c=>c.replacement.includes(' ')),false);
+});

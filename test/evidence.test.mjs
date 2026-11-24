@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { literalRanges, evidenceReport } from '../src/evidence.mjs';
+import { literalRanges, evidenceReport, originalEvidence } from '../src/evidence.mjs';
 import { evidenceInText } from '../src/grounding.mjs';
 import { parse } from '../src/schema.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
@@ -47,4 +47,14 @@ test('spelling retains evidence offsets into both original and corrected text',a
   const linked=originalEvidence(report,original,[{start:3,end:7,replacement:'small'},{start:8,end:11,replacement:'blue'}]);
   assert.deepEqual(linked.tokens.map(t=>t.originalText),['smal','blu','moon']);
   assert.deepEqual(linked.spans.find(s=>s.slot==='name').originalRanges,[[8,16]]);
+});
+
+test('a recovered space maps each word to its own original letters after earlier edits',()=>{
+  const original='😺 Put teh dampsoil here';
+  const source='😺 Put the damp soil here';
+  const tokens=['damp','soil','here'].map(text=>({text,start:source.indexOf(text),end:source.indexOf(text)+text.length}));
+  const projected=originalEvidence({tokens,spans:[]},original,[
+    {start:7,end:10,replacement:'the'},{start:11,end:19,replacement:'damp soil'}
+  ]);
+  assert.deepEqual(projected.tokens.map(t=>t.originalText),['damp','soil','here']);
 });

@@ -2,6 +2,12 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Repeated landmarks, page regions and missing spaces
+
+The default reader reached **51.1%** reasonable on the original primary requests and **52.6%** with spelling. The independent replica reached **44.1%**. Across the three lots of 1,000, no previously reasonable request lost a complete reading. On the third lot, two scene requests and two identity selectors gained reasonable readings. Only changed sets have semantic judgments in that third lot, so its absolute rate is unknown. [All changed sets](LANDMARK-REPLAY.tsv)
+
+The optional expression world reached **51.3%** on the same primary original texts. Its only two changed requests both gained a complete reading. The market scene uses the new upset expression together with the far-left stall. The aquarium uses the curious expression together with the bottom region and both animals’ placements on the ledge. These judgments concern the request circuit. The current official expression inventory and host support are tracked in the integration review. [Expression pilot](../sop-worlds/expression-pilot/README.md)
+
 ## Composing typed effects across clauses
 
 Reader `25579ab` reached **51.0%** on the primary sample (**52.3%** including spelling). The replica reached **43.9%**. Four replica requests gained complete readings and one retained exact match corrected an earlier scoring error. The third sample gained two complete scenes. Across all three samples no request lost its reasonable proposal. The optional scatter pilot changed no primary outputs. The expression pilot recovered a requested emotion in two primary requests, but each still lacked a placement. Neither pilot is included in the default score. [Paired judgments](EFFECT-SEQUENCE-REPLAY.tsv)

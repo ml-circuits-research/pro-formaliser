@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { loadCorpus, splitCorpus } from '../src/corpus.mjs';
-import { SPELL_DICTIONARY, loadSpellingContext, spellcheck, spellcheckTokens } from '../src/spell.mjs';
+import { SPELL_DICTIONARY, loadSpellingContext, spellcheck, spellcheckTokens, spellingNeighbors } from '../src/spell.mjs';
 
 const allChanges = process.argv.includes('--all-changes');
 let context = process.argv.includes('--no-context') ? null : loadSpellingContext();
@@ -106,6 +106,28 @@ function evaluateBatch(rows) {
   return indexed;
 }
 
+function missingSpaceChallenge(rows) {
+  const edited=[];
+  for (const row of rows) {
+    const pairs=[...spellingNeighbors(row.text)].filter(([a,b])=>
+      row.text.slice(a.index+a[0].length,b.index)===' ' &&
+      dictionary.has(a[0].toLowerCase()) && dictionary.has(b[0].toLowerCase()));
+    if (!pairs.length) continue;
+    const hash=createHash('sha256').update('join-space\0'+row.source+':'+row.row).digest();
+    const [left,right]=pairs[hash.readUInt32BE(0)%pairs.length];
+    const at=right.index-1;
+    edited.push({...row,text:row.text.slice(0,at)+row.text.slice(at+1),
+      start:left.index,original:left[0]+' '+right[0]});
+  }
+  let restored=0,wrong=0;
+  for (const {row,corrections} of evaluateBatch(edited)) {
+    const replacement=corrections.find(edit=>edit.start===row.start)?.replacement;
+    if (replacement===row.original) restored++;
+    else if (replacement) wrong++;
+  }
+  return {injected:edited.length,restored,wrong,unchanged:edited.length-restored-wrong};
+}
+
 const clean = evaluateBatch(heldOut);
 const corrupted = evaluateBatch(heldOut.map(inject).filter(Boolean));
 const cleanTokens = heldOut.reduce((count, row) => count + spellcheckTokens(row.text).length, 0);
@@ -186,6 +208,7 @@ console.log(JSON.stringify({
   spellcheckableCleanTokens: cleanTokens,
   cleanChanges: cleanChanges.length,
   cleanTokenChangeRate: cleanChanges.length / cleanTokens,
+  missingSpaceChallenge: missingSpaceChallenge(heldOut),
   injectedTypos: corrupted.length,
   realWordTypos,
   realWordRestorations,

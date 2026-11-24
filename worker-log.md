@@ -200,3 +200,6 @@
 
 ## Placement, addressed requests and spelling
 - Trained on the pinned splits for buckets 0, 37 and 73. Both ledge placements now survive in the aquarium request. The worlds-only scatter pilot returns the three field roles in the regional-slide control with the destination explicitly unread. The spelling context preserves the verb “ink” in the Pack label request. Full semantic replay follows separately.
+
+## Missing word boundaries and three-cohort semantic review
+- The corrected/original union reached 52.6% on primary, original text reached 51.1%, and replication reached 44.1%. The optional expression world reached 51.3% on original primary texts. All 347 tests passed. A separate 1,902-request spacing challenge restored 48.4% of deleted spaces.

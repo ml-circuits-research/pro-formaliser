@@ -9,7 +9,7 @@ sample	source	row	grade	reference_issue	review_note
 8	drawing/people-05.csv	2015	L3	0	Applies mole variant and white huge cheek
 9	document/text-01.csv	2686	L4	0	Replaces Invoice notes with the exact sentence
 10	diagram/diagrams-01.csv	2685	L4	0	Moves the third figure to the front by ordinal
-11	drawing/scenes-06.csv	2684	L4	0	Sets the beach and sunset and creates the four sized objects with their placements, pose, and angry expression.
+11	drawing/scenes-06.csv	2684	L4	0	A retained circuit sets the beach and sunset and creates and places the sandbox, girl, dog, and boy with their stated attributes.
 12	drawing/objects-04.csv	560	L3	0	Adds a prison
 13	drawing/scenes-11.csv	3021	L2b	1	Does not bind old label DELI and new label FLOWERS to the sign
 14	diagram/charts-05.csv	1039	L2a	1	Creates the line chart with sales and month bound, but omits grid and zero baseline and fails to ask for above-target month count.
@@ -26,7 +26,7 @@ sample	source	row	grade	reference_issue	review_note
 25	drawing/scenes-11.csv	1454	L2b	1	Adds three blocks but leaves the green column and five-high stopping point unbound.
 26	diagram/nodes-05.csv	2694	L1d	0	Best undo reading invents undo of the journal return
 27	drawing/scenes-19.csv	509	L2b	0	Creates a group but never assigns the wheat field, barn and dog to it.
-28	drawing/scenes-04.csv	849	L2c	0	Separates medium size from blue color and binds left region for the pool, but all new candidates still omit the crab depth and boy kneeling.
+28	drawing/scenes-04.csv	849	L2c	0	The revised relation keeps “deep in” with the crab and rock pool, but all proposed scenes still omit the boy’s kneeling pose.
 29	drawing/scenes-17.csv	4110	L3	0	Asks for star color
 30	drawing/scenes-10.csv	2396	L2c	0	Identifies block 12 and places it right of block 10, but leaves the top-and-bottom leveling instruction unread.
 31	diagram/charts-01.csv	1690	L3	0	Bar chart breaks matches down by competition
@@ -48,18 +48,18 @@ sample	source	row	grade	reference_issue	review_note
 47	diagram/nodes-01.csv	702	L4	1	Creates a small olive circle in the lower-right region and binds the hold instruction to that same circle and placement.
 48	diagram/nodes-12.csv	4365	L2c	0	Binds all three named alignment targets, but leaves the requested centered alignment unread.
 49	diagram/nodes-12.csv	4380	L4	0	Carries the underspecified placement improvement request with n2 as the written target.
-50	drawing/scenes-07.csv	4026	L4	0	Sets the rainy afternoon clearing, creates and places all four sized groups, and keeps the animals in the foreground from now on.
+50	drawing/scenes-07.csv	4026	L4	0	A retained circuit sets the rainy afternoon clearing, creates and places the four object groups, and keeps the animals in the foreground.
 51	diagram/nodes-02.csv	250	L1b	1	Targets a drawn tree or node instead of the diagram whose levels should appear in sequence.
 52	drawing/scenes-11.csv	710	L2c	1	Creates the little blue bird but leaves its perch and exact top-right placement incomplete, along with the meadow glow and preservation conditions.
 53	drawing/placement-06.csv	899	L4	0	Places a big ram just left of the stated mountain.
 54	drawing/scenes-13.csv	1892	L4	0	Applies striped fill and the thin white outline to the existing shirt.
 55	diagram/nodes-06.csv	2818	L4	0	Creates the Funds hexagon and connects it to Fund A.
 56	calendar/meetings-01.csv	3183	L3	0	Reschedules Review exactly
-57	drawing/scenes-14.csv	920	L4	0	Sets the farm and early morning, retains the specified groups, sizes and counts, and binds the girl’s sitting pose, rightward facing and fence placement while preserving the foreground instruction.
+57	drawing/scenes-14.csv	920	L4	0	A retained circuit sets the early-morning farm, creates the hens, girl, cat and cows, and keeps the animals in the foreground.
 58	drawing/scenes-21.csv	860	L4	0	Creates a house
 59	drawing/scenes-11.csv	1480	L2c	1	Creates a little bird and recognizes the tower move, but misses the tower’s destination and the requirement to keep the courses intact.
 60	diagram/nodes-06.csv	1765	L3	0	Creates purple Home star
-61	drawing/scenes-04.csv	909	L4	0	One circuit sets the beach scene and creates the medium brown basket at left, four small white shells in it, a medium white seagull by it, and a small sitting girl by the right edge.
+61	drawing/scenes-04.csv	909	L4	0	A retained circuit sets the beach and places the basket, shells, seagull and seated girl in their requested positions.
 62	drawing/scenes-03.csv	1523	L4	1	Moves the cloud downward and binds a touch as the qualitative distance.
 63	drawing/scenes-10.csv	659	L4	0	Expresses livelier ambience as open styling for the entire picture
 64	drawing/objects-01.csv	799	L2b	0	Questions avatar selection without identifying the chosen avatar preference
@@ -104,7 +104,7 @@ sample	source	row	grade	reference_issue	review_note
 103	drawing/placement-06.csv	467	L4	0	Creates a large stop sign close to the mountain. The landmark lookup binds the mountain.
 104	diagram/nodes-03.csv	1162	L2c	1	Recognizes trend and axis step but omits zero minimum and binds no measure
 105	calendar/meetings-07.csv	98	L4	0	Adds a person named Leo.
-106	drawing/scenes-08.csv	20	L4	0	Sets the oasis with haze at noon, creates and places the four sized groups including the goat in the far-right region, and keeps the animals in the foreground.
+106	drawing/scenes-08.csv	20	L4	0	A retained circuit sets the oasis at noon with haze, creates and places the traveler, tent, goat and lizards, and keeps the animals in the foreground.
 107	drawing/scenes-19.csv	149	L4	0	Sets the existing house’s label to Home Sweet Home.
 108	diagram/diagrams-01.csv	1942	L4	0	Centers Review relative to Approve
 109	diagram/charts-03.csv	107	L2a	1	No proposal adds two pages and also handles backdrop and margins
@@ -300,7 +300,7 @@ sample	source	row	grade	reference_issue	review_note
 299	drawing/placement-06.csv	4184	L3	0	Places new tanker in lake
 300	diagram/nodes-07.csv	13	L2c	0	Identifies the Intro link and styles it solid yellow, but lacks the Main label and forward arrow.
 301	drawing/scenes-21.csv	919	L1a	0	Creates or arranges house rather than selecting both objects
-302	drawing/scenes-04.csv	955	L4	0	A new full circuit has three medium blue deck chairs arranged in a row beside the boat, a large red umbrella near the boat, and the medium sitting woman facing right beside the umbrella. Unread article and degree adverb are incidental.
+302	drawing/scenes-04.csv	955	L4	0	A retained circuit places the three deck chairs in a row, the red umbrella by the boat, and the seated woman by the umbrella.
 303	diagram/diagrams-01.csv	4541	L3	0	Sets March to 40
 304	diagram/nodes-01.csv	4905	L4	0	Creates a new blank page
 305	drawing/objects-04.csv	2778	L4	1	Creates boat, preserving clear intended typo correction
@@ -456,7 +456,7 @@ sample	source	row	grade	reference_issue	review_note
 455	drawing/objects-04.csv	667	L3	0	Exact boot creation.
 456	drawing/scenes-10.csv	2940	L2b	0	A new reading binds block 19 separately, while candidates that recognize movement between anchors still omit the explicitly ordered counterpart references.
 457	diagram/nodes-02.csv	867	L4	0	A teal update on branches interpreted as links is defensible; node versus link is open.
-458	drawing/scenes-06.csv	2795	L4	0	The retained alignment creates all five groups with their sizes, colors, placements, pose, facing, expression and three-star count.
+458	drawing/scenes-06.csv	2795	L4	0	A retained circuit creates and places the rocket, desk, seated girl, sleepy cat and three stars with their stated properties.
 459	diagram/nodes-12.csv	2948	L3	0	Exact edge-count proposal.
 460	document/text-01.csv	1398	L4	0	Replaces Letter with the exact quoted sentence.
 461	drawing/scenes-12.csv	360	L2c	0	Adds a green block to a row but omits that it must be below the bottommost purple block.
@@ -502,7 +502,7 @@ sample	source	row	grade	reference_issue	review_note
 501	drawing/scenes-06.csv	3536	L4	1	One proposal places the bird on the fence facing the sun and preserves the rest. The reference omits preservation.
 502	diagram/diagrams-04.csv	935	L3	0	Exact Login box recolor alongside a drawn-object hypothesis.
 503	diagram/nodes-04.csv	3879	L2c	1	Recognizes a question but does not capture which condition ends the process; reference omits that feature.
-504	drawing/scenes-08.csv	1670	L2c	0	Recovers the setting, all four object groups and the surprised expression, but treats the bottom as a landmark instead of a page region.
+504	drawing/scenes-08.csv	1670	L2c	0	The dog is now placed next to the traveler, but the suitcases still use “the bottom” as an object anchor instead of a page region.
 505	drawing/scenes-13.csv	4378	L3	0	Exact larger-text default for future tabs and diagrams.
 506	diagram/nodes-12.csv	3730	L2c	0	Recognizes arranging all elements but loses vertical direction.
 507	diagram/charts-07.csv	772	L4	0	One circuit sets the existing bar chart title to the exact authored Revenue by quarter.
@@ -638,7 +638,7 @@ sample	source	row	grade	reference_issue	review_note
 637	drawing/scenes-09.csv	1259	L3	0	Exact description question about the duck on the pond.
 638	diagram/diagrams-04.csv	3801	L4	1	The effect-free alternative preserves the full acknowledgment and positive self-report. The reference drops the final words with it.
 639	diagram/charts-06.csv	2735	L4	0	Changes the existing sales chart to show the average of order value, with the aggregate and measure bound separately.
-640	drawing/scenes-08.csv	1813	L4	0	Sets the terrace, sun and early morning and creates all four groups with their sizes, specified colors, poses, placements and the three-cup count.
+640	drawing/scenes-08.csv	1813	L4	0	A retained circuit sets the sunny early-morning rooftop terrace and creates and places the table, man, cat and cups.
 641	drawing/objects-03.csv	1285	L4	0	Provides the requested pillow.
 642	document/text-07.csv	1094	L4	0	Deleting the named chapter reasonably removes the contents with it.
 643	diagram/charts-01.csv	2458	L4	0	Creates a pie chart distributing ships by flag.
@@ -715,7 +715,7 @@ sample	source	row	grade	reference_issue	review_note
 714	diagram/charts-05.csv	4188	L4	1	Both measures represented with segment; reference drops average profit.
 715	drawing/placement-01.csv	1727	L4	0	Places two clouds at the top and adds the kite between the pair identified by the written anchor “them.”
 716	diagram/diagrams-04.csv	2088	L4	0	Creates a link from Pump to Valve and excludes the courtesy suffix.
-717	drawing/scenes-06.csv	2783	L2c	0	The objects and several sizes and poses are grounded, but the space-station setting and the rocket's middle placement are unbound.
+717	drawing/scenes-06.csv	2783	L2c	0	The new readings improve the stars’ and cat’s landmark relations but still leave the space-station setting unread and omit the rocket’s middle region.
 718	diagram/nodes-14.csv	275	L1c	0	Color clause captured inside label.
 719	drawing/scenes-16.csv	2779	L4	0	Creates a fish named Turtle and places that named fish below the complete landmark Rock 3.
 720	diagram/nodes-06.csv	2159	L3	0	Blue circle and label.
@@ -756,7 +756,7 @@ sample	source	row	grade	reference_issue	review_note
 755	diagram/diagrams-05.csv	355	L4	0	Selects every arrow and sets dotted style without an additional pattern selector.
 756	diagram/nodes-12.csv	90	L4	0	Improve diagram layout reasonably open.
 757	document/text-01.csv	3544	L4	0	Document with quoted body.
-758	drawing/scenes-08.csv	121	L2c	0	New circuits add the market street at dusk and preserve the foreground instruction, but the boy's upset face is still unread and some local details remain unresolved.
+758	drawing/scenes-08.csv	121	L2c	0	The scene now places the stall on the far left and the boy beside it, but leaves the boy’s upset expression unread.
 759	diagram/nodes-12.csv	1568	L2b	0	Missing rect and n3 endpoints.
 760	drawing/scenes-16.csv	86	L3	0	Width and owner grounded.
 761	diagram/diagrams-04.csv	2632	L3	0	Requests values of named entity.
@@ -863,7 +863,7 @@ sample	source	row	grade	reference_issue	review_note
 862	drawing/objects-04.csv	1839	L3	0	Swamp created.
 863	calendar/meetings-01.csv	10	L3	0	Full meeting details.
 864	drawing/scenes-13.csv	3074	L2b	0	Protected shoes missing.
-865	drawing/placement-02.csv	1530	L2c	0	The barn is placed along the dirt road, but the barn's small size and the requirement to keep it out of the lane remain unbound.
+865	drawing/placement-02.csv	1530	L2c	1	The replacement grounds “right along” with the dirt road, but the barn’s size and the requirement to keep it out of the lane remain unbound. The reference omits the lane requirement.
 866	drawing/scenes-10.csv	1878	L3	0	Clouds softened.
 867	drawing/placement-02.csv	1821	L2c	0	Missing old-tree attribute.
 868	drawing/placement-04.csv	842	L1d	0	Adds an unsupported edit to an acknowledgment.
@@ -956,7 +956,7 @@ sample	source	row	grade	reference_issue	review_note
 955	drawing/scenes-09.csv	1108	L1c	0	Park replaces park bench as anchor.
 956	drawing/placement-02.csv	3733	L4	0	Facing and cloud placement correct.
 957	diagram/charts-04.csv	3668	L0	1	The negated request yields no usable reading.
-958	drawing/scenes-08.csv	1617	L2c	0	Retains the aquarium at noon, the object additions and the continuing foreground placement, but omits the curious expression and both ledge placements.
+958	drawing/scenes-08.csv	1617	L2c	0	The new circuits put the bucket in the bottom region and both the penguin and fish on the ledge, but leave the boy’s curious expression unread.
 959	diagram/charts-03.csv	2499	L2c	1	Title punctuation removal absent.
 960	diagram/diagrams-01.csv	4071	L2c	1	Creates the stacked revenue-by-region bar chart and positions its legend, but omits the channel breakdown.
 961	drawing/placement-02.csv	1099	L2b	1	Intervening path missing from reference and alternatives.
@@ -964,7 +964,7 @@ sample	source	row	grade	reference_issue	review_note
 963	diagram/charts-05.csv	861	L2c	0	Creates a line chart but leaves the year-on-year average and claim-cost measure unread.
 964	drawing/objects-04.csv	2611	L4	0	Cellos created.
 965	drawing/scenes-07.csv	2824	L4	1	Broader candidate preserves full stormy night description; reference only sets storm.
-966	drawing/scenes-08.csv	698	L2c	0	The orchard, afternoon, large brown press and foreground instruction are preserved, but the press's far-left position is missing.
+966	drawing/scenes-08.csv	698	L4	0	A new circuit places the press on the far left and keeps all four object groups, including eight apples deep in the press, with their placements and the foreground instruction.
 967	diagram/nodes-06.csv	2084	L3	0	Orange rectangle and supplier label.
 968	drawing/scenes-08.csv	707	L4	0	Sets the orchard and afternoon and creates all five object groups with the requested counts.
 969	diagram/diagrams-04.csv	3189	L3	0	Asks for supplier values.
@@ -981,7 +981,7 @@ sample	source	row	grade	reference_issue	review_note
 980	drawing/objects-04.csv	2865	L3	0	Canteen creation.
 981	drawing/scenes-11.csv	1728	L2c	1	The small cat near the bench is grounded, but the man's outfit, the right end of the line and preservation of the other objects are not correctly bound together.
 982	diagram/diagrams-01.csv	4107	L2c	1	Recognizes the pie chart but omits the intended grouped medication count; another proposal requests both sum and count.
-983	drawing/scenes-08.csv	1391	L4	0	A whole proposal retains the bakery at frosty daybreak and the people, animals and props with their counts, sizes and placements.
+983	drawing/scenes-08.csv	1391	L4	0	A retained circuit places the barista, customer, cat, and four cups in a row at the bakery counter at frosty daybreak.
 984	diagram/nodes-06.csv	3342	L4	0	Creates the rectangle labeled Dev and connects Dev to Prod in the same circuit.
 985	drawing/scenes-17.csv	23	L3	0	Tree recolored.
 986	drawing/scenes-17.csv	823	L3	0	Mountain recolored.

@@ -119,13 +119,19 @@ export function originalEvidence(report,original,corrections) {
   const edits=corrections.map(c=>{
     const begin=c.start+shift,after=begin+c.replacement.length;
     shift+=c.replacement.length-(c.end-c.start);
-    return {begin,after,start:c.start,end:c.end};
+    const space=c.replacement.indexOf(' ');
+    const cut=space>0 && c.replacement.slice(0,space)+c.replacement.slice(space+1)===original.slice(c.start,c.end)
+      ? begin+space : undefined;
+    return {begin,after,start:c.start,end:c.end,cut};
   });
   function project(point,isEnd) {
     let offset=0;
     for (const e of edits) {
       if (point<=e.begin) break;
-      if (point<e.after) return isEnd ? e.end : e.start;
+      if (point<e.after) {
+        if (e.cut!==undefined) return e.start+point-e.begin-Number(point>e.cut);
+        return isEnd ? e.end : e.start;
+      }
       offset=e.end-e.after;
     }
     return point+offset;

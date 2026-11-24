@@ -19,7 +19,7 @@ sample	edits	original_reasonable	corrected_reasonable	corrected_text_seen_in_tra
 392	berret → beret	0	1	1
 397	rof → row	0	0	0
 418	teh → the	0	0	0
-420	bodl → bold, ink → in	1	0	0
+420	bodl → bold	1	1	0
 428	ermove → remove	0	0	0
 431	vaaates → vacates	0	0	0
 506	aree → are, uneeven → uneven, vrrtically → vertically	0	1	1
@@ -38,8 +38,10 @@ sample	edits	original_reasonable	corrected_reasonable	corrected_text_seen_in_tra
 728	meadwo → meadow	1	1	0
 730	widde → wide	1	1	1
 756	loiks → looks, somothly → smoothly	1	1	1
+762	solidblue → solid blue	0	1	1
 771	pummpkin → pumpkin	0	1	1
 792	islland → island	0	1	1
+817	amcolour → am colour, isshape → is shape	0	1	1
 841	levles → levels	0	0	0
 852	thickess → thickness	0	0	0
 866	saften → soften	1	1	1

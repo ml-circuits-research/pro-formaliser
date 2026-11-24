@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Replay with 2acd04c
+
+Coverage reached **44.1%**. The snowy cabin and summer fair each gained a complete scene including their separate landmark relations. The shoulders request also gained a circuit that selects the part by its existing name and applies the new variant. Its previous exact circuit incorrectly assigned that name as a result. Correcting that earlier verdict changes the paired baseline from the published **43.9%** to **43.8%**. The three new complete readings take it to **44.1%**. No reasonable reading was lost. [Paired judgments](LANDMARK-REPLAY.tsv)
+
 ## Replay with 25579ab
 
 Coverage reached **43.9%**. The previous published **43.4%** becomes **43.5%** after correcting request 294, whose exact deletion circuit was already present. Four requests newly gained reasonable circuits. Two retain palette and placement together, one narrows the bars of the referenced chart, and one creates a grouped pie chart with its title. No reasonable reading disappeared. [Paired judgments](EFFECT-SEQUENCE-REPLAY.tsv)

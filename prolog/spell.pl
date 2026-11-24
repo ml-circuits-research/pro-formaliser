@@ -54,7 +54,7 @@ suggestions(_, Word, _{known: true, count: 0, matches: []}) :-
     atom_string(Atom, Word),
     extra(Atom),
     !.
-suggestions(Contextual, Word, _{known: Known, count: Count, matches: Matches}) :-
+suggestions(Contextual, Word, _{known: Known, count: Count, matches: Matches, splits: Splits}) :-
     atom_string(Atom, Word),
     (known(Atom) -> Known = true ; Known = false),
     word_count(Atom, Count),
@@ -65,7 +65,12 @@ suggestions(Contextual, Word, _{known: Known, count: Count, matches: Matches}) :
     atom_codes(Atom, Codes),
     findall(Key-Match, one_edit_match(Codes, Key, Match), Candidates),
     sort(Candidates, Ranked),
-    maplist(scored_word, Ranked, Matches).
+    maplist(scored_word, Ranked, Matches),
+    ( Known == false, Contextual == true, Count == 0 ->
+        findall([Left,Right], (append([A,B|Ls],[C,D|Rs], Codes),
+                 atom_codes(Left,[A,B|Ls]), atom_codes(Right,[C,D|Rs]),
+                 candidate(Left), candidate(Right)), Splits)
+    ; Splits=[] ).
 suggestions(_, _, _{known: true, count: 0, matches: []}).
 
 word_count(Word, Count) :-

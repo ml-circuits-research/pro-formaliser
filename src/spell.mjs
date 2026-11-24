@@ -75,6 +75,20 @@ function realWordRank(matches, original, neighbors, context) {
   return [];
 }
 
+function supportedSplit(splits,original,neighbors,context,matches) {
+  if (!splits?.length || !neighbors || original!==original.toLowerCase() ||
+      observedCount(context.wordCounts,original)) return;
+  const [before,after]=neighbors;
+  const eligible=splits.filter(([left,right])=>{
+    const pair=left+' '+right;
+    const support=(before ? context.triples[before+' '+pair] ?? 0 : 0)+
+      (after ? context.triples[pair+' '+after] ?? 0 : 0);
+    return (context.allPairs[pair] ?? 0)>=3 && support>=2 &&
+      matches.every(({word})=>phraseEvidence(word,neighbors,context)<support);
+  });
+  if (eligible.length===1) return eligible[0].join(' ');
+}
+
 function preservesUnknown(original, observed, matches, neighbors, context) {
   const lower = original.toLowerCase();
   const evidence = neighbors ? phraseEvidence(lower, neighbors, context) : 0;
@@ -144,12 +158,14 @@ export function spellcheck(text, { knownWords = [], context = loadSpellingContex
   let cursor = 0;
   for (const { 0: original, index: start } of tokens) {
     const lower = original.toLowerCase();
-    const { known, count, matches: candidatesForWord } = suggestions.get(lower);
-    if (!candidatesForWord.length) continue;
-
+    const { known, count, matches: candidatesForWord, splits } = suggestions.get(lower);
     const adjacent = neighbors.get(start);
+    const split = contextual && supportedSplit(splits,original,adjacent,context,candidatesForWord);
+    if (!split && !candidatesForWord.length) continue;
     let matches;
-    if (known) {
+    if (split) {
+      matches = [{word:split}];
+    } else if (known) {
       // Require both sides of the phrase and protect title-case words in
       // that position, where the user may be referring to a specific name.
       if (!contextual || !adjacent?.[0] || !adjacent?.[1] || original !== lower) continue;
