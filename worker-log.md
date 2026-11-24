@@ -152,3 +152,6 @@
 
 ## Paired review for 1a427d8
 - Replayed 1,000 requests in each sample. Text-only coverage reached 48.9% and 41.9%. Spelling adds thirteen separate recoveries in the primary sample. See eval/RESULTS.md.
+
+## Evidence ownership and generalization checks
+- Added alternative scale/value attachment, scoped sign payloads and analytical boundary checks. Removed the extra coverage-only sequence choice after a controlled replay retained the only plausible sequence gain without it. Integrated gate passed (298 tests). Independent diagnostics and measured overlap are in eval/TRAINING-OVERLAP.md.

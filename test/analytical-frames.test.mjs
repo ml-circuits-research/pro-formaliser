@@ -57,6 +57,7 @@ test('loads a distinct analytical layout through a normal reader overlay', async
     '@partition w.request.key tab=audit family=screen name=screen.partition head=span',
     '@style w.request.key tab=audit family=screen name=screen.style head=class value=grid',
     '@frame pro.reader.analytical_frame tab=audit family=screen layout=trailing_owner prefix=build owner="a weekly matrix" owner_key=screen.view owner_value=weekly owner_marker=as measure=screen.subject grouping=screen.partition group_marker=across operation=screen.combine operation_marker=of',
+    '@boundary pro.reader.analytical_boundary tab=audit family=screen text="capped at" numeric_modifier=deep',
     '@matrix.style pro.reader.analytical_owner_property tab=audit family=screen owner_key=screen.view owner_value=weekly text="a weekly matrix" key=screen.style value=grid',
     '@union core.word text=unioned means=union of=screen.combine'
   ].join('\n'));
@@ -69,8 +70,31 @@ test('loads a distinct analytical layout through a normal reader overlay', async
     'Build unioned inspection results if asked across delivery teams as a weekly matrix',
     'Build unioned inspection results across delivery teams and delete the plot as a weekly matrix',
     'Build unioned inspection results across delivery teams as a quarterly matrix',
+    'Build unioned inspection results across delivery teams capped at ten as a weekly matrix',
+    'Build unioned inspection results across 10-deep team strata as a weekly matrix',
   ]) {
     const {candidates}=await reader.propose(text);
     assert.ok(candidates.every(candidate=>candidate.source!=='argument-frame'),text);
   }
+});
+
+test('keeps binning and comparison clauses out of open analytical operands', async t => {
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const text of [
+    'Can you show sales grouped by 500-wide price band as a bar chart?',
+    "I'd like sales grouped by 500-wide price band as a bar chart",
+    "I'd like sales by 500-wide price band as a bar chart",
+    "I'd like sales by year higher than the monthly average as a bar chart",
+    'Can you show just sales month by month above the monthly average as a line chart?',
+    'Show just sales month by month above the monthly average as a line chart',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='argument-frame'),text);
+    assert.ok(candidates.every(candidate=>properties(parse(candidate.sop))['chart.aggregate']!=='avg'),text);
+  }
+  await proves(reader,"I'd like grouped sales by 2025 region as a column chart",
+    {'chart.type':'bar','chart.measure':'grouped sales','chart.dimension':'2025 region'});
+  await proves(reader,"I'd like sales grouped by state as a bar chart",
+    {'chart.type':'bar','chart.measure':'sales','chart.dimension':'state'});
 });

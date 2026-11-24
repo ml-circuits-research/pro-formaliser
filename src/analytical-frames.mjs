@@ -9,6 +9,14 @@ const ownerId=(family,key,value,words)=>JSON.stringify([family,key,value,surface
 // validates the written spans and closed operator values.
 export function analyticalArgumentFacts(facts) {
   const frames=[];
+  const boundaries=new Map();
+  for (const {attrs} of facts('pro.reader.analytical_boundary')) {
+    const id=JSON.stringify(['tab','family'].map(key=>str(attrs[key]?.[0])));
+    const accumulated=boundaries.get(id) ?? {open_boundary:[],numeric_modifier:[]};
+    accumulated.open_boundary.push(...attrs.text ?? []);
+    accumulated.numeric_modifier.push(...attrs.numeric_modifier ?? []);
+    boundaries.set(id,accumulated);
+  }
   for (const wire of facts('pro.reader.analytical_frame')) {
     const {attrs}=wire;
     const take=key=>attrs[key]?.[0];
@@ -40,12 +48,13 @@ export function analyticalArgumentFacts(facts) {
       }
     }
     for (const [i,part] of parts.entries()) {
+      const key=JSON.stringify(['tab','family'].map(key=>str(take(key))));
       frames.push({
         id:wire.id+'.argument.'+(i+1),
         type:'pro.reader.argument_sequence',
         attrs:Object.fromEntries([
           ...['tab','family','prefix','owner','owner_key','owner_value'].map(key=>[key,attrs[key]]),
-          ['act',['make']],['mode',['new']],['part',part]
+          ['act',['make']],['mode',['new']],['part',part],...Object.entries(boundaries.get(key) ?? {})
         ])
       });
     }

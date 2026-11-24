@@ -195,7 +195,7 @@ function compile(facts) {
   })).filter(key => key.tab && key.family && key.name && key.head);
   const literalBindings = facts('pro.reader.literal').map(wire => ({
     family: one(wire,'family'), attribute: one(wire,'attribute'), role: one(wire,'role'),
-    surfaces: values(wire,'text').map(phrase),
+    containerKey: one(wire,'container_key'), surfaces: values(wire,'text').map(phrase),
   })).filter(binding => requestKeys.some(key => key.family === binding.family && key.name === binding.attribute &&
     key.head.split('+').includes('span') && !key.values.length));
   const tuples = new Map();

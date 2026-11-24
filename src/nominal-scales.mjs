@@ -98,7 +98,31 @@ function matchScale(ts,end,bank) {
   }
 }
 
-export function nominalScaleReading(text,ts,quotes,candidate,worlds) {
+// One lexical property can overlap two independently declared modifiers.
+// A second reading splits it only at an attested scale/value boundary.
+function splitModifier(text,ts,start,end,wire,bank,family,worlds,offset) {
+  if (end-start<2 || matchScale(ts,start,bank)) return;
+  const original=field(wire,'value'),attribute=field(wire,'attribute');
+  const raw=text.slice(offset(ts[start][2]),offset(ts[end-1][3]));
+  if (normalize(original)!==normalize(raw)) return;
+  const alternatives=[];
+  for (let i=start+1;i<end;i++) {
+    const scale=matchScale(ts,i,bank);
+    if (scale?.start!==start || !scale.attribute || scale.attribute===attribute) continue;
+    const suffix=text.slice(offset(ts[i][2]),offset(ts[end-1][3]));
+    const values=new Set();
+    for (const [role,,owner,body] of worlds.lookup(normalize(suffix))) {
+      if (role!=='constraint' || owner!==family) continue;
+      const [property]=parse('@p w.request.constraint '+body);
+      if (field(property,'attribute')===attribute && field(property,'operator')==='eq' &&
+          property.attrs.value?.length===1) values.add(field(property,'value'));
+    }
+    if (values.size===1) alternatives.push({at:i,suffix,value:[...values][0]});
+  }
+  return alternatives.length===1 ? alternatives[0] : undefined;
+}
+
+export function nominalScaleReading(text,ts,quotes,candidate,worlds,{splitCompounds=false}={}) {
   const index=worlds.nominalScales;
   if (!index?.byFamily.size || !candidate.sop) return;
   const wires=parse(candidate.sop);
@@ -155,10 +179,14 @@ export function nominalScaleReading(text,ts,quotes,candidate,worlds) {
       owned.filter(w=>field(w,'attribute')===field(wire,'attribute')).length===1);
     if (!peers.length) break;
     if (peers.length!==1) return;
-    const [{range}]=peers;
+    const [{range,wire}]=peers;
     const start=ts.findIndex(([, ,start])=>offset(start)===range[0]);
     if (start<0 || start>=at) return;
-    at=start;
+    const part=splitCompounds && !scale && splitModifier(text,ts,start,at,wire,bank,family,worlds,offset);
+    if (part && !wires.some(w=>Object.values(w.attrs).flat().includes('$'+wire.id))) {
+      wire.attrs={...wire.attrs,value:[atom(part.value)],words:[JSON.stringify(part.suffix)]};
+      at=part.at;
+    } else at=start;
   }
   if (!scale || owned.some(w=>field(w,'attribute')===scale.attribute)) return;
   const {attribute,on,value}=scale;

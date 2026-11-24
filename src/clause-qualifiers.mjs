@@ -96,7 +96,7 @@ function fixedPacket(words,request,original,worlds,permit,priorFamilies) {
 
 // A whole-sentence template can get the later action right while missing a
 // modifier on an earlier noun. Bind against the words owned by that request.
-export function clauseQualifiers(text, worlds, model, permit) {
+export function clauseQualifiers(text, worlds, model, permit, scaleOptions) {
   const cache=new Map(), fixedCache=new Map();
   const fixedAllowed=worlds.fixedProperties?.size && permit(text,quotedSpans(text));
   return candidate=>{
@@ -115,7 +115,7 @@ export function clauseQualifiers(text, worlds, model, permit) {
         let result={sop:packet};
         if (permit(words,quotes)) {
           if (model.modifiers) result=modifierReading(words,ts,quotes,result,model.modifiers) ?? result;
-          result=nominalScaleReading(words,ts,quotes,result,worlds) ?? result;
+          result=nominalScaleReading(words,ts,quotes,result,worlds,scaleOptions) ?? result;
           result=identitySelectorReadings(words,result,worlds)[0] ?? result;
           result=nominalNumberReading(words,result,worlds.nominalNumbers,quotes,model.modifiers) ?? result;
           result=nativeNominalPhraseReadings(words,ts,quotes,result,worlds.nominalPositions,worlds)[0] ?? result;

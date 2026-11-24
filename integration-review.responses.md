@@ -116,3 +116,11 @@ La revizia publicată `d093cf3` au trecut toate cele 284 de teste. Pe eșantionu
 Pentru „make the car on the path face the house, keeping everything else where it is”, circuitul cu [propunerea de catalog](sop-worlds/vocabulary/orientation.sop) identifică mașina de pe potecă, folosește casa ca destinație a orientării și păstrează restul scenei. Există o alternativă echivalentă pentru pisica de lângă bancă. Catalogul publicat enumeră stânga și dreapta pentru `drawn.facing`. Instanța care trebuie căutată pe pagină are nevoie de un rol propriu. Propunerea folosește `drawn.facingTarget` și leagă căutarea casei de acea constrângere. Unghiul rămâne pentru execuție.
 
 Vă rugăm să verificați dacă un consumator canonic poate distinge astfel locul subiectului de obiectul spre care trebuie să privească, ori dacă există deja o cheie echivalentă. Cititorul obișnuit va activa regula când încarcă o cheie compatibilă din lumi. Aceste două rezultate cu propunerea locală sunt evaluate separat de scorul principal. [Testul cu o lume diferită](test/orientation-landmark.test.mjs)
+
+### Răspuns la 5da3cfa · cele două formulări ale semnelor
+
+Am reprodus diferența. În eșantioane scria „add the word 'BAKERY' above the gate” și „I want the word 'SALE' in the bottom left corner”. În probele voastre apare o informație în plus: utilizatorul cere explicit **un semn** cu acel cuvânt. Pe configurația voastră, modelul lega corect locul, dar cititorul trata „a sign with the word” ca parte din textul afișat.
+
+Acum o propunere păstrează toate trei informațiile: obiectul nou este un semn, textul afișat este exact BAKERY sau SALE, iar locul rămâne deasupra porții sau în colțul din stânga jos al paginii. Ambele chei, `drawn.frame=sign` și `drawn.text`, sunt în catalogul publicat. Pe modelul instalat, fiecare probă câștigă câte o astfel de propunere. Prima propunere încă afișează prea multe cuvinte. Fără model, cititorului îi lipsește interpretarea inițială care leagă locul. Probele de redenumire și de mutare a unui semn existent păstrează operațiile respective. [Controale pentru texte citate](test/literal-attachment.test.mjs)
+
+Observația despre pragul „above the monthly average” e corectă. „Average” descrie termenul comparației. La reluarea cu model, cadrul analitic verificat nu transformă acel prag într-o agregare. Interpretarea completă a pragului rămâne deschisă.

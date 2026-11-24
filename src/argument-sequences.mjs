@@ -57,9 +57,11 @@ export function argumentSequences(facts,catalog) {
     if (slots.length<2 || new Set(slots).size!==slots.length ||
         owned && (!slots.includes(ownerPart) || slots.includes(ownerKey))) continue;
     const tails=owned ? many(w,'tail').map(keys).filter(words=>words.length) : [];
+    const boundaries=many(w,'open_boundary').map(keys).filter(words=>words.length);
+    const numericModifiers=many(w,'numeric_modifier').map(keys).filter(words=>words.length);
     for (const prefix of many(w,'prefix').map(keys).filter(prefix=>prefix.length)) {
       const entries=index.get(prefix[0]) ?? [];
-      entries.push({prefix,parts,family,act,mode,owned,ownerKey,ownerValue,tails});index.set(prefix[0],entries);
+      entries.push({prefix,parts,family,act,mode,owned,ownerKey,ownerValue,tails,boundaries,numericModifiers});index.set(prefix[0],entries);
     }
   }
   for (const frames of index.values()) {
@@ -89,10 +91,18 @@ export function sequencePacket(ts,worlds) {
         role==='target' && act===f.act && family===f.family && mode===f.mode)))) continue;
     const literals=new Set(f.parts.flatMap(p=>p.literal ?? []));
     const protectedPositions=new Set();
-    for (const words of f.boundPhrases ?? []) {
+    for (const words of [...f.boundPhrases ?? [],...f.boundaries]) {
       for (let from=start;from+words.length<=stop;from++) {
         if (!matchesAt(ts,from,words)) continue;
         for (let at=from;at<from+words.length;at++) protectedPositions.add(at);
+      }
+    }
+    // A declared measurement modifier is not a data field name. Leave
+    // the tokens available to typed/literal parts, but bar open spans.
+    for (const words of f.numericModifiers) {
+      for (let from=start;from+2+words.length<=stop;from++) {
+        if (!/^\d+$/u.test(ts[from][0]) || ts[from+1][0]!=='-' || !matchesAt(ts,from+2,words)) continue;
+        for (let at=from;at<from+2+words.length;at++) protectedPositions.add(at);
       }
     }
     const input=ts.slice(start,stop).map(([word,,a,b],j)=>{

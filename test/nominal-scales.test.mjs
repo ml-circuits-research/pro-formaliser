@@ -103,3 +103,16 @@ test('a count traverses the two grounded modifiers without swallowing their evid
   const contested={sop:scaled.sop+'\n'+constraint('other','drawn.size','small','result','large')};
   assert.equal(nominalNumberReading(text,contested,worlds.nominalNumbers),undefined);
 });
+
+test('a compound property also licenses separate scale and value when both have their own senses',()=>{
+  const sop=[request('make'),target('drawn','kite','new'),
+    constraint('c','drawn.colour','medium blue','result')].join('\n');
+  const text='draw a medium blue kite';
+  const split=nominalScaleReading(text,tokens(text),[],{sop},worlds,{splitCompounds:true});
+  assert.match(split.sop,/attribute=drawn.colour value=blue.*words="blue"/u);
+  assert.match(split.sop,/attribute=drawn.size value=medium words="medium"/u);
+  assert.equal(read('draw a medium unfamiliar kite',sop.replace('medium blue','medium unfamiliar')),undefined);
+  const otherSize=read('draw a large medium blue kite',sop);
+  assert.match(otherSize.sop,/attribute=drawn.colour value="medium blue"/u);
+  assert.match(otherSize.sop,/attribute=drawn.size value=large/u);
+});

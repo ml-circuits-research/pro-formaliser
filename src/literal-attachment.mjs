@@ -10,6 +10,8 @@ const get = (wire, name) => decode(raw(wire,name));
 const word = /^[\p{L}\p{M}\p{N}_]+$/u;
 const punctuation = new Set(['.', '!', '?']);
 const nominalDeterminers = new Set(['definite','indefinite','demonstrative','possessive']);
+const creationDeterminers = new Set(['indefinite','quantified']);
+const normalized = text => tokens(text).map(([key]) => key).join(' ');
 
 function locations(ts, surface, start = 0) {
   const forms = tokens(surface).map(token => token[0]);
@@ -21,7 +23,7 @@ function locations(ts, surface, start = 0) {
 function roleCues(grammar, family) {
   const cues = new Map();
   for (const {family:owner, attribute, role, surfaces} of grammar.bindings) {
-    if (owner !== family) continue;
+    if (owner !== family || role === 'quoted') continue;
     const forms = role === 'name' ? [...surfaces,...grammar.namingLeads] : surfaces;
     for (const surface of forms) {
       const keys = cues.get(surface) ?? new Set();
@@ -116,6 +118,46 @@ export function literalAttachments(text, candidate, worlds) {
   return readings;
 }
 
+function displayedContainer({intro, start, from, to, text, target, request, bindings, local, worlds}) {
+  if (get(request,'act') !== 'make' || get(target,'mode') !== 'new') return;
+  const predicate=get(request,'predicate');
+  const predicates=literalRanges(text,predicate,from,to);
+  if (predicates.length!==1 || !/^\s+$/u.test(text.slice(predicates[0][1],start)) || predicates[0][1]>=start ||
+      !worlds.lookup(normalized(predicate)).some(([role,act,mood])=>role==='act' &&
+        ['make','place'].includes(act) && (!mood || mood==='do'))) return;
+  const lead=normalized(text.slice(from,predicates[0][0])).replace(/ ,$/u,'');
+  if (lead && !worlds.literalGrammar.leads.has(lead) && !worlds.fillerPhrases.has(lead)) return;
+  const ts=tokens(intro), chars=Array.from(intro), family=get(target,'family'), possibilities=new Map();
+  for (let head=1; head<ts.length-1; head++) {
+    const det=ts.slice(0,head).map(([key])=>key).join(' ');
+    if (!creationDeterminers.has(worlds.determiners[det])) continue;
+    for (let cueAt=head+1; cueAt<ts.length; cueAt++) {
+      const nominal=chars.slice(ts[head][2],ts[cueAt-1][3]).join('');
+      const cue=chars.slice(ts[cueAt][2],ts.at(-1)[3]).join('');
+      const supplied=get(target,'sort_words') ?? get(target,'sort') ?? get(target,'family_words');
+      for (const binding of bindings) {
+        if (binding.role!=='quoted' || !binding.containerKey || !binding.surfaces.includes(normalized(cue))) continue;
+        const declared=worlds.requestKeys.find(key=>key.family===family && key.name===binding.containerKey && key.values.length);
+        if (!declared) continue;
+        const existing=local.filter(wire=>wire.type===type('constraint') && get(wire,'attribute')===binding.containerKey);
+        for (const [body,evidence] of worlds.ownerPropertyValues.get(JSON.stringify([family,normalized(nominal)])) ?? []) {
+          if (evidence.includes('key_words=')) continue;
+          const [wire]=parse('@container '+type('constraint')+' '+body);
+          const value=get(wire,'value');
+          if (get(wire,'attribute')!==binding.containerKey || get(wire,'operator')!=='eq' ||
+              get(wire,'phase')!=='result' || !declared.values.includes(value) || wire.attrs.open_value ||
+              supplied && ![normalized(value),normalized(nominal)].includes(normalized(supplied)) ||
+              existing.some(item=>get(item,'value')!==value || get(item,'phase')!=='result' ||
+                get(item,'operator')!=='eq' || ![undefined,'yes'].includes(get(item,'want')))) continue;
+          const result={attribute:binding.attribute,key:binding.containerKey,value,nominal,cue,existing:existing.length>0};
+          possibilities.set(JSON.stringify([result.attribute,result.key,value,nominal,cue]),result);
+        }
+      }
+    }
+  }
+  return possibilities.size===1 ? possibilities.values().next().value : undefined;
+}
+
 // A value inherited from another reading can contain a written introducer
 // and its quotation marks. Strip those only when the existing typed slot has
 // an independent native cue for that exact written construction.
@@ -128,6 +170,8 @@ export function quotedLiteralCleanup(text, candidate, worlds) {
   if (!authored.length) return;
   const wires = parse(candidate.sop);
   const requests = wires.filter(wire => wire.type === type('request'));
+  const additions=[];
+  const reserved=new Set(wires.map(wire=>wire.id));
   let changed = false;
   for (const request of requests) {
     const ref = '$' + request.id;
@@ -142,12 +186,15 @@ export function quotedLiteralCleanup(text, candidate, worlds) {
     const ranges = scoped ? literalRanges(text,scoped) : requests.length === 1 ? [[0,text.length]] : [];
     if (ranges.length !== 1) continue;
     const [[from,to]] = ranges;
+    const local=wires.filter(wire=>raw(wire,'request')===ref);
     for (const wire of wires) {
       if (wire.type !== type('constraint') || raw(wire,'request') !== ref || get(wire,'on') !== 'attribute' ||
           get(wire,'operator') !== 'eq' || ![undefined,'result'].includes(get(wire,'phase')) ||
           ![undefined,'yes'].includes(get(wire,'want')) || wire.attrs.value?.length !== 1) continue;
       const value = get(wire,'value'), attribute = get(wire,'attribute');
-      if (!bindings.some(binding => binding.attribute === attribute && binding.surfaces.length)) continue;
+      if (!bindings.some(binding => binding.attribute === attribute && binding.surfaces.length) ||
+          local.some(other=>other!==wire && other.type===type('constraint') && get(other,'attribute')===attribute &&
+            [undefined,'result'].includes(get(other,'phase')))) continue;
       const occurrences = literalRanges(text,value,from,to);
       if (occurrences.length !== 1) continue;
       const [[start,end]] = occurrences;
@@ -162,16 +209,29 @@ export function quotedLiteralCleanup(text, candidate, worlds) {
       for (let i = 0; i < terms.length; i++) {
         if (i && !nominalDeterminers.has(worlds.determiners[terms.slice(0,i).join(' ')])) continue;
         const cue = terms.slice(i).join(' ');
-        for (const binding of bindings) if (binding.surfaces.includes(cue)) cues.add(binding.attribute);
+        for (const binding of bindings) if (!binding.containerKey && binding.surfaces.includes(cue)) cues.add(binding.attribute);
       }
-      if (cues.size !== 1 || !cues.has(attribute)) continue;
+      const container=cues.size===0 ? displayedContainer({intro,start,from,to,text,target:targets[0],request,bindings,local,worlds}) : undefined;
+      if (!(cues.size === 1 && cues.has(attribute)) && container?.attribute!==attribute) continue;
       const words = get(wire,'words'), quoted = text.slice(literal.start,literal.end);
       if (words !== undefined && ![value,quoted,literal.value].includes(words)) continue;
+      if (container && wire.attrs.key_words?.some(item=>![intro.trimEnd(),container.cue].includes(decode(item)))) continue;
       wire.attrs.value = [JSON.stringify(literal.value)];
       wire.attrs.words = [JSON.stringify(literal.value)];
-      wire.attrs.key_words ??= [JSON.stringify(intro.trimEnd())];
+      if (container) {
+        wire.attrs.key_words=[JSON.stringify(container.cue)];
+        if (!container.existing) {
+          let id=request.id+'.displayContainer';
+          for (let i=2;reserved.has(id);i++) id=request.id+'.displayContainer'+i;
+          reserved.add(id);
+          additions.push({id,type:type('constraint'),attrs:{request:[ref],on:['attribute'],attribute:[container.key],
+            value:[JSON.stringify(container.value)],
+            ...(container.nominal!==container.value ? {words:[JSON.stringify(container.nominal)]} : {}),
+            operator:['eq'],phase:['result']}});
+        }
+      } else wire.attrs.key_words ??= [JSON.stringify(intro.trimEnd())];
       changed = true;
     }
   }
-  if (changed) return {...candidate,sop:serialize(wires).trimEnd(),source:'quoted-literal-cleanup'};
+  if (changed) return {...candidate,sop:serialize([...wires,...additions]).trimEnd(),source:'quoted-literal-cleanup'};
 }

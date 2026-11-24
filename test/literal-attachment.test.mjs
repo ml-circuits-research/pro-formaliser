@@ -127,3 +127,85 @@ test('requires a uniquely located authored quote, licensed introducer and bound 
     ['add “the headline ‘Saved’”','poster.heading','the headline ‘Saved’'],
   ]) assert.equal(quotedLiteralCleanup(text,copiedLiteral('poster',key,value),worlds),undefined,text);
 });
+
+test('recovers independently typed quoted sign text while retaining the exact location', async t=>{
+  const worlds=loadWorlds();
+  const examples=[
+    {
+      text:"put a sign with the word 'BAKERY' up above the gate",
+      predicate:'put', literal:'BAKERY',
+      placement:[
+        '@p w.request.constraint request=$r on=place attribute=drawn.relation value=above words="up above" operator=relation phase=result',
+        '@a w.request.constraint request=$r on=place attribute=drawn.anchor value="the gate" operator=relation phase=selector'
+      ].join('\n')
+    },
+    {
+      text:"paint a sign with the word 'SALE' at the bottom left of the page",
+      predicate:'paint', literal:'SALE',
+      placement:'@p w.request.constraint request=$r on=attribute attribute=drawn.at value="bottom left" words="at the bottom left of the page" operator=region phase=result open_value=true'
+    },
+  ].map(item=>{
+    const descriptor="a sign with the word '"+item.literal+"'";
+    const {sop}=copiedLiteral('drawn','drawn.text',descriptor,item.placement);
+    return {...item,sop:sop.replace('predicate=add','predicate='+item.predicate),count:1};
+  });
+  const reader=createFormaliser({version:1,examples,templates:[]},worlds);
+  t.after(()=>reader.close());
+  for (const example of examples) {
+    const {candidates}=await reader.formalise(example.text);
+    const reading=candidates.find(candidate=>candidate.source==='quoted-literal-cleanup');
+    assert.ok(reading,example.text);
+    assert.ok(hasField(reading,'drawn.text',example.literal));
+    assert.ok(hasField(reading,'drawn.frame','sign'));
+    assert.ok(!parse(reading.sop).some(wire=>wire.attrs.name));
+    assert.ok(evidenceInText(example.text,reading.sop,worlds));
+    assert.ok(validate(reading.sop,worlds));
+    for (const expected of parse(example.placement)) {
+      assert.deepEqual(parse(reading.sop).find(wire=>wire.id===expected.id),expected);
+    }
+  }
+});
+
+test('keeps quoted negation as displayed content while rejecting selector and rename lookalikes',()=>{
+  const worlds=loadWorlds();
+  const candidate=(predicate,descriptor,mode='new',act='make')=>{
+    const {sop}=copiedLiteral('drawn','drawn.text',descriptor);
+    return {sop:sop.replace('mode=new','mode='+mode).replace('act=make','act='+act)
+      .replace('predicate=add','predicate='+predicate)};
+  };
+  const displayed="a sign with the word 'no'";
+  const reading=quotedLiteralCleanup('add '+displayed,candidate('add',displayed),worlds);
+  assert.ok(hasField(reading,'drawn.text','no'));
+  assert.ok(hasField(reading,'drawn.frame','sign'));
+  for (const [text,predicate,descriptor,mode,act] of [
+    ['move the sign saying no','move','the sign saying no','existing','place'],
+    ["move the sign with the word 'no'","move","the sign with the word 'no'","existing","place"],
+    ["rename the sign to 'no'","rename","the sign to 'no'","existing","change"],
+    ["add a lantern with the word 'no'","add","a lantern with the word 'no'"],
+    ["add a blue with the word 'no'","add","a blue with the word 'no'"],
+    ['add a sign with the word no','add','a sign with the word no'],
+    ["add a sign saying 'no'","add","a sign saying 'no'"],
+    ["do not add a sign with the word 'no'","add",displayed],
+    ["add a sign with the word 'no' then add a sign with the word 'no'","add",displayed],
+  ]) assert.equal(quotedLiteralCleanup(text,candidate(predicate,descriptor,mode,act),worlds),undefined,text);
+});
+
+test('uses a container class and quote cue declared by an unrelated world', t=>{
+  const dir=mkdtempSync(fileURLToPath(new URL('../.cache/quoted-container-test-',import.meta.url)));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  const overlay=join(dir,'press.sop');
+  writeFileSync(overlay,`
+@press std.schema.world name=w.press
+@poster std.schema.kind of=w.press.poster world=w.press acts=make
+@title w.request.key tab=press family=poster name=poster.heading head=span
+@format w.request.key tab=press family=poster name=poster.format head=class value=standee
+@binding pro.reader.literal family=poster attribute=poster.heading role=quoted container_key=poster.format text="displaying the caption"
+`);
+  const worlds=loadWorlds({paths:[overlay]});
+  const descriptor='a standee displaying the caption “Keep clear”';
+  const reading=quotedLiteralCleanup('add '+descriptor,copiedLiteral('poster','poster.heading',descriptor),worlds);
+  assert.ok(hasField(reading,'poster.heading','Keep clear'));
+  assert.ok(hasField(reading,'poster.format','standee'));
+  assert.ok(validate(reading.sop,worlds));
+  assert.ok(evidenceInText('add '+descriptor,reading.sop,worlds));
+});

@@ -15,7 +15,15 @@
 @pro.reader.analytical_frame.operation_lead core.slot of=pro.reader.analytical_frame key=operation_lead kind=string many=true
 @pro.reader.analytical_frame.operation_marker core.slot of=pro.reader.analytical_frame key=operation_marker kind=string many=true
 
-@reader.chart.analytic.column.final pro.reader.analytical_frame tab=diagram family=chart layout=trailing_owner prefix="I'd like" prefix="I would like" owner="a column chart" owner="a bar chart" owner_key=chart.type owner_value=bar owner_marker=as measure=chart.measure grouping=chart.dimension group_marker=by group_marker=", by"
+# Binning and threshold words must not be absorbed by open field names.
+@pro.reader.analytical_boundary core.type of=pro.reader.analytical_boundary closed=true
+@pro.reader.analytical_boundary.tab core.slot of=pro.reader.analytical_boundary key=tab kind=atom required=true
+@pro.reader.analytical_boundary.family core.slot of=pro.reader.analytical_boundary key=family kind=atom required=true
+@pro.reader.analytical_boundary.text core.slot of=pro.reader.analytical_boundary key=text kind=string many=true
+@pro.reader.analytical_boundary.numeric_modifier core.slot of=pro.reader.analytical_boundary key=numeric_modifier kind=string many=true
+@reader.chart.analytic.operand_boundary pro.reader.analytical_boundary tab=diagram family=chart text="grouped by" text="split by" text="broken down by" text="higher than" text="lower than" text="greater than" text="less than" text="more than" text="at least" text="at most" numeric_modifier=wide
+
+@reader.chart.analytic.column.final pro.reader.analytical_frame tab=diagram family=chart layout=trailing_owner prefix="I'd like" prefix="I would like" owner="a column chart" owner="a bar chart" owner_key=chart.type owner_value=bar owner_marker=as measure=chart.measure grouping=chart.dimension group_marker=by group_marker=", by" group_marker="grouped by"
 @reader.chart.analytic.line.final pro.reader.analytical_frame tab=diagram family=chart layout=trailing_owner prefix=show prefix="show me" prefix="we want" prefix=plot prefix="give me" owner="a line chart" owner="a line graph" owner_key=chart.type owner_value=line owner_marker=as measure=chart.measure grouping=chart.dimension group_marker=by group_marker=versus operation=chart.aggregate operation_marker=of
 @reader.chart.analytic.line.across pro.reader.analytical_frame tab=diagram family=chart layout=leading_owner prefix=make prefix="show me" prefix="give me" prefix=draw prefix=plot owner="a line graph" owner="a line chart" owner_key=chart.type owner_value=line owner_marker=of measure=chart.measure grouping=chart.period group_marker=across group_marker=by operation=chart.aggregate operation_lead=the operation_marker=of
 @reader.chart.analytic.bar.period pro.reader.analytical_frame tab=diagram family=chart layout=leading_group prefix="we need" prefix=make prefix="show me" prefix="give me" prefix=draw owner="a bar chart" owner="a column chart" owner_key=chart.type owner_value=bar owner_marker=of measure=chart.measure grouping=chart.period operation=chart.aggregate operation_marker=of

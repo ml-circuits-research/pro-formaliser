@@ -430,7 +430,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   }
   function combine(text, parts, results, enumeration) {
     let beam = [{cost:0,clauses:[]}];
-    const coverageChoice = [], groundedChoice = [];
+    const coverageChoice = [];
     for (const [index,result] of results.entries()) {
       const {alternatives,[conditionalScope]:_conditional,...first} = result;
       const targets = enumeration?.items[index];
@@ -443,14 +443,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const unread = wires.filter(w=>w.type==='w.request.unread')
           .flatMap(w=>w.attrs.text ?? [])
           .reduce((sum,raw)=>sum+tokens(raw.startsWith('"') ? JSON.parse(raw) : raw).length,0);
-        const {counts}=evidenceReport(parts[index],wires,worlds.evidenceVocabulary);
-        const missing=(counts.unread ?? 0)+(counts.uncovered ?? 0);
-        return [{clause,rank,unread,missing}];
+        return [{clause,rank,unread}];
       });
       if (!options.length) return [];
-      const covered=options.reduce((a,b)=>b.unread<a.unread ? b : a).clause;
-      coverageChoice.push(covered);
-      groundedChoice.push(options.reduce((a,b)=>b.missing<a.missing ? b : a).clause);
+      coverageChoice.push(options.reduce((a,b)=>b.unread<a.unread ? b : a).clause);
       const next = beam.flatMap(prefix => options.map(({clause,rank}) =>
         ({cost:prefix.cost+rank,clauses:[...prefix.clauses,clause]})));
       beam = next.sort((a,b)=>a.cost-b.cost).slice(0,12);
@@ -459,7 +455,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const seen = new Set();
     // An independently complete reading of each clause can fall outside the
     // rank-sum beam. Keep that combination too; validation and deduplication follow.
-    for (const {clauses} of [...beam,{clauses:coverageChoice},{clauses:groundedChoice}]) {
+    for (const {clauses} of [...beam,{clauses:coverageChoice}]) {
       const sop = composeParts(parts,clauses,enumeration);
       const key = admissibleKey(text,sop);
       if (!key || seen.has(key)) continue;
@@ -654,6 +650,21 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (enriched) {
           const key=admissibleKey(text,enriched.sop);
           if (key) additional.set(key,enriched);
+        }
+      }
+      const sourceTokens=tokens(text), sourceQuotes=quotedSpans(text);
+      const scaleBanks=[...worlds.nominalScales.byFamily.values()];
+      if (sourceTokens.some(([key])=>scaleBanks.some(bank=>bank.forms.has(key))) && permit(text,sourceQuotes)) {
+        const options={splitCompounds:true};
+        const distinctModifiers=clauseQualifiers(text,worlds,model,permit,options);
+        for (const candidate of [...candidates,...additional.values()]) {
+          // Add a competing attachment after ordinary composition, so the
+          // full reading of a lexical compound remains available as well.
+          const single=candidate.sop.indexOf(' w.request.request')===candidate.sop.lastIndexOf(' w.request.request');
+          const reading=single ? nominalScaleReading(text,sourceTokens,sourceQuotes,candidate,worlds,options) :
+            distinctModifiers(candidate);
+          const key=reading && admissibleKey(text,reading.sop);
+          if (key) additional.set(key,reading);
         }
       }
       for (const candidate of [...candidates,...additional.values()]) {
