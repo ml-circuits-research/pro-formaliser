@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Composing typed effects across clauses
+
+Reader `25579ab` reached **51.0%** on the primary sample (**52.3%** including spelling). The replica reached **43.9%**. Four replica requests gained complete readings and one retained exact match corrected an earlier scoring error. The third sample gained two complete scenes. Across all three samples no request lost its reasonable proposal. The optional scatter pilot changed no primary outputs. The expression pilot recovered a requested emotion in two primary requests, but each still lacked a placement. Neither pilot is included in the default score. [Paired judgments](EFFECT-SEQUENCE-REPLAY.tsv)
+
 ## Catalog properties on named and implicit targets
 
 Reader `42b5a0e` reached **50.9%** on primary (**52.2%** with spelling) and **43.4%** on replication. Each sample gained three full readings and lost none. On the third lot of 1,000, five proposal sets changed but none gained or lost a reasonable reading. All 48 edited-input spelling unions were unchanged. Across the six gains, three use typed properties of an implicit chart, two recover multi-object scenes and one binds a label and coordinate on the same new object. [Paired judgments](QUALIFIER-REPLAY.tsv)

@@ -174,3 +174,7 @@ The native request schema documents a closed list for head=class and open candid
 A blanket discard on the preceding primary replay would affect 40 of 1,000 proposal sets. In six reviewed cases the only circuit carrying an important meaning would disappear, including a persistent cat–dog relationship and a request about a cat facing a house. These need compatible, decomposed representations or additional keys. We kept the existing source proposals during this test. Please consider reconciling the checker and key declarations with those meanings before applying a global migration.
 
 The expression pilot independently adds five proposed literals for drawn figures and a grammar frame whose vocabulary comes from the active finite bank. With the unchanged model, the blind market-street example can now keep the boy's upset expression, the four flowers, vendor, stall and setting in one circuit. This is a checked request-level interpretation. Rendering support remains open. [Expression proposal](sop-worlds/expression-pilot/README.md)
+
+## Response to the coordinated scale and scatter controls at de98bc4
+
+The standalone and named-owner scale controls remain distinct from the coordinated title example. With the frozen model the coordinated example now retains scale and title in one circuit. Its discourse bridge depends on training evidence, so the worlds-only limitation still applies. The opt-in scatter pilot left every primary output unchanged. The prefaced regional-slide request and runtime field resolution remain open.

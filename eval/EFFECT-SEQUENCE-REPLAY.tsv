@@ -1,0 +1,34 @@
+sample_group	sample	source	row	previous	current	reference_issue	reason
+primary	324	diagram/charts-06.csv	2287	L1b	L1b	0	The new circuit sets the title but explicitly targets a hat for the axis movement.
+primary	355	diagram/charts-04.csv	3144	L4	L4	0	A complete prior circuit remains. The new single-target reading with both comparative adjustments and solid grid lines is also reasonable.
+primary	454	drawing/scenes-05.csv	271	L4	L4	0	Both sets include a circuit creating the lantern, bench, and girl.
+primary	574	drawing/scenes-21.csv	645	L4	L4	0	An unchanged two-step circuit moves the existing house to (260,180) and colors that house blue.
+primary	586	drawing/placement-02.csv	4518	L4	L4	0	Both sets create the large sad girl, facing right, on the left. The added alternative reads the courtesy framing more cleanly.
+primary	594	drawing/scenes-16.csv	3029	L3	L3	0	The exact creation of the green tree named Canvas remains. The replacement sequence misroutes the name to a chart.
+primary	753	drawing/scenes-16.csv	3507	L3	L3	0	The exact circuit still creates an orange house named ice cream van.
+primary	758	drawing/scenes-08.csv	121	L2c	L2c	0	New circuits add the market street at dusk and preserve the foreground instruction, but the boy's upset face is still unread and some local details remain unresolved.
+primary	898	drawing/scenes-08.csv	1475	L2a	L4	0	A new circuit sets the library in the evening and separately creates the armchair, woman, three books, and cat.
+replica	45	drawing/scenes-17.csv	3759	1	1	0	The exact circuit deleting Item 1890 and excluding the hill remains. The changed alternative separates the two actions.
+replica	91	drawing/scenes-16.csv	1170	1	1	0	The exact circuit still creates the yellow flower and names it seesaw. The replacement alternatives rename a room or calendar instead.
+replica	98	drawing/scenes-08.csv	3305	1	1	0	An unchanged circuit creates the kid on the bench facing right and preserves the positions of the other objects.
+replica	107	diagram/charts-06.csv	1167	0	1	1	The new circuit narrows the referenced bars. The annotation additionally narrows the gaps between bars.
+replica	145	diagram/charts-04.csv	3233	0	0	1	The added title does not repair the marker or its best-store placement. The reference leaves marker placement unread and puts the title on the chart.
+replica	168	drawing/scenes-17.csv	2161	1	1	0	The exact circuit retains the selected red item and changes it to purple. The extra removal hypothesis is wrong.
+replica	252	diagram/charts-05.csv	2295	0	0	1	The title is recovered, but no candidate gives the bars and line their requested data, timeline, legend and value labels. The reference also omits the explicit measure-to-mark assignments.
+replica	294	drawing/scenes-17.csv	3746	1	1	0	Both sets retain the exact, reasonable deletion of the drawn object named cloud 1 with a selector excluding sun. The prior score missed the retained exact circuit.
+replica	509	drawing/scenes-16.csv	2294	1	1	0	The exact circuit still draws the yellow tree named hill. The replacement routes the name to a separate chart.
+replica	542	diagram/charts-04.csv	730	0	1	0	The new circuit keeps the ordered red-to-white-to-blue operand under chart.palette and sets legend right on that same context chart. Palette resolution is deferred.
+replica	583	diagram/charts-02.csv	4165	0	1	0	A new circuit preserves the transparent-to-green palette operand and places the y axis on the right of that same context chart. Palette resolution is deferred.
+replica	786	drawing/scenes-16.csv	350	1	1	0	The exact circuit still creates the orange fish named lake. The changed alternative incorrectly renames a calendar.
+replica	808	diagram/charts-01.csv	3577	0	0	1	The added circuit sets the title but still fails to construct the ranked bar chart. The reference incorrectly assigns departments to the measure and order counts to the dimension.
+replica	809	diagram/nodes-12.csv	1414	1	1	0	Both sets include a circuit specifying 150 pixels of width and the written Checkout selector on the same existing node.
+replica	993	diagram/charts-01.csv	2309	0	1	0	One circuit creates a pie chart of stations grouped by company, then supplies the exact title with an explicit chart context lookup for the anaphoric target.
+blind	27	diagram/charts-04.csv	1239	L2a	L2a	0	A retained chart reading sets the cap to medium. The changed sequence adds the title Q2 sales but still misreads the cap and bar-edge edits.
+blind	169	drawing/scenes-14.csv	686	L2a	L4	0	An added circuit sets the evening library and creates the armchair, woman, cat and three books.
+blind	178	drawing/scenes-06.csv	713	L4	L4	1	A retained circuit adds several little ducks on the lake and preserves the rest. The reference treats preservation as filler.
+blind	269	diagram/charts-04.csv	1331	L1a	L1a	0	The changed sequence sets Revenue by month as a title but still mistakes the background for a question and misses both requested line edits.
+blind	303	drawing/scenes-10.csv	320	L2a	L4	0	An added circuit sets a sunny island shore in the early morning and creates the parrot, girl, canoe and three shells.
+blind	595	drawing/placement-02.csv	84	L4	L4	0	The replaced circuit still creates separate blocks at the left and right ends. Only the first request’s wording now includes the polite lead.
+blind	786	drawing/scenes-16.csv	3399	L3	L3	0	The retained exact circuit draws the orange fish and names it pond. The replaced alternative still misroutes the naming to a calendar.
+blind	843	drawing/scenes-17.csv	3693	L3	L3	0	The retained exact circuit deletes the fruit bowl and excludes Orange. Changed alternatives expand the removal scope to include Please, but do not change the retained verdict.
+blind	900	drawing/scenes-16.csv	315	L3	L3	0	The retained exact circuit creates the orange house and names it sky. The replaced alternative still misroutes the naming to a calendar.

@@ -194,3 +194,6 @@
 
 ## Composing typed effects and grounded scene headings
 - The frozen public reader binds scale and title in the coordinated review request and keeps the comment as supported discourse. A named chart retains both scale and font. Compounded values are checked against their catalog. Optional scatter and figure-expression pilot worlds are staged. All 340 tests passed.
+
+## Three-cohort review of coordinated effects at 25579ab
+- Original-text reasonable coverage reached 51.0% on primary and 43.9% on replication. Spelling brought primary to 52.3%. The third lot gained two complete scenes. No prior reasonable reading disappeared. The optional scatter and expression worlds gave no whole-request gain on primary.

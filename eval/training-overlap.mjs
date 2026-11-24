@@ -49,7 +49,7 @@ const corpus=loadCorpus();
 const primary=table('THOUSAND-GRADES.tsv');
 const replica=table('REPLICATION-37-GRADES.tsv');
 for (const file of ['REPLICATION-37-REPLAY.tsv','REPLICATION-37-ANALYTICAL.tsv',
-  'SCOPED-REPLAY.tsv','ROLE-BINDING-REPLAY.tsv','COMPOSITION-REPLAY.tsv','DEPENDENT-REPLAY.tsv','QUALIFIER-REPLAY.tsv']) {
+  'SCOPED-REPLAY.tsv','ROLE-BINDING-REPLAY.tsv','COMPOSITION-REPLAY.tsv','DEPENDENT-REPLAY.tsv','QUALIFIER-REPLAY.tsv','EFFECT-SEQUENCE-REPLAY.tsv']) {
   for (const row of table(file)) {
     if (row.sample_group && row.sample_group!=='replica') continue;
     replica[Number(row.sample)-1].current_reasonable=row.current;

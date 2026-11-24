@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Replay with 25579ab
+
+Coverage reached **43.9%**. The previous published **43.4%** becomes **43.5%** after correcting request 294, whose exact deletion circuit was already present. Four requests newly gained reasonable circuits. Two retain palette and placement together, one narrows the bars of the referenced chart, and one creates a grouped pie chart with its title. No reasonable reading disappeared. [Paired judgments](EFFECT-SEQUENCE-REPLAY.tsv)
+
 ## Replay with 42b5a0e
 
 The early morning library with five object groups, a logarithmic colour-bar scale and the x axis at the top gained complete alternatives. Coverage rose from **43.1%** to **43.4%**, with no losses. A request for a house with a height and coordinates still splits its properties across different targets. [Paired judgments](QUALIFIER-REPLAY.tsv)
