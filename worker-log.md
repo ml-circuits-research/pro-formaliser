@@ -110,3 +110,6 @@
 
 ## Independent replication
 - A fresh 1,000-request sample from bucket 37 yielded 36.8% reasonable for fa5ff40 and 41.1% for 03b29bc. All paired verdicts and reproduction steps are in eval/REPLICATION-37.md.
+
+## Handover audit
+- Compared all 369 staged declarations with the 1,357 official SOP files at d94ae52e. No identifier or exact-content match required pruning. Documented the comparison and retirement procedure.

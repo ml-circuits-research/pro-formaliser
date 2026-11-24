@@ -35,3 +35,16 @@ De exemplu, dacă `$r` este cererea, iar `$t` selecția celor două păsări, re
 Regulile din modul verifică apartenența țintelor la cerere și cardinalitățile explicite. Referințele către proprietăți trebuie să indice chei reale `w.request.key`. La integrare, consumatorul trebuie să verifice că fiecare cheie aparține familiei țintă și că proprietățile implicate în calcul sunt numerice și au unități compatibile. Catalogul actual nu exportă `w.request.key` pentru citirea câmpurilor sale din regulile altui modul. Un număr de participanți încă necunoscut se verifică după rezolvarea selecției.
 
 Preferințele de context pot ordona interpretările după ce au fost produse. Propoziția „aceeași culoare” rămâne fidelă și fără o preferință pentru o nuanță.
+
+## Urmărirea integrării
+
+Toate fișierele SOP cu scheme și cunoaștere întreținute de pro-formaliser se publică aici. Exemplele de documentație, circuitele generate și datele de test au propriile locuri. Observațiile integratorului și răspunsurile formalizatorului sunt în două fișiere distincte. [Observații](../integration-review.md) · [Răspunsuri](../integration-review.responses.md)
+
+La fiecare actualizare a propunerilor și la fiecare notificare de integrare, verificăm versiunea publicată a lumilor oficiale. Din rădăcina pro-formaliser se rulează următoarele comenzi.
+
+```sh
+git -C ../sop-knowledge-worlds fetch origin
+.cache/node/bin/node tools/staged-worlds.mjs
+```
+
+Raportul compară declarațiile după identificator și după conținutul câmpurilor. O integrare rescrisă în altă schemă se verifică prin exemplele din review și prin efectul asupra cititorului. Când integrarea este confirmată, eliminăm declarațiile locale preluate și păstrăm restul propunerii. Pentru cunoașterea folosită implicit, actualizăm întâi versiunea oficială instalată de proiect și verificăm cititorul cu copia locală eliminată.
