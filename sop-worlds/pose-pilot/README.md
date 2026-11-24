@@ -1,0 +1,7 @@
+# Optional figure pose vocabulary
+
+`poses.sop` extends the closed `drawn.pose` bank with four authored postures. In the frozen bucket 0 training model, 264 distinct requests have a written `kneeling` value under that key, 183 have `lying down`, 182 have `curled up`, and 80 have `perched`. These observations can share templates. Each new literal has a separate English post-nominal form. A placement such as “on the fence” remains a separate relationship. “Leaning against” would also need its support grounded independently, so this proposal leaves it for separate review.
+
+This opt-in file replaces a catalog row by ID and is tied to knowledge snapshot `ba7cbcf2ab78b8b99d077e8958013d52618c6d04`. It retains every field and previous value from that snapshot. For another snapshot, append the four values to the live row after checking its schema and existing values. Loading the file over a newer row could overwrite intervening catalog changes.
+
+After project setup, pass the directory explicitly with `SOP_WORLDS=sop-worlds/pose-pilot`. With the frozen bucket 0 model, primary request #992 has an alternative that sets the beach scene and includes all six objects, including a girl with the canonical `kneeling` pose beside the sandcastle. The native post-nominal reader requires a separately grounded target. The pilot verifies proposed request circuits. Rendering or executing any new pose in a host application remains unverified.

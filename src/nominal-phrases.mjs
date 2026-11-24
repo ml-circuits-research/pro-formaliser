@@ -295,6 +295,24 @@ export function nominalPositionForms(facts, requestKeys) {
     for (const surface of wire.attrs.text ?? []) cues.push(['arrangement',decode(surface),values]);
   }
   const indexes=new Map();
+  const add=(family,entry)=>{
+    const [words]=entry;
+    if (!indexes.has(family)) indexes.set(family,new Map());
+    const byLead=indexes.get(family);
+    if (!byLead.has(words[0])) byLead.set(words[0],new Map());
+    byLead.get(words[0]).set(JSON.stringify(entry),entry);
+  };
+  for (const wire of facts('pro.reader.nominal_value')) {
+    const family=field(wire,'family'), tab=field(wire,'tab');
+    const key=field(wire,'key'), value=field(wire,'value');
+    if (!family || !tab || !key || !value || !requestKeys.some(prop=>prop.family===family &&
+      prop.tab===tab && prop.name===key && prop.head.split('+').includes('class') &&
+      prop.values.includes(value))) continue;
+    for (const text of wire.attrs.text ?? []) {
+      const words=lexicalWords(decode(text));
+      if (words) add(family,[words,key,value,'attribute','eq','result']);
+    }
+  }
   for (const wire of facts('pro.reader.spatial')) {
     const family=field(wire,'family'), tab=field(wire,'tab');
     const roles={region:field(wire,'region_key'),arrangement:field(wire,'arrangement_key')};
@@ -308,12 +326,7 @@ export function nominalPositionForms(facts, requestKeys) {
       if (!value || words.length<2 || !words.every((token,i)=>word.test(token) ||
         token==='-' && word.test(words[i-1] ?? '') && word.test(words[i+1] ?? ''))) continue;
       const operator=kind==='region' ? 'region' : 'eq';
-      const byLead=indexes.get(family) ?? new Map();
-      if (!indexes.has(family)) indexes.set(family,byLead);
-      const options=byLead.get(words[0]) ?? new Map();
-      if (!byLead.has(words[0])) byLead.set(words[0],options);
-      const entry=[words,key,value,'attribute',operator];
-      options.set(JSON.stringify(entry),entry);
+      add(family,[words,key,value,'attribute',operator]);
     }
   }
   return new Map([...indexes].map(([family,byLead])=>[family,new Map([...byLead].map(([lead,options])=>
@@ -438,10 +451,14 @@ export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, 
   if (!byLead || !position || field(target,'request')!=='$'+request.id) return [];
   const [start,after]=position;
   const mode=field(target,'mode'), ref='$'+request.id;
+  const createsTarget=mode==='new' && field(request,'act')==='make';
   const owned=()=>wires.filter(w=>w.type===constraintType && field(w,'request')===ref);
   const grounded=at=>uniqueParts(partsAt(owned(),ts,at,worlds,family,mode));
   const placement=at=>groundedPlacementEnd(owned(),ts,at,worlds,family);
-  const options=at=>(byLead.get(ts[at]?.[0]) ?? []).filter(([words])=>matchesAt(ts,at,words));
+  // An explicit phase marks a value on a newly created nominal. Spatial
+  // forms still use the phase of their existing local relation.
+  const options=at=>(byLead.get(ts[at]?.[0]) ?? []).filter(([words,,,,,phase])=>
+    (!phase || createsTarget) && matchesAt(ts,at,words));
   let revised;
   // A sentence-initial region before a comma can modify the one target in
   // this local packet. Its phrase must end before the target nominal starts.
@@ -459,7 +476,7 @@ export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, 
     const [entry]=best, [covered]=existing;
     if (covered) {
       const agrees=covered.meaning && (!entry || covered.words.join(' ')===entry[0].join(' ') &&
-        JSON.stringify(JSON.parse(covered.meaning).slice(0,4))===JSON.stringify(entry.slice(1)));
+        JSON.stringify(JSON.parse(covered.meaning).slice(0,entry.length-1))===JSON.stringify(entry.slice(1)));
       if (agrees) {
         at+=covered.words.length;
         continue;

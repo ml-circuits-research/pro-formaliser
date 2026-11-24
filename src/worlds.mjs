@@ -1,3 +1,5 @@
+import {compileDependentOperands} from './dependent-operands.mjs';
+import {compileDialogueCoverage} from './dialogue-coverage.mjs';
 import {compileOwnedEffects} from './owned-effects.mjs';
 import {compileAppositiveSelectors} from './appositive-selector.mjs';
 import {compileQuantifiedVerbs} from './quantified-verb.mjs';
@@ -41,6 +43,7 @@ const types = new Set([
   ...nominalInflectionTypes,...nominalScaleTypes,...affectedMorphologyTypes,
   'w.lang.en.alternation','w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
+  'pro.reader.nominal_value','pro.reader.dependent_operand','w.lang.en.answer','k.feelings.feeling',
   'pro.reader.owned_effect','pro.reader.effect_sense','pro.reader.effect_owner','pro.reader.landmark_surface','pro.reader.appositive_selector','pro.reader.quantified_verb','pro.reader.quantified_marker','pro.reader.quantified_reference','pro.reader.topic_command','pro.reader.postposed_clause','pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
@@ -605,6 +608,8 @@ function compile(facts) {
     })),
     fixedProperties:compileFixedProperties(facts,requestKeys),
     analyticalOwnerProperties:compileAnalyticalOwnerProperties(facts,requestKeys),
+    dialogueCoverage:compileDialogueCoverage(facts),
+    dependentOperands:compileDependentOperands(facts,requestKeys),
     ownedEffects:compileOwnedEffects(facts,requestKeys,propertyLabels),
     landmarkSurfaceFacts:facts('pro.reader.landmark_surface'),
     appositiveSelectors:compileAppositiveSelectors(facts,requestKeys,words),
@@ -681,6 +686,7 @@ function providerTypes(facts) {
   }
   for (const role of facts.get('pro.reader.creation_role')?.values() ?? []) sources.push(one(role,'value_type'));
   for (const frame of facts.get('pro.reader.postposed_clause')?.values() ?? []) sources.push(one(frame,'value_type'));
+  for (const frame of facts.get('pro.reader.dependent_operand')?.values() ?? []) sources.push(one(frame,'item_type'));
   for (const frame of facts.get('pro.reader.appositive_selector')?.values() ?? []) sources.push(one(frame,'item_type'));
   for (const frame of facts.get('pro.reader.orientation')?.values() ?? []) sources.push(one(frame,'landmark_type'));
   for (const frame of facts.get('pro.reader.motion')?.values() ?? []) sources.push(one(frame,'target_type'));

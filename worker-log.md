@@ -176,3 +176,6 @@
 
 ## Full reproduction from training at 1a7dffa
 - Bucket 0 retrained outside its 1,915 held-out rows. The model was byte-identical and all 1,000 audited proposal sets matched the previous public run. Full-check results and limitations are in eval/RESULTS.md.
+
+## Native owner slots, dialogue and finite postures
+- Added independent owner/endpoint bindings, an effect-free reading for fully covered social turns, and a catalog-backed posture pilot. The integrated suite passed all 325 tests including disjoint-world controls. The pose catalog is optional and awaits integration review.

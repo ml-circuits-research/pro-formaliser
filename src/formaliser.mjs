@@ -1,3 +1,5 @@
+import {dependentOperandReadings} from './dependent-operands.mjs';
+import {createDialogueCoverage} from './dialogue-coverage.mjs';
 import {ownedEffectReadings} from './owned-effects.mjs';
 import {createAppositiveSelectorReader} from './appositive-selector.mjs';
 import {quantifiedVerbReadings} from './quantified-verb.mjs';
@@ -127,6 +129,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     Object.values(grammar).flatMap(frames=>frames.map(f=>f.prefix[0]))));
   const phraseHeads=new Set(Object.keys(model.nominalPhrases ?? {}).map(k=>JSON.parse(k)[3]));
   const knownModifiers=new Set(Object.keys(model.modifiers ?? {}).map(k=>JSON.parse(k)[1]));
+  const dialogueCoverage=createDialogueCoverage(worlds,model.examples);
   const appositiveSelector=createAppositiveSelectorReader(model,worlds);
   const topicGrammar=createTopicCommands(model,worlds);
   const predicateTransfer=createPredicateTransfer(model.examples,worlds);
@@ -279,6 +282,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         contextualTargets.push({...plain,sop});
       }
     }
+    const dialogue=dialogueCoverage(text);
+    if (dialogue) retain(dialogue);
     // The ordinary search prefers a longer marker. If its prefix also
     // finishes a grounded property, try the native suffix marker separately.
     const competing=allowConstraints && !scope.restricted && spatialOverlap(hits,chars,ts);
@@ -712,6 +717,12 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
       for (const candidate of [...candidates,...additional.values()]) {
         for (const reading of spatialAnchorReadings(text,candidate,worlds,permit)) {
+          const key=admissibleKey(text,reading.sop);
+          if (key) additional.set(key,reading);
+        }
+      }
+      for (const candidate of [...candidates,...additional.values()]) {
+        for (const reading of dependentOperandReadings(text,candidate,worlds,permit)) {
           const key=admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
         }
