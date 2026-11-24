@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -eu
+root="$(cd "$(dirname "$0")/../.cache/swi/usr/lib" && pwd)"
+home_dir="$root/swi-prolog"
+for lib in "$root"/*/libswipl.so.9; do
+  export LD_LIBRARY_PATH="$(dirname "$lib")${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+done
+export SWI_HOME_DIR="$home_dir"
+exec "$home_dir"/bin/*/swipl "$@"

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+version=2020.12.07-2
+sha256=d3e582e313163747700c84d912728fbf30ad57dc50c818b41089eed5a79ed05e
+cache=.cache/spell
+dictionary=$cache/english.txt
+mkdir -p "$cache"
+if [[ -f "$dictionary" ]] && printf '%s  %s\n' "$sha256" "$dictionary" | sha256sum -c --status; then
+  exit 0
+fi
+
+stage=$(mktemp -d "$cache/install.XXXXXX")
+trap 'rm -rf "$stage"' EXIT
+(
+  cd "$stage"
+  apt-get download "wamerican=$version" "wbritish=$version"
+  for name in wamerican wbritish; do
+    dpkg-deb -x "${name}_${version}_all.deb" extracted
+  done
+  LC_ALL=C sort -u extracted/usr/share/dict/american-english \
+    extracted/usr/share/dict/british-english > english.txt
+  printf '%s  english.txt\n' "$sha256" | sha256sum -c
+)
+mv "$stage/english.txt" "$dictionary"

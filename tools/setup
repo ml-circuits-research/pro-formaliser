@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+version=9.0.4+dfsg-3.1ubuntu4
+knowledge=ba7cbcf2ab78b8b99d077e8958013d52618c6d04
+mkdir -p .cache/debs .cache/swi .cache/knowledge .cache/node
+node_version=v22.23.2
+case "$(dpkg --print-architecture)" in
+  arm64) arch=arm64; digest=fff4078c5def658577f92c88db7db3bc0072924bfb93fe52c1e744a54e94abb8 ;;
+  amd64) arch=x64; digest=d60acfe00a2932254bb0ad20e01b0d74397a0875595de719654b214f4b03f307 ;;
+  *) echo "Unsupported Node architecture" >&2; exit 1 ;;
+esac
+archive="node-$node_version-linux-$arch.tar.xz"
+if ! echo "$digest  .cache/$archive" | sha256sum --check --status 2>/dev/null; then
+  curl --fail --location --retry 2 "https://nodejs.org/dist/$node_version/$archive" -o ".cache/$archive.new"
+  echo "$digest  .cache/$archive.new" | sha256sum --check
+  mv ".cache/$archive.new" ".cache/$archive"
+fi
+tar -xJf ".cache/$archive" -C .cache/node --strip-components=1
+.cache/node/bin/node --version
+(
+  cd .cache/debs
+  apt-get download "swi-prolog-core=$version" "swi-prolog-core-packages=$version" "swi-prolog-nox=$version"
+  arch=$(dpkg --print-architecture)
+  for name in swi-prolog-core swi-prolog-core-packages swi-prolog-nox; do
+    dpkg-deb -x "${name}_${version}_${arch}.deb" ../swi
+  done
+)
+source_repo=${SOP_KNOWLEDGE:-../sop-knowledge-worlds}
+if ! git -C "$source_repo" cat-file -e "$knowledge^{commit}" 2>/dev/null; then
+  source_repo=.cache/knowledge.git
+  if [ ! -d "$source_repo" ]; then git init --bare "$source_repo"; fi
+  git -C "$source_repo" fetch --depth 1 https://github.com/ml-circuits-research/sop-knowledge-worlds "$knowledge"
+fi
+git -C "$source_repo" archive "$knowledge" tools/sopworld/sopworld.mjs tools/lib/{schemas,worlds}.mjs docs/worlds | tar -x -C .cache/knowledge
+echo "$knowledge" > .cache/knowledge/REVISION
+tools/swipl -q -g 'use_module(library(http/json)),use_module(library(pcre)),halt'
+tools/setup-spell
+tools/swipl --version

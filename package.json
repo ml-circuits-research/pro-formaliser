@@ -1,0 +1,11 @@
+{
+  "name": "pro-formaliser",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "setup": "bash tools/setup",
+    "test": "node --test test/*.test.mjs",
+    "benchmark": "node eval/benchmark.mjs"
+  }
+}
