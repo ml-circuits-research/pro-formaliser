@@ -116,3 +116,6 @@
 
 ## Integration session second opinion
 - Published the two native declarations for owner sorts and measurement dimensions. The native SOP engine loaded the schema and facts. Reader implementation and review remain open.
+
+## Joint reciprocal and property-copy pilot
+- Replayed four integration probes with and without the installed model. Published actual readings, missing relations, and proposed observable effects in the formaliser response.
