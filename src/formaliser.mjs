@@ -1,3 +1,6 @@
+import {createAppositiveSelectorReader} from './appositive-selector.mjs';
+import {quantifiedVerbReadings} from './quantified-verb.mjs';
+import {createTopicCommands,topicCommandPacket,topicCommandReading} from './topic-commands.mjs';
 import {postposedClauseReadings} from './postposed-clause.mjs';
 import {analyticalOwnerBindings} from './analytical-frames.mjs';
 import {orientationLandmarkReadings} from './orientation-landmark.mjs';
@@ -123,6 +126,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     Object.values(grammar).flatMap(frames=>frames.map(f=>f.prefix[0]))));
   const phraseHeads=new Set(Object.keys(model.nominalPhrases ?? {}).map(k=>JSON.parse(k)[3]));
   const knownModifiers=new Set(Object.keys(model.modifiers ?? {}).map(k=>JSON.parse(k)[1]));
+  const appositiveSelector=createAppositiveSelectorReader(model,worlds);
+  const topicGrammar=createTopicCommands(model,worlds);
   const predicateTransfer=createPredicateTransfer(model.examples,worlds);
   const nearExample = createNearExample(model.examples,{discourse:worlds.discourse,worlds});
   const closedKeys=new Map();
@@ -239,6 +244,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const exact = examples.get(text) ?? [];
     const transfers = exact.length ? [] : transfer(text);
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
+    const topicCommands=scope.restricted ? undefined : topicCommandPacket(text,ts,quotes,worlds,topicGrammar);
     const propertyCommands=scope.restricted || quotes.length ? undefined : propertyCommandPacket(text,ts,model.propertyCommands);
     const argumentSequences=scope.restricted || quotes.length ? [] : sequencePacket(ts,worlds);
     const memberActions=scope.restricted ? [] : memberActionPackets(text,ts,quotes,worlds);
@@ -246,7 +252,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const verbEffects=scope.restricted || quotes.length ? [] : [...new Set(ts.map(t=>t[0]))].flatMap(head=>verbIndex.get(head) ?? []);
     const nativeProperties=nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly:scope.restricted});
     const titleConnectors = ts.map(([key])=>key).filter(key=>worlds.evidenceVocabulary.grammar.has(key));
-    const request = {text,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -291,6 +297,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of transformationReadings(text,ts,quotes,worlds)) retain(reading);
+      for (const reading of quantifiedVerbReadings(text,worlds)) retain(reading);
       for (const reading of ownerPropertyReadings(text,ts,quotes,worlds)) retain(reading);
     }
     for (const candidate of instanceReferences(text,ts,quotes,hits)) retain(candidate);
@@ -410,6 +417,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (reading) retain(reading);
       }
     }
+    for (const proof of response.topicCommands ?? []) retain(topicCommandReading(text,proof));
     for (const proof of response.coordinatedEffects ?? []) retain(effectReading(text,ts,proof));
     for (const reading of memberActionReadings(text,response.memberActions ?? [],worlds)) retain(reading);
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
@@ -678,6 +686,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const candidate of [...candidates,...additional.values()]) {
         for (const reading of spatialAnchorReadings(text,candidate,worlds,permit)) {
           const key=admissibleKey(text,reading.sop);
+          if (key) additional.set(key,reading);
+        }
+      }
+      if (text.includes(',') && worlds.appositiveSelectors.bindings.length) {
+        for (const candidate of [...candidates,...additional.values()]) {
+          const reading=appositiveSelector(text,candidate,permit);
+          const key=reading && admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
         }
       }

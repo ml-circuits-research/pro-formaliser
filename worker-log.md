@@ -161,3 +161,6 @@
 
 ## Three-sample verification at 03f237f
 - Independent review found three new reasonable primary requests, reaching 49.2% (50.5% with spelling). The second sample remained at 41.9%. A fresh 1,000-input comparison with 4480c70 changed zero proposal sets. See eval/RESULTS.md.
+
+## Scoped subject, amount and landmark bindings
+- Trained on 187,106 rows outside primary bucket 0. Added learned and installed topic roles, scoped appositive selectors, relative numeric amounts and typed side landmarks. All 312 tests passed, including newly installed unrelated worlds and competing roles within one family.

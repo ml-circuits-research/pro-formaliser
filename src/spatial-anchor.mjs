@@ -13,6 +13,33 @@ const quote=JSON.stringify;
 const word=/^[\p{L}\p{M}\p{N}_]+$/u;
 const boundary=/^[,;.!?—–，。！？；]$/u;
 const forms=text=>tokens(text).map(t=>t[0]).join(' ');
+const landmarkSurfaces=new WeakMap();
+
+function scopedMarkers(worlds,binding) {
+  if (!landmarkSurfaces.has(worlds)) {
+    const map=new Map();
+    for (const wire of worlds.landmarkSurfaceFacts ?? []) {
+      const tab=field(wire,'tab'),family=field(wire,'family'),value=field(wire,'relation');
+      const base=field(wire,'base');
+      if (!tab || !family || !value || !base) continue;
+      const senses=new Set(worlds.lookup(forms(base)).flatMap(([role,act,slot,sense])=>
+        role==='marker' && act==='*' && slot==='spatial' ? [sense] : []));
+      if (senses.size!==1 || !senses.has(value)) continue;
+      const id=JSON.stringify([tab,family]);
+      const surfaces=map.get(id) ?? new Map();
+      for (const raw of wire.attrs.text ?? []) {
+        const words=forms(raw.startsWith('"') ? JSON.parse(raw) : raw);
+        if (!words) continue;
+        const values=surfaces.get(words) ?? new Set();
+        values.add(value);
+        surfaces.set(words,values);
+      }
+      map.set(id,surfaces);
+    }
+    landmarkSurfaces.set(worlds,map);
+  }
+  return landmarkSurfaces.get(worlds).get(JSON.stringify([binding.tab,binding.family]));
+}
 
 const triggers=new WeakMap();
 function hasAnchorTail(text,worlds) {
@@ -57,6 +84,7 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
     key.name===binding.relationKey && key.values.length)?.values;
   if (!relationBank) return;
   const choices=[];
+  const scoped=['make','place'].includes(act) ? scopedMarkers(worlds,binding) : undefined;
   const markerForms=(a,b)=>worlds.lookup(phrase(a,b)).filter(
     ([role,license,slot,value])=>role==='marker' && relationBank.includes(value) &&
        (license==='*' && slot==='spatial' || license===act && slot==='place'));
@@ -64,6 +92,11 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
     for (let markerEnd=markerAt+1;markerEnd<Math.min(markerAt+6,end);markerEnd++) {
       const marker=span(markerAt,markerEnd);
       const values=new Set(markerForms(markerAt,markerEnd).map(entry=>entry[3]));
+      const alias=!values.size && scoped?.get(phrase(markerAt,markerEnd));
+      if (alias?.size===1 && markerAt===start && relationBank.includes([...alias][0]) &&
+          (field(target,'mode')==='new' || ['definite','demonstrative'].includes(field(target,'determiner')))) {
+        values.add([...alias][0]);
+      }
       if (relation) {
         const written=field(relation,'words') ?? field(relation,'value');
         if (forms(written)===forms(marker)) {
@@ -77,7 +110,7 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
       const det=worlds.determiners[ts[markerEnd][0]];
       const tail=ts.slice(markerEnd,end);
       if (tail.length>9 || !tail.every(([key])=>word.test(key))) continue;
-      if (det==='definite') {
+      if (det==='definite' || alias && det==='demonstrative') {
         // A landmark is a complete noun phrase at the end of this local span.
         // Require a typed terminal noun and keep every written modifier.
         let headAt=markerEnd+1;
@@ -86,7 +119,8 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
           const local=worlds.lookup(surface).flatMap(([role,,family])=>role==='target' ? [family] : []);
           const inventory=(worlds.ownerInventory?.get(JSON.stringify(['change',surface])) ?? [])
             .map(({family})=>family);
-          if ([...local,...inventory].some(family=>worlds.familyTabs[family]?.includes(binding.tab))) break;
+          if ([...local,...inventory].some(family=>alias ? family===binding.family :
+            worlds.familyTabs[family]?.includes(binding.tab))) break;
         }
         if (headAt>=end) continue;
         if (ts.slice(markerEnd+1,headAt).some(([key])=>worlds.joiners[key] || worlds.determiners[key] ||
@@ -95,7 +129,7 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
       } else {
         // A proper name can select an existing landmark. Keep its spelling
         // as the lookup operand; instance resolution belongs to the next layer.
-        if (markerAt!==start || tail.length>4 || !tail.every(([key,raw])=>
+        if (alias || markerAt!==start || tail.length>4 || !tail.every(([key,raw])=>
             /^\p{Lu}[\p{L}\p{M}\d_]*$/u.test(raw) &&
             !worlds.evidenceVocabulary.grammar.has(key) && !worlds.negatives.has(key) &&
             !worlds.joiners[key] && !worlds.isReference(key))) continue;
