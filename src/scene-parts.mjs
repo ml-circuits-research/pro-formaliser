@@ -99,16 +99,24 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
   }
 
   const parts=[],inputs=[],items=[];
-  let begin=start, chunk=start, punctuated=false, firstObject;
+  let begin=start, chunk=start, punctuated=false, firstObject, frontedLocation=false;
   const synthesize=!predicate || !!prefix;
   predicate ??= 'make';
   function add(end) {
     const targets=nouns(chunk,end);
     if (!targets.length) return false;
+    if (!prefix && begin!==chunk) {
+      const location=span(begin,chunk-1);
+      for (const target of targets) {
+        target.fronted={location,bindings:worlds.spatialBindings.filter(b=>b.family===target.family)};
+      }
+    }
     const part=span(begin,end);
     firstObject ??= part;
     parts.push(!parts.length && (prefix || !synthesize) ? span(0,end) : part);
-    inputs.push(predicate+' '+(begin===chunk ? part : span(chunk,end)+' '+span(begin,chunk-1)));
+    const nounEnd=terminal.has(head[end-1]) ? end-1 : end;
+    const body=begin===chunk ? part : span(chunk,nounEnd)+' '+span(begin,chunk-1);
+    inputs.push(predicate+' '+body);
     items.push(targets);
     return true;
   }
@@ -123,7 +131,10 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
       if (comma && hasSpatialLead(next)) {
         const after=head.indexOf(',',next);
         if (after>=0 && nominal(after+1)) {
-          if (!prefix || !add(i)) return null;
+          if (!prefix && head.slice(next,after).some(key=>!word.test(key) || worlds.joiners[key] ||
+              worlds.negatives.has(key) || worlds.scopeGrammar.conditionals.has(key))) return null;
+          if (!add(i)) return null;
+          frontedLocation=true;
           begin=next;
           chunk=after+1;
           punctuated=true;
@@ -165,5 +176,5 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
     return {act:'make',predicate,parts,inputs,items,singleNominal:true,quantity:quantityAt(0) ? span(0,quantityAt(0)) : undefined};
   }
   if (!punctuated || items.filter(Boolean).length<2 || parts.length>8) return null;
-  return {act:'make',predicate,parts,inputs,items,prefix,headingRole,firstObject,syntheticPredicate:synthesize};
+  return {act:'make',predicate,parts,inputs,items,prefix,headingRole,firstObject,frontedLocation,syntheticPredicate:synthesize};
 }

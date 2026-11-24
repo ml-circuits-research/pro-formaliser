@@ -264,6 +264,18 @@ export function enumeratedParts(text, ts, worlds, { prefixes, learned = {} } = {
   return null;
 }
 
+function bindsFrontedLandmark(wires,target,{location,bindings}) {
+  const constraints=wires.filter(w=>w.type===constraintType && one(w,'request')===one(target,'request'));
+  return bindings.some(({anchorKey,relationKey})=>{
+    const anchors=constraints.filter(w=>one(w,'attribute')===anchorKey && one(w,'phase')==='selector');
+    if (anchors.length!==1) return false;
+    const [anchor]=anchors, landmark=one(anchor,'value');
+    return landmark && keyOf(location).endsWith(' '+keyOf(landmark)) &&
+      constraints.some(w=>one(w,'attribute')===relationKey && one(w,'phase')==='result' && !w.attrs.want) &&
+      wires.some(w=>w.type==='w.request.lookup' && one(w,'constraint')==='$'+anchor.id && one(w,'from')==='page');
+  });
+}
+
 export function composableWires(result, item) {
   let wires;
   try { wires = parse(result.sop); } catch { return null; }
@@ -273,7 +285,8 @@ export function composableWires(result, item) {
         one(requests[0],'predicate')!==item.predicate) return null;
     const targets = wires.filter(w=>w.type===targetType && one(w,'request')==='$'+requests[0].id);
     if (targets.length!==1 || one(targets[0],'mode')!=='new' ||
-        !item.targets.some(({family,sort})=>one(targets[0],'family')===family && one(targets[0],'sort')===sort)) return null;
+        !item.targets.some(({family,sort,fronted})=>one(targets[0],'family')===family && one(targets[0],'sort')===sort &&
+          (!fronted || bindsFrontedLandmark(wires,targets[0],fronted)))) return null;
   } else if (requests.length===1) {
     if (!requests[0].attrs.predicate && !['scene-heading','nominal-creation'].includes(result.source)) return null;
   } else if (result.source!=='enumeration' || requests.length<2 ||

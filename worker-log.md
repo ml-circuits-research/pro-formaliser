@@ -243,3 +243,7 @@
 ## Participants, fronted destinations and periodic results
 - Prolog binds a destination before the command from original offsets. A typed landmark can retain its noun sense alongside a verb sense. Worlds declare held/worn participants and period–operation–measure combinations.
 - All 370 tests pass. All-staged transfer passes 11/12 familiar and 7/12 alternate forms. On trained primary #602 the native checker accepts the woman, height, carried basket and unresolved written destination.
+
+## Spatial attachment across list boundaries
+- The list reader can attach a location to the following item when that object's world supplies a result relation and a lookup for the written landmark. It retains competing preceding-item readings.
+- Two full-sentence held-out probes recover coherent centered campfire and fountain scenes. Unknown spatial roles in a custom workbench world still abstain. All 371 tests passed.

@@ -541,7 +541,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const options={...sequenceOptions,learned:model.lexicon,visible:visibleTokens(Array.from(text),ts)};
     const scene=sceneParts(text,ts,worlds,options);
     const enumeration=enumeratedParts(text,ts,worlds,{prefixes:sequenceOptions.prefixes,learned:model.lexicon});
-    const plans=enumeration ? (scene?.prefix ? [enumeration,scene] : [enumeration]) : (scene ? [scene] : []);
+    const plans=enumeration ? (scene?.prefix || scene?.frontedLocation ? [enumeration,scene] : [enumeration]) : (scene ? [scene] : []);
     if (model.sceneConstructs) {
       const extra=sceneParts(text,ts,worlds,{...options,constructs:model.sceneConstructs});
       if (extra && !plans.some(p=>JSON.stringify(p)===JSON.stringify(extra))) plans.push(extra);

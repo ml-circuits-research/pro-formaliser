@@ -171,3 +171,20 @@ test('a learned change property does not block a counted noun in a creation list
     return targets.map(wire=>first(wire,'sort')).join(',')==='cat,folio,dog';
   }));
 });
+
+test('a location between list members can describe either neighbour',async t=>{
+  const reader=createReader(model); t.after(()=>reader.close());
+  const text='Create a red cat, a blue bird, near the house, a green dog.';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const owners=new Set();
+  for (const c of candidates) {
+    const wires=parse(c.sop);
+    if (wires.filter(w=>w.type==='w.request.target').length!==3 || c.evidence.missing.length) continue;
+    const anchor=wires.find(w=>first(w,'attribute')==='drawn.anchor' && first(w,'value')==='the house');
+    if (!anchor) continue;
+    const target=wires.find(w=>w.type==='w.request.target' && first(w,'request')===first(anchor,'request'));
+    if (target) owners.add(first(target,'sort'));
+  }
+  assert.ok(owners.has('bird'));
+  assert.ok(owners.has('dog'));
+});
