@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Catalog properties on named and implicit targets
+
+Reader `42b5a0e` reached **50.9%** on primary (**52.2%** with spelling) and **43.4%** on replication. Each sample gained three full readings and lost none. On the third lot of 1,000, five proposal sets changed but none gained or lost a reasonable reading. All 48 edited-input spelling unions were unchanged. Across the six gains, three use typed properties of an implicit chart, two recover multi-object scenes and one binds a label and coordinate on the same new object. [Paired judgments](QUALIFIER-REPLAY.tsv)
+
 ## Owner slots and social responses
 
 Reader `33434b0` reached **50.6%** on the primary sample (**51.9%** with spelling) and **43.1%** on the replica. All six changed sets gained a complete alternative. None of the third sample’s 1,000 sets changed. An optional posture catalog changed six primary sets with the same model. Only one gained a complete proposal, taking original-text coverage to **50.7%**. The others still missed separate details or attached them to the wrong object. [Paired judgments](DEPENDENT-REPLAY.tsv)

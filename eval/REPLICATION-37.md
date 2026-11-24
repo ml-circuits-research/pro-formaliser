@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Replay with 42b5a0e
+
+The early morning library with five object groups, a logarithmic colour-bar scale and the x axis at the top gained complete alternatives. Coverage rose from **43.1%** to **43.4%**, with no losses. A request for a house with a height and coordinates still splits its properties across different targets. [Paired judgments](QUALIFIER-REPLAY.tsv)
+
 ## Replay with 33434b0
 
 Coverage rose from **42.7%** to **43.1%** with three social responses and a request to turn the chimney on a house upright. The incidental observation that it looks odd remains explicitly unread. No previous proposal disappeared. [Paired judgments](DEPENDENT-REPLAY.tsv)

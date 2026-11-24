@@ -1,0 +1,18 @@
+sample_group	sample	source	row	previous	current	reference_issue	reason
+primary	356	drawing/scenes-20.csv	946	L4	L4	0	The replacement adds an explicit imperative mood while preserving the written tree owner, the trunk target and the upright result.
+primary	430	diagram/charts-07.csv	820	L1b	L4	0	A new circuit moves the current chart's legend to the bottom and leaves the chart identity to page context.
+primary	879	diagram/charts-04.csv	3967	L4	L4	0	The new contextual alternative also sets colour-bar length to medium on the current chart. A complete prior proposal is retained.
+primary	898	drawing/scenes-08.csv	1475	L2a	L2a	0	New enumeration creates the armchair, woman, three books and cat, but leaves the requested evening library setting unread.
+primary	933	drawing/scenes-06.csv	2051	L2a	L4	0	New proposals set the classroom scene and create all six correctly described objects, including the running boy, surprised girl and exact count of red books.
+primary	998	diagram/nodes-14.csv	190	L2c	L4	0	A new proposal creates a rectangle labelled Step with the written x-coordinate of 240.
+replica	306	diagram/charts-06.csv	553	1	1	0	A retained circuit sets the named Monthly sales chart to eight bins and shows the grid. The new circuit places both effects on that same written chart.
+replica	438	diagram/charts-03.csv	2125	0	1	0	The added circuit sets logarithmic scale on the colour bar of the context-selected chart, preserving the authored property and value.
+replica	655	drawing/scenes-22.csv	187	0	0	0	The added alternatives attach y=90 to the house but still misread the height and size as a second creation. None gives all three properties to one house.
+replica	665	drawing/scenes-20.csv	978	1	1	0	The replacement preserves the typed house-owner selector and the upright chimney effect, with the preceding observation retained as unread. No unchanged circuit covers the owner.
+replica	810	diagram/charts-02.csv	774	0	1	0	The added circuit moves the x axis to the top of the context-selected chart, preserving the written axis and destination.
+replica	959	drawing/scenes-08.csv	1486	0	1	0	One circuit sets the early morning library and creates all five objects with the written colors, sizes, count, librarian pose and facing, and relative placements. Only articles and proximity intensifiers remain unread.
+blind	169	drawing/scenes-14.csv	686	0	0		The enumerated objects improve, while the library evening setting remains unbound.
+blind	341	diagram/charts-02.csv	1475	1	1		A retained reading already increases pie radius; the contextual alternative preserves the same delta.
+blind	418	diagram/charts-03.csv	988	1	1		The exact reference is retained and the added reading also sets the colour bar vertical.
+blind	452	drawing/scenes-10.csv	273	0	0		The canyon camp, heat haze and afternoon never occur together as the scene state in an otherwise faithful circuit.
+blind	805	drawing/scenes-08.csv	132	0	0		The new reading sets the market street at dusk and adds the stall and other groups, but leaves the boy’s upset expression unread.

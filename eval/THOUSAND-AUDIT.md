@@ -1,27 +1,27 @@
 # Text-only formalisation on 1,000 random requests
 
-**50.6%** of the 1,000 original requests had a reasonable proposal, up from **50.4%**. The spelling path reaches **51.9%**. All 48 edited-input unions were unchanged. [Spelling audit](SPELL-AUDIT.md)
+**50.9%** of the 1,000 original requests had a reasonable proposal, up from **50.6%**. The spelling path reaches **52.2%**. All 48 edited-input unions were unchanged. [Spelling audit](SPELL-AUDIT.md)
 
 | Formaliser grade | Previous | Current |
 | --- | ---: | ---: |
 | L0 – Fail | 1.3% | 1.3% |
 | L1a – Wrong intent | 1.9% | 1.9% |
-| L1b – Wrong target | 2.3% | 2.3% |
+| L1b – Wrong target | 2.3% | 2.2% |
 | L1c – Wrong detail or role | 3.8% | 3.8% |
-| L1d – Invented instruction | 1.7% | 1.6% |
-| L2a – Missing action or step | 6.2% | 6.2% |
-| L2b – Missing target or reference | 10.1% | 10.0% |
-| L2c – Missing value, placement or condition | 22.3% | 22.3% |
+| L1d – Invented instruction | 1.6% | 1.6% |
+| L2a – Missing action or step | 6.2% | 6.1% |
+| L2b – Missing target or reference | 10.0% | 10.0% |
+| L2c – Missing value, placement or condition | 22.3% | 22.2% |
 | L3 – Reasonable and identical | 20.9% | 20.9% |
-| L4 – Reasonable alternative | 29.5% | 29.7% |
+| L4 – Reasonable alternative | 29.7% | 30.0% |
 
 Reviewers flagged material reference issues on 23.4% of requests. On 2.9% of requests, a reasonable proposal coexisted with a material reference issue. Differences in identifiers or another defensible interpretation alone do not count as a reference issue. [One grade and rationale per request](THOUSAND-GRADES.tsv) · [Shared grading legend v1.2](https://github.com/ml-circuits-research/webmeet-dataset/blob/172299f/LEGEND.md)
 
-Two requests gained a complete alternative. One selects a trunk by the tree to which it belongs and turns it upright. The other preserves a social acknowledgment without inventing an edit. An optional posture catalog separately brings text-only coverage to 50.7%. [Paired judgments](DEPENDENT-REPLAY.tsv)
+Three requests gained complete readings: moving a legend to the bottom, creating a six-object classroom, and creating a labelled rectangle at x=240. One classroom proposal preserves the table’s central position, the running boy facing left, the girl’s surprised face, the two red books, the plant and the bird. The optional pose catalog was excluded. [All changed sets](QUALIFIER-REPLAY.tsv)
 
 ## Reproduction and interpretation
 
-The current reader `33434b0` used the same frozen models on three lots of 1,000. Reader revision `1a7dffa` was replayed through the public batch CLI on all 1,000 ordered inputs using the frozen model from the preceding full bucket run. Thirteen proposal sets changed. We also retrained on the 187,106 rows outside bucket 0 and ran the full 1,915-row benchmark. The serialized model matched the frozen one byte for byte. The public CLI and the full benchmark produced the same proposal set on every one of these 1,000 audited requests. Benchmark bucket 0 contains 1,915 rows held out by normalized-text group at WebMeet revision `a85de79`. It trains on the other groups and runs inference without a tab, spelling correction, or conversation history. Score one request across its original proposals. L3 requires a reasonable candidate with exact reference text after trimming and line-ending normalization. L4 includes reasonable alternatives. Requests and reference labels can be noisy. LLM reviewers saw the annotations, assessed disjoint subsets, and used compact circuit displays and original SOP for inspection. No human adjudication was performed.
+The current reader `42b5a0e` used the same frozen models on three lots of 1,000. Reader revision `1a7dffa` was replayed through the public batch CLI on all 1,000 ordered inputs using the frozen model from the preceding full bucket run. Thirteen proposal sets changed. We also retrained on the 187,106 rows outside bucket 0 and ran the full 1,915-row benchmark. The serialized model matched the frozen one byte for byte. The public CLI and the full benchmark produced the same proposal set on every one of these 1,000 audited requests. Benchmark bucket 0 contains 1,915 rows held out by normalized-text group at WebMeet revision `a85de79`. It trains on the other groups and runs inference without a tab, spelling correction, or conversation history. Score one request across its original proposals. L3 requires a reasonable candidate with exact reference text after trimming and line-ending normalization. L4 includes reasonable alternatives. Requests and reference labels can be noisy. LLM reviewers saw the annotations, assessed disjoint subsets, and used compact circuit displays and original SOP for inspection. No human adjudication was performed.
 
 ```sh
 node eval/benchmark.mjs --bucket 0 --context text --model .cache/bindings-model.json --report .cache/bindings.json --details .cache/bindings.jsonl

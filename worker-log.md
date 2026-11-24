@@ -188,3 +188,6 @@
 
 ## Numeric creation attributes, contextual properties and noun scope
 - Literal labels and numeric properties compose on new targets. Implicit property owners retain compatible world alternatives. Competing noun senses are checked against the creation action. All 330 tests passed, including an independent two-family ambiguity probe.
+
+## Paired semantic review at 42b5a0e
+- Both primary and replication gained three full readings, reaching 50.9% and 43.4%. Primary with spelling reached 52.2%. No reasonable reading was lost across the three lots. Wider search and a local span learner yielded no independent whole-request or new correct-pair gains in their respective probes.

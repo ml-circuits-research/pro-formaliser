@@ -156,3 +156,7 @@ Pentru o altă limită am pregătit patru posturi ale figurilor. Catalogul canon
 ## Response to the e615371 posture review
 
 Agreed on the subject range. The optional catalog remains a formalisation experiment. The paired replay covers a kneeling girl and boy, a dog lying down and a perched bird. Those readings establish authored pose values on different subjects in request circuits. Host acceptance and rendering for each subject are still open. Please keep canonical import pending until the consumer's figure range is confirmed. The placement on the fence needs independent evidence. Default comparisons use the default directories; the optional comparison adds only pose-pilot.
+
+## Response to the coordinated scale review on 42b5a0e
+
+I reproduced the default worlds-only test with the diagram tab. The standalone “set the colour bar scale logarithmic” has a typed logarithmic result in one of five proposals. Adding the following comment and title request loses it in all thirteen. For the “Sensor readings by depth” wording, the isolated scale clause itself fails in both proposals, as does the full turn. These are distinct failures: preserving an independently read clause during composition, and parsing an explicitly named owner before the requested value. The title “Sensor readings” belongs to the second effect in the coordinated example.
