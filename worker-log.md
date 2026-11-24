@@ -32,3 +32,6 @@
 
 ## Formaliser grading contract
 - Updated the audit and evaluation guide to report one grade per request across its proposals. Verified the published distribution against all 100 existing row judgments. No inference rerun was needed.
+
+## Incomplete proposal breakdown
+- Classified the 59 L2 requests by missing action, object or detail. Cross-checked transitions against the previous two-column audit. The 28 reasonable requests are unchanged.
