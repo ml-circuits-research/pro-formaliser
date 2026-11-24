@@ -149,3 +149,10 @@ test('the reader retains a licensed body reading with the complete request words
   assert.equal(JSON.parse(request.attrs.words[0]),input);
   assert.equal(request.attrs.predicate[0],'Narrow');
 });
+
+test('a native sequence lead requires a real opening boundary',()=>{
+  const rules=withFacts('@seq w.lang.en.alternation family="sequence lead" from="next {body}" to="{body}"',[]);
+  assert.deepEqual(alternateBodies('Next, add a lantern',rules).map(r=>[r.mode,r.text]),[['ordered','add a lantern']]);
+  for (const input of ['next to the lantern','next week','name it "Next, add a lantern"'])
+    assert.deepEqual(alternateBodies(input,rules),[]);
+});

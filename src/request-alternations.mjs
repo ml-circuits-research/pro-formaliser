@@ -56,8 +56,10 @@ export function compileAlternations(facts) {
   };
   const rules=new Map();
   for (const wire of facts('w.lang.en.alternation')) {
-    const mode=field(wire,'mode');
-    if (!['request','question'].includes(mode)) continue;
+    const explicit=field(wire,'mode');
+    const ordered=!explicit && field(wire,'family')==='sequence lead';
+    const mode=ordered ? 'ordered' : explicit;
+    if (!ordered && !['request','question'].includes(mode)) continue;
     const lhs=pattern(field(wire,'from')), rhs=pattern(field(wire,'to'));
     if (!lhs || !rhs || lhs.variable!==rhs.variable || lhs.parts.length<=rhs.parts.length) continue;
     const starts=lhs.parts.flatMap((_,i)=>samePattern(lhs.parts,rhs.parts,i) ? [i] : []);
@@ -66,6 +68,7 @@ export function compileAlternations(facts) {
     if (unsafe(lhs.parts.slice(0,start)) || unsafe(lhs.parts.slice(end))) continue;
     const pivot=lhs.parts.findIndex(piece=>piece.key===slot);
     const before=lhs.parts.slice(0,pivot), after=lhs.parts.slice(pivot+1);
+    if (ordered && (!before.length || after.length || rhs.parts.length!==1 || rhs.parts[0].key!==slot)) continue;
     const rule={mode,before,after,dropBefore:start,dropAfter:lhs.parts.length-end};
     rules.set(JSON.stringify(rule),rule);
   }
@@ -110,6 +113,9 @@ export function alternateBodies(text, compiled) {
   if (terminal.has(ts[last].key) && !ts[last].hidden) ends.push(last);
   const alternatives=new Map();
   for (const {before,after,mode,dropBefore,dropAfter} of compiled) {
+    // A comma separates a turn-opening order marker from a noun modifier
+    // (for example, “next, …” versus “next month” and “next to …”).
+    if (mode==='ordered' && ts[before.length]?.key!==',') continue;
     for (const end of ends) {
       const visible=removeBoundaryCommas(ts.slice(0,end),dropBefore,dropAfter,before,after);
       const capturedEnd=visible.length-after.length;

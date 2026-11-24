@@ -22,7 +22,7 @@ const color = (value, phase='result', extra='') =>
 test('terminal punctuation does not turn polite imperatives into questions',async t=>{
   const reader=createReader();
   t.after(()=>reader.close());
-  for (const input of ['Could you paint the object blue?','Paint the object blue!']) {
+  for (const input of ['Could you paint the object blue?','Could you also paint the object blue?','Paint the object blue!']) {
     const result=await reader.formalise(input,{tab:'drawing'});
     assert.equal(rows(result,'request')[0].act,'change');
     assert.deepEqual(rows(result,'constraint').map(({value,phase})=>[value,phase]),[['blue','result']]);

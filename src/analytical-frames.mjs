@@ -22,44 +22,63 @@ export function analyticalArgumentFacts(facts) {
     const take=key=>attrs[key]?.[0];
     const [layout,ownerMarker,grouping,operation,measure]=
       ['layout','owner_marker','grouping','operation','measure'].map(take);
-    if (![ownerMarker,grouping,measure,take('family'),take('tab'),take('owner_key'),
-      take('owner_value')].every(Boolean) || !attrs.prefix?.length || !attrs.owner?.length) continue;
-    const owner=['$owner',ownerMarker];
-    const groupMarkers=attrs.group_marker ?? [];
-    const operationMarkers=attrs.operation_marker ?? [];
-    const variants=operation ? [[operation],...operationMarkers.map(marker=>[operation,marker])] : [[]];
-    if (operation) for (const lead of attrs.operation_lead ?? []) {
-      variants.push([lead,operation],...operationMarkers.map(marker=>[lead,operation,marker]));
-    }
-    const parts=[];
-    for (const variant of variants) for (const groupMarker of groupMarkers) {
-      if (layout==='leading_owner') {
-        parts.push([...owner,...variant,measure,groupMarker,grouping]);
-      } else if (layout==='trailing_owner') {
-        parts.push([...variant,measure,groupMarker,grouping,ownerMarker,'$owner']);
-      }
-    }
-    if (layout==='leading_group' && operation) {
-      for (const marker of operationMarkers) parts.push([...owner,grouping,operation,marker,measure]);
-    }
-    if (layout==='trailing_operation' && operation) {
-      for (const marker of operationMarkers) for (const groupMarker of groupMarkers) {
-        parts.push([...owner,measure,marker,operation,groupMarker,grouping]);
-      }
-    }
+    if (![take('family'),take('tab'),take('owner_key'),take('owner_value')].every(Boolean) ||
+        !attrs.prefix?.length || !attrs.owner?.length) continue;
+    const parts=layout==='ordered_fields' ? (attrs.pattern ?? []).flatMap(pattern=>{
+      // Braces name typed catalog slots. The text between slots is one
+      // authored connector, including any attached punctuation.
+      const split=str(pattern).split(/\{(\$owner|[\p{L}][\p{L}\p{N}_-]*\.[\p{L}\p{N}_.-]+)\}/u);
+      if (split.length<5 || split.some((item,i)=>i%2===0 &&
+          (/[{}]/u.test(item) || i>0 && i<split.length-1 && !item.trim()))) return [];
+      return [split.flatMap((item,i)=>{
+        const part=item.trim();
+        return part ? [i%2 ? part : JSON.stringify(part)] : [];
+      })];
+    }) : groupedParts(attrs,[layout,ownerMarker,grouping,operation,measure]);
     for (const [i,part] of parts.entries()) {
       const key=JSON.stringify(['tab','family'].map(key=>str(take(key))));
+      const inherited=boundaries.get(key);
       frames.push({
         id:wire.id+'.argument.'+(i+1),
         type:'pro.reader.argument_sequence',
         attrs:Object.fromEntries([
           ...['tab','family','prefix','owner','owner_key','owner_value'].map(key=>[key,attrs[key]]),
-          ['act',['make']],['mode',['new']],['part',part],...Object.entries(boundaries.get(key) ?? {})
+          ['act',['make']],['mode',['new']],['part',part],['tail',attrs.tail ?? []],
+          ['open_boundary',[...inherited?.open_boundary ?? [],...attrs.open_boundary ?? []]],
+          ['numeric_modifier',inherited?.numeric_modifier ?? []]
         ])
       });
     }
   }
   return frames;
+}
+
+function groupedParts(attrs,[layout,ownerMarker,grouping,operation,measure]) {
+  if (!ownerMarker || !grouping || !measure) return [];
+  const owner=['$owner',ownerMarker];
+  const groupMarkers=attrs.group_marker ?? [];
+  const operationMarkers=attrs.operation_marker ?? [];
+  const variants=operation ? [[operation],...operationMarkers.map(marker=>[operation,marker])] : [[]];
+  if (operation) for (const lead of attrs.operation_lead ?? []) {
+    variants.push([lead,operation],...operationMarkers.map(marker=>[lead,operation,marker]));
+  }
+  const parts=[];
+  for (const variant of variants) for (const groupMarker of groupMarkers) {
+    if (layout==='leading_owner') {
+      parts.push([...owner,...variant,measure,groupMarker,grouping]);
+    } else if (layout==='trailing_owner') {
+      parts.push([...variant,measure,groupMarker,grouping,ownerMarker,'$owner']);
+    }
+  }
+  if (layout==='leading_group' && operation) {
+    for (const marker of operationMarkers) parts.push([...owner,grouping,operation,marker,measure]);
+  }
+  if (layout==='trailing_operation' && operation) {
+    for (const marker of operationMarkers) for (const groupMarker of groupMarkers) {
+      parts.push([...owner,measure,marker,operation,groupMarker,grouping]);
+    }
+  }
+  return parts;
 }
 
 export function compileAnalyticalOwnerProperties(facts, requestKeys) {

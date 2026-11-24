@@ -1,10 +1,12 @@
 # Propuneri pentru lumile SOP
 
-Pachetul se poate revizui și integra pe bucăți. Pilotul pentru posturi păstrează identificatorul intrării de catalog din versiunea fixată, iar celelalte propuneri au identificatori noi. Declarațiile din lumile instalate rămân sursa pentru tipurile, proprietățile și valorile existente.
+Pachetul se poate revizui și integra pe bucăți. Piloții pentru posturi și expresii păstrează identificatorul intrării de catalog din versiunea fixată, iar celelalte propuneri au identificatori noi. Declarațiile din lumile instalate rămân sursa pentru tipurile, proprietățile și valorile existente.
 
 | Fișier | Ce adaugă | Ce funcționează azi |
 | --- | --- | --- |
 | [pro.reader/](pro.reader/) | Schemele și regulile folosite deja implicit de formalizator, inclusiv roluri, regiuni și păstrarea stării. | Cititorul le încarcă la pornire. |
+| [Câmpurile unui grafic de dispersie](scatter-fields-pilot/README.md) | Două chei pentru datele de pe axe și reguli pentru ordinea câmpurilor. | Pilotul păstrează separat titlurile axelor și câmpurile. Execuția în aplicație rămâne de verificat. |
+| [Expresii ale figurilor](expression-pilot/README.md) | Cinci valori și o regulă gramaticală pentru o expresie scrisă după numele figurii. | Regula folosește valorile catalogului instalat. |
 | [Posturi ale figurilor](pose-pilot/README.md) | Patru valori suplimentare pentru catalogul închis de posturi. | Același model citește „kneeling” după obiectul descris. La integrare se adaugă doar valorile lipsă în intrarea curentă. |
 | [visual-properties.sop](vocabulary/visual-properties.sop) | Opt expresii englezești pentru trasee, stiluri de linie și aliniere. Fiecare sens este legat de proprietatea sa. | Cititorul le folosește când încarcă vocabularul. De exemplu, „curvy” produce valoarea canonică `curved` pentru traseul unei legături. |
 | [property-frames.sop](language/property-frames.sop) | Două construcții gramaticale cu roluri pentru obiect, proprietate și valoare. | Aceeași regulă citește „What width does the node have?” și „What style does the link have?”. Regula pentru atribuiri citește „Set the style on the link to dotted”. |

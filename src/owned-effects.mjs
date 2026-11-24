@@ -105,6 +105,19 @@ function resolveOwner(tokens,span,a,b,worlds,frame,heads) {
 
 function names(ts,a,b) { return ts.slice(a,b).map(([term])=>term).join(' '); }
 
+function openValueText(written,worlds,grammar,family) {
+  const terms=written.split(' ');
+  return terms.every((term,i)=>nominal.test(term) && !worlds.negatives.has(term) && !worlds.joiners[term] &&
+    !Array.from({length:Math.min(8,terms.length-i)},(_,j)=>terms.slice(i,i+j+1).join(' ')).some(surface=>
+      worlds.scopeGrammar.conditionals.has(surface) || worlds.scopeGrammar.questions.has(surface) ||
+      worlds.lookup(surface).some(([role])=>role==='act') ||
+      i>0 && [...(grammar.properties.get(surface)?.get(family)?.values() ?? [])].some(({spec,sense})=>{
+        const tail=terms.slice(i+surface.split(' ').length).join(' ');
+        return spec.values.some(value=>form(value.replaceAll('_',' '))===tail) || sense?.aliases.has(tail) ||
+          grammar.comparatives.has(quote([sense?.scale,tail]));
+      })));
+}
+
 function operand(frame,property,captured,worlds,grammar) {
   const {spec,sense}=property, heads=spec.head.split('+');
   if (frame.operation!=='set') {
@@ -132,7 +145,8 @@ function operand(frame,property,captured,worlds,grammar) {
   if (options.size===1) return {value:options.values().next().value,words};
   // Unquoted open text is admissible only in an explicit owner construction.
   if (frame.openText && captured.owner && heads.includes('span') && !spec.values.length && !sense?.scale &&
-      written.split(' ').every(term=>nominal.test(term) && !worlds.negatives.has(term) && !worlds.joiners[term])) {
+      (captured.owner.reference ? sense?.command && openValueText(written,worlds,grammar,spec.family) :
+        written.split(' ').every(term=>nominal.test(term) && !worlds.negatives.has(term) && !worlds.joiners[term]))) {
     return {value:words,words,open:true};
   }
 }
@@ -168,8 +182,11 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
   }
   if (!registered.size) return [];
   const licensedLead=lead=>worlds.literalGrammar.leads.has(lead) || worlds.fillerPhrases.has(lead);
-  const leadAllowed=lead=>!lead || licensedLead(lead) || lead.split(' ').some((_,end,parts)=>
-    end>0 && licensedLead(parts.slice(0,end).join(' ')) && licensedLead(parts.slice(end).join(' ')));
+  const leadAllowed=lead=>!lead || licensedLead(lead) || lead.split(' ').some((_,end,parts)=>{
+    const tail=parts.slice(end);
+    return end>0 && licensedLead(parts.slice(0,end).join(' ')) &&
+      (licensedLead(tail.join(' ')) || tail.length===1 && worlds.joiners[tail[0]]==='addition');
+  });
   function* match(frame,family,part,a,b,captured) {
     if (part===frame.parts.length) {
       if (a===b) yield captured;
@@ -186,7 +203,13 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
     for (let end=a+1;end<=Math.min(a+12,b);end++) {
       let result;
       if (slot==='owner') {
-        if (!covered(a,end)) result=resolveOwner(ts,span,a,end,worlds,{family},grammar.ownerHeads.get(family) ?? []);
+        if (!covered(a,end)) {
+          const surface=norm(a,end);
+          if (frame.openText && frame.parts[part+1]?.word &&
+              frame.parts[part+2]?.slot==='property' && worlds.sequenceObjectPronouns.get(surface)==='sg') {
+            result={reference:true,words:span(a,end)};
+          } else result=resolveOwner(ts,span,a,end,worlds,{family},grammar.ownerHeads.get(family) ?? []);
+        }
       } else if (slot==='property') {
         const choices=registered.get(a)?.get(end)?.get(family);
         if (choices?.length) result={words:span(a,end),choices};
@@ -212,7 +235,7 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
         for (const family of families) {
           for (const captured of match(frame,family,0,start,b,{})) {
             for (const property of captured.property.choices) {
-              if (frame.command && !property.sense?.command) continue;
+              if ((frame.command || captured.owner?.reference) && !property.sense?.command) continue;
               const value=operand(frame,property,captured,worlds,grammar);
               if (!value) continue;
               if (captured.prior) {
@@ -221,7 +244,7 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
               }
               const head=frame.parts[0].word, next=frame.parts[1];
               const predicate=head && !worlds.determiners[head] &&
-                (next?.slot==='property' || worlds.determiners[next?.word]) ? span(start,start+1) : undefined;
+                (next?.slot==='property' || captured.owner?.reference || worlds.determiners[next?.word]) ? span(start,start+1) : undefined;
               result.push({family,key:property.spec.name,keyWords:captured.property.words,owner:captured.owner,value,predicate});
             }
           }
@@ -262,10 +285,13 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
       }) : [];
       const topic=topics.at(-1);
       if (start && !topic) continue;
-      const owners=[...path.map(effect=>effect.owner).filter(Boolean),...(topic ? [topic] : [])];
+      if (!topic && path[0].owner?.reference && path.some(effect=>effect.owner && !effect.owner.reference)) continue;
+      const owners=[...path.map(effect=>effect.owner).filter(item=>item && !item.reference),...(topic ? [topic] : [])];
       if (new Set(path.map(effect=>effect.key)).size!==path.length) continue;
       const owner=owners.find(owner=>owner.licensed);
-      const contextual=!owners.length && path.every(effect=>!effect.value.open);
+      const anaphoric=path.some(effect=>effect.owner?.reference);
+      if (anaphoric && owners.length && !owner?.name) continue;
+      const contextual=!owners.length && path.every(effect=>!effect.value.open || effect.owner?.reference);
       if (!contextual && (!owner || new Set(owners.map(item=>item.identity)).size!==1)) continue;
       const predicate=contextual && path[0].predicate;
       const lines=['@r w.request.request act=change mood=do words='+quote(text)+(predicate ? ' predicate='+quote(predicate) : ''),

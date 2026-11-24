@@ -302,6 +302,20 @@ export function nominalPositionForms(facts, requestKeys) {
     if (!byLead.has(words[0])) byLead.set(words[0],new Map());
     byLead.get(words[0]).set(JSON.stringify(entry),entry);
   };
+  for (const wire of facts('pro.reader.nominal_pattern')) {
+    const family=field(wire,'family'), tab=field(wire,'tab'), key=field(wire,'key');
+    const bank=requestKeys.find(prop=>prop.family===family && prop.tab===tab && prop.name===key &&
+      prop.head==='class' && prop.values.length);
+    if (!bank) continue;
+    for (const surface of wire.attrs.pattern ?? []) {
+      const pattern=decode(surface);
+      if (!/^(?:[\p{L}\p{M}]+ )*\{value\}(?: [\p{L}\p{M}]+)*$/u.test(pattern)) continue;
+      for (const value of bank.values) {
+        const words=lexicalWords(pattern.replace('{value}',()=>value));
+        if (words) add(family,[words,key,value,'attribute','eq','result']);
+      }
+    }
+  }
   for (const wire of facts('pro.reader.nominal_value')) {
     const family=field(wire,'family'), tab=field(wire,'tab');
     const key=field(wire,'key'), value=field(wire,'value');

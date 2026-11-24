@@ -51,3 +51,22 @@ test('an independently declared node value attaches to its local nominal with ve
     'Draw a girl standing by.',
   ]) assert.deepEqual(await interpretations(input),[],input);
 });
+
+test('a postnominal frame reads current members of an independently installed finite bank',async t=>{
+  const dir=mkdtempSync(join(fileURLToPath(new URL('../.cache/',import.meta.url)),'finite-nominal-'));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  const file=join(dir,'pattern.sop');
+  writeFileSync(file,[
+    '@fixture.state w.request.key tab=diagram family=node name=node.fixtureState head=class value=active value=idle',
+    '@fixture.frame pro.reader.nominal_pattern tab=diagram family=node key=node.fixtureState pattern="with an {value} indicator"',
+  ].join('\n'));
+  const reader=createReader(undefined,loadWorlds({paths:[file]}));
+  t.after(()=>reader.close());
+  for (const value of ['active','idle','unlisted']) {
+    const result=await reader.propose('Add a node with an '+value+' indicator');
+    const hit=result.candidates.flatMap(c=>parse(c.sop)).some(w=>
+      field(w,'attribute')==='node.fixtureState' && field(w,'value')===value &&
+      field(w,'words')==='with an '+value+' indicator');
+    assert.equal(hit,value!=='unlisted',value);
+  }
+});

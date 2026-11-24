@@ -1,5 +1,6 @@
 import {dependentOperandReadings} from './dependent-operands.mjs';
 import {createDialogueCoverage} from './dialogue-coverage.mjs';
+import {createEffectSequence} from './effect-sequence.mjs';
 import {ownedEffectReadings} from './owned-effects.mjs';
 import {createAppositiveSelectorReader} from './appositive-selector.mjs';
 import {quantifiedVerbReadings} from './quantified-verb.mjs';
@@ -141,6 +142,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     for (const value of values) bank.add(value);
     closedKeys.set(key,bank);
   }
+  const effectSequence=createEffectSequence(worlds,model.examples);
   const transfer = createTransfer(model.examples, {
     propertyLabels:worlds.ownerPropertyLabels,requestKeys:worlds.requestKeys,joiners:worlds.joiners,
     resolveValue:valueResolver(worlds,model.lexicon,model.forms), fillerPhrases:worlds.discourse,
@@ -620,8 +622,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       const {alternatives,...head}=await formalise(body.text);
       const boundaries=sequenceParts(body.text,tokens(body.text),worlds.joiners,sequenceOptions);
       for (const choice of [head,...alternatives]) {
-        if (!choice.sop || choice.sop.includes(' w.request.unread ')) continue;
+        if (!choice.sop) continue;
         const wires=parse(choice.sop), requests=wires.filter(w=>w.type==='w.request.request');
+        if (wires.some(w=>w.type==='w.request.unread' &&
+            !Object.hasOwn(worlds.determiners,valueOf(w,'text')?.toLowerCase()))) continue;
         if (!requests.length || requests.length<boundaries.length ||
             requests.length>1 && requests.some(r=>!r.attrs.words)) continue;
         const [request]=requests;
@@ -629,6 +633,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const evidence=evidenceReport(body.text,wires,worlds.evidenceVocabulary);
         if (evidence.missing.length || evidence.counts.uncovered) continue;
         if (requests.length===1) request.attrs.words=[JSON.stringify(text)];
+        else if (body.prefix) {
+          const firstScope=valueOf(request,'words');
+          if (!body.text.startsWith(firstScope)) continue;
+          request.attrs.words=[JSON.stringify(text.slice(0,body.start+firstScope.length))];
+        }
         const sop=serialize(wires);
         const key=admissibleKey(text,sop);
         if (key && !seen.has(key)) {
@@ -685,6 +694,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
+      for (const reading of await effectSequence(text,read)) {
+        const key=admissibleKey(text,reading.sop);
+        if (key) additional.set(key,reading);
+      }
       for (const candidate of candidates) {
         if (!candidate.sop.includes(' words=') || candidate.sop.indexOf(' w.request.request')===
             candidate.sop.lastIndexOf(' w.request.request')) continue;

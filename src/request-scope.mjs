@@ -70,8 +70,11 @@ function speech(ts, start, worlds, hits) {
   if (modals.has(head)) {
     const politeEnd=leadEnd(ts,start,worlds.literalGrammar?.leads);
     if (politeEnd>start+2) return {intent:'proposal',lead:ts.slice(start,politeEnd),after:politeEnd};
-    if (politeEnd===start+2 && addressees.has(second) &&
-        hasMutatingHead(ts,firstContent(ts.slice(politeEnd),worlds)+politeEnd,worlds,hits)) return {};
+    if (politeEnd===start+2 && addressees.has(second)) {
+      let action=firstContent(ts.slice(politeEnd),worlds)+politeEnd;
+      if (worlds.joiners[ts[action]?.[0]]==='addition') action++;
+      if (hasMutatingHead(ts,action,worlds,hits)) return {};
+    }
   }
   // A bare do/have form before a named argument also introduces an imperative.
   if (plainImperatives.has(head) && ts.at(-1)?.[0]!=='?' && !subjects.has(second)) return {};

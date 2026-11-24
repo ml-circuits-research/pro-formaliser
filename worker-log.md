@@ -191,3 +191,6 @@
 
 ## Paired semantic review at 42b5a0e
 - Both primary and replication gained three full readings, reaching 50.9% and 43.4%. Primary with spelling reached 52.2%. No reasonable reading was lost across the three lots. Wider search and a local span learner yielded no independent whole-request or new correct-pair gains in their respective probes.
+
+## Composing typed effects and grounded scene headings
+- The frozen public reader binds scale and title in the coordinated review request and keeps the comment as supported discourse. A named chart retains both scale and font. Compounded values are checked against their catalog. Optional scatter and figure-expression pilot worlds are staged. All 340 tests passed.

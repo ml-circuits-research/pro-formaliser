@@ -525,7 +525,7 @@ function* excerpts(example, observeHeading) {
   }
 }
 
-function composedHeadingIndex(determiners, fillerPhrases) {
+function composedHeadingIndex(determiners, fillerPhrases, joiners) {
   const shells=new Map(), maxFragments=4;
   const embedded=new Map();
   const attributes=new Set(['request','on','attribute','value','words','key_words','operator','phase','want','open_value']);
@@ -612,6 +612,13 @@ function composedHeadingIndex(determiners, fillerPhrases) {
     const ts=tokens(text);
     if (!ts.length || ts.length>36) return [];
     const proposals=new Map();
+    // Leading discourse can precede both an imperative and a bare heading.
+    // Inside the heading a connector may link operands, so only strip it here.
+    let openingEnd=0;
+    while (openingEnd<ts.length && (ornament.has(ts[openingEnd].key) || joiners?.[ts[openingEnd].key]==='addition')) {
+      openingEnd++;
+      if (ts[openingEnd]?.key===',') openingEnd++;
+    }
     for (const {leads,pieces,bare} of shells.values()) {
       const byFirst=new Map();
       const contextualRoles=new Set([...pieces.values()].filter(piece=>piece.sources.size>=2).map(piece=>role(piece.attrs)));
@@ -642,9 +649,8 @@ function composedHeadingIndex(determiners, fillerPhrases) {
       }
       for (const lead of leads.values()) {
         if (lead.sources.size<2) continue;
-        const afterOrnaments=ts.findIndex(({key})=>!ornament.has(key));
-        for (const start of new Set([0,Math.max(0,afterOrnaments)])) {
-          if (start && !lead.predicate || normal(ts.slice(start,start+lead.length))!==lead.lead) continue;
+        for (const start of new Set([0,openingEnd])) {
+          if (normal(ts.slice(start,start+lead.length))!==lead.lead) continue;
           const predicate=lead.predicate && rawSpan(text,ts,lead.predicate[0]+start,lead.predicate[1]+start);
           cover(start+lead.length,[],predicate);
         }
@@ -674,10 +680,10 @@ function composedHeadingIndex(determiners, fillerPhrases) {
   return {observe,observeEmbedded,find};
 }
 
-function headingIndex(envelope, determiners, fillerPhrases) {
+function headingIndex(envelope, determiners, fillerPhrases, joiners) {
   const proposals=new Map();
   const bareForms=new Set();
-  const composed=composedHeadingIndex(determiners,fillerPhrases);
+  const composed=composedHeadingIndex(determiners,fillerPhrases,joiners);
   const signature=text=>tokens(text).map(token=>token.key).join(' ');
   function formOf(bodyTokens,wires,constraints) {
     const slots=new Map();
@@ -772,7 +778,7 @@ function headingIndex(envelope, determiners, fillerPhrases) {
 export function createTransfer(examples, { resolveValue, typedSlot, fillerPhrases = [], determiners = {},
   propertyLabels, requestKeys, joiners = {} } = {}) {
   const envelope = makeEnvelope(fillerPhrases);
-  const headings=headingIndex(envelope,determiners,fillerPhrases);
+  const headings=headingIndex(envelope,determiners,fillerPhrases,joiners);
   const checkProperties=checkNumericResultKeys(propertyLabels,requestKeys,joiners);
   const postings = new Map();
   const indexed = [];

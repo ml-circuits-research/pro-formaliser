@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { createReader } from '../src/runtime.mjs';
@@ -57,6 +58,8 @@ test('loads a distinct analytical layout through a normal reader overlay', async
     '@partition w.request.key tab=audit family=screen name=screen.partition head=span',
     '@style w.request.key tab=audit family=screen name=screen.style head=class value=grid',
     '@frame pro.reader.analytical_frame tab=audit family=screen layout=trailing_owner prefix=build owner="a weekly matrix" owner_key=screen.view owner_value=weekly owner_marker=as measure=screen.subject grouping=screen.partition group_marker=across operation=screen.combine operation_marker=of',
+    '@ordered pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="{$owner} for {screen.subject}, partitioned across {screen.partition}, combined by {screen.combine}"',
+    '@adjacent pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=merge owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="{$owner} for {screen.subject} {screen.partition}"',
     '@boundary pro.reader.analytical_boundary tab=audit family=screen text="capped at" numeric_modifier=deep',
     '@matrix.style pro.reader.analytical_owner_property tab=audit family=screen owner_key=screen.view owner_value=weekly text="a weekly matrix" key=screen.style value=grid',
     '@union core.word text=unioned means=union of=screen.combine'
@@ -65,7 +68,10 @@ test('loads a distinct analytical layout through a normal reader overlay', async
   t.after(()=>reader.close());
   await proves(reader,'Build unioned inspection results across delivery teams as a weekly matrix',
     {'screen.view':'weekly','screen.combine':'union','screen.subject':'inspection results','screen.partition':'delivery teams','screen.style':'grid'});
+  await proves(reader,'Assemble a weekly matrix for repair results, partitioned across shift teams, combined by unioned',
+    {'screen.view':'weekly','screen.combine':'union','screen.subject':'repair results','screen.partition':'shift teams','screen.style':'grid'});
   for (const text of [
+    'Merge a weekly matrix for result groups',
     'Build weighted inspection results across delivery teams as a weekly matrix',
     'Build unioned inspection results if asked across delivery teams as a weekly matrix',
     'Build unioned inspection results across delivery teams and delete the plot as a weekly matrix',
@@ -97,4 +103,55 @@ test('keeps binning and comparison clauses out of open analytical operands', asy
     {'chart.type':'bar','chart.measure':'grouped sales','chart.dimension':'2025 region'});
   await proves(reader,"I'd like sales grouped by state as a bar chart",
     {'chart.type':'bar','chart.measure':'sales','chart.dimension':'state'});
+});
+
+test('opt-in scatter field mappings preserve axis semantics without creating axis titles',async t=>{
+  const path=new URL('../sop-worlds/scatter-fields-pilot/',import.meta.url);
+  const original=createReader();
+  const reader=createReader(undefined,loadWorlds({paths:[fileURLToPath(path)]}));
+  t.after(async()=>{await original.close();await reader.close()});
+  const source='Make a scatter plot of defect rate against elapsed minutes, colored by repair crew';
+  const expected={
+    'chart.type':'scatter','chart.xField':'elapsed minutes','chart.yField':'defect rate','chart.colourBy':'repair crew',
+  };
+  const result=await proves(reader,source,expected);
+  const props=properties(parse(result.sop));
+  for (const key of ['chart.x','chart.y','chart.xLabel','chart.yLabel','chart.measure','chart.dimension']) {
+    assert.equal(props[key],undefined,key);
+  }
+  assert.ok((await original.propose(source)).candidates.every(candidate=>
+    !properties(parse(candidate.sop))['chart.xField']));
+
+  await proves(reader,'Display net repairs against technician tenure, coloured by office in a scatter plot',{
+    'chart.type':'scatter','chart.xField':'technician tenure','chart.yField':'net repairs','chart.colourBy':'office',
+  });
+  await proves(reader,'Draw a scatter plot with heater load on the x axis, fuel draw on the y axis, coloured by unit',{
+    'chart.type':'scatter','chart.xField':'heater load','chart.yField':'fuel draw','chart.colourBy':'unit',
+  });
+  for (const [x,y] of [['heater load','fuel draw'],['fuel draw','heater load']]) {
+    await proves(reader,'Draw a scatter plot of heater load versus fuel draw, coloured by unit',{
+      'chart.type':'scatter','chart.xField':x,'chart.yField':y,'chart.colourBy':'unit',
+    });
+  }
+
+  for (const text of [
+    'Make a scatter plot of defect rate against elapsed minutes shown together, colored by repair crew',
+    'Make a scatter plot of defect rate against elapsed minutes, labeled by repair crew',
+    'Make a scatter plot of defect rate against elapsed minutes, colored by repair crew if asked',
+    'Make a line plot of defect rate against elapsed minutes, colored by repair crew',
+    'Do not make a scatter plot of defect rate against elapsed minutes, colored by repair crew',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>!properties(parse(candidate.sop))['chart.xField']),text);
+  }
+  const followup=await reader.propose(source+' and delete the plot');
+  const mappings=followup.candidates.filter(candidate=>properties(parse(candidate.sop))['chart.xField']);
+  assert.ok(mappings.length);
+  assert.ok(mappings.every(({sop})=>{
+    const wires=parse(sop);
+    return properties(wires)['chart.colourBy']==='repair crew' &&
+      wires.some(wire=>wire.type==='w.request.request' && decode(wire.attrs.act?.[0])==='remove' ||
+        wire.type==='w.request.unread' && decode(wire.attrs.text?.[0]).includes('delete the plot'));
+  }));
+
 });

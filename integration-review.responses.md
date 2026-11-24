@@ -160,3 +160,17 @@ Agreed on the subject range. The optional catalog remains a formalisation experi
 ## Response to the coordinated scale review on 42b5a0e
 
 I reproduced the default worlds-only test with the diagram tab. The standalone “set the colour bar scale logarithmic” has a typed logarithmic result in one of five proposals. Adding the following comment and title request loses it in all thirteen. For the “Sensor readings by depth” wording, the isolated scale clause itself fails in both proposals, as does the full turn. These are distinct failures: preserving an independently read clause during composition, and parsing an explicitly named owner before the requested value. The title “Sensor readings” belongs to the second effect in the coordinated example.
+
+## Reply on the two coordinated scale requests
+
+The default catalog now supports the isolated named-owner and anaphoric title constructions. On the frozen bucket-0 model with the diagram tab, a single proposed circuit binds both the logarithmic scale and larger font to “Sensor readings by depth”. The other input now binds the logarithmic scale and the title “Sensor readings” on one contextual chart. The intervening comment is preserved through independent training evidence. A worlds-only run has no such learned evidence for this comment.
+
+A separate opt-in proposal adds explicit data-field bindings for a scatter plot. Chart page coordinates and axis display titles have different meanings from the fields that supply data. The two proposed diagram slots and request keys are additive. The optional reader accepts explicit horizontal/vertical instructions and preserves both plausible orders for neutral “versus” in its declared patterns. Host-side data resolution and rendering are open. [Proposal and measured scope](sop-worlds/scatter-fields-pilot/README.md)
+
+## Closed value banks and candidate operands
+
+The native request schema documents a closed list for head=class and open candidates for head=candidate. The pinned dataset checker accepts an out-of-bank value whenever the wire carries open_value. For example, chart.gridStyle has solid, dashed and dotted. A request for a darker purple grid cannot use that key to encode colour. The new clause composer checks a donor's value against its actual key before reusing the donor.
+
+A blanket discard on the preceding primary replay would affect 40 of 1,000 proposal sets. In six reviewed cases the only circuit carrying an important meaning would disappear, including a persistent cat–dog relationship and a request about a cat facing a house. These need compatible, decomposed representations or additional keys. We kept the existing source proposals during this test. Please consider reconciling the checker and key declarations with those meanings before applying a global migration.
+
+The expression pilot independently adds five proposed literals for drawn figures and a grammar frame whose vocabulary comes from the active finite bank. With the unchanged model, the blind market-street example can now keep the boy's upset expression, the four flowers, vendor, stall and setting in one circuit. This is a checked request-level interpretation. Rendering support remains open. [Expression proposal](sop-worlds/expression-pilot/README.md)

@@ -2,18 +2,22 @@
 @pro.reader.analytical_frame core.type of=pro.reader.analytical_frame closed=true
 @pro.reader.analytical_frame.tab core.slot of=pro.reader.analytical_frame key=tab kind=atom required=true
 @pro.reader.analytical_frame.family core.slot of=pro.reader.analytical_frame key=family kind=atom required=true
-@pro.reader.analytical_frame.layout core.slot of=pro.reader.analytical_frame key=layout enum=leading_owner enum=trailing_owner enum=leading_group enum=trailing_operation required=true
+@pro.reader.analytical_frame.layout core.slot of=pro.reader.analytical_frame key=layout enum=leading_owner enum=trailing_owner enum=leading_group enum=trailing_operation enum=ordered_fields required=true
 @pro.reader.analytical_frame.prefix core.slot of=pro.reader.analytical_frame key=prefix kind=string many=true required=true
 @pro.reader.analytical_frame.owner core.slot of=pro.reader.analytical_frame key=owner kind=string many=true required=true
 @pro.reader.analytical_frame.owner_key core.slot of=pro.reader.analytical_frame key=owner_key kind=atom required=true
 @pro.reader.analytical_frame.owner_value core.slot of=pro.reader.analytical_frame key=owner_value kind=atom required=true
-@pro.reader.analytical_frame.owner_marker core.slot of=pro.reader.analytical_frame key=owner_marker kind=string required=true
-@pro.reader.analytical_frame.measure core.slot of=pro.reader.analytical_frame key=measure kind=atom required=true
-@pro.reader.analytical_frame.grouping core.slot of=pro.reader.analytical_frame key=grouping kind=atom required=true
+@pro.reader.analytical_frame.owner_marker core.slot of=pro.reader.analytical_frame key=owner_marker kind=string
+@pro.reader.analytical_frame.measure core.slot of=pro.reader.analytical_frame key=measure kind=atom
+@pro.reader.analytical_frame.grouping core.slot of=pro.reader.analytical_frame key=grouping kind=atom
 @pro.reader.analytical_frame.group_marker core.slot of=pro.reader.analytical_frame key=group_marker kind=string many=true
 @pro.reader.analytical_frame.operation core.slot of=pro.reader.analytical_frame key=operation kind=atom
 @pro.reader.analytical_frame.operation_lead core.slot of=pro.reader.analytical_frame key=operation_lead kind=string many=true
 @pro.reader.analytical_frame.operation_marker core.slot of=pro.reader.analytical_frame key=operation_marker kind=string many=true
+
+@pro.reader.analytical_frame.pattern core.slot of=pro.reader.analytical_frame key=pattern kind=string many=true
+@pro.reader.analytical_frame.tail core.slot of=pro.reader.analytical_frame key=tail kind=string many=true
+@pro.reader.analytical_frame.open_boundary core.slot of=pro.reader.analytical_frame key=open_boundary kind=string many=true
 
 # Binning and threshold words must not be absorbed by open field names.
 @pro.reader.analytical_boundary core.type of=pro.reader.analytical_boundary closed=true

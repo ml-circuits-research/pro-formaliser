@@ -90,3 +90,15 @@ test('a setting before the first object can corroborate a local facet only in it
   assert.match(proposal.sop,/attribute=gallery\.location value=beach/);
   assert.doesNotMatch(proposal.sop,/family=artifact/);
 });
+
+test('an additive discourse opening preserves the setting and its typed facets',()=>{
+  const transfer=createTransfer(samples,{joiners:{also:'addition',or:'alternative'}});
+  const [withVerb]=transfer.sceneHeadings('also, Prepare a courtyard before sunrise');
+  assert.match(withVerb.sop,/predicate="Prepare"/);
+  assert.match(withVerb.sop,/attribute=gallery.light value=dawn/);
+  const bare=createTransfer([...samples,scene('a courtyard',[place],'statue'),scene('a courtyard',[place],'print')],
+    {joiners:{also:'addition',or:'alternative'}});
+  assert.ok(bare.sceneHeadings('also a courtyard before sunrise').length);
+  assert.deepEqual(bare.sceneHeadings('or a courtyard before sunrise'),[]);
+  assert.deepEqual(bare.sceneHeadings('a courtyard also before sunrise'),[]);
+});

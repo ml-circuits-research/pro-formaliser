@@ -68,7 +68,7 @@ unique_sops([_-C|Rest], Seen, N, Answers) :-
     ; Answers = [C|Tail], Next is N-1, unique_sops(Rest, [C.sop|Seen], Next, Tail) ).
 
 candidate(Q, score(4, N, 0), _{sop:Sop, source:example, support:N}) :-
-    member(E, Q.examples), Sop = E.sop, N = E.count.
+    member(E, Q.examples), Sop = E.sop, (get_dict(count, E, N) -> true ; N = 1).
 candidate(Q, score(3, Specificity, N), _{sop:Sop, source:template, support:N}) :-
     member(T, Q.templates), matches(T.pattern, Q.tokens, Q, [], Bindings),
     maplist(part(Bindings), T.parts, Parts), atomics_to_string(Parts, Sop),
