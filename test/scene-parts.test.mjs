@@ -146,3 +146,13 @@ test('learned scene constructors separate setting and list after a display-shape
     assert.ok(questions.candidates.every(c=>!c.sop.includes('@scene.setting')));
   } finally { await reader.close(); }
 });
+
+test('a trailing list separator has no following predicate',async t=>{
+  const reader=createReader(model);
+  t.after(()=>reader.close());
+  const result=await reader.propose('Create a cat, a dog,');
+  assert.ok(result.candidates.some(({sop})=>{
+    const targets=parse(sop).filter(w=>w.type==='w.request.target');
+    return targets.some(w=>first(w,'sort')==='cat') && targets.some(w=>first(w,'sort')==='dog');
+  }));
+});

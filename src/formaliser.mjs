@@ -1,3 +1,8 @@
+import { affectedTargetCandidates } from './affected-target.mjs';
+import { ownerPropertyReadings } from './owner-property.mjs';
+import { serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
+import { alternateBodies } from './request-alternations.mjs';
+import { evidenceReport } from './evidence.mjs';
 import {createCompoundReferenceReader} from './compound-reference.mjs';
 import {nominalScaleReading} from './nominal-scales.mjs';
 import { sequencePacket,sequenceReading } from './argument-sequences.mjs';
@@ -183,7 +188,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         contextualTargets.push({...plain,sop});
       }
     }
-    if (!scope.restricted) for (const candidate of compounds(text,ts,quotes)) retain(candidate);
+    if (!scope.restricted) {
+      for (const candidate of compounds(text,ts,quotes)) retain(candidate);
+      for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
+      for (const reading of ownerPropertyReadings(text,ts,quotes,worlds)) retain(reading);
+    }
     for (const candidate of instanceReferences(text,ts,quotes,hits)) retain(candidate);
     // Family hypotheses for pronouns follow the text's own readings. The
     // independent estimator can promote one when there is supporting context.
@@ -424,6 +433,29 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       const result = await formalise(text);
       const {alternatives,[conditionalScope]:_conditional,...first} = result;
       const candidates = result.sop ? [first,...alternatives] : [];
+      // Native alternations license an additional reading of a literal part of
+      // the utterance. Keep the outer wording as evidence for the whole request.
+      const bodies=languageFrames ? alternateBodies(text,worlds.alternations) : [];
+      const seen=bodies.length && new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
+      for (const body of bodies) {
+        const {alternatives,...head}=await formalise(body.text);
+        for (const choice of [head,...alternatives]) {
+          if (!choice.sop || choice.sop.includes(' w.request.unread ')) continue;
+          const wires=parse(choice.sop), requests=wires.filter(w=>w.type==='w.request.request');
+          if (requests.length!==1) continue;
+          const [request]=requests;
+          if (body.mode==='question' && !['ask','check'].includes(request.attrs.mood?.[0]) && request.attrs.act?.[0]!=='ask') continue;
+          const evidence=evidenceReport(body.text,wires,worlds.evidenceVocabulary);
+          if (evidence.missing.length || evidence.counts.uncovered) continue;
+          request.attrs.words=[JSON.stringify(text)];
+          const sop=serialize(wires);
+          const key=admissibleKey(text,sop);
+          if (key && !seen.has(key)) {
+            seen.add(key);
+            candidates.push({sop,status:choice.status,source:'language-alternation'});
+          }
+        }
+      }
       const qualify=clauseQualifiers(text,worlds,model,(words,quotes)=>
         !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted);
       const additional=new Map();

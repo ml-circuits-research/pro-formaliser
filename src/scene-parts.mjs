@@ -99,6 +99,7 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
     if (!separator(i)) continue;
     let next=i+1;
     while (separator(next)) next++;
+    if (next===ts.length) break;
     const comma=head.slice(i,next).some(key=>key===',');
     if (!nominal(next)) {
       if (comma && hasSpatialLead(next)) {

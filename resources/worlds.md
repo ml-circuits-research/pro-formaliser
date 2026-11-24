@@ -221,6 +221,55 @@ the reference. The separator inside the quote stays part of the operand. The
 reader checks the selected clause and the existing wires before accepting the
 pair. Ambiguous operand boundaries can leave text unread.
 
+## Owner-bound property edits
+
+A `pro.reader.owner_property` frame declares the connectors between an
+attribute phrase, its described owner and the replacement value. The verb
+must have a native action reading and a value-bearing frame for that action.
+The existing owner must end in a native noun licensed for the same action.
+
+```sop
+@reader.change.property_on pro.reader.owner_property act=change owner=on value=to
+@reader.chart.y_axis_title core.word text="y axis title" means=chart.yLabel
+```
+
+The owner’s catalog supplies the property key. A key with a value bank
+accepts a canonical value or a scoped alias. An open `span` key accepts the
+written payload, which can be quoted. Each independently licensed family can
+supply a candidate when it has one unambiguous reading of all three roles.
+
+## Request and question alternations
+
+The reader can use a `w.lang.en.alternation` in `request` or `question` mode when
+its `to` pattern is one contiguous part of `from` with the same single capture.
+
+```sop
+@reader.wrapper.example w.lang.en.alternation name=tell_me_where family="question vs command" n=2 from="tell me where {x}" to="where {x}" mode=question
+```
+
+A matching body is read as a literal substring. An additional proposal
+requires a complete single request, a compatible question reading when
+appropriate, and grounded body evidence. Its request words preserve the
+whole submitted utterance.
+
+## Affected object requests
+
+A `pro.reader.affected_lead` declares the opening phrase of a request whose
+affected nominal comes before a past participle. Native English inflection
+supplies the lemma. The action and its compatibility with the existing
+target come from the catalog.
+
+```sop
+@example.affected pro.reader.affected_lead text="I need"
+@example.source pro.reader.affected_source act=remove family=meeting marker=from keyword=schedule attribute=meeting.calendar
+```
+
+The optional source declaration links a language source marker and nominal
+keyword to an open span key. For “I need Review deleted from my schedule,”
+the source can supply the meeting family for the written name and use
+“my schedule” as the selector value, with “from my schedule” as evidence. A source phrase without a matching
+declaration stays unread when the affected target is grounded independently.
+
 ## Ordered argument sequences
 
 Declare a native nominal prefix and its argument order with

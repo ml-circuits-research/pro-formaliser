@@ -1,3 +1,5 @@
+import { affectedMorphologyTypes, createAffectedParticiples } from './affected-target.mjs';
+import { compileAlternations } from './request-alternations.mjs';
 import {nominalScaleForms,nominalScaleTypes} from './nominal-scales.mjs';
 import {argumentSequences} from './argument-sequences.mjs';
 import { compileFixedProperties } from './fixed-properties.mjs';
@@ -15,12 +17,12 @@ import { createNominalInflection, nominalInflectionTypes } from './nominal-infle
 
 const pinned = fileURLToPath(new URL('../.cache/knowledge/docs/worlds/', import.meta.url));
 const types = new Set([
-  ...nominalInflectionTypes,...nominalScaleTypes,
-  'w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
+  ...nominalInflectionTypes,...nominalScaleTypes,...affectedMorphologyTypes,
+  'w.lang.en.alternation','w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
-  'pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
+  'pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue', 'w.lang.en.number',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
@@ -552,6 +554,7 @@ function compile(facts) {
       .map(w=>[phrase(one(w,'text')),{kind:one(w,'kind'),value:one(w,'value')}])),
     stativeVerbAliases:stativeVerbAliases(facts),
     languageFrames:languageFrames(facts),
+    alternations:compileAlternations(facts),
     scopeGrammar:scopeGrammar(facts),
     literalGrammar: {
       leads, contentLeads, namingLeads, bindings:literalBindings,
@@ -565,6 +568,13 @@ function compile(facts) {
     })),
     fixedProperties:compileFixedProperties(facts,requestKeys),
     argumentSequences:argumentSequences(facts,requestKeys),
+    ownerPropertyFrames:facts('pro.reader.owner_property').map(w=>({act:one(w,'act'),owner:one(w,'owner'),value:one(w,'value')})),
+    affectedParticiples:createAffectedParticiples(facts),
+    affectedTargetLeads:new Set(facts('pro.reader.affected_lead').flatMap(w=>values(w,'text').map(phrase))),
+    affectedTargetSources:facts('pro.reader.affected_source').map(w=>Object.fromEntries(
+      ['act','family','marker','keyword','attribute'].map(k=>[k,one(w,k)]))),
+    ownerPropertyLabels:propertyLabels,
+    ownerPropertyValues:compatibleValues,
     compoundReferences:facts('pro.reader.compound_reference').map(w=>({family:one(w,'family'),firstKey:one(w,'first_key'),secondKey:one(w,'second_key'),delimiter:one(w,'delimiter')})),
     nominalClasses, spatialBindings, selectorKeys, identityAssignmentVerbs,
     predicateTransferFacts:{

@@ -124,3 +124,17 @@
 @pro.reader.argument_sequence.mode core.slot of=pro.reader.argument_sequence key=mode enum=new enum=existing required=true
 @pro.reader.argument_sequence.prefix core.slot of=pro.reader.argument_sequence key=prefix kind=string many=true required=true
 @pro.reader.argument_sequence.part core.slot of=pro.reader.argument_sequence key=part kind=atom kind=string many=true required=true
+
+@pro.reader.owner_property core.type of=pro.reader.owner_property closed=true
+@pro.reader.owner_property.act core.slot of=pro.reader.owner_property key=act kind=atom required=true
+@pro.reader.owner_property.owner core.slot of=pro.reader.owner_property key=owner kind=string required=true
+@pro.reader.owner_property.value core.slot of=pro.reader.owner_property key=value kind=string required=true
+
+@pro.reader.affected_lead core.type of=pro.reader.affected_lead closed=true
+@pro.reader.affected_lead.text core.slot of=pro.reader.affected_lead key=text kind=string many=true required=true
+@pro.reader.affected_source core.type of=pro.reader.affected_source closed=true
+@pro.reader.affected_source.act core.slot of=pro.reader.affected_source key=act kind=atom required=true
+@pro.reader.affected_source.family core.slot of=pro.reader.affected_source key=family kind=atom required=true
+@pro.reader.affected_source.marker core.slot of=pro.reader.affected_source key=marker kind=string required=true
+@pro.reader.affected_source.keyword core.slot of=pro.reader.affected_source key=keyword kind=string required=true
+@pro.reader.affected_source.attribute core.slot of=pro.reader.affected_source key=attribute kind=atom required=true

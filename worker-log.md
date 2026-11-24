@@ -71,3 +71,7 @@
 ## Sizes, regions, compound references and ordered arguments
 - Read declared scales, stacked quantities, regions and compound references. SWI-Prolog binds ordered arguments to catalog fields.
 - Full test gate passed. 43.8% reasonable on the same 1,000 requests, previously 42.7%. See eval/THOUSAND-AUDIT.md.
+
+## Native request alternations, affected targets and property owners
+- Applied native request alternations to complete grounded bodies, preserved explicit property owners and read requests with an affected object before the past participle.
+- Full test gate passed. 44.4% reasonable on the same 1,000 requests, previously 43.8%. See eval/THOUSAND-AUDIT.md.

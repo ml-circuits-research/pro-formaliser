@@ -105,3 +105,14 @@
 @reader.diagram.chart.sum_alias core.word text=totals means=sum of=chart.aggregate
 @reader.diagram.chart.avg_alias core.word text=average means=avg of=chart.aggregate
 @reader.diagram.chart.total_alias core.word text=total means=sum of=chart.aggregate
+
+# Grammatical separators for edits to a property of a described owner.
+@reader.change.property_on pro.reader.owner_property act=change owner=on value=to
+@reader.change.property_of pro.reader.owner_property act=change owner=of value=to
+@reader.diagram.chart.y_axis_title core.word text="y axis title" means=chart.yLabel
+@reader.diagram.chart.x_axis_title core.word text="x axis title" means=chart.xLabel
+
+# Requests naming the affected object before the desired result.
+@reader.english.affected pro.reader.affected_lead text="I need" text="I want" text="I would like" text="I'd like" text="I'll have" text="I will have"
+@reader.calendar.meeting_source pro.reader.affected_source act=remove family=meeting marker=from keyword=calendar attribute=meeting.calendar
+@reader.calendar.schedule_source pro.reader.affected_source act=remove family=meeting marker=from keyword=schedule attribute=meeting.calendar
