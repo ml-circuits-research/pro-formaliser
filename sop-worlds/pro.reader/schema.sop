@@ -159,6 +159,9 @@
 @pro.reader.member_action.phase core.slot of=pro.reader.member_action key=phase enum=result enum=selector required=true
 @pro.reader.member_action.separator core.slot of=pro.reader.member_action key=separator kind=string many=true required=true
 @pro.reader.member_action.suffix core.slot of=pro.reader.member_action key=suffix kind=string many=true
+@pro.reader.member_action.noun core.slot of=pro.reader.member_action key=noun kind=string many=true
+@pro.reader.member_action.numeric_id core.slot of=pro.reader.member_action key=numeric_id kind=boolean
+@pro.reader.member_action.effect_key core.slot of=pro.reader.member_action key=effect_key kind=atom
 
 @pro.reader.coordinated_effects core.type of=pro.reader.coordinated_effects closed=true
 @pro.reader.coordinated_effects.part core.slot of=pro.reader.coordinated_effects key=part kind=string kind=atom many=true required=true

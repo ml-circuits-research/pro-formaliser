@@ -10,6 +10,9 @@ const ownerId=(family,key,value,words)=>JSON.stringify([family,key,value,surface
 export function analyticalArgumentFacts(facts) {
   const frames=[];
   const boundaries=new Map();
+  const closedFields=new Set(facts('w.request.key').filter(({attrs})=>
+    attrs.value?.length && str(attrs.head?.[0])?.split('+').some(head=>head==='class' || head==='candidate'))
+    .map(({attrs})=>JSON.stringify(['tab','family','name'].map(key=>str(attrs[key]?.[0])))));
   for (const {attrs} of facts('pro.reader.analytical_boundary')) {
     const id=JSON.stringify(['tab','family'].map(key=>str(attrs[key]?.[0])));
     const accumulated=boundaries.get(id) ?? {open_boundary:[],numeric_modifier:[]};
@@ -24,20 +27,23 @@ export function analyticalArgumentFacts(facts) {
       ['layout','owner_marker','grouping','operation','measure'].map(take);
     if (![take('family'),take('tab'),take('owner_key'),take('owner_value')].every(Boolean) ||
         !attrs.prefix?.length || !attrs.owner?.length) continue;
+    const scope=['tab','family'].map(key=>str(take(key)));
+    const isClosedField=field=>closedFields.has(JSON.stringify([...scope,field]));
     const parts=layout==='ordered_fields' ? (attrs.pattern ?? []).flatMap(pattern=>{
       // Braces name typed catalog slots. The text between slots is one
-      // authored connector, including any attached punctuation.
+      // authored connector. A closed value between open slots also separates
+      // them, as in a threshold operator between a subject and its bound.
       const split=str(pattern).split(/\{(\$owner|[\p{L}][\p{L}\p{N}_-]*\.[\p{L}\p{N}_.-]+)\}/u);
       if (split.length<5 || split.some((item,i)=>i%2===0 &&
-          (/[{}]/u.test(item) || i>0 && i<split.length-1 && !item.trim()))) return [];
+          (/[{}]/u.test(item) || i>0 && i<split.length-1 && !item.trim() &&
+            !isClosedField(split[i-1]) && !isClosedField(split[i+1])))) return [];
       return [split.flatMap((item,i)=>{
         const part=item.trim();
         return part ? [i%2 ? part : JSON.stringify(part)] : [];
       })];
     }) : groupedParts(attrs,[layout,ownerMarker,grouping,operation,measure]);
     for (const [i,part] of parts.entries()) {
-      const key=JSON.stringify(['tab','family'].map(key=>str(take(key))));
-      const inherited=boundaries.get(key);
+      const inherited=boundaries.get(JSON.stringify(scope));
       frames.push({
         id:wire.id+'.argument.'+(i+1),
         type:'pro.reader.argument_sequence',

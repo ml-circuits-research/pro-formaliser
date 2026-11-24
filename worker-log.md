@@ -218,3 +218,6 @@
 
 ## Independent all-world replication
 - All staged worlds reached 44.4% on replica original text and 53.5% on primary including spelling. The destination repair improved one primary grade from wrong to incomplete. The unfamiliar-wording cohorts reached 41.9% and 32.5% on original text. Seven newly identified reference issues are documented in the integration response.
+
+## Set restrictions and explicit sources
+- The public reader now grounds an all-tree selection, its spatial exception, and the current scene together on primary #428. It also grounds a chart comparison in #493 and the immediate directional placement in #876. The explicit block list on #119 keeps its remaining adjunct unread. All 359 tests passed, including contrast cases for separate effects, named containers and quoted operands.

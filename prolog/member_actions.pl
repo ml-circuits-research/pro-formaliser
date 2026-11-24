@@ -8,10 +8,16 @@ member_actions(Query, Proofs) :-
             ( member(Frame, Frames),
               once(findnsols(2, Members, distinct(Members, frame_members(Frame, Members)), Answers)),
               Answers = [List],
-              Proof = _{family:Frame.family, act:Frame.act, mode:Frame.mode, key:Frame.key,
-                        phase:Frame.phase, predicate:Frame.predicate, members:List}
+              Base = _{family:Frame.family, act:Frame.act, mode:Frame.mode, key:Frame.key,
+                       phase:Frame.phase, predicate:Frame.predicate, members:List},
+              include_frame_field(noun, Frame, Base, WithNoun),
+              include_frame_field(effectKey, Frame, WithNoun, WithEffect),
+              include_frame_field(adjunct, Frame, WithEffect, Proof)
             ), Proofs)
     ; Proofs = [] ).
+
+include_frame_field(Key, Frame, In, Out) :-
+    ( get_dict(Key, Frame, Value) -> put_dict(Key, In, Value, Out) ; In = Out ).
 
 frame_members(Frame, Members) :-
     named_member(Frame.input, Rest, First),

@@ -1,3 +1,6 @@
+import {sourceContainerMatch,sourceContainerReading} from './source-container.mjs';
+import {setExclusionReadings} from './set-exclusion.mjs';
+import {spatialModifierReadings} from './spatial-modifier.mjs';
 import {dependentOperandReadings} from './dependent-operands.mjs';
 import {createDialogueCoverage} from './dialogue-coverage.mjs';
 import {createEffectSequence} from './effect-sequence.mjs';
@@ -431,6 +434,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     for (const proof of response.topicCommands ?? []) retain(topicCommandReading(text,proof));
     for (const proof of response.coordinatedEffects ?? []) retain(effectReading(text,ts,proof));
     for (const reading of memberActionReadings(text,response.memberActions ?? [],worlds)) retain(reading);
+    if (!scope.restricted && !quotes.length && ts.some(([key])=>worlds.spatialModifiers?.heads.has(key))) {
+      for (const candidate of [...candidates]) {
+        for (const reading of spatialModifierReadings(text,candidate,worlds)) retain(reading);
+      }
+    }
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
     if (response.proofs.length) {
       for (const c of candidates) {
@@ -694,7 +702,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
-      for (const reading of await effectSequence(text,read)) {
+      for (const reading of [...await effectSequence(text,read), ...await setExclusionReadings(text,worlds,read,permit)]) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);
       }
@@ -774,6 +782,14 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (worlds.reciprocal) {
         for (const candidate of [...candidates,...additional.values()]) {
           const reading=reciprocalReading(text,candidate,worlds);
+          const key=reading && admissibleKey(text,reading.sop);
+          if (key) additional.set(key,reading);
+        }
+      }
+      const containerMatches=sourceContainerMatch(text,worlds);
+      if (containerMatches.length) {
+        for (const candidate of [...candidates,...additional.values()]) {
+          const reading=sourceContainerReading(text,candidate,worlds,containerMatches);
           const key=reading && admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
         }

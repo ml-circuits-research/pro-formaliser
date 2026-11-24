@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createReader } from '../src/runtime.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
-import { parse } from '../src/schema.mjs';
+import { parse, validate } from '../src/schema.mjs';
+import { evidenceInText } from '../src/grounding.mjs';
 
 const read=x=>x?.startsWith('"') ? JSON.parse(x) : x;
 function check(candidates,key,expected,act='group',mode='new',phase='result') {
@@ -67,4 +68,59 @@ test('licenses an existing-object member role in an unrelated overlay', async t=
     const {candidates}=await reader.propose('Highlight “Quartz 7” plus Basalt');
     check(candidates,'device.ids',['Quartz 7','Basalt'],'pick','existing','selector');
   } finally {await reader.close();}
+});
+
+test('binds explicit object lists and applies a finite effect to every selected block', async t=>{
+  const worlds=loadWorlds();
+  const reader=createReader(undefined,worlds);
+  t.after(()=>reader.close());
+  for (const [text,key,expected,effect] of [
+    ['Underline blocks Intro, 2 and 3 plus Second','block.id',['Intro','2','3','Second'],'underline'],
+    ['Bold blocks “Plan and Budget”, 2, and Second','block.id',['Plan and Budget','2','Second'],'bold'],
+    ['Select nodes n2 and n5','node.ids',['n2','n5']],
+    ['Select objects o3 and o5','drawn.ids',['o3','o5']],
+  ]) {
+    const {candidates}=await reader.propose(text);
+    check(candidates,key,expected,effect ? 'change' : 'pick','existing','selector');
+    const {sop}=candidates.find(candidate=>candidate.source==='member-action');
+    assert.ok(validate(sop,worlds));
+    assert.ok(evidenceInText(text,sop,worlds));
+    if (effect) {
+      const [result]=parse(sop).filter(wire=>read(wire.attrs.phase?.[0])==='result');
+      assert.deepEqual(['attribute','value'].map(slot=>read(result.attrs[slot][0])),['block.mark',effect]);
+    }
+  }
+  for (const text of [
+    'Underline Intro and 2', 'Underline blocks Intro and Intro',
+    'Underline blocks Intro and 2, then delete the rest',
+    'Underline blocks Intro and 2 with Main left enabled',
+    'Underline blocks Intro, 2 and final',
+    'Underline blocks Intro and 2, final label',
+    'Select nodes n2 and e5', 'Select nodes n2 and 5',
+    'Select blocks Intro and 2 if ready', 'Do not select blocks Intro and 2',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='member-action'),text);
+  }
+});
+
+test('retains a marked adjunct without trimming names or interpreting its effect', async t=>{
+  const worlds=loadWorlds();
+  const reader=createReader(undefined,worlds);
+  t.after(()=>reader.close());
+  for (const [text,members,adjunct] of [
+    ['please underline blocks Intro, 2 and 3, with the enabled value Main plus attrs Second',
+      ['Intro','2','3'],'with the enabled value Main plus attrs Second'],
+    ['Bold blocks Intro and “Draft, with notes”, with styling from Appendix.',
+      ['Intro','Draft, with notes'],'with styling from Appendix.'],
+    ['Bold blocks Intro, 2, and “With Love”',['Intro','2','With Love'],undefined],
+  ]) {
+    const {candidates}=await reader.propose(text);
+    check(candidates,'block.id',members,'change','existing','selector');
+    const candidate=candidates.find(candidate=>candidate.source==='member-action');
+    const unread=parse(candidate.sop).filter(wire=>wire.type==='w.request.unread');
+    assert.deepEqual(unread.map(wire=>read(wire.attrs.text[0])),adjunct ? [adjunct] : []);
+    assert.equal(candidate.status,adjunct ? 'partial' : 'matched');
+    assert.ok(evidenceInText(text,candidate.sop,worlds));
+  }
 });

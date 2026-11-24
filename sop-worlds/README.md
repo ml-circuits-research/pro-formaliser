@@ -5,6 +5,7 @@ Pachetul se poate revizui și integra pe bucăți. Piloții pentru posturi și e
 | Fișier | Ce adaugă | Ce funcționează azi |
 | --- | --- | --- |
 | [pro.reader/](pro.reader/) | Schemele și regulile folosite deja implicit de formalizator, inclusiv roluri, regiuni și păstrarea stării. | Cititorul le încarcă la pornire. |
+| [Filtrarea observațiilor dintr-un grafic](chart-predicate-pilot/README.md) | Trei chei pentru grupul filtrat, comparație și pragul scris. | „Only the weeks above target” păstrează săptămânile, comparația și referința la țintă. Rezolvarea pragului revine aplicației. |
 | [Câmpurile unui grafic de dispersie](scatter-fields-pilot/README.md) | Două chei pentru datele de pe axe și reguli pentru ordinea câmpurilor. | Pilotul păstrează separat titlurile axelor și câmpurile. Execuția în aplicație rămâne de verificat. |
 | [Nume de obiecte și persoane](drawable-inventory-pilot/README.md) | Nume și sinonime pentru ținte, preluate din inventarele native prin relațiile declarate acolo. | „Draw a lad with a happy face” păstrează cuvântul „lad” și leagă expresia de băiat când sunt activate ambele propuneri. |
 | [Expresii ale figurilor](expression-pilot/README.md) | Cinci valori și o regulă gramaticală pentru o expresie scrisă după numele figurii. | Regula folosește valorile catalogului instalat. |

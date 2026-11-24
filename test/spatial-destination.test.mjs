@@ -50,3 +50,19 @@ test('grounds direct-pronoun placement destinations while retaining selectors',a
   const explicit=relations(await reader.propose('Move a node right of the box'),'place','the box');
   assert.ok(explicit.some(r=>get(r.target,'family_words')==='node' && get(r.relation,'phase')==='selector'));
 });
+
+test('a qualified direction binds proximity to the same landmark and phase',async t=>{
+  const reader=createReader(); t.after(()=>reader.close());
+  const text='Move them immediately left of the shape';
+  const result=await reader.propose(text,{evidence:true});
+  const readings=relations(result,'place','the shape').filter(r=>get(r.target,'family')==='node' &&
+    get(r.relation,'phase')==='result' && get(r.relation,'value')==='left_of');
+  assert.ok(readings.some(({candidate})=>parse(candidate.sop).some(w=>
+    get(w,'attribute')==='node.position' && get(w,'phase')==='result' &&
+    get(w,'value')==='near' && get(w,'words')==='immediately') && candidate.evidence.missing.length===0));
+  assert.ok(readings.some(({candidate})=>!candidate.sop.includes('value=near')));
+  for (const control of ['Just move them left of the shape','Move them left of the shape']) {
+    const answer=await reader.propose(control);
+    assert.ok(answer.candidates.every(c=>c.source!=='spatial-modifier'),control);
+  }
+});

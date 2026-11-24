@@ -175,3 +175,33 @@ test('a fronted location survives an addressed request as a separate source span
     assert.ok(candidates.every(c=>!properties(parse(c.sop))['chart.xField']),lead);
   }
 });
+
+test('keeps chart threshold predicates separate from fields and literal categories', async t => {
+  const path = fileURLToPath(new URL('../sop-worlds/chart-predicate-pilot', import.meta.url));
+  const reader = createReader(undefined, loadWorlds({paths:[path]}));
+  t.after(() => reader.close());
+  const bar = await proves(reader, 'Meanwhile, try a bar chart of claims by week — only the weeks above target', {
+    'chart.type':'bar', 'chart.measure':'claims', 'chart.dimension':'week',
+    'chart.filterScope':'the weeks', 'chart.filterOperator':'gt', 'chart.filterThreshold':'target'
+  });
+  const wires = parse(bar.sop);
+  assert.equal(properties(wires)['chart.only'], undefined);
+  assert.equal(decode(wires.find(wire => decode(wire.attrs.attribute?.[0]) === 'chart.filterOperator').attrs.words[0]), 'above');
+  await proves(reader, 'Draw a line chart of costs by department, only departments at most 500', {
+    'chart.type':'line', 'chart.measure':'costs', 'chart.dimension':'department',
+    'chart.filterScope':'departments', 'chart.filterOperator':'le', 'chart.filterThreshold':'500'
+  });
+  for (const text of [
+    'Draw a line chart of costs by department, only the west department',
+    'Draw a line chart of costs by department, only departments at most'
+  ]) {
+    const {candidates} = await reader.propose(text);
+    assert.ok(candidates.every(candidate => !('chart.filterOperator' in properties(parse(candidate.sop)))), text);
+  }
+  const {candidates} = await reader.propose(
+    'Draw a line chart of costs by department, only departments at most 500 and remove the chart');
+  const requests = candidates.map(candidate => parse(candidate.sop)).find(wires =>
+    properties(wires)['chart.filterThreshold'] === '500' && wires.some(wire =>
+      wire.type === 'w.request.request' && decode(wire.attrs.act?.[0]) === 'remove'));
+  assert.ok(requests);
+});
