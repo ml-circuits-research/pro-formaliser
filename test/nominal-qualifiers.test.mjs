@@ -17,6 +17,21 @@ test('a numeral qualifying one noun keeps its written evidence',()=>{
   assert.match(count('create twenty-one boxes').sop,/count=21/u);
   assert.match(count('create half a dozen boxes').sop,/count=6/u);
 });
+
+test('chooses a qualified target when its noun is repeated in the payload',()=>{
+  const target='@r w.request.request act=change\n@t w.request.target request=$r family=text mode=existing sort=paragraph';
+  const result=value=>'\n@c w.request.constraint request=$r on=attribute attribute=text.text value='+JSON.stringify(value)+' phase=result';
+  const reading=(text,payload)=>nominalNumberReading(text,{sop:target+(payload ? result(payload) : '')},
+    worlds.nominalNumbers,quotedSpans(text));
+  const text='set the first paragraph content to Updated paragraph';
+  assert.match(reading(text,'Updated paragraph').sop,/ordinal="first"/u);
+  assert.match(reading('set the first paragraph content to Second paragraph','Second paragraph').sop,/ordinal="first"/u);
+  assert.match(reading('set the first paragraph content to "Second paragraph"','Second paragraph').sop,/ordinal="first"/u);
+  assert.equal(reading('set the paragraph content to First paragraph','First paragraph'),undefined);
+  assert.equal(reading('set the paragraph content to First paragraph'),undefined);
+  assert.equal(reading('move the first paragraph before the second paragraph'),undefined);
+  assert.equal(reading('set the paragraph content to "First paragraph"'),undefined);
+});
 test('independent training phrases license a property on a new noun with the same family',()=>{
   const learner=modifierLearner({requestKeys:[{name:'sample.finish',family:'sample',head:'class',values:[]}]});
   const [target,c]=parse('@t w.request.target family=sample sort=rod\n@c w.request.constraint attribute=sample.finish value=rough');

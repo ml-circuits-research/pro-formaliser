@@ -221,6 +221,28 @@ the reference. The separator inside the quote stays part of the operand. The
 reader checks the selected clause and the existing wires before accepting the
 pair. Ambiguous operand boundaries can leave text unread.
 
+## Scene settings and counted sets
+
+A scene setting can use any family’s licensed context target and result
+keys. Training examples should annotate the setting as one independent
+request before the object clauses. Keep each result value in the setting
+words. The reader checks for agreement across independent source texts and
+requires a predicate-free attestation for the setting or its argument
+pattern. A setting that lacks corroboration can stay unread.
+
+To add a universal phrase and allow a cardinal after it, declare the same
+phrase with both scope cue kinds. The noun must already ground an existing
+target, and the number is read from the installed number vocabulary or
+written digits.
+
+```sop
+@workbench.universal pro.reader.scope_cue kind=universals text="each of the"
+@workbench.counted pro.reader.scope_cue kind=countedUniversals text="each of the"
+```
+
+The reading keeps the source phrase in `count_words` and records both
+`fill=all` and the written cardinality.
+
 ## Numeric pairs
 
 A `pro.reader.tuple` declaration assigns two ordered numeric result keys

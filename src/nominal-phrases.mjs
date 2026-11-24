@@ -108,6 +108,44 @@ function separatesPhrase(ts, next, worlds) {
   return false;
 }
 
+export function nominalPositionForms(facts, requestKeys) {
+  const cues = [];
+  for (const wire of facts('w.lang.en.cue')) {
+    const on=field(wire,'on'), value=field(wire,'value'), relation=field(wire,'relation');
+    if (field(wire,'takes')!=='none' || !value) continue;
+    const kind=on==='layout' ? 'arrangement' : on==='place' && ['in','at'].includes(relation) &&
+      !wire.attrs.attribute ? 'region' : undefined;
+    if (kind) for (const surface of wire.attrs.lead ?? []) cues.push([kind,decode(surface),[value]]);
+  }
+  for (const wire of facts('w.lang.en.arrangement')) {
+    const values=[field(wire,'layout'),field(wire,'diagram_layout')].filter(Boolean);
+    for (const surface of wire.attrs.text ?? []) cues.push(['arrangement',decode(surface),values]);
+  }
+  const indexes=new Map();
+  for (const wire of facts('pro.reader.spatial')) {
+    const family=field(wire,'family'), tab=field(wire,'tab');
+    const roles={region:field(wire,'region_key'),arrangement:field(wire,'arrangement_key')};
+    for (const [kind,surface,values] of cues) {
+      const key=roles[kind];
+      if (!key) continue;
+      const property=requestKeys.find(prop=>prop.family===family && prop.tab===tab && prop.name===key &&
+        prop.head.split('+').some(h=>h==='class' || h==='candidate'));
+      const value=values.find(value=>property?.values.includes(value));
+      const words=normalize(surface).split(' ');
+      if (!value || words.length<2 || !words.every(token=>word.test(token))) continue;
+      const operator=kind==='region' ? 'region' : 'eq';
+      const byLead=indexes.get(family) ?? new Map();
+      if (!indexes.has(family)) indexes.set(family,byLead);
+      const options=byLead.get(words[0]) ?? new Map();
+      if (!byLead.has(words[0])) byLead.set(words[0],options);
+      const entry=[words,key,value,'attribute',operator];
+      options.set(JSON.stringify(entry),entry);
+    }
+  }
+  return new Map([...indexes].map(([family,byLead])=>[family,new Map([...byLead].map(([lead,options])=>
+    [lead,[...options.values()]]))]));
+}
+
 export function nominalPhraseReadings(text, ts, quotes, candidate, forms, worlds) {
   if (!forms || !candidate.sop) return [];
   const wires = parse(candidate.sop);
@@ -126,18 +164,24 @@ export function nominalPhraseReadings(text, ts, quotes, candidate, forms, worlds
   const matches = entries.filter(([words]) => words.every((token, i) => ts[at + i]?.[0] === token));
   // Competing forms with a common prefix may express different scopes.
   if (matches.length !== 1) return [];
-  const [[keys, key, value, on, operator, phase]] = matches;
-  if (!separatesPhrase(ts, at + keys.length, worlds)) return [];
+  const reading=attachPhrase(text,ts,quotes,wires,request,target,start,at,matches[0],worlds);
+  return reading ? [reading] : [];
+}
+
+function attachPhrase(text, ts, quotes, wires, request, target, start, at, entry, worlds) {
+  const [keys, key, value, on, operator, requestedPhase]=entry;
+  const family=field(target,'family'), ref='$'+request.id;
+  if (!separatesPhrase(ts, at + keys.length, worlds)) return;
   const fromChar = ts[at][2], toChar = ts[at + keys.length - 1][3];
   const headChar = ts[start][2];
-  if (quotes.some(q => q.start < toChar && q.end > headChar)) return [];
+  if (quotes.some(q => q.start < toChar && q.end > headChar)) return;
 
   const chars = Array.from(text);
   const from = chars.slice(0, fromChar).join('').length;
   const to = chars.slice(0, toChar).join('').length;
   const namedScope = field(request, 'words');
   const scopes = namedScope ? literalRanges(text, namedScope) : [[0, text.length]];
-  if (scopes.length !== 1 || chars.slice(0, headChar).join('').length < scopes[0][0] || to > scopes[0][1]) return [];
+  if (scopes.length !== 1 || chars.slice(0, headChar).join('').length < scopes[0][0] || to > scopes[0][1]) return;
   const scopeTokens = tokens(text.slice(...scopes[0])).map(token => token[0]);
   if (scopeTokens.some((token, i) => {
     for (let end = i + 1; end <= Math.min(i + 4, scopeTokens.length); end++) {
@@ -147,25 +191,29 @@ export function nominalPhraseReadings(text, ts, quotes, candidate, forms, worlds
           [...worlds.scopeGrammar.endings].some(ending => scopeTokens.slice(i, end).join('').endsWith(ending))) return true;
     }
     return false;
-  })) return [];
+  })) return;
   if (!worlds.requestKeys.some(prop => prop.family === family && prop.name === key &&
     prop.head.split('+').some(h => h === 'class' || h === 'candidate') &&
-    (!prop.values.length || prop.values.includes(value)))) return [];
+    (!prop.values.length || prop.values.includes(value)))) return;
 
   const constraints = wires.filter(w => w.type === constraintType);
   if (constraints.some(w => field(w, 'attribute') === key) ||
-      constraints.some(w => ['no', 'not_all'].includes(field(w, 'want')))) return [];
+      constraints.some(w => ['no', 'not_all'].includes(field(w, 'want')))) return;
   const owned = constraints.filter(w => field(w, 'request') === ref);
-  const drop = new Set(spatialPair(wires, owned, family, keys.join(' '), worlds));
+  const spatial=spatialPair(wires, owned, family, keys.join(' '), worlds);
+  const phase=requestedPhase ?? (spatial.length ? field(spatial[0],'phase') ?? 'result'
+    : field(target,'mode')==='new' || field(request,'act')==='place' ? 'result' : undefined);
+  if (!phase) return;
+  const drop = new Set(spatial);
   const overlap = (wire, fields) => fields.some(name => wire.attrs[name].some(item =>
     normalSpans(text, decode(item)).some(([a,b]) => a < to && b > from)));
   const observed = wires.filter(w => w.type === unreadType && field(w, 'request') === ref);
-  if (!drop.size && !observed.some(w => overlap(w, ['text']))) return [];
+  if (!drop.size && !observed.some(w => overlap(w, ['text']))) return;
   for (const w of wires) {
-    if (drop.has(w) || w.type === unreadType || w === request) continue;
+    if (drop.has(w) || w.type === unreadType || w.id === request.id) continue;
     const evidence = Object.keys(w.attrs).filter(literalField);
     if (w.type === constraintType && w.attrs.value && !w.attrs.words) evidence.push('value');
-    if (overlap(w, evidence)) return [];
+    if (overlap(w, evidence)) return;
   }
   const ids = new Set(wires.map(w => w.id));
   const stem = target.id + '.phrase';
@@ -177,6 +225,33 @@ export function nominalPhraseReadings(text, ts, quotes, candidate, forms, worlds
     attrs:{request:[ref], on:[on], attribute:[encode(key)], value:[encode(value)],
       words:[JSON.stringify(text.slice(from,to))], operator:[operator], phase:[phase]},
   };
-  return [{sop:serialize([...kept, support]), source:'nominal-phrase',
-    status:kept.some(w => w.type === unreadType) ? 'partial' : 'matched'}];
+  return {sop:serialize([...kept, support]), source:requestedPhase ? 'nominal-phrase' : 'nominal-position',
+    status:kept.some(w => w.type === unreadType) ? 'partial' : 'matched'};
+}
+
+export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, worlds) {
+  if (!index?.size || !candidate.sop) return [];
+  let wires=parse(candidate.sop);
+  const targets=wires.filter(w=>w.type===targetType), requests=wires.filter(w=>w.type===requestType);
+  if (targets.length!==1 || requests.length!==1) return [];
+  const [target]=targets, [request]=requests;
+  const family=field(target,'family'), head=noun(target);
+  const byLead=index.get(family), position=head && nounPosition(ts,head);
+  if (!byLead || !position || field(target,'request')!=='$'+request.id) return [];
+  const [start,after]=position;
+  let revised;
+  for (let at=after;at<ts.length;) {
+    const options=(byLead.get(ts[at][0]) ?? []).filter(([words])=>
+      words.every((token,i)=>ts[at+i]?.[0]===token) && separatesPhrase(ts,at+words.length,worlds));
+    const length=Math.max(0,...options.map(([words])=>words.length));
+    const best=options.filter(([words])=>words.length===length);
+    if (best.length!==1) break;
+    const attached=attachPhrase(text,ts,quotes,wires,request,target,start,at,best[0],worlds);
+    if (attached?.sop) {
+      revised=attached;
+      wires=parse(attached.sop);
+    }
+    at+=length;
+  }
+  return revised ? [revised] : [];
 }

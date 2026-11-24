@@ -4,8 +4,8 @@
 @reader.value.result pro.reader.evidence_role role=value type=w.request.constraint slot=value phase=result
 
 # Role assignments for the supported example worlds.
-@reader.drawing.spatial pro.reader.spatial tab=drawing family=drawn relation_key=drawn.relation anchor_key=drawn.anchor named_act=place
-@reader.diagram.spatial pro.reader.spatial tab=diagram family=node relation_key=node.position anchor_key=node.anchor named_act=place
+@reader.drawing.spatial pro.reader.spatial tab=drawing family=drawn relation_key=drawn.relation anchor_key=drawn.anchor region_key=drawn.at arrangement_key=drawn.arrangement named_act=place
+@reader.diagram.spatial pro.reader.spatial tab=diagram family=node relation_key=node.position anchor_key=node.anchor region_key=node.at named_act=place
 @reader.drawing.object.code pro.reader.instance_code family=drawn prefix=o core.source="w.drawing/schema.sop: object.code"
 @reader.diagram.node.code pro.reader.instance_code family=node prefix=n core.source="w.diagram/schema.sop: node.code"
 @reader.diagram.edge.code pro.reader.instance_code family=link prefix=e core.source="w.diagram/schema.sop: edge.code"
@@ -80,3 +80,13 @@
 @reader.scope.predicate.negation pro.reader.scope_cue kind=predicateNegators text=not
 
 @reader.scope.counted_set pro.reader.scope_cue kind=countedUniversals text=all text="all the" text="all of the"
+
+# The catalog describes these keys as codes of the objects the request selects.
+@reader.drawing.drawn.identity pro.reader.identity tab=drawing family=drawn attribute=drawn.ids
+@reader.drawing.part.identity pro.reader.identity tab=drawing family=part attribute=part.ids
+@reader.diagram.chart.identity pro.reader.identity tab=diagram family=chart attribute=chart.ids
+@reader.diagram.group.identity pro.reader.identity tab=diagram family=group attribute=group.ids
+@reader.diagram.link.identity pro.reader.identity tab=diagram family=link attribute=link.ids
+@reader.diagram.node.identity pro.reader.identity tab=diagram family=node attribute=node.ids
+@reader.document.block.identity pro.reader.identity tab=document family=block attribute=block.ids
+@reader.document.section.identity pro.reader.identity tab=document family=section attribute=section.ids

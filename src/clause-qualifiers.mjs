@@ -1,9 +1,10 @@
+import { identitySelectorReadings } from './identity-selectors.mjs';
 import { parse, serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { literalRanges } from './evidence.mjs';
 import { tokens } from './lexicon.mjs';
 import { quotedSpans } from './literal-roles.mjs';
 import { modifierReading } from './nominal-modifiers.mjs';
-import { nominalPhraseReadings } from './nominal-phrases.mjs';
+import { nativeNominalPhraseReadings, nominalPhraseReadings } from './nominal-phrases.mjs';
 import { nominalNumberReading } from './nominal-number.mjs';
 
 const field=(wire,key)=>{
@@ -32,7 +33,9 @@ export function clauseQualifiers(text, worlds, model, permit) {
         let result={sop:packet};
         if (permit(words,quotes)) {
           if (model.modifiers) result=modifierReading(words,ts,quotes,result,model.modifiers) ?? result;
+          result=identitySelectorReadings(words,result,worlds)[0] ?? result;
           result=nominalNumberReading(words,result,worlds.nominalNumbers,quotes,model.modifiers) ?? result;
+          result=nativeNominalPhraseReadings(words,ts,quotes,result,worlds.nominalPositions,worlds)[0] ?? result;
           result=nominalPhraseReadings(words,ts,quotes,result,model.nominalPhrases,worlds)[0] ?? result;
         }
         cache.set(packet,result.sop===packet ? null : parse(result.sop));

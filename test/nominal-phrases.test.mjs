@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { tokens } from '../src/lexicon.mjs';
 import { quotedSpans } from '../src/literal-roles.mjs';
-import { createNominalPhraseLearner, nominalPhraseReadings } from '../src/nominal-phrases.mjs';
+import { createNominalPhraseLearner, nativeNominalPhraseReadings, nominalPhraseReadings, nominalPositionForms } from '../src/nominal-phrases.mjs';
 import { evidenceInText } from '../src/grounding.mjs';
 import { parse, validate } from '../src/schema.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
@@ -86,4 +86,34 @@ test('declines negated, quoted, ambiguously repeated, and unlicensed readings', 
   assert.deepEqual(read('draw stars in a row',sop.replace('act=make','act=place')),[]);
   assert.deepEqual(read('draw stars in a row',sop +
     '\n@c w.request.constraint request=$r on=attribute attribute=drawn.arrangement value=grid'),[]);
+});
+
+test('native family bindings read a row and an adjacent region without replacing the landmark',()=>{
+  const byType=new Map();
+  for (const wire of parse(`
+@spatial pro.reader.spatial tab=drawing family=drawn region_key=drawn.at arrangement_key=drawn.arrangement
+@row w.lang.en.arrangement text="in a row" layout=row
+@bottom w.lang.en.cue on=place value=bottom relation=at lead="at the bottom" takes=none
+@above w.lang.en.cue on=place value=top relation=at lead="above the bridge" takes=thing
+`)) byType.set(wire.type,[...(byType.get(wire.type) ?? []),wire]);
+  const index=nominalPositionForms(type=>byType.get(type) ?? [],worlds.requestKeys);
+  const text='draw stars in a row at the bottom above the tree';
+  const candidate={sop:[
+    request,target('stars'),
+    placement('relation','in','result'),
+    placement('anchor','"a row"','selector'),
+    '@a w.request.lookup request=$r constraint=$c.anchor key=thing from=page',
+    '@u w.request.unread request=$r text="at the bottom"',
+    placement('relation','above','result').replace('@c.relation','@c.other'),
+    placement('anchor','"the tree"','selector').replace('@c.anchor','@c.other.anchor'),
+    '@b w.request.lookup request=$r constraint=$c.other.anchor key=thing from=page',
+  ].join('\n')};
+  const [reading]=nativeNominalPhraseReadings(text,tokens(text),quotedSpans(text),candidate,index,worlds);
+  assert.match(reading.sop,/attribute=drawn\.arrangement value=row words="in a row" operator=eq/);
+  assert.match(reading.sop,/attribute=drawn\.at value=bottom words="at the bottom" operator=region/);
+  assert.match(reading.sop,/constraint=\$c\.other\.anchor/);
+  assert.doesNotMatch(reading.sop,/value="a row"/);
+  assert.match(candidate.sop,/value="a row"/);
+  assert.ok(validate(reading.sop,worlds));
+  assert.ok(evidenceInText(text,reading.sop,worlds));
 });

@@ -1,3 +1,5 @@
+import { nominalPositionForms } from './nominal-phrases.mjs';
+import { spatialAliases } from './spatial-aliases.mjs';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { delimiter, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +17,7 @@ const types = new Set([
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
-  'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
+  'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue', 'w.lang.en.number',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
@@ -272,13 +274,22 @@ function compile(facts) {
       index(markers, form, ['marker', '*', 'spatial', relation, 0]);
     }
   }
+  const aliasesByPrep = new Map();
+  for (const [form,relation,base] of spatialAliases(facts,spatial,values,phrase)) {
+    index(aliasesByPrep,base,form);
+    index(spatial,form,relation);
+    index(markers,form,['marker','*','spatial',relation,0]);
+  }
   for (const wire of facts('k.actions.role')) {
     const act = one(wire, 'act'), role = one(wire, 'name'), holds = one(wire, 'holds');
     if (!actNames.has(act) || !role || !holds || one(wire, 'needed') === 'true') continue;
     for (const text of values(wire, 'marker')) {
       const form = phrase(text);
-      for (const relation of (holds === 'place' ? spatial.get(form) : undefined) ?? ['']) {
-        index(markers, form, ['marker', act, role, relation, 0]);
+      const forms = holds === 'place' ? [form,...(aliasesByPrep.get(form) ?? [])] : [form];
+      for (const surface of forms) {
+        for (const relation of (holds === 'place' ? spatial.get(surface) : undefined) ?? ['']) {
+          index(markers,surface,['marker',act,role,relation,0]);
+        }
       }
     }
   }
@@ -296,7 +307,7 @@ function compile(facts) {
     .filter(wire => one(wire, 'on') === 'with')
     .flatMap(wire => values(wire, 'lead')).map(phrase));
   const namingLeads = new Set(aliases.get('w.request.target.name')?.map(phrase) ?? []);
-  const literalVerbs = new Map();
+  const literalVerbs = new Map(), identityAssignmentVerbs = new Set();
   for (const wire of facts('k.actions.verb')) {
     const act = one(wire, 'act');
     for (const text of values(wire, 'text')) {
@@ -304,6 +315,7 @@ function compile(facts) {
       if (!actNames.has(act)) continue;
       const form = phrase(text);
       index(acts, form, ['act', act, '', 0]);
+      if (one(wire,'attribute') === 'name' && one(wire,'complement') === 'value') identityAssignmentVerbs.add(form);
       if (one(wire, 'complement') === 'value') index(markers, form, ['frame', act, 'value', '', 0]);
       const object = one(wire, 'object');
       if (act === 'make' && object === 'kind') index(literalVerbs, form, {act, object});
@@ -488,6 +500,14 @@ function compile(facts) {
     }
   }
 
+  const selectorKeys = new Map();
+  for (const wire of facts('pro.reader.identity')) {
+    const family = one(wire,'family'), tab = one(wire,'tab'), name = one(wire,'attribute');
+    if (!requestKeys.some(key => key.family === family && key.tab === tab && key.name === name &&
+        ['span','candidate'].includes(key.head))) continue;
+    if (!selectorKeys.has(family)) selectorKeys.set(family,new Set());
+    selectorKeys.get(family).add(name);
+  }
   const spatialBindings = facts('pro.reader.spatial').map(wire => ({
     tab: one(wire, 'tab'), family: one(wire, 'family'),
     relationKey: one(wire, 'relation_key'), anchorKey: one(wire, 'anchor_key'),
@@ -526,7 +546,8 @@ function compile(facts) {
     preservationBindings: facts('pro.reader.preservation').map(wire => ({
       family:one(wire,'family'), attribute:one(wire,'attribute'), concept:one(wire,'concept'),
     })),
-    spatialBindings,
+    spatialBindings, selectorKeys, identityAssignmentVerbs,
+    nominalPositions:nominalPositionForms(facts,requestKeys),
     instanceBindings: facts('pro.reader.instance_code').map(wire => ({
       family:one(wire,'family'), prefix:one(wire,'prefix')?.toLowerCase(),
     })).filter(({family,prefix}) => familyActs.has(family) && /^\p{L}+$/u.test(prefix ?? '')),

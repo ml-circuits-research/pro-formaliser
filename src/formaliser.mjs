@@ -1,6 +1,7 @@
+import { identitySelectorReadings } from './identity-selectors.mjs';
 import { openPairReadings } from './open-pairs.mjs';
 import { clauseQualifiers } from './clause-qualifiers.mjs';
-import { nominalPhraseReadings } from './nominal-phrases.mjs';
+import { nativeNominalPhraseReadings, nominalPhraseReadings } from './nominal-phrases.mjs';
 import { sequenceNameReadings } from './sequence-names.mjs';
 import { postfixSetQuestions, universalTargetReading } from './set-query.mjs';
 import { modifierReading } from './nominal-modifiers.mjs';
@@ -84,6 +85,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const max = template.pattern.reduce((n,x) => n + (x.max ?? 1), 0);
     add(buckets, anchor, {min,max,template});
   }
+  const positionHeads = new Set([...(worlds.nominalPositions?.values() ?? [])].flatMap(forms => [...forms.keys()]));
   const worker = prologWorker(new URL('../prolog/formalise.pl',import.meta.url));
   async function read(text) {
     if (typeof text !== 'string') throw Error('Expected a text string');
@@ -233,6 +235,18 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         retain(candidate);
         const qualified = nominalNumberReading(text,candidate,worlds.nominalNumbers,quotes,model.modifiers);
         if (qualified) retain(qualified);
+      }
+    }
+    if (!scope.restricted && ts.some(([key]) => positionHeads.has(key))) {
+      for (const candidate of [...candidates]) {
+        for (const reading of nativeNominalPhraseReadings(text,ts,quotes,candidate,worlds.nominalPositions,worlds)) retain(reading);
+      }
+    }
+    if (!scope.restricted) {
+      for (const candidate of [...candidates]) {
+        if (candidate.sop.includes('phase=result')) {
+          for (const selected of identitySelectorReadings(text,candidate,worlds)) retain(selected);
+        }
       }
     }
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};

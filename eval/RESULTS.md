@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Identities, repeated nouns and spatial meaning
+
+On the paired 1,000 requests, at least one proposal was reasonable on 41.4% (previously 40.8%). On the full holdout, 634 proposal sets contained the reference semantic wire set, previously 634. The first-choice WebMeet checker rejected 253 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)
+
 ## Grounded headings and pairs of written arguments
 
 On the paired 1,000 requests, at least one proposal was reasonable on 40.8% (previously 40.3%). On the full holdout, 634 proposal sets contained the reference semantic wire set, previously 634. The first-choice WebMeet checker rejected 253 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)

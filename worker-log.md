@@ -55,3 +55,7 @@
 ## Headings, quantities and argument pairs
 - Read grounded scene settings, counted universals, stacked modifiers and two source-bound text arguments using training or SOP declarations.
 - Full test gate passed. 40.8% reasonable on the same 1,000 requests, previously 40.3%. See eval/THOUSAND-AUDIT.md.
+
+## Identities and spatial meaning
+- Bound selected identities, repeated qualified nouns and scene positions using native world declarations and local source evidence.
+- Full test gate passed. 41.4% reasonable on the same 1,000 requests, previously 40.8%. See eval/THOUSAND-AUDIT.md.

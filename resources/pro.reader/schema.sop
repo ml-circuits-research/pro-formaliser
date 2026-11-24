@@ -15,6 +15,8 @@
 @pro.reader.spatial.family core.slot of=pro.reader.spatial key=family kind=atom required=true
 @pro.reader.spatial.relation_key core.slot of=pro.reader.spatial key=relation_key kind=atom required=true
 @pro.reader.spatial.anchor_key core.slot of=pro.reader.spatial key=anchor_key kind=atom required=true
+@pro.reader.spatial.region_key core.slot of=pro.reader.spatial key=region_key kind=atom
+@pro.reader.spatial.arrangement_key core.slot of=pro.reader.spatial key=arrangement_key kind=atom
 @pro.reader.spatial.named_act core.slot of=pro.reader.spatial key=named_act kind=atom many=true
 
 # A documented prefix on the family's decimal instance codes.
@@ -78,3 +80,9 @@
 @pro.reader.scope_cue.text core.slot of=pro.reader.scope_cue key=text kind=string many=true required=true
 @pro.reader.scope_cue.polarity core.slot of=pro.reader.scope_cue key=polarity enum=positive enum=negative
 @pro.reader.scope_cue.question core.slot of=pro.reader.scope_cue key=question kind=atom
+
+# Catalog property that identifies the existing target selected by a noun phrase.
+@pro.reader.identity core.type of=pro.reader.identity closed=true
+@pro.reader.identity.tab core.slot of=pro.reader.identity key=tab kind=atom required=true
+@pro.reader.identity.family core.slot of=pro.reader.identity key=family kind=atom required=true
+@pro.reader.identity.attribute core.slot of=pro.reader.identity key=attribute kind=atom required=true
