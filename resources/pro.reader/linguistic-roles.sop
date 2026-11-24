@@ -1,0 +1,4 @@
+# Correspondences between a syntactic argument and literal evidence in w.request.
+@reader.thing.name pro.reader.evidence_role role=thing type=w.request.target slot=name
+@reader.thing.sort_words pro.reader.evidence_role role=thing type=w.request.target slot=sort_words
+@reader.value.result pro.reader.evidence_role role=value type=w.request.constraint slot=value phase=result

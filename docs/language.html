@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linguistic evidence | pro-formaliser</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="sidebar" aria-label="Documentation">
+    <div class="brand">pro-formaliser</div>
+    <div class="subtitle">SWI-Prolog → SOP Lang</div>
+    <ul>
+      <li><a href="index.html">Overview</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a class="active" aria-current="page" href="language.html">Linguistic evidence</a></li>
+      <li><a href="worlds.html">Extend with SOP worlds</a></li>
+      <li><a href="spelling.html">Spelling</a></li>
+      <li><a href="context.html">Contextual estimator</a></li>
+      <li><a href="evaluation.html">Evaluation and reproduction</a></li>
+      <li><a href="diagnosis.html">Failure diagnosis</a></li>
+      <li><a href="decisions.html">Design history</a></li>
+    </ul>
+  </nav>
+  <main>
+    <h1>Linguistic frames and evidence</h1>
+    <p>The reader can cite a grammatical construction for a request act, its predicate, and the source spans of its arguments. The proof comes from native <code>w.lang.en.frame</code> and <code>w.lang.en.part</code> declarations in the loaded SOP worlds. Prolog uses separated object spans while assembling lexical candidates and returns the proofs so the reader can check each retained interpretation. <a href="../src/language-frames.mjs">Frame compilation and support</a> · <a href="../prolog/language_frames.pl">Prolog matcher</a></p>
+
+    <h2>What the matcher checks</h2>
+    <p>The compiler reads ordered parts and builds lexical events for act-specific verbs, declared lead phrases, determiners and fixed words. It supports frames with one verb and at least one required role that takes words. Leads may precede the verb. Consecutive role spans require an obligatory lexical delimiter between them. Frames requiring other domain or grammatical prerequisites are outside this fragment.</p>
+    <p>Prolog works backward from the end of the token sequence. It indexes lexical events by kind and value and tracks viable suffixes at each token boundary. Each argument consumes a nonempty contiguous span. Optional lexical parts may be matched or skipped, and a proof consumes the complete prepared sequence. The matcher retains one deterministic proof per frame and emits token ranges for the predicate and named roles. The compiler can ignore terminal periods and exclamation marks and avoids applying this simple frame analysis across recognized coordination or negation boundaries. Quoted arguments remain available as text spans while their contents supply no lexical events.</p>
+
+    <h2>Object scope before the candidate shortlist</h2>
+    <p>A frame that captures two or more arguments can distinguish the direct object from its value or another argument. The role declarations identify which captures can provide target evidence. For a matching act and predicate span, Prolog gives a lexical candidate a score bonus when its target is inside all applicable object spans. The bonus affects which readings survive the bounded candidate list, which retains up to twelve distinct SOP texts. Absent or conflicting scopes supply no bonus. The frame scope leaves other candidates eligible and preserves the source priority of examples, templates and alignments. <a href="../prolog/formalise.pl">Lexical candidate search</a></p>
+
+    <h2>Hard checks and ranking evidence</h2>
+    <p>The native engine, request catalogue and literal evidence checks gate admitted candidates. A predicate whose only whole-token occurrences in its own request are inside quotations fails the literal evidence check. A quote can be the content of an edit while the predicate remains grounded outside it. <a href="../src/grounding.mjs">Grounding checks</a> · <a href="../src/predicate-scope.mjs">Quotation scope</a> · <a href="../src/catalog.mjs">Request catalogue</a></p>
+    <p><code>pro.reader.evidence_role</code> connects a named grammatical role to a wire type and field, optionally within a constraint phase. The shipped declarations compare target <code>name</code> and <code>sort_words</code> with the <code>thing</code> role, and result-phase constraint <code>value</code> with the <code>value</code> role. An <code>argument_role_conflict</code> occurs when a declared literal appears only in another role's span. Repeated occurrences across roles leave that attribution open. A frame may also provide soft <code>competing_frame_act</code> evidence for a different act.</p>
+    <p>After the shortlist is returned, these linguistic signals reorder retained lexical fallback candidates. A conflict-free proof provides positive ranking evidence if it discriminates by licensing a unique act for the predicate or separating multiple argument roles. A conflict-free generic one-argument frame supplies no positive preference among already licensed readings of a polysemous predicate. The reader preserves candidates with soft conflicts and the precedence of higher-priority sources. <a href="../resources/pro.reader/linguistic-roles.sop">Role correspondence declarations</a> · <a href="../src/formaliser.mjs">Candidate ranking</a></p>
+
+    <h2>Inspect a reading and its evidence ledger</h2>
+    <pre><code>node bin/formalise.mjs --worlds-only --evidence "create an object"</code></pre>
+    <p><code>--evidence</code> adds a ledger and a catalogue report to the selected interpretation. The ledger lists whole-token literal matches within each request's source range, preserving all matching occurrences. It reports missing required literal fields and assigns each text token one of <code>grounded</code>, <code>unread</code>, <code>filler</code>, <code>ambiguous_occurrence</code>, <code>grammar</code>, or <code>uncovered</code>. Its ranges use UTF-16 offsets with an exclusive end. With <code>--spell</code>, those offsets refer to the corrected utterance. Frame proofs use token indices internally.</p>
+    <p><code>bin/check-reading.mjs</code> takes a JSON object with <code>text</code>, <code>sop</code>, and an optional <code>tab</code> from stdin. It emits native schema validity, literal evidence validity, the ledger, catalogue issues, quotation conflicts, and frame support for the supplied circuit. <a href="../bin/check-reading.mjs">Reading checker</a> · <a href="../src/evidence.mjs">Evidence ledger</a></p>
+
+    <h2>Try a new verb and a two-role frame</h2>
+    <p>Save the overlay as <code>language.sop</code>. The new act and verb feed the same frame compiler as the pinned world. The required two-token delimiter <code>with tag</code> separates the object from the label.</p>
+    <pre><code>@demo.tag k.actions.act name=apply_tag about="put a reference label on an object" role=thing
+@demo.verb k.actions.verb act=apply_tag text=tagstamp
+@demo.frame w.lang.en.frame name=demo.apply_tag act=apply_tag set=acts priority=10 role=thing role=value
+@demo.frame.1 w.lang.en.part frame=demo.apply_tag at=1 is=verb act=apply_tag
+@demo.frame.2 w.lang.en.part frame=demo.apply_tag at=2 is=role role=thing takes=words
+@demo.frame.3 w.lang.en.part frame=demo.apply_tag at=3 is=word word="with tag"
+@demo.frame.4 w.lang.en.part frame=demo.apply_tag at=4 is=role role=value takes=words</code></pre>
+    <pre><code>SOP_WORLDS=./language.sop node bin/check-reading.mjs &lt;&lt;'JSON'
+{
+  "text": "tagstamp Gauge with tag Reference",
+  "tab": "drawing",
+  "sop": "@r w.request.request act=apply_tag predicate=tagstamp\n@t w.request.target request=$r family=drawn mode=existing fill=written name=Gauge\n@c w.request.constraint request=$r on=attribute attribute=drawn.label value=Reference operator=eq phase=result"
+}
+JSON</code></pre>
+    <p>The checked example passed schema, catalogue and literal checks. It returned frame <code>demo.apply_tag</code> with <code>thing=Gauge</code>, <code>value=Reference</code>, and no role conflicts. Removing <code>with tag</code> from the input eliminated the frame proof. Swapping <code>name</code> and <code>value</code> in the circuit kept the literal checks valid and reported two role conflicts. Supplying <code>quote "tagstamp" Gauge with tag Reference</code> produced <code>predicate_inside_quotation</code> and failed the literal evidence check.</p>
+
+    <h2>How to evaluate the mechanism</h2>
+    <p>Frame coverage, argument conflicts and the evidence ledger describe support for particular readings. Full semantic agreement compares the request graph, including acts, targets, values and links. Runtime speed depends on the measured end-to-end benchmark. Evaluate each independently so a change in frame-based search or ranking can be understood alongside semantic matches, checker results and inference time. <a href="../eval/RESULTS.md">Benchmark report</a> · <a href="../eval/LANGUAGE-AUDIT.md">Blind language audit</a> · <a href="diagnosis.html">Failure diagnosis</a></p>
+    <p>On the text-only primary holdout, 155 of 1,915 selected readings had a named frame proof. Of those, 78 matched all semantic wires. Separately, 32 selected readings carried at least one soft linguistic conflict. The matching-enabled and disabled runs each had 541 complete semantic matches. WebMeet checker errors were 216 and 222 respectively. The concurrent runs took 118.9 and 118.4 seconds for inference, so these timings do not isolate latency.</p>
+    <p>Compare the same pinned split with frame matching enabled and disabled. <code>--language off</code> disables frame support, the object-scope bonus in lexical search, and the subsequent preference among retained lexical candidates. Both runs keep the grounding and quotation checks.</p>
+    <pre><code>node eval/benchmark.mjs --report .cache/frames-on.json --details .cache/frames-on.jsonl
+node eval/benchmark.mjs --language off --model .cache/no-frames-model.json \
+  --report .cache/frames-off.json --details .cache/frames-off.jsonl</code></pre>
+  </main>
+</body>
+</html>

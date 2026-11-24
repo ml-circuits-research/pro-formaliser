@@ -5,6 +5,7 @@
 :- use_module(library(pcre)).
 :- use_module(properties).
 :- use_module(roles).
+:- use_module(language_frames).
 :- initialization(main, main).
 
 main :- repeat,
@@ -15,12 +16,29 @@ main :- repeat,
             E, (print_message(error, E), halt(1))),
       nl, flush_output, fail ).
 
-answer(Q, Answers) :-
+answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
+answer(Q, _{candidates:Answers,proofs:Proofs}) :-
+    frame_proofs(Q.language,Proofs),
     property_constraints(Q, ExtraHits), append(Q.hits,ExtraHits,Hits),
-    reset_role_cache, index_roles(Q, Hits, WithProperties),
+    findall(B, (member(P,Proofs), target_scope(Q.tokens,Q.targetRoles,P,B)), RawBounds), sort(RawBounds, Bounds),
+    reset_role_cache, index_roles(Q.put(roleScopes,Bounds), Hits, WithProperties),
     findall(S-C, candidate(WithProperties, S, C), Pairs),
     keysort(Pairs, Ascending), reverse(Ascending, Ordered),
     unique_sops(Ordered, [], 12, Answers).
+
+% A separated object span can guide search before the bounded candidate list
+% is formed. A one-argument frame spanning the entire tail adds no preference.
+target_scope(Tokens,TargetRoles,Proof,[Act,PS,PE,Start,End]) :-
+    Proof.roles=[_,_|_], member(R,Proof.roles), memberchk(R.role,TargetRoles),
+    offsets(Tokens,Proof.predicate,PS,PE), offsets(Tokens,R.range,Start,End), Act=Proof.act.
+
+offsets(Tokens,[First,After],Start,End) :-
+    Last is After-1, nth0(First,Tokens,[_,_,Start,_]), nth0(Last,Tokens,[_,_,_,End]).
+
+scope_fit(Scopes,Act,PS,PE,S,E,Bonus) :-
+    ( member([Act,PS,PE,_,_],Scopes),
+      \+ (member([Act,PS,PE,A,B],Scopes), (S<A ; E>B)) -> Bonus=2
+    ; Bonus=0 ).
 
 unique_sops([], _, _, []).
 unique_sops([_|_], _, 0, []) :- !.
@@ -56,7 +74,8 @@ candidate(Q, score(1, Score, 0), _{sop:Sop, source:lexicon, support:N}) :-
       append(DetBounds, BoundEvidence, Bounds),
       append([Req,T|Attached], More, Wires),
       length(More, Evidence), Gap is max(0,max(S-End,Start-E)),
-      Extra is 5 + Evidence + FamilyPrior + RoleFit + AttachmentFit + log(1+K)/2 - log(1+Gap)/2
+      scope_fit(Q.roleScopes,Act,Start,End,S,E,ScopeFit),
+      Extra is 5 + Evidence + FamilyPrior + RoleFit + AttachmentFit + ScopeFit + log(1+K)/2 - log(1+Gap)/2
     ; direct_reference(Q,Act,End,RS-RE),
       format(string(ReferenceRequest),'~s refers=thing',[Req]),
       attached_roles(Q,Act,"existing",RE,Attached,Used,_,Fit,_),

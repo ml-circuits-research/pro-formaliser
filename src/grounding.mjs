@@ -1,3 +1,5 @@
+import { quotedPredicates } from './predicate-scope.mjs';
+import { literalRanges, literalField, sortRanges } from './evidence.mjs';
 import { parse } from './schema.mjs';
 
 const normalize = text => text.normalize('NFKC').toLowerCase().trim().replace(/\s+/gu,' ');
@@ -90,20 +92,21 @@ export function constraintGrounder() {
 // Check copied evidence inside the owning request before returning that reading.
 export function evidenceInText(text, sop, worlds) {
   const wires = parse(sop);
+  if (quotedPredicates(text,wires).length) return false;
   const scopes = new Map(wires.filter(w => w.type === 'w.request.request')
     .map(w => ['$'+w.id,w.attrs.words?.length ? decode(w.attrs.words[0]) : text]));
-  for (const {type,attrs} of wires) {
+  for (const {id,type,attrs} of wires) {
     if (['w.request.clock','w.request.previous','w.request.context'].includes(type)) return false;
-    const scope = scopes.get(attrs.request?.[0]) ?? text;
+    const scope = scopes.get(type === 'w.request.request' ? '$'+id : attrs.request?.[0]) ?? text;
+    const present = phrase => literalRanges(scope,phrase).length > 0;
     if (type === 'w.request.target' && attrs.sort && worlds?.isReference?.(decode(attrs.sort_words?.[0] ?? attrs.sort[0]))) {
       return false;
     }
+    if (type==='w.request.target' && attrs.sort && !attrs.sort_words && !sortRanges(scope,decode(attrs.sort[0])).length) return false;
     for (const [key,vs] of Object.entries(attrs)) {
-      const literal = key === 'predicate' || key === 'words' || key.endsWith('_words') ||
-        (['text','name','description','ids'].includes(key) && type !== 'w.request.clock');
-      if (literal && vs.some(v => !scope.includes(decode(v)))) return false;
+      if (literalField(key) && vs.some(v => !literalRanges(key === 'words' && type==='w.request.request' ? text : scope,decode(v)).length)) return false;
     }
-    if (type === 'w.request.constraint' && !attrs.words && attrs.value?.some(v => !scope.includes(decode(v)))) return false;
+    if (type === 'w.request.constraint' && attrs.value?.some(v => (!attrs.words || v.startsWith('"')) && !present(decode(v)))) return false;
   }
   return true;
 }

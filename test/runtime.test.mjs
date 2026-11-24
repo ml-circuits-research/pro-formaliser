@@ -63,3 +63,17 @@ test('discard stale evidence in an example and keep the reading grounded in the 
     assert.match((await reader.formalise('draw oval')).sop,/act=make/);
   } finally { await reader.close(); }
 });
+
+test('a matched whole-utterance example cannot hide two independently matched requests',async()=>{
+  const wire=(act,pred)=>'@r w.request.request act='+act+' predicate='+pred;
+  const text='draw comet and delete moon';
+  const examples=[[text,wire('make','draw')],['draw comet',wire('make','draw')],['delete moon',wire('remove','delete')]]
+    .map(([text,sop])=>({text,sop,count:1}));
+  const reader=createReader({version:1,templates:[],examples,lexicon:{}});
+  try {
+    const r=await reader.formalise(text);
+    assert.equal(r.source,'sequence');
+    assert.match(r.sop,/act=remove predicate=delete/);
+    assert.ok(r.alternatives.some(c=>c.sop===examples[0].sop));
+  } finally {await reader.close();}
+});

@@ -128,3 +128,22 @@ thing, additional hypotheses can each propose a family with uniquely
 licensed spatial keys. Those targets have `fill=context` and retain
 an unresolved thing lookup. The text-only reader keeps the unresolved
 reading first.
+
+## Preservation keys
+
+Declare a `pro.reader.preservation` fact to use a custom preservation key
+for a target family. The attribute must name a `w.request.key` in that
+family with a `class` head and a closed value bank.
+
+```sop
+@workbench.baseline w.request.key tab=workbench family=instrument name=instrument.baseline head=class value=registration
+@workbench.preserve pro.reader.preservation family=instrument attribute=instrument.baseline
+```
+
+A training example must use that same family, attribute, and value for a
+grounded preservation request before the reader can apply the pattern to a
+new target. For instance, a result constraint with `attribute=instrument.baseline
+value=registration` can teach the reader how “keep the spectrometer in
+registration” expresses that policy. Adding another value to the bank
+only makes it eligible for training. The conventional `<family>.keep`
+keys continue to work without a binding.

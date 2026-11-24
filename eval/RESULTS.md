@@ -10,7 +10,34 @@ The split groups input globally by Unicode NFKC, lowercase, and whitespace colla
 - **Act/mood** compares the sequence of request acts and moods. **Semantic F1** measures micro-averaged wire overlap, so it can credit parts of an otherwise incorrect circuit.
 - The WebMeet checker uses the gold tab for checking its allowed families and keys after inference. Gold circuits and nonempty top predictions are checked. Warnings cover such cases as unused content words or unread meanings and are distinct from errors.
 
-## Measured runs
+## Current release — linguistic roles and evidence
+
+All runs use the pinned revisions above. The primary split has 1,915 rows and the replication split 2,027. The independent-layers release below is the preceding baseline.
+
+| Input | Complete semantic match | Additional matches in alternatives | Act/mood | Wire F1 | Checker errors / emitted |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Text, bucket 0 | 541 (28.25%) | 85 | 1,292 | 43.78% | 216 / 1,912 |
+| Text and tab, bucket 0 | 581 (30.34%) | 45 | 1,304 | 45.25% | 17 / 1,912 |
+| Text, bucket 1 | 496 (24.47%) | 72 | 1,339 | 39.94% | 201 / 2,021 |
+| Text, bucket 0, native frame matcher disabled | 541 (28.25%) | 85 | 1,303 | 43.84% | 222 / 1,912 |
+
+On the primary split, 21 previous disagreements became full matches and three previous full matches became disagreements. The candidate set contained the annotated semantics on 626/1,915 rows. Text and tab runs retained the same candidate circuits on every row. Compared with the previous release, full semantic matches and wire F1 increased in all three conditions, while checker failures increased by five on each text-only split and stayed at 17 with the tab.
+
+**Attributing the change.** The final row disables only the native frame matcher and its search/ranking signals. It retains literal-role grounding, word verification and coordination. Frames alone changed 42 winners, gained or lost zero full matches, and reduced checker failures by six. Act/mood agreement and wire F1 decreased slightly. Primary inference took 118.9 seconds with frames and 118.4 seconds without in concurrent runs. These measurements establish no speedup. The broader reader changes account for the aggregate semantic gains. [Language experiment and counterexamples](../docs/language.html)
+
+**Preservation and additions.** The primary text-only reader grounded 9,805 source-token occurrences in semantic fields, compared with 8,981 previously. Unread occurrences fell from 12,107 to 11,021. Uncovered occurrences rose from 347 to 377. There were 596 occurrences with ambiguous references to repeated text. The upstream checker warned on 1,118 emitted predictions, including 252 with uncovered words. Its warning categories use its own tokenization and matching rules. A semantic field containing a source word is evidence of copying and may still put that word in the wrong role.
+
+| Primary annotation obligation | Kept before → now | Omitted before → now | Added before → now |
+| --- | ---: | ---: | ---: |
+| Action | 1,637 → 1,718 | 928 → 847 | 510 → 617 |
+| Target family and mode | 1,426 → 1,506 | 1,147 → 1,067 | 599 → 654 |
+| Target detail | 1,101 → 1,164 | 1,093 → 1,030 | 394 → 438 |
+| Selector | 273 → 291 | 732 → 714 | 494 → 473 |
+| Requested result | 1,262 → 1,373 | 2,615 → 2,504 | 823 → 809 |
+
+Action additions remain a concrete failure mode. An intermediate split treated polite clauses and modifiers as commands. Requiring independent predicate evidence for weak connectors removed these splits on the observed courtesy and link-formatting regressions. The per-row comparison and fresh blind review distinguish substantive mistakes from alternative valid encodings. [Blind review](LANGUAGE-AUDIT.md) · [Review probes and their limits](../docs/diagnosis.html)
+
+## Previous measured runs
 
 The primary measurement uses bucket 0. A second model was trained from scratch with bucket 1 held out for replication. Both partitions use the same pinned dataset and knowledge revisions. The tab-aware condition is a separate invocation on bucket 0 that includes the actual application tab with the text. The two text-only runs receive the utterance alone.
 
@@ -24,7 +51,7 @@ The primary measurement uses bucket 0. A second model was trained from scratch w
 | Independent layers, text, bucket 1 | 2,027 | 356 | 425 | 470 (23.19%) | 70 | 1,301 | 37.74% | 196 / 2,021 |
 | Independent layers, text + tab, bucket 0 | 1,915 | 415 | 511 | 562 (29.35%) | 44 | 1,270 | 43.21% | 17 / 1,912 |
 
-The current primary run used 187,106 training rows and 1,867 held-out normalized texts. It produced 715 matched constructions, 1,197 partial readings and 3 unresolved rows. The checker warned on 1,122 emitted pairs. The annotations had 0 errors and 416 warnings. Knowledge revision was `ba7cbcf2ab78b8b99d077e8958013d52618c6d04`.
+The independent-layers primary run used 187,106 training rows and 1,867 held-out normalized texts. It produced 715 matched constructions, 1,197 partial readings and 3 unresolved rows. The checker warned on 1,122 emitted pairs. The annotations had 0 errors and 416 warnings. Knowledge revision was `ba7cbcf2ab78b8b99d077e8958013d52618c6d04`.
 
 | Area | Primary rows | Complete semantic matches | Wire F1 | Replication rows | Complete semantic matches | Wire F1 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |

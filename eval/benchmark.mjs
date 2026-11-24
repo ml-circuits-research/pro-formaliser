@@ -4,12 +4,13 @@ import { dirname, join, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { DATASET, DATASET_REVISION, loadCorpus, normalizeText, splitCorpus } from '../src/corpus.mjs';
+import { measureRequirements } from './requirements.mjs';
 import { intersectCount, signatures } from './signatures.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const cache = join(root, '.cache');
 const options = {};
-const flags = new Set(['--dataset', '--knowledge', '--revision', '--model', '--report', '--details', '--bucket', '--context']);
+const flags = new Set(['--dataset', '--knowledge', '--revision', '--model', '--report', '--details', '--bucket', '--context', '--language']);
 for (let i = 2; i < process.argv.length; i += 2) {
   const [flag, value] = process.argv.slice(i, i + 2);
   if (!flags.has(flag) || !value || value.startsWith('--')) throw new Error('Expected a benchmark option and value: ' + flag);
@@ -47,7 +48,9 @@ function checkCircuits(checker, temp, label, rows) {
   const records = JSON.parse(readFileSync(out, 'utf8'));
   if (records.total !== rows.length) throw new Error('Checker row count mismatch for ' + label);
   const warningCount = Number(/warnings \(rows[^)]+\): (\d+) rows/.exec(result.stdout)?.[1] ?? 0);
-  return { checked: records.total, errors: records.bad, warningCircuits: warningCount,
+  const warnings = result.stdout.split(/warnings \(rows[^)]+\): \d+ rows/)[1] ?? '';
+  const warningCategories = Object.fromEntries([...warnings.matchAll(/^(\d+)\t(.+)$/gm)].map(([,n,key])=>[key,Number(n)]));
+  return { checked: records.total, errors: records.bad, warningCircuits: warningCount, warningCategories,
     violations: records.groups.map(({ violation, n }) => ({ violation, count: n })) };
 }
 
@@ -93,12 +96,14 @@ writeFileSync(modelPath, JSON.stringify(train(training)));
 const trainingSeconds = (performance.now() - trainAt) / 1000;
 
 const context = options.context ?? 'text';
+const language=options.language ?? 'on';
+if (!['on','off'].includes(language)) throw Error('Expected --language on or off');
 if (!['text','tab'].includes(context)) throw Error('Expected --context text or tab');
 const query = row => JSON.stringify(context === 'tab' ? {text:row.text,tab:row.family} : {text:row.text});
 const inputs = [...new Set(heldOut.map(query))];
 const inferAt = performance.now();
 const batch = execFileSync(process.execPath, [
-  join(root, 'bin/formalise.mjs'), '--model', modelPath, '--batch',
+  join(root, 'bin/formalise.mjs'), '--model', modelPath, '--batch', ...(language==='off' ? ['--no-language-frames'] : []),
 ], {
   cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
   input: inputs.join('\n') + '\n',
@@ -156,7 +161,7 @@ try {
 }
 
 const report = {
-  bucket, context, datasetRevision: corpus.revision,
+  bucket, context, language, datasetRevision: corpus.revision,
   knowledgeRevision: options.knowledge
     ? execFileSync('git', ['-C', knowledge, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
     : readFileSync(join(knowledge, 'REVISION'), 'utf8').trim(),
@@ -165,7 +170,7 @@ const report = {
   totals: summarize(training, scored),
   families: Object.fromEntries(Object.entries(Object.groupBy(scored, row => row.family))
     .map(([family, group]) => [family, summarize(training.filter(row => row.family === family), group)])),
-  checker: checkerResults,
+  checker: checkerResults, requirements:measureRequirements(scored),
 };
 mkdirSync(dirname(sampleReportPath), { recursive: true });
 writeFileSync(sampleReportPath, JSON.stringify(report, null, 2) + '\n');

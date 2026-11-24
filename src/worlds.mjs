@@ -2,12 +2,17 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { delimiter, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse, quote, str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
+import { languageFrames } from './language-frames.mjs';
+import { evidenceVocabulary } from './evidence.mjs';
 import { tokens } from './lexicon.mjs';
 
 const pinned = fileURLToPath(new URL('../.cache/knowledge/docs/worlds/', import.meta.url));
 const types = new Set([
+  'w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
+  'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial',
+  'w.lang.en.cue', 'w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
   'w.reader.en.binding', 'w.reader.en.feature', 'w.reader.en.filter',
 ]);
@@ -100,10 +105,56 @@ function* boundLexicon(facts) {
   }
 }
 
+const senseType = 'k.words.sense';
+const stativeSenses = new Set([senseType]);
+const stativeShards = new Map();
+
+function stativeVerbAliases(facts) {
+  const overlays = facts(senseType);
+  const overrides = new Set(overlays.map(wire => wire.id));
+  const byWord = new Map();
+  for (const wire of overlays) {
+    const word = one(wire, 'word');
+    if (word) index(byWord, phrase(word), wire);
+  }
+  const cache = new Map();
+  return surface => {
+    const word = phrase(surface);
+    if (cache.has(word)) return cache.get(word);
+    // k.words groups lexical senses by the first two letters of the lemma.
+    // Open a shard only after an otherwise complete preservation frame matches.
+    const shard = /^[a-z]+$/u.test(word) ? word.slice(0, 2) : null;
+    if (shard && !stativeShards.has(shard)) {
+      const words = new Map();
+      try {
+        const path = join(pinned, 'k.words', 'shards', shard + '.sop');
+        for (const wire of readFacts(path, stativeSenses)) {
+          const lemma = one(wire, 'word');
+          if (lemma) index(words,phrase(lemma),wire);
+        }
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+      stativeShards.set(shard,words);
+    }
+    const wires = [...(stativeShards.get(shard)?.get(word) ?? []).filter(wire => !overrides.has(wire.id)),
+      ...(byWord.get(word) ?? [])];
+    const synonyms = new Set(), parents = new Set();
+    for (const wire of wires) {
+      if (one(wire,'pos') !== 'verb' || one(wire,'supersense') !== 'verb.stative') continue;
+      for (const synonym of values(wire,'synonym')) synonyms.add(phrase(synonym));
+      for (const parent of values(wire,'is_a')) parents.add(phrase(parent));
+    }
+    const aliases = { synonyms,parents };
+    cache.set(word,aliases);
+    return aliases;
+  };
+}
+
 function compile(facts) {
   const knownWords = new Set();
   const acts = new Map(), targets = new Map(), constraints = new Map(), markers = new Map();
-  const familyTabs = new Map();
+  const familyTabs = new Map(), familyActs = new Map();
   const determiners = new Map(), joiners = new Map(), negatives = new Set(), fillerPhrases = new Set(), discourse = [];
   const actFacts = facts('k.actions.act');
   const actNames = new Set(actFacts.map(wire => one(wire, 'name')).filter(Boolean));
@@ -134,6 +185,7 @@ function compile(facts) {
   function bind({ of, family, sort = '', tab, acts, mode, surfaces }) {
     if (tab) index(familyTabs, family, tab);
     const binding = { family, sort, acts: [...new Set(acts.filter(act => actNames.has(act)))], mode };
+    for (const act of binding.acts) index(familyActs, family, act);
     for (const text of new Set([...surfaces, ...(aliases.get(of) ?? [])])) {
       spell(text);
       index(targets, phrase(text), binding);
@@ -188,6 +240,20 @@ function compile(facts) {
     }
   }
 
+  const replacementFrames = new Set(facts('w.lang.en.frame')
+    .filter(wire => one(wire, 'mode') === 'replace' && values(wire, 'role').includes('replacement'))
+    .map(wire => one(wire, 'name')));
+  const replacementForms = new Set(facts('w.lang.en.part')
+    .filter(wire => replacementFrames.has(one(wire, 'frame')) && one(wire, 'is') === 'word')
+    .flatMap(wire => values(wire, 'word')).map(phrase));
+  const leads = new Set(facts('w.lang.en.phrase')
+    .filter(wire => ['lead.polite', 'lead.filler'].includes(one(wire, 'name')))
+    .flatMap(wire => values(wire, 'item')).map(phrase));
+  const contentLeads = new Set(facts('w.lang.en.cue')
+    .filter(wire => one(wire, 'on') === 'with')
+    .flatMap(wire => values(wire, 'lead')).map(phrase));
+  const namingLeads = new Set(aliases.get('w.request.target.name')?.map(phrase) ?? []);
+  const literalVerbs = new Map();
   for (const wire of facts('k.actions.verb')) {
     const act = one(wire, 'act');
     for (const text of values(wire, 'text')) {
@@ -196,6 +262,11 @@ function compile(facts) {
       const form = phrase(text);
       index(acts, form, ['act', act, '', 0]);
       if (one(wire, 'complement') === 'value') index(markers, form, ['frame', act, 'value', '', 0]);
+      const object = one(wire, 'object');
+      if (act === 'make' && object === 'kind') index(literalVerbs, form, {act, object});
+      if (replacementForms.has(form) && ['thing', 'replacement'].includes(object)) {
+        index(literalVerbs, form, {act, object});
+      }
     }
   }
 
@@ -356,6 +427,16 @@ function compile(facts) {
 
   return {
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
+    stativeVerbAliases:stativeVerbAliases(facts),
+    languageFrames:languageFrames(facts),
+    literalGrammar: {
+      leads, contentLeads, namingLeads,
+      verbs: surface => literalVerbs.get(surface) ?? [],
+      licenses: (family, act) => familyActs.get(family)?.includes(act),
+    }, evidenceVocabulary:evidenceVocabulary(facts),
+    preservationBindings: facts('pro.reader.preservation').map(wire => ({
+      family:one(wire,'family'), attribute:one(wire,'attribute'),
+    })),
     spatialBindings: facts('pro.reader.spatial').map(wire => ({
       tab: one(wire, 'tab'), family: one(wire, 'family'),
       relationKey: one(wire, 'relation_key'), anchorKey: one(wire, 'anchor_key'),
@@ -409,6 +490,7 @@ export function loadWorlds({ paths = (process.env.SOP_WORLDS ?? '').split(delimi
     pinnedFiles = [...worldFiles(pinned, false)];
     baseFacts = new Map();
     loadPinned(baseFacts, types);
+    collect(baseFacts,fileURLToPath(new URL('../resources/pro.reader/linguistic-roles.sop',import.meta.url)));
     pinnedProviders = providerTypes(baseFacts);
     loadPinned(baseFacts, new Set([...pinnedProviders].filter(type => !types.has(type))));
   }

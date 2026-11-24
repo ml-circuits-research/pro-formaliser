@@ -1,5 +1,5 @@
 # Optional bindings between an application's declared kinds and w.request targets.
-@pro.reader core.module name=pro.reader version=1 exports=target exports=spatial
+@pro.reader core.module name=pro.reader version=1 exports=target exports=spatial exports=evidence_role exports=preservation
 @pro.reader.target core.type of=pro.reader.target closed=true
 @pro.reader.target.of core.slot of=pro.reader.target key=of kind=atom
 @pro.reader.target.family core.slot of=pro.reader.target key=family kind=atom required=true
@@ -15,3 +15,15 @@
 @pro.reader.spatial.family core.slot of=pro.reader.spatial key=family kind=atom required=true
 @pro.reader.spatial.relation_key core.slot of=pro.reader.spatial key=relation_key kind=atom required=true
 @pro.reader.spatial.anchor_key core.slot of=pro.reader.spatial key=anchor_key kind=atom required=true
+
+@pro.reader.evidence_role core.type of=pro.reader.evidence_role closed=true
+@pro.reader.evidence_role.role core.slot of=pro.reader.evidence_role key=role kind=atom required=true
+@pro.reader.evidence_role.type core.slot of=pro.reader.evidence_role key=type kind=atom required=true
+@pro.reader.evidence_role.slot core.slot of=pro.reader.evidence_role key=slot kind=atom required=true
+@pro.reader.evidence_role.phase core.slot of=pro.reader.evidence_role key=phase enum=selector enum=result
+
+
+# A family's declared class key for preserving current state.
+@pro.reader.preservation core.type of=pro.reader.preservation closed=true
+@pro.reader.preservation.family core.slot of=pro.reader.preservation key=family kind=atom required=true
+@pro.reader.preservation.attribute core.slot of=pro.reader.preservation key=attribute kind=atom required=true

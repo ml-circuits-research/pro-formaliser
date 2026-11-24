@@ -13,10 +13,12 @@
     <ul>
       <li><a href="index.html">Overview</a></li>
       <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="language.html">Linguistic evidence</a></li>
       <li><a href="worlds.html">Extend with SOP worlds</a></li>
       <li><a href="spelling.html">Spelling</a></li>
       <li><a href="context.html">Contextual estimator</a></li>
       <li><a class="active" aria-current="page" href="evaluation.html">Evaluation and reproduction</a></li>
+      <li><a href="diagnosis.html">Failure diagnosis</a></li>
       <li><a href="decisions.html">Design history</a></li>
     </ul>
   </nav>
@@ -33,6 +35,7 @@
     </ul>
     <p>In the runtime-world release, the primary text-only holdout matched all semantic wires for <strong>519 of 1,915</strong> rows. The independent bucket-1 split yielded <strong>471 of 2,027</strong>. Supplying the actual tab to the reader on bucket 0 yielded <strong>558 of 1,915</strong>. The per-area breakdown, alternative-only matches and checker denominators are in the report. <a href="../eval/RESULTS.md">Formalisation results</a> · <a href="../src/signatures.mjs">Signature computation</a></p>
     <p>The independent-layer release matched 523/1,915 rows with text alone, 562/1,915 with the tab, and 470/2,027 on the second text-only split. The primary candidate set covered 606 annotation signatures including alternatives. The tab changed 207 choices and gained 39 complete matches. Wire F1 declined slightly on all three conditions. Historical turns and live properties were tested by changing the supplied context for identical candidates. This dataset evaluation measures the tab signal only. <a href="../eval/RESULTS.md">Results and limitations</a></p>
+    <p>The frame-matching ablation compares semantic matches and checker errors with the grammatical evidence enabled or disabled. The diagnosis workflow uses scoped, reviewed test cases to investigate why individual readings differ. <a href="language.html">Linguistic benchmark</a> · <a href="diagnosis.html">Failure diagnosis</a></p>
     <h2>Independent adjudication</h2>
     <p>Sol reviewers compared the model and annotation as anonymized candidates. The sampler drew six disagreements per WebMeet area on the final text-only split. The final reviewer preferred the annotation in 21 of 24 cases, preferred the model in one, and identified one equivalent and one ambiguous pair. Both candidates were judged incomplete in seven. The sample describes disagreements and their failure modes. <a href="../eval/SEMANTIC-AUDIT.md">Blind semantic audit</a> · <a href="../eval/sample-disagreements.mjs">Disagreement sampler</a></p>
     <p>A fresh, stratified review of twelve release disagreements preferred the annotation in eleven pairs, with one ambiguous pair. The judge rated seven annotations fully adequate. These cases expose wrong acts and targets, loss of quoted content, and omission of a second request. <a href="../eval/ROLE-AUDIT.md">Release blind review</a></p>
@@ -51,6 +54,11 @@ node eval/benchmark.mjs --details .cache/primary.jsonl
 node eval/benchmark.mjs --bucket 1 --model .cache/replication-model.json   --report .cache/replication.json --details .cache/replication.jsonl
 node eval/benchmark.mjs --context tab --model .cache/tab-model.json --report .cache/tab.json
 node eval/sample-disagreements.mjs .cache/replication.jsonl .cache/blind</code></pre>
+    <h2>Evaluate argument and word preservation</h2>
+    <p>The benchmark reports kept, omitted and added annotation obligations for actions, target families and modes, target details, selectors and results. A constraint key, phase and value must agree within the same request position. These structural counts are sensitive to alternative encodings. They do not attribute an added wire to invented words. A separate ledger counts grounded, unread, uncovered, grammatical, filler and ambiguous source occurrences. The upstream checker also reports its own warning categories for gold and predictions. <a href="../eval/requirements.mjs">Requirement comparison</a> · <a href="../eval/RESULTS.md">Measured outcomes</a></p>
+    <pre><code>node eval/requirements.mjs .cache/primary.jsonl
+node eval/requirements.mjs .cache/primary.jsonl document/text-01.csv 1398
+node eval/benchmark.mjs --language off --model .cache/control.json --report .cache/control-results.json</code></pre>
   </main>
 </body>
 </html>

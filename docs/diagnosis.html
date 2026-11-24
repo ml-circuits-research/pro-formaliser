@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Failure diagnosis | pro-formaliser</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="sidebar" aria-label="Documentation">
+    <div class="brand">pro-formaliser</div>
+    <div class="subtitle">SWI-Prolog → SOP Lang</div>
+    <ul>
+      <li><a href="index.html">Overview</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="language.html">Linguistic evidence</a></li>
+      <li><a href="worlds.html">Extend with SOP worlds</a></li>
+      <li><a href="spelling.html">Spelling</a></li>
+      <li><a href="context.html">Contextual estimator</a></li>
+      <li><a href="evaluation.html">Evaluation and reproduction</a></li>
+      <li><a class="active" aria-current="page" href="diagnosis.html">Failure diagnosis</a></li>
+      <li><a href="decisions.html">Design history</a></li>
+    </ul>
+  </nav>
+  <main>
+    <h1>Diagnose formalisation failures</h1>
+    <p>A structural mismatch identifies a pair to inspect. The diagnosis records a reviewer’s claim about one specific feature, then tests that claim with a witness circuit and a controlled contrast. Unreviewed disagreements and proposals with insufficient evidence are counted as unknown. The review cases refer to committed WebMeet rows by source and record number. <a href="../eval/diagnose-cases.mjs">Review plan and probes</a> · <a href="../eval/ROLE-AUDIT.md">Independent semantic review</a></p>
+    <h2>Evidence for each diagnosis</h2>
+    <table>
+      <thead><tr><th scope="col">Attribution</th><th scope="col">Evidence</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Mechanism</th><td>A valid circuit represents the reviewed feature. Neither the stored candidates nor the replay produces it from the original utterance, and an explicit contrast produces it using the same model and knowledge. This is a scoped candidate-generation diagnosis.</td></tr>
+        <tr><th scope="row">Missing knowledge</th><td>Change only SOP declarations and check the relevant catalogue entry before and after. Verify that the same contrast yields the feature only with the new declaration. Report the original utterance separately because attachment or target inference can still fail.</td></tr>
+        <tr><th scope="row">Schema expressive limit</th><td>Specify the required typed distinction and review possible existing encodings. Check that the native schema rejects the exact missing slot on a closed type and accepts the same witness after adding that one declaration. This establishes a contract boundary for the reviewed representation. The row attribution still depends on whether that distinction is required.</td></tr>
+        <tr><th scope="row">Ambiguous context</th><td>Supply two plausible contextual snapshots to the same candidates. The selected interpretations differ as reviewed, while the utterance and candidate circuits stay fixed.</td></tr>
+        <tr><th scope="row">Annotation</th><td>Identify a specific mismatch between the annotation and the utterance. Provide a structurally distinct accepted witness for the reviewed feature. It can preserve other uncertain material as unread.</td></tr>
+        <tr><th scope="row">Unknown</th><td>The row is unreviewed, the intent or evidence is insufficient, or the current reader no longer reproduces the specific failure.</td></tr>
+      </tbody>
+    </table>
+    <h2>Validation and catalogue scope</h2>
+    <p>The native SOP engine checks type declarations, slots, enumerations and local references. The pinned WebMeet checker also checks that phrases occur in the source, apply within the owning request, and follow the dataset's rules for target families, constraint keys and closed value banks in the row's tab. It accepts explicit <code>open_value=true</code> where applicable. The benchmark's text-only reader receives the utterance alone. The checker uses the dataset tab after inference. The checker reports warnings separately for phenomena such as unread material.</p>
+    <p>The checker emits grouped violations with example rows. The diagnostic uses a distinct temporary filename for each witness and requests enough examples to map every violation back to the witness. Native validity and checker errors are preserved separately. A checker pass can establish conformance while leaving semantic adequacy open. <a href="../eval/diagnose.mjs">Diagnostic runner</a> · <a href="../eval/diagnose-schema.mjs">Native schema differential</a></p>
+    <p>The standalone reading checker can expose whole-token evidence ranges, quote-only predicates and argument role conflicts before a reviewer chooses a diagnosis. It preserves multiple occurrences and reports uncovered tokens separately from lexical or schema errors. <a href="language.html">Inspect linguistic evidence</a></p>
+    <h2>Measured bucket-0 review</h2>
+    <p>The native-frame text-only run had 1,915 rows and 1,374 structural disagreements. The diagnostic reproduced all six stored candidate lists. Six reviewed probes yielded one mechanism attribution, one missing-knowledge attribution, one ambiguous-context attribution, one annotation attribution, and two unresolved probes. The other 1,368 disagreements were unreviewed. This purposive review does not estimate the prevalence of each cause. All six submitted witness circuits passed the native validator and pinned checker.</p>
+    <ul>
+      <li>“Move it to Friday” never produced the plausible <code>meeting.day=Friday</code> candidate. The explicit meeting-day contrast produced it with the same model and declarations.</li>
+      <li>A single alias for <code>chart.colourBarLength</code> exposed “colour bar length medium” in the lexical catalogue and repaired the contrast with an explicit chart target. The original metonymic request still lacked the property.</li>
+      <li>Two plausible live entities named Kickoff switched the winner between node and drawn object among the same eight candidates.</li>
+      <li>The “add a paargraph” annotation targets an existing block. The witness creates a new paragraph and leaves “Main Track 3” unresolved.</li>
+      <li>The native-frame run generated replacement text for the reviewed Letter request. The historical release candidate set omitted that feature, so the reviewed omission did not account for the current disagreement. For the other unresolved case, the closed constraint type lacked a typed <code>antecedent</code> link. A previous-value lookup was legal, and the utterance did not isolate its intended prior effect, so the case remained unknown.</li>
+    </ul>
+    <h2>Reproduce and extend</h2>
+    <p>From the repository root, use a text-only benchmark with <code>--details</code> and the matching trained model. The diagnostic preserves stored candidates and reports whether the current reader reproduces them. If replaying on a later code revision, inspect that field before comparing results.</p>
+    <pre><code>node eval/diagnose.mjs .cache/primary.jsonl --model .cache/model.json \
+  &gt; .cache/diagnosis-primary.json
+node --test test/diagnose.test.mjs</code></pre>
+    <p>Pass <code>--cases path/to/plan.mjs</code> to use another plan exporting a <code>cases</code> array. Follow the release plan for scope, witness and probe fields. When reviewing a schema boundary, include the one-slot extension, witness and alternative encodings checked against the pinned schema. Keep subjective judgments in the review rationale and observed outputs in the generated report. <a href="evaluation.html#reproduction">Benchmark reproduction</a> · <a href="../eval/diagnose-cases.mjs">Example plan</a></p>
+  </main>
+</body>
+</html>
