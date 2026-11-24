@@ -1,0 +1,11 @@
+sample	previous	current	reference_issue	retained_reasonable	review_note
+247	1	1	0	1	A retained full graph sets airport lounge and noon and creates all four object groups with the requested attributes and relations. Removed and added partial variants still misread medium blue or miss setting.
+579	0	0	1	0	New graphs miss the bird's top-right region, left shift, spacing and linked restore operation. Reference omits the shift distance and intended gap, and does not disambiguate the swap participants.
+669	0	0	1	0	New graph misreads top as a target, blue as a result and the tower as existing. Reference omits the exact matching instruction and introduces a separate count from the one above.
+708	0	0	1	0	New graph binds green paint but treats write green as a drawn object and fails to bind the requested literal label. Reference invents a triangle selector.
+789	0	0	1	0	New graph removes yellow blocks then creates four yellow ones, losing purple and the vacated positions. Reference lacks the vacated-position link.
+814	0	1	0	0	One new graph creates a line chart that sums sales forecast by month using the catalog period slot.
+864	0	1	0	0	New graph creates a bar chart of summed orders grouped month by month.
+906	0	1	1	0	New sequence makes a monthly average-order-value line chart and places the legend on the right through contextual chart lookup. Removed graph misconstrues the first clause as a link edit. Reference uses an axis title as the measure.
+931	0	0	1	0	New graph mistakes the top-right region for upward movement, treats boats as existing and leaves even spacing unread. Reference lacks explicit even spacing.
+957	0	0	1	0	New graph creates a figure instead of swapping the second-in figures and fails to preserve other positions. Reference leaves the pair and swap unread.

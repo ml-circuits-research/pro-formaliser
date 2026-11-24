@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Analytical readings and independent spelling
+
+Reader `1a427d8` reached 48.9% reasonable on the primary 1,000 and 41.9% on the second 1,000 using the original wording alone. On the primary sample, preserving original and corrected proposals adds thirteen separate recoveries, giving 50.2% with spelling enabled. The spelling context was trained for this primary split. The optional landmark catalog was excluded from both benchmarks. [Primary grades](THOUSAND-AUDIT.md) · [Second sample](REPLICATION-37.md) · [Spelling judgments](SPELL-AUDIT.md)
+
 ## Quoted text, landmarks and preservation
 
 At revision `d093cf3`, the primary sample reached 48.8% reasonable (previously 48.6%) and the second sample reached 41.6% (previously 41.1%). Each sample contains 1,000 requests. Both use text alone and count a request when at least one complete proposal is faithful. [Primary grades](THOUSAND-AUDIT.md) · [Second sample review](REPLICATION-37.md)

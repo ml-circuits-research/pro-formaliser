@@ -83,7 +83,7 @@ sample	source	row	grade	reference_issue	review_note
 82	diagram/nodes-05.csv	441	L2b	0	Retains the ordinal but cannot identify what the first option refers to.
 83	drawing/objects-04.csv	1660	L3	0	Adds a pudding
 84	diagram/charts-02.csv	4033	L1d	0	Turns background narration into commands and drops requested edits
-85	diagram/charts-05.csv	1652	L2b	1	Creation intent survives but chart and metric are not bound
+85	diagram/charts-05.csv	1652	L4	1	Creates vertical bars showing units per transaction grouped by state. The reference leaves the measure unread.
 86	diagram/charts-05.csv	776	L2b	0	Creation intent survives but line chart specification is unread
 87	drawing/placement-01.csv	1163	L2a	1	Creates the tree behind the boy, but omits the little cloud and the half-hidden head relation.
 88	drawing/scenes-06.csv	3487	L1d	1	Invents a far placement from 'so far' and leaves facing unread
@@ -766,7 +766,7 @@ sample	source	row	grade	reference_issue	review_note
 765	diagram/diagrams-01.csv	2879	L2b	0	Arrangement lacks both named nodes.
 766	diagram/charts-03.csv	2642	L2c	1	The transparent effects target the diagram or a node, and no proposal applies partial transparency to the flow lines.
 767	drawing/scenes-08.csv	2682	L3	0	Caption, location and font.
-768	diagram/diagrams-03.csv	72	L2c	0	Recognizes a bar chart but omits order quantity and the requested relationship involving the count.
+768	diagram/diagrams-03.csv	72	L2c	1	Recognizes a bar chart but omits order quantity and the requested relationship involving the count.
 769	drawing/people-05.csv	1668	L4	0	Selects existing small pale ear with change unspecified.
 770	drawing/placement-06.csv	1209	L4	0	Fairy size and location.
 771	drawing/objects-03.csv	1384	L2b	0	Pumpkin missing.

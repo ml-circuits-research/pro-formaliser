@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Replay with 1a427d8
+
+Reasonable proposals reached **41.9%**, previously 41.6%. Ten sets changed. Three gained a complete reading and none lost one. The gains bind a monthly sales forecast sum, monthly order totals, and average order value by month with a right-hand legend. [Changed cases and independent review](REPLICATION-37-ANALYTICAL.tsv)
+
 ## Replay with d093cf3
 
 On the same 1,000 requests, 41.6% had a reasonable circuit, up from 41.1%. Review covered all 29 changed sets. Five previously incomplete or wrong results gained a faithful alternative, with no observed losses. These cases included a named landmark and the quoted sign text SALE. Some failures informed development after the original independent test. Unchanged sets inherit their previous verdict. [Changed sets and reasons](REPLICATION-37-REPLAY.tsv)
