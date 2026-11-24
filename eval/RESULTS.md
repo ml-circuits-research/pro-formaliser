@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Scaled property readings and transfer shortlist
+
+On the paired 1,000 text-only inputs, `9011c80` reached 48.6% reasonable, previously 48.5%, with no observed loss. The newly recovered proposal selects the existing Plan block and applies a numbered style. A separate probe with the optional relation module produces the height-from-width circuit in the integration pilot. The sample replay reused the preceding bucket's training model. [Grades](THOUSAND-AUDIT.md) · [Integration review responses](../integration-review.responses.md)
+
 ## Coordinated properties, endpoint selectors and transfer of descriptions
 
 Reader revision `cf23f06` offered at least one reasonable proposal for 48.5% of the paired 1,000 requests, up from 48.2%. Three requests gained a reasonable proposal, and none lost one. Across the full holdout, 674 sets contained the reference semantic wire set, previously 667. The reference-tab checker rejected 254 of 1,891 nonempty first choices in both runs. These measurements use the default worlds. The optional relation module and vocabulary overlay have separate public-reader probes. [Grades and reproduction](THOUSAND-AUDIT.md)

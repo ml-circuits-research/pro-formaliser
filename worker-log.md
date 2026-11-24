@@ -134,3 +134,6 @@
 ## Explicit relative dimensions and bounded transfer retrieval
 - The optional reader emits a typed scale for explicit, compatible properties on the same owner and retains the partial alternative. Replayed the integration team's contrast with and without a model.
 - Added a bounded fallback after the original transfer shortlist. Full gate passed (273 tests); the new row-by-row sample replay is in progress.
+
+## Verification on all 1,000 paired inputs
+- Replayed 5f41cd2 and 9011c80 through the public text-only CLI with the frozen training model. The final run recovered one additional reasonable case, reaching 48.6% with no observed losses. See eval/THOUSAND-AUDIT.md.

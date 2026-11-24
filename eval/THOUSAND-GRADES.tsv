@@ -499,7 +499,7 @@ sample	source	row	grade	reference_issue	review_note
 498	calendar/meetings-08.csv	81	L2b	0	Recognizes a meeting edit and some notes, but misses the review meeting identity and schedule.
 499	diagram/nodes-03.csv	1014	L2b	0	Recognizes undo, re-add and check, but loses the removed box identity and row.
 500	drawing/people-05.csv	3658	L4	0	The terse request supports dot variant, pink color and default eye size.
-501	drawing/scenes-06.csv	3536	L2c	1	A circuit adds the bird to the fence and preserves the rest in place, but leaves its orientation toward the sun unread.
+501	drawing/scenes-06.csv	3536	L2c	1	One proposal puts the bird on the fence facing the sun. Another preserves the rest in place. No single proposal binds all three requirements.
 502	diagram/diagrams-04.csv	935	L3	0	Exact Login box recolor alongside a drawn-object hypothesis.
 503	diagram/nodes-04.csv	3879	L2c	1	Recognizes a question but does not capture which condition ends the process; reference omits that feature.
 504	drawing/scenes-08.csv	1670	L2c	0	Recovers the setting, all four object groups and the surprised expression, but treats the bottom as a landmark instead of a page region.
@@ -704,7 +704,7 @@ sample	source	row	grade	reference_issue	review_note
 703	diagram/charts-06.csv	1615	L2b	1	March-only restriction missing.
 704	diagram/nodes-04.csv	1186	L2c	0	Caption lacks exact title.
 705	document/text-01.csv	4494	L4	0	Exact document content preserved.
-706	document/text-03.csv	1134	L2b	0	Plan not bound to a numbered block.
+706	document/text-03.csv	1134	L3	0	Selects the existing Plan block and applies numbered style; the reasonable proposal matches the reference.
 707	diagram/charts-06.csv	1851	L2c	0	Tick format missing.
 708	drawing/scenes-10.csv	3229	L1c	0	Reads the shirt as a spatial landmark and green as a result rather than selecting the dressed man and moving him right one place.
 709	drawing/scenes-13.csv	2292	L2c	0	A girl-change proposal leaves the smile and bench selector unbound.
