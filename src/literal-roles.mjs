@@ -218,13 +218,89 @@ function creation(span, ts, quotes, head, worlds) {
   return readings;
 }
 
+export function compileCreationRoles(facts,requestKeys) {
+  const get = (wire,key) => (wire.attrs[key] ?? []).map(raw => raw.startsWith('"') ? JSON.parse(raw) : raw);
+  const index = new Map();
+  for (const wire of facts('pro.reader.creation_role')) {
+    const [family]=get(wire,'family'), [tab]=get(wire,'tab'), [attribute]=get(wire,'attribute');
+    const [sortKey]=get(wire,'sort_key'), sorts=get(wire,'sort');
+    const keys=requestKeys.filter(key=>key.family===family && key.tab===tab);
+    if (!keys.some(key=>key.name===attribute && key.head.split('+').includes('span') && !key.values.length)) continue;
+    const bank=sortKey && keys.find(key=>key.name===sortKey)?.values;
+    if (sortKey && !bank?.length) continue;
+    const cues=get(wire,'text').map(normalized).filter(Boolean);
+    for (const cue of cues) {
+      const list=index.get(cue) ?? [];
+      list.push({family,attribute,sorts:new Map(sorts.map(sort=>[normalized(sort.replaceAll('_',' ')),sort])),
+        bank:new Map((bank ?? []).map(sort=>[normalized(sort.replaceAll('_',' ')),sort]))});
+      index.set(cue,list);
+    }
+  }
+  return index;
+}
+
+function plainCreationTail(ts,start,end,worlds) {
+  const input=ts.slice(start,end);
+  if (!input.length || !input.some(([key])=>/\p{L}/u.test(key))) return false;
+  return input.every(([key,,a,b],i)=>{
+    if (/^[\p{L}\p{M}\p{N}_]+$/u.test(key)) {
+      if (worlds.negatives.has(key) || worlds.joiners[key]) return false;
+      return !phrases(ts,start+i,end).some(({surface})=>
+        worlds.scopeGrammar.negatives.has(surface) || worlds.scopeGrammar.conditionals.has(surface) ||
+        worlds.lookup(surface).some(([role])=>role==='marker'));
+    }
+    return ['-',"'",'’'].includes(key) && input[i-1]?.[3]===a && input[i+1]?.[2]===b;
+  });
+}
+
+function declaredCreation(span,ts,quotes,head,worlds) {
+  const roles=worlds.literalGrammar.creationRoles;
+  if (!roles?.size || ts.at(-1)?.[0]==='?' && head.start===0) return [];
+  const stop=ts.length-Number(['.','!','?'].includes(ts.at(-1)?.[0]));
+  const det=phrases(ts,head.next,stop).find(choice=>Object.hasOwn(worlds.determiners,choice.surface));
+  if (definite.has(worlds.determiners[det?.surface])) return [];
+  const noun=det?.next ?? head.next;
+  if (noun>=stop) return [];
+  const readings=new Map();
+  for (const nominal of phrases(ts,noun,stop)) {
+    for (const cue of phrases(ts,nominal.next,stop)) {
+      if (cue.next>=stop || quotes.some(q=>q.start<cue.end && q.end>nominal.start)) continue;
+      const pending=roles.get(cue.surface);
+      if (!pending?.length) continue;
+      const literal=quotes.find(q=>q.start===ts[cue.next][2] && q.end===ts[stop-1][3]);
+      if (!literal && (quotes.length || !plainCreationTail(ts,cue.next,stop,worlds))) continue;
+      const value=literal?.value ?? span(ts[cue.next][2],ts[stop-1][3]);
+      if (!value.trim() || (!literal && worlds.isReference(value))) continue;
+      const matches=worlds.lookup(nominal.surface)
+        .filter(([role,act,,mode])=>role==='target' && act===head.act && mode==='new');
+      for (const {family,attribute,sorts,bank} of pending) {
+        const sense=matches.find(([, ,owner])=>owner===family);
+        const sort=bank.get(nominal.surface) ?? (sense && sorts.get(nominal.surface));
+        if (!sort && (sorts.size || bank.size || !sense)) continue;
+        const target={family,mode:'new',sort:sort || sense?.[4],det:worlds.determiners[det?.surface],
+          surface:span(nominal.start,nominal.end)};
+        const candidate=circuit({span,head,end:ts[stop-1][3],target,
+          constraints:[constraint(attribute,value,span(cue.start,cue.end))]});
+        const choices=readings.get(family) ?? new Map();
+        choices.set(candidate.sop,{...candidate,source:'literal-creation',status:'matched'});
+        readings.set(family,choices);
+      }
+    }
+  }
+  return [...readings.values()].flatMap(choices=>choices.size===1 ? [...choices.values()] : []);
+}
+
 export function literalRoleCandidates(text, ts, quotes, worlds) {
-  if (!quotes.length || !worlds.literalGrammar) return [];
+  if (!worlds.literalGrammar || (!quotes.length && !worlds.literalGrammar.creationRoles?.size)) return [];
   const chars = Array.from(text);
   const span = (start,end) => chars.slice(start,end).join('');
   const scope = maskQuoted(text,quotes);
   if (/\b(?:not|never|without|except|instead|but)\b|n['’]t\b/iu.test(scope)) return [];
-  return requestHeads(ts,worlds).flatMap(head => head.act === 'make'
-    ? creation(span,ts,quotes,head,worlds)
-    : replacement(span,ts,quotes,head,worlds));
+  return requestHeads(ts,worlds).flatMap(head => {
+    if (head.act==='make') return [
+      ...declaredCreation(span,ts,quotes,head,worlds),
+      ...(quotes.length ? creation(span,ts,quotes,head,worlds) : [])
+    ];
+    return quotes.length ? replacement(span,ts,quotes,head,worlds) : [];
+  });
 }

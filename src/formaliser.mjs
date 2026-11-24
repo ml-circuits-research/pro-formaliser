@@ -1,3 +1,5 @@
+import { verbEffectIndex,verbEffectReading } from './verb-effects.mjs';
+import { transformationReadings } from './transformation.mjs';
 import { numberedQualifierReadings } from './numbered-qualifier.mjs';
 import { coordinatedPacket,effectReading } from './coordinated-effects.mjs';
 import { discourseBody } from './trailing-discourse.mjs';
@@ -51,6 +53,51 @@ function add(map, key, item) {
   map.get(key).push(item);
 }
 
+const valueOf=(wire,key)=>{
+  const raw=wire.attrs[key]?.[0];
+  return raw?.startsWith('"') ? JSON.parse(raw) : raw;
+};
+
+function spatialOverlap(hits,chars,ts) {
+  const markers=hits.filter(([, , [role,,slot,relation]])=>
+    role==='marker' && relation && ['spatial','place'].includes(slot));
+  const byEnd=new Map(), byPropertyEnd=new Map();
+  const previousEnd=new Map(ts.slice(1).map((token,i)=>[token[2],ts[i][3]]));
+  for (const marker of markers) add(byEnd,marker[1],marker);
+  for (const hit of hits) {
+    if (hit[2][0]==='constraint' && typeof hit[2][3]==='string' && hit[2][3].includes('key_words='))
+      add(byPropertyEnd,hit[1],hit);
+  }
+  const omitted=new Set(), evidence=[];
+  for (const longer of markers) {
+    const [start,end,[,license,slot]]=longer;
+    for (const [boundary,,[,shortLicense,shortSlot,relation]] of byEnd.get(end)) {
+      if (boundary<=start || shortLicense!==license || shortSlot!==slot) continue;
+      for (const [propertyStart,,[,,family,body]] of byPropertyEnd.get(previousEnd.get(boundary)) ?? []) {
+        if (propertyStart>=start) continue;
+        const [property]=parse('@p w.request.constraint '+body);
+        const key=valueOf(property,'attribute'), value=valueOf(property,'value');
+        if (!key || !value || valueOf(property,'operator')!=='eq' || valueOf(property,'on')!=='attribute' ||
+            !valueOf(property,'key_words') || property.attrs.want) continue;
+        omitted.add(longer);
+        evidence.push({family,key,value,relation,marker:chars.slice(boundary,end).join('')});
+      }
+    }
+  }
+  if (!omitted.size) return;
+  return {hits:hits.filter(hit=>!omitted.has(hit)),evidence};
+}
+
+function keepsSpatialOverlap(sop,evidence) {
+  const wires=parse(sop), constraints=wires.filter(w=>w.type==='w.request.constraint');
+  return evidence.some(({family,key,value,relation,marker})=>wires.some(target=>
+    target.type==='w.request.target' && valueOf(target,'family')===family &&
+    constraints.some(field=>valueOf(field,'request')===valueOf(target,'request') &&
+      valueOf(field,'attribute')===key && valueOf(field,'value')===value) &&
+    constraints.some(field=>valueOf(field,'request')===valueOf(target,'request') &&
+      valueOf(field,'relation')===relation && valueOf(field,'words')?.startsWith(marker+' '))));
+}
+
 // The index eliminates impossible candidates. Prolog unifies the full pattern,
 // binds the raw input spans and orders the resulting circuits.
 export function createFormaliser(model = {version:1,examples:[],templates:[]}, worlds = loadWorlds(), {languageFrames=true} = {}) {
@@ -72,6 +119,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     determiners:worlds.determiners,
   });
   const targetRoles=[...new Set(worlds.languageFrames.bindings.filter(b=>b.type==='w.request.target').map(b=>b.role))];
+  const verbIndex=verbEffectIndex(worlds,model.verbEffects);
   const ground = constraintGrounder();
   const resolveRelationKeys = createRelationKeyResolver(worlds);
   const compounds=createCompoundReferenceReader(worlds);
@@ -169,7 +217,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const argumentSequences=scope.restricted || quotes.length ? [] : sequencePacket(ts,worlds);
     const memberActions=scope.restricted ? [] : memberActionPackets(text,ts,quotes,worlds);
     const coordinatedEffects=scope.restricted || quotes.length ? undefined : coordinatedPacket(ts,worlds,model.lexicon);
-    const request = {text,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const verbEffects=scope.restricted || quotes.length ? [] : [...new Set(ts.map(t=>t[0]))].flatMap(head=>verbIndex.get(head) ?? []);
+    const request = {text,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -194,9 +243,23 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         contextualTargets.push({...plain,sop});
       }
     }
+    // The ordinary search prefers a longer marker. If its prefix also
+    // finishes a grounded property, try the native suffix marker separately.
+    const competing=allowConstraints && !scope.restricted && spatialOverlap(hits,chars,ts);
+    if (competing) {
+      const alternative=await worker.request({...request,hits:competing.hits,
+        templates:[],examples:[],transfers:[],argumentSequences:[],propertyCommands:undefined,
+        coordinatedEffects:undefined,verbEffects:[]});
+      for (const answer of alternative.candidates) {
+        if (answer.source!=='lexicon' || !keepsSpatialOverlap(answer.sop,competing.evidence)) continue;
+        const {operationMode:_mode,...candidate}=answer;
+        retain({...candidate,sop:resolveRelationKeys(candidate.sop)});
+      }
+    }
     if (!scope.restricted) {
       for (const candidate of compounds(text,ts,quotes)) retain(candidate);
       for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
+      for (const reading of transformationReadings(text,ts,quotes,worlds)) retain(reading);
       for (const reading of ownerPropertyReadings(text,ts,quotes,worlds)) retain(reading);
     }
     for (const candidate of instanceReferences(text,ts,quotes,hits)) retain(candidate);
@@ -303,6 +366,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     if (!scope.restricted && ts.some(([key])=>/\d/u.test(key) || worlds.nominalNumbers.has(key))) {
       for (const candidate of [...candidates]) for (const reading of numberedQualifierReadings(text,candidate,worlds)) retain(reading);
+    }
+    if (response.verbEffects?.length) {
+      const owners=candidates.slice();
+      for (const proof of response.verbEffects) for (const candidate of owners) {
+        const reading=verbEffectReading(text,candidate,proof);
+        if (reading) retain(reading);
+      }
     }
     for (const proof of response.coordinatedEffects ?? []) retain(effectReading(text,ts,proof));
     for (const reading of memberActionReadings(text,response.memberActions ?? [],worlds)) retain(reading);

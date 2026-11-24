@@ -1,0 +1,4 @@
+# Explicit roles for a complete creation clause with a written complement.
+@reader.creation.node.label pro.reader.creation_role tab=diagram family=node attribute=node.label sort_key=node.kind text=labelled text=labeled text=marked text=called text=named
+@reader.creation.section.heading pro.reader.creation_role tab=document family=section attribute=section.content sort=heading text=called text=named text=titled text=saying
+@reader.creation.section.content pro.reader.creation_role tab=document family=section attribute=section.content sort=paragraph sort=quote text=saying text=containing

@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Written complements, named landmarks and predicate effects
+
+On the paired 1,000 requests, at least one proposal was reasonable on 45.9% (previously 45.0%). On the full holdout, 663 proposal sets contained the reference semantic wire set, previously 660. The first-choice WebMeet checker rejected 272 of 1889 nonempty circuits using the reference tab, compared with 264 in the previous run. The increase includes alternatives from another family ordered first and closing phrases rejected as fillers. [Grades and reproduction](THOUSAND-AUDIT.md)
+
 ## Shared properties, named members and trailing discourse
 
 On the paired 1,000 requests, at least one proposal was reasonable on 45.0% (previously 44.4%). On the full holdout, 660 proposal sets contained the reference semantic wire set, previously 659. The first-choice WebMeet checker rejected 264 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)

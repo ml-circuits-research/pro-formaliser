@@ -5,7 +5,8 @@ The formaliser and spellchecker load the world snapshot installed by
 additional `.sop` files or directories, separated by the platform path
 delimiter (`:` on Linux). Directory entries are loaded in sorted order.
 Later declarations with the same wire type and ID replace earlier ones.
-Start the command again to read changes to an overlay.
+The reader also discovers bundled SOP files under `resources/pro.reader/`
+before applying the optional overlays. Restart the command to load new facts.
 
 ```sh
 SOP_WORLDS=./workbench.sop node bin/formalise.mjs --json "calibrate the fluxometer"
@@ -127,6 +128,20 @@ licensed spatial keys. Those targets have `fill=context` and retain
 an unresolved thing lookup. The text-only reader keeps the unresolved
 reading first.
 
+A `pro.reader.spatial_surface` declares a written variant whose specific
+relation depends on a catalog already licensing the base construction.
+The base and specific relation must both be available on the family’s
+relation key.
+
+```sop
+@reader.vicinity pro.reader.spatial_surface base="next to" relation=next_to text="right next to" text="directly next to"
+```
+
+A licensed named relation pattern can distinguish a written target from a
+written landmark, including a single bare content word in each role. Quoted
+labels retain their full spelling. Clauses that establish a name locally can
+also supply it to a follow-up reading. [Named spatial tests](../test/named-arguments.test.mjs)
+
 ## Preservation keys
 
 Declare a `pro.reader.preservation` fact to use a custom preservation key
@@ -220,6 +235,56 @@ Slate Alloy” reads the quoted material as the specimen and `Slate Alloy` as
 the reference. The separator inside the quote stays part of the operand. The
 reader checks the selected clause and the existing wires before accepting the
 pair. Ambiguous operand boundaries can leave text unread.
+
+## Creation complements
+
+Use `pro.reader.creation_role` to connect a creation cue to an open `span`
+key on a new target. An optional `sort_key` supplies sorts from a bank in the
+owner’s catalog. Repeated `sort` values identify native nouns for that family.
+With neither field, the role applies to an independently recognized family
+noun.
+
+```sop
+@reader.creation.node.label pro.reader.creation_role tab=diagram family=node attribute=node.label sort_key=node.kind text=labelled text=labeled
+@reader.creation.section.heading pro.reader.creation_role tab=document family=section attribute=section.content sort=heading text=called text=titled
+```
+
+The cue and full complement must occur in the same creation clause. Quoted
+payloads keep their literal content. If the words after an unquoted cue
+introduce another clause or an adjunct, the existing reader can still offer
+partial alternatives. Tests cover whole labels, composed section requests
+and an independently installed family. [Creation role tests](../test/creation-roles.test.mjs)
+
+## Transformations
+
+Declare `pro.reader.transformation` for an existing owner and a result
+connected by a native predicate and grammatical marker. Explicit `owner`
+words or a native `owner_type` inventory license the owner. A `value_type`
+inventory can supply typed values for a class or candidate key. An open
+span instead needs a declared `value_head`. Optional `extent` terms qualify
+the owner.
+
+```sop
+@reader.art.render pro.reader.transformation tab=drawing family=page act=change predicate=render marker=as owner=drawing value_head=painting attribute=page.style
+```
+
+The reader matches the local clause and copies observed evidence. A modifier
+outside a typed value can remain unread. [Transformation tests](../test/transformation.test.mjs)
+
+## Effects expressed by verbs
+
+A native `k.actions.verb` can specify an attribute and a value for its existing
+object. The reader projects that value only when a family has one compatible
+catalog key for the attribute. A native comparative direction can instead
+supply a relative numeric or stepped effect.
+
+Training can learn an equality for a predicate, action and family when the
+predicate itself supplies evidence for one bank value. Different normalized
+object phrases provide independent witnesses and missing or conflicting
+results count against agreement. Learned effects come from training rows.
+Prolog matches the predicate’s local scope, and each effect requires a
+separately grounded existing owner and an unoccupied result slot.
+[Verb effect tests](../test/verb-effects.test.mjs)
 
 ## Owner-bound property edits
 

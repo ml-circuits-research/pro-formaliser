@@ -1,3 +1,6 @@
+import { nativeVerbEffects } from './verb-effects.mjs';
+import { compileTransformations } from './transformation.mjs';
+import { compileCreationRoles } from './literal-roles.mjs';
 import { effectGrammar } from './coordinated-effects.mjs';
 import { compileTrailingDiscourse } from './trailing-discourse.mjs';
 import { affectedMorphologyTypes, createAffectedParticiples } from './affected-target.mjs';
@@ -24,7 +27,7 @@ const types = new Set([
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
-  'pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
+  'k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue', 'w.lang.en.number',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
@@ -282,7 +285,11 @@ function compile(facts) {
     }
   }
   const aliasesByPrep = new Map();
-  for (const [form,relation,base] of spatialAliases(facts,spatial,values,phrase)) {
+  const explicitAliases=facts('pro.reader.spatial_surface').flatMap(w=>{
+    const base=phrase(one(w,'base') ?? ''), relation=one(w,'relation');
+    return spatial.has(base) && relation ? values(w,'text').map(t=>[phrase(t),relation,base]) : [];
+  });
+  for (const [form,relation,base] of [...spatialAliases(facts,spatial,values,phrase),...explicitAliases]) {
     index(aliasesByPrep,base,form);
     index(spatial,form,relation);
     index(markers,form,['marker','*','spatial',relation,0]);
@@ -559,6 +566,7 @@ function compile(facts) {
     alternations:compileAlternations(facts),
     scopeGrammar:scopeGrammar(facts),
     literalGrammar: {
+      creationRoles:compileCreationRoles(facts,requestKeys),
       leads, contentLeads, namingLeads, bindings:literalBindings,
       verbs: surface => literalVerbs.get(surface) ?? [],
       licenses: (family, act) => familyActs.get(family)?.includes(act),
@@ -572,12 +580,14 @@ function compile(facts) {
     argumentSequences:argumentSequences(facts,requestKeys),
     ownerPropertyFrames:facts('pro.reader.owner_property').map(w=>({act:one(w,'act'),owner:one(w,'owner'),value:one(w,'value')})),
     ...effectGrammar(facts,requestKeys),
+    transformations:compileTransformations(facts,requestKeys,words),
     trailingDiscourse:compileTrailingDiscourse(facts),
     memberActions:facts('pro.reader.member_action').map(w=>({family:one(w,'family'),tab:one(w,'tab'),act:one(w,'act'),mode:one(w,'mode'),key:one(w,'key'),phase:one(w,'phase'),separators:values(w,'separator'),suffixes:values(w,'suffix')})),
     affectedParticiples:createAffectedParticiples(facts),
     affectedTargetLeads:new Set(facts('pro.reader.affected_lead').flatMap(w=>values(w,'text').map(phrase))),
     affectedTargetSources:facts('pro.reader.affected_source').map(w=>Object.fromEntries(
       ['act','family','marker','keyword','attribute'].map(k=>[k,one(w,k)]))),
+    nativeVerbEffects:nativeVerbEffects(facts,requestKeys,propertyLabels),
     ownerPropertyLabels:propertyLabels,
     ownerPropertyValues:compatibleValues,
     compoundReferences:facts('pro.reader.compound_reference').map(w=>({family:one(w,'family'),firstKey:one(w,'first_key'),secondKey:one(w,'second_key'),delimiter:one(w,'delimiter')})),
@@ -623,8 +633,11 @@ function collect(facts, file, selection) {
 }
 
 function providerTypes(facts) {
-  return new Set([...(facts.get('w.reader.en.binding')?.values() ?? [])]
-    .map(binding => one(binding, 'source_type')).filter(Boolean));
+  const sources=[...(facts.get('w.reader.en.binding')?.values() ?? [])].map(w=>one(w,'source_type'));
+  for (const frame of facts.get('pro.reader.transformation')?.values() ?? []) {
+    sources.push(one(frame,'owner_type'),one(frame,'value_type'));
+  }
+  return new Set(sources.filter(Boolean));
 }
 
 function compileFacts(facts) {
@@ -642,8 +655,8 @@ export function loadWorlds({ paths = (process.env.SOP_WORLDS ?? '').split(delimi
     pinnedFiles = [...worldFiles(pinned, false)];
     baseFacts = new Map();
     loadPinned(baseFacts, types);
-    collect(baseFacts,fileURLToPath(new URL('../resources/pro.reader/linguistic-roles.sop',import.meta.url)));
-    collect(baseFacts,fileURLToPath(new URL('../resources/pro.reader/discourse.sop',import.meta.url)));
+    const local = fileURLToPath(new URL('../resources/pro.reader/', import.meta.url));
+    for (const file of worldFiles(local, true)) collect(baseFacts, file);
     pinnedProviders = providerTypes(baseFacts);
     loadPinned(baseFacts, new Set([...pinnedProviders].filter(type => !types.has(type))));
   }

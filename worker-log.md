@@ -79,3 +79,7 @@
 ## Shared properties, named members and trailing discourse
 - SWI-Prolog binds coordinated properties and named members. The reader retains numerical qualifiers, courtesy tails and multi-request scopes.
 - Full test gate passed. 45.0% reasonable on the same 1,000 requests, previously 44.4%. See eval/THOUSAND-AUDIT.md.
+
+## Written complements, named landmarks and predicate effects
+- Bound creation complements and named landmarks, retained typed transformations, and matched predicate effects in SWI-Prolog.
+- Full test gate passed. 45.9% reasonable on the same 1,000 requests, previously 45.0%. See eval/THOUSAND-AUDIT.md.

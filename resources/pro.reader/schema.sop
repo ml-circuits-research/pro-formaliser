@@ -151,3 +151,29 @@
 
 @pro.reader.coordinated_effects core.type of=pro.reader.coordinated_effects closed=true
 @pro.reader.coordinated_effects.part core.slot of=pro.reader.coordinated_effects key=part kind=string kind=atom many=true required=true
+
+@pro.reader.creation_role core.type of=pro.reader.creation_role closed=true
+@pro.reader.creation_role.tab core.slot of=pro.reader.creation_role key=tab kind=atom required=true
+@pro.reader.creation_role.family core.slot of=pro.reader.creation_role key=family kind=atom required=true
+@pro.reader.creation_role.attribute core.slot of=pro.reader.creation_role key=attribute kind=atom required=true
+@pro.reader.creation_role.sort_key core.slot of=pro.reader.creation_role key=sort_key kind=atom
+@pro.reader.creation_role.sort core.slot of=pro.reader.creation_role key=sort kind=string many=true
+@pro.reader.creation_role.text core.slot of=pro.reader.creation_role key=text kind=string many=true required=true
+
+@pro.reader.spatial_surface core.type of=pro.reader.spatial_surface closed=true
+@pro.reader.spatial_surface.base core.slot of=pro.reader.spatial_surface key=base kind=string required=true
+@pro.reader.spatial_surface.text core.slot of=pro.reader.spatial_surface key=text kind=string required=true many=true
+@pro.reader.spatial_surface.relation core.slot of=pro.reader.spatial_surface key=relation kind=atom required=true
+
+@pro.reader.transformation core.type of=pro.reader.transformation closed=true
+@pro.reader.transformation.tab core.slot of=pro.reader.transformation key=tab kind=atom required=true
+@pro.reader.transformation.family core.slot of=pro.reader.transformation key=family kind=atom required=true
+@pro.reader.transformation.act core.slot of=pro.reader.transformation key=act kind=atom required=true
+@pro.reader.transformation.attribute core.slot of=pro.reader.transformation key=attribute kind=atom required=true
+@pro.reader.transformation.owner_type core.slot of=pro.reader.transformation key=owner_type kind=atom
+@pro.reader.transformation.value_type core.slot of=pro.reader.transformation key=value_type kind=atom
+@pro.reader.transformation.owner core.slot of=pro.reader.transformation key=owner kind=string many=true
+@pro.reader.transformation.extent core.slot of=pro.reader.transformation key=extent kind=string many=true
+@pro.reader.transformation.value_head core.slot of=pro.reader.transformation key=value_head kind=string many=true
+@pro.reader.transformation.predicate core.slot of=pro.reader.transformation key=predicate kind=string many=true required=true
+@pro.reader.transformation.marker core.slot of=pro.reader.transformation key=marker kind=string many=true required=true

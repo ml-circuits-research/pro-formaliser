@@ -124,3 +124,4 @@
 @reader.effects.verb pro.reader.coordinated_effects part=verbal_effect part=join part=effect part=owner
 @reader.effects.make pro.reader.coordinated_effects part=make part=owner part=effect part=join part=effect
 @reader.effects.turn pro.reader.coordinated_effects part=turn part=owner part=effect part=join part=effect
+@reader.english.immediate_vicinity pro.reader.spatial_surface base="next to" relation=next_to text="right next to" text="directly next to" text="immediately next to"

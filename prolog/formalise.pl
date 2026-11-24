@@ -8,6 +8,7 @@
 :- use_module(property_commands).
 :- use_module(argument_sequences).
 :- use_module(member_actions).
+:- use_module(verb_effects).
 :- use_module(coordinated_effects).
 :- use_module(roles).
 :- use_module(language_frames).
@@ -22,7 +23,8 @@ main :- repeat,
       nl, flush_output, fail ).
 
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,proofs:Proofs,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects}) :-
+answer(Q, _{candidates:Answers,proofs:Proofs,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects}) :-
+    verb_effects(Q,VerbEffects),
     coordinated_effects(Q,Effects),
     member_actions(Q,Members),
     argument_sequences(Q,Sequences),
