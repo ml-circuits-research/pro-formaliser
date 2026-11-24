@@ -1,14 +1,14 @@
 # Does the reader handle unfamiliar wording?
 
-On the primary sample, 40.5% of requests with little shared wording had a reasonable proposal. On the second sample the figure was 30.9%. A request with different wording can still describe a familiar task. These figures measure similarity of the words only.
+On the primary sample, 40.8% of requests with little shared wording had a reasonable proposal. On the second sample the figure was 31.4%. A request with different wording can still describe a familiar task. These figures measure similarity of the words only.
 
 | Wording shared with the closest training request | Primary sample, reasonable | Second sample, reasonable |
 | --- | ---: | ---: |
-| Low (under 0.4) | 40.5% (148/365) | 30.9% (118/382) |
-| Moderate (0.4 to below 0.8) | 55.0% (334/607) | 47.8% (276/577) |
+| Low (under 0.4) | 40.8% (149/365) | 31.4% (120/382) |
+| Moderate (0.4 to below 0.8) | 56.3% (342/607) | 48.7% (281/577) |
 | High (0.8 and above) | 46.4% (13/28) | 63.4% (26/41) |
 
-Version `f3233ae`, original text, no discussion context or suggested tab. Each row uses the reviewed reasonable-proposal judgment for its sample. The script compares every sampled request against all distinct training utterances outside its normalized-text holdout group. It tokenizes normalized words and numbers, adds start and end boundaries, and measures the fraction of distinct consecutive three-token sequences in common (intersection divided by union). It assigns a band using the largest similarity to any one training utterance. The high-similarity groups are small. Length, subject matter and task complexity can also differ across bands. [Primary audit](THOUSAND-AUDIT.md) · [Second audit](REPLICATION-37.md)
+Version `1a7dffa`, original text, no discussion context or suggested tab. Each row uses the reviewed reasonable-proposal judgment for its sample. The script compares every sampled request against all distinct training utterances outside its normalized-text holdout group. It tokenizes normalized words and numbers, adds start and end boundaries, and measures the fraction of distinct consecutive three-token sequences in common (intersection divided by union). It assigns a band using the largest similarity to any one training utterance. The high-similarity groups are small. Length, subject matter and task complexity can also differ across bands. [Primary audit](THOUSAND-AUDIT.md) · [Second audit](REPLICATION-37.md)
 
 Run `.cache/node/bin/node eval/training-overlap.mjs` after project setup. Record the reader revision together with the result because the grading tables evolve. [Implementation](training-overlap.mjs)
 

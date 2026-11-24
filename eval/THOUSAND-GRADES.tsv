@@ -59,7 +59,7 @@ sample	source	row	grade	reference_issue	review_note
 58	drawing/scenes-21.csv	860	L4	0	Creates a house
 59	drawing/scenes-11.csv	1480	L2c	1	Creates a little bird and recognizes the tower move, but misses the tower’s destination and the requirement to keep the courses intact.
 60	diagram/nodes-06.csv	1765	L3	0	Creates purple Home star
-61	drawing/scenes-04.csv	909	L2c	0	Creates and sizes the four objects, including four shells, and places the basket and girl in the requested regions. The beach setting remains unread.
+61	drawing/scenes-04.csv	909	L4	0	One circuit sets the beach scene and creates the medium brown basket at left, four small white shells in it, a medium white seagull by it, and a small sitting girl by the right edge.
 62	drawing/scenes-03.csv	1523	L4	1	Moves the cloud downward and binds a touch as the qualitative distance.
 63	drawing/scenes-10.csv	659	L4	0	Expresses livelier ambience as open styling for the entire picture
 64	drawing/objects-01.csv	799	L2b	0	Questions avatar selection without identifying the chosen avatar preference
@@ -353,7 +353,7 @@ sample	source	row	grade	reference_issue	review_note
 352	drawing/scenes-17.csv	4073	L3	0	Exact question for the circle’s color.
 353	drawing/scenes-04.csv	544	L4	0	One sequence creates the medium kid in front of the tent and changes that kid's facing to the right.
 354	drawing/placement-01.csv	222	L1c	0	Attaches the basket-on-mat relation to the mat itself.
-355	diagram/charts-04.csv	3144	L2a	0	One chart edit survives but the font and marker changes are unrepresented.
+355	diagram/charts-04.csv	3144	L4	0	One circuit enlarges both the font and markers and makes the Revenue trend chart's grid lines solid.
 356	drawing/scenes-20.csv	946	L2b	0	Turns a trunk upright but misses which tree owns it.
 357	drawing/scenes-10.csv	2146	L2c	0	Recognizes the edit sequence but does not convert the beach into the requested court.
 358	diagram/charts-01.csv	2558	L3	0	Exact bar chart of registrations by course.
@@ -364,7 +364,7 @@ sample	source	row	grade	reference_issue	review_note
 363	calendar/meetings-01.csv	1620	L3	0	Exact room, title, date, start, duration and timezone.
 364	diagram/diagrams-07.csv	970	L3	0	Exact new magenta series labelled Review.
 365	diagram/nodes-12.csv	3358	L1b	0	Asks about a step but does not preserve the question about node n3 and its color.
-366	diagram/charts-02.csv	90	L2b	0	Recognizes removal but does not bind the Expenses by department chart or its value-label setting. The new part-ID reading consumes both as one identifier.
+366	diagram/charts-02.csv	90	L4	0	The new circuit hides value labels on the chart identified by the Expenses by department description.
 367	drawing/scenes-05.csv	1568	L2c	0	Identifies people but omits the continuing request to keep them facing the sun.
 368	diagram/nodes-01.csv	3111	L1b	0	Applies circular layouts to groups or creates circles instead of updating the named nodes.
 369	calendar/meetings-01.csv	2720	L3	0	Exact new date, time and UTC for Review.
@@ -377,7 +377,7 @@ sample	source	row	grade	reference_issue	review_note
 376	calendar/meetings-01.csv	2683	L3	0	Exact Review reschedule and timezone.
 377	drawing/placement-06.csv	66	L3	0	Exact bobcat near the tree.
 378	drawing/scenes-13.csv	2886	L1b	1	Removes scissors or a vague part, not the shadow effect; the reference makes scissors the removal target too.
-379	diagram/charts-02.csv	1306	L4	0	Narrows the bars on the existing orders chart with the correct relative bar-width constraint.
+379	diagram/charts-02.csv	1306	L4	0	The retained and new circuits narrow bar width on the existing orders chart.
 380	diagram/nodes-12.csv	198	L2c	1	Adds a thing but omits the end position, also missing from the reference.
 381	drawing/scenes-13.csv	3309	L2b	0	Some checks now carry happy, but the red-cap wearer is represented as a spatial containment selector.
 382	drawing/placement-02.csv	3273	L2c	1	Retains a boat edit but omits adding the rightward shadow; reference misses direction.
@@ -413,13 +413,13 @@ sample	source	row	grade	reference_issue	review_note
 412	diagram/diagrams-01.csv	781	L2b	0	The proposals leave Flask unread and never bind the requested small even gap.
 413	diagram/charts-02.csv	443	L2c	1	Creates a bar chart without grounding reuse of the same data. The exact reference changes an existing chart instead of inserting one.
 414	document/text-07.csv	527	L4	0	Removes the existing paragraph using the explicitly written block ID b2.
-415	drawing/scenes-06.csv	886	L1c	0	Applies both place descriptions to a single group of benches instead of separating the two placements.
+415	drawing/scenes-06.csv	886	L1c	0	The new circuits can distinguish the two bench groups and bind the quantity, sizes, tree and bottom region, but every otherwise complete circuit adds a downward movement effect to the second bench.
 416	diagram/diagrams-01.csv	2678	L2c	1	Finds three operations but omits top alignment, the thin outline and margins.
 417	drawing/objects-04.csv	1475	L3	0	Exact ladder creation request.
 418	diagram/nodes-03.csv	421	L2c	1	Recognizes an edge edit but drops coloring by kind, also absent in the annotation.
 419	diagram/charts-02.csv	1308	L2a	0	One grid option survives, but the bar-width change is absent.
 420	diagram/nodes-01.csv	2798	L4	0	Boldens the named Pack label and sets its words navy in a separate edit.
-421	drawing/scenes-04.csv	460	L2c	0	Creates stars in the sky region, but omits the requested abundance.
+421	drawing/scenes-04.csv	460	L4	0	A new circuit creates an abundance of stars in the sky and preserves the indefinite quantity without inventing a count.
 422	diagram/nodes-03.csv	1409	L3	0	The exact reference copies the existing picture alone; its qualifier adds no further action.
 423	diagram/charts-05.csv	2411	L2c	1	Recognizes scatter-chart creation but leaves the two fields, least-squares fit, gridlines and zero baseline unread.
 424	drawing/placement-06.csv	4749	L3	0	Exact house on the hill.
@@ -505,7 +505,7 @@ sample	source	row	grade	reference_issue	review_note
 504	drawing/scenes-08.csv	1670	L2c	0	Recovers the setting, all four object groups and the surprised expression, but treats the bottom as a landmark instead of a page region.
 505	drawing/scenes-13.csv	4378	L3	0	Exact larger-text default for future tabs and diagrams.
 506	diagram/nodes-12.csv	3730	L2c	0	Recognizes arranging all elements but loses vertical direction.
-507	diagram/charts-07.csv	772	L1b	0	Targets text or node title instead of applying the specified title to the bar chart.
+507	diagram/charts-07.csv	772	L4	0	One circuit sets the existing bar chart title to the exact authored Revenue by quarter.
 508	drawing/scenes-09.csv	1068	L2c	0	Recognizes the tree by the path, but no clean change applies its requested low shadow.
 509	drawing/placement-02.csv	461	L2c	1	Creates the small sun above the fence but does not express that only its top should show.
 510	drawing/scenes-11.csv	2614	L2a	1	Preserves adding two towers but misses the tall center tower and the ordered relative placement.
@@ -785,7 +785,7 @@ sample	source	row	grade	reference_issue	review_note
 784	diagram/charts-03.csv	2222	L2c	0	No interval of five.
 785	drawing/objects-03.csv	886	L4	0	Intercom created.
 786	diagram/nodes-08.csv	11	L3	0	Larger node.
-787	drawing/scenes-06.csv	558	L2c	0	Does not retain indefinite quantity.
+787	drawing/scenes-06.csv	558	L4	0	A new circuit creates the intended ducks above the lake and explicitly retains the indefinite quantity some.
 788	diagram/charts-01.csv	2212	L3	0	Payments by method.
 789	drawing/objects-03.csv	3570	L3	0	Preserves requested misty rose.
 790	drawing/scenes-16.csv	3164	L3	0	Yellow triangle with name.
@@ -847,7 +847,7 @@ sample	source	row	grade	reference_issue	review_note
 846	diagram/nodes-12.csv	2075	L2b	0	End and n3 unbound.
 847	drawing/placement-01.csv	2385	L4	0	Creates four balloons in a row above the house in one circuit.
 848	drawing/people-05.csv	1985	L3	0	Correct cheek and size.
-849	drawing/scenes-03.csv	1582	L1b	0	The move alternatives select a spot or treat the jacket as a spatial anchor, and the candidate identifying the boy creates him instead of moving him.
+849	drawing/scenes-03.csv	1582	L1b	0	The removed candidate treats a spot as the selected object. Remaining readings still fail to move the boy in the orange jacket one spot left.
 850	drawing/scenes-16.csv	2032	L4	0	Creates the square named penguin and places that written target below iceberg in the same circuit.
 851	drawing/scenes-11.csv	3616	L3	0	Green set and exemption grounded.
 852	diagram/charts-04.csv	2371	L2a	0	Color bar and grid edits missing together.
@@ -875,9 +875,9 @@ sample	source	row	grade	reference_issue	review_note
 874	diagram/charts-05.csv	4453	L2a	0	Two aggregations lost.
 875	drawing/placement-04.csv	168	L4	0	Moves the existing written target crab to the left of the separately resolved sand landmark.
 876	diagram/diagrams-01.csv	707	L2b	0	Fridge anchor missing.
-877	diagram/charts-04.csv	3416	L2c	0	Legend position missing.
+877	diagram/charts-04.csv	3416	L4	0	The new circuit places the legend at right on the chart identified by the regional bar-chart description.
 878	drawing/placement-06.csv	2188	L3	0	Bobcat below tree.
-879	diagram/charts-04.csv	3967	L2c	0	Color bar length missing.
+879	diagram/charts-04.csv	3967	L4	0	The new implicit-owner circuit sets the existing chart's colour-bar length to medium.
 880	drawing/scenes-11.csv	1854	L1c	1	Green applied to the blue block; reference does likewise.
 881	drawing/scenes-06.csv	3677	L2c	1	Count, location and mutual facing not jointly expressed.
 882	document/text-01.csv	4327	L3	0	Topic and word count.
@@ -945,7 +945,7 @@ sample	source	row	grade	reference_issue	review_note
 944	diagram/nodes-08.csv	42	L4	0	Increases shape size.
 945	diagram/nodes-12.csv	901	L4	0	Relabels the written shape n4 to Maybe; the misspelled wrapper and reason add no requested action.
 946	diagram/ui-coverage.csv	650	L2b	0	Conversion source not bound.
-947	diagram/charts-02.csv	760	L2c	0	Log scale missing.
+947	diagram/charts-02.csv	760	L4	0	One circuit sets the scale to log on the existing claims chart, preserving the unspecified axis.
 948	diagram/charts-02.csv	2298	L4	0	Line conversion and right-side axis.
 949	drawing/people-05.csv	3258	L3	0	Lip bite mouth variant.
 950	drawing/placement-02.csv	794	L2c	1	The dog is recognized, but placing it near the same green bench with walking clearance remains unbound.
@@ -990,7 +990,7 @@ sample	source	row	grade	reference_issue	review_note
 989	diagram/diagrams-03.csv	4098	L2c	0	Removes the existing Grow node and grounds step as its family wording, but the explicit source scope “from this tree” remains unread.
 990	drawing/scenes-09.csv	360	L2a	1	A woman-only change drops the page styling; the more complete composition introduces removal.
 991	drawing/scenes-08.csv	3888	L4	0	Kid feeding ducks.
-992	drawing/scenes-04.csv	840	L2c	0	New alternatives separate the towel's medium size from blue but still do not bind both the beach scene and the girl's kneeling pose.
+992	drawing/scenes-04.csv	840	L2c	1	New circuits set the beach scene and can bind all six objects, but all leave the girl kneeling unread. The reference omits the explicitly small hat size.
 993	diagram/nodes-12.csv	4569	L2c	0	Cluster grouping rule missing.
 994	drawing/scenes-07.csv	3647	L4	0	Asks about cat direction relative to house.
 995	calendar/meetings-07.csv	367	L1b	0	Part used instead of meeting.

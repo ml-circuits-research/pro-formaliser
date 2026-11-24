@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Replay with 1a7dffa
+
+Reasonable coverage reached **42.7%**, up from 42.0%. Seven of nine changed proposal sets gained a complete reading, and none lost one. The gains include a few clouds in the sky and six chart edits, among them showing error bars and hiding the grid on the same named chart. The zoo setting recovered in another scene, but the girl's right-side placement remains unread. The original comparison table below retains its original revision judgments. [Paired judgments](COMPOSITION-REPLAY.tsv)
+
 ## Replay with f3233ae
 
 Reasonable coverage reached **42.0%**, previously 41.9%. Two of 1,000 proposal sets changed. The bear gains a complete alternative that selects it by size and turns it right. Its first proposal remains partial. The hyacinth retains its complete placement and gains a landmark lookup. No request lost its reasonable reading. The separate 1,000-request bucket 73 comparison had no changed proposal sets. [Paired judgments](ROLE-BINDING-REPLAY.tsv) · [Comparison setup](RESULTS.md)

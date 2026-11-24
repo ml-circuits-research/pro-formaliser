@@ -2,6 +2,12 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Catalog properties, quantities and scene settings
+
+Reader `1a7dffa` reached **50.4%** reasonable on the primary 1,000 and **42.7%** on the second 1,000. The primary gained nine of 13 changed sets, and the second sample gained seven of nine. All 48 spelling unions were unchanged. The 13 separate spelling recoveries bring the primary result to **51.7%** with spelling enabled.
+
+On the separate bucket 73 sample, nine of 1,000 proposal sets changed. Two gained a reasonable proposal, a farm scene with a barn, two cows and a pond, and a request to make a couple of shapes. No loss was observed across the three samples. This comparison reviewed only changed bucket 73 sets, so it gives no absolute coverage rate for that sample. [Primary audit](THOUSAND-AUDIT.md) · [Replica audit](REPLICATION-37.md) · [Paired judgments](COMPOSITION-REPLAY.tsv)
+
 ## Written subjects, selectors and property changes
 
 Reader `f3233ae` reached **49.5%** reasonable on the primary 1,000 and **42.0%** on the second 1,000. Four primary sets changed and three gained a reasonable proposal. Two replica sets changed and one gained a reasonable proposal. No observed loss occurred on either sample. The 13 prior spelling recoveries bring the primary result to **50.8%** with spelling enabled. All 48 spelling unions were unchanged. The same frozen bucket 73 comparison used below showed no changed proposal sets against the preceding reader on its 1,000 requests. [Primary audit](THOUSAND-AUDIT.md) · [Replica audit](REPLICATION-37.md) · [Paired judgments](ROLE-BINDING-REPLAY.tsv)

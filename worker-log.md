@@ -170,3 +170,6 @@
 
 ## Written property labels, owners, quantities and setting roles
 - Installed catalogs supply spoken compound labels. New property frames retain implicit or shared owners, and independent worlds can add senses for the same key. Qualitative quantities preserve written words. A supported setting can precede its object list. All 318 tests passed; per-property sentence patterns were discarded.
+
+## Three-sample review at 1a7dffa
+- Checked all changed proposal sets on three lots of 1,000. Primary coverage reached 50.4% (51.7% with spelling), replication 42.7%. The third lot gained two faithful readings, with no losses across the three lots. See eval/COMPOSITION-REPLAY.tsv.

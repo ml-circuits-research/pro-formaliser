@@ -1,0 +1,32 @@
+sample_group	sample	source	row	previous	current	reference_issue	reason
+primary	61	drawing/scenes-04.csv	909	L2c	L4	0	One circuit sets the beach scene and creates the medium brown basket at left, four small white shells in it, a medium white seagull by it, and a small sitting girl by the right edge.
+primary	355	diagram/charts-04.csv	3144	L2a	L4	0	One circuit enlarges both the font and markers and makes the Revenue trend chart's grid lines solid.
+primary	366	diagram/charts-02.csv	90	L2b	L4	0	The new circuit hides value labels on the chart identified by the Expenses by department description.
+primary	379	diagram/charts-02.csv	1306	L4	L4	0	The retained and new circuits narrow bar width on the existing orders chart.
+primary	415	drawing/scenes-06.csv	886	L1c	L1c	0	The new circuits can distinguish the two bench groups and bind the quantity, sizes, tree and bottom region, but every otherwise complete circuit adds a downward movement effect to the second bench.
+primary	421	drawing/scenes-04.csv	460	L2c	L4	0	A new circuit creates an abundance of stars in the sky and preserves the indefinite quantity without inventing a count.
+primary	507	diagram/charts-07.csv	772	L1b	L4	0	One circuit sets the existing bar chart title to the exact authored Revenue by quarter.
+primary	787	drawing/scenes-06.csv	558	L2c	L4	0	A new circuit creates the intended ducks above the lake and explicitly retains the indefinite quantity some.
+primary	849	drawing/scenes-03.csv	1582	L1b	L1b	0	The removed candidate treats a spot as the selected object. Remaining readings still fail to move the boy in the orange jacket one spot left.
+primary	877	diagram/charts-04.csv	3416	L2c	L4	0	The new circuit places the legend at right on the chart identified by the regional bar-chart description.
+primary	879	diagram/charts-04.csv	3967	L2c	L4	0	The new implicit-owner circuit sets the existing chart's colour-bar length to medium.
+primary	947	diagram/charts-02.csv	760	L2c	L4	0	One circuit sets the scale to log on the existing claims chart, preserving the unspecified axis.
+primary	992	drawing/scenes-04.csv	840	L2c	L2c	1	New circuits set the beach scene and can bind all six objects, but all leave the girl kneeling unread. The reference omits the explicitly small hat size.
+replica	3	diagram/charts-04.csv	3261	0	1	0	Sets the legend at the right of the existing order value chart. The copied previous turn in the reference is irrelevant to this request.
+replica	87	diagram/charts-06.csv	1044	0	1	0	Sets the title of the currently indicated chart to the exact quoted text Weekly trading.
+replica	101	diagram/charts-02.csv	11	0	1	0	Enables the legend of the existing chart.
+replica	203	diagram/charts-06.csv	1243	0	1	0	One circuit shows error bars and hides the grid on the same named Revenue by region chart.
+replica	305	drawing/placement-02.csv	4395	0	0	1	New circuits recover the zoo setting and some recover the girl's sad expression, but her placement on the right remains unread. The reference does not encode the zoo setting separately.
+replica	719	drawing/scenes-04.csv	369	0	1	0	Creates a few clouds in the sky and leaves precise placement to the scene as the user does. The proposal keeping the sky as the written landmark is sufficient.
+replica	760	diagram/charts-03.csv	2681	0	1	1	Applies the one-step thickness increase to the named chart's colour bar. The reference additionally changes the data grouping to depth, which is part of the chart name.
+replica	883	drawing/scenes-11.csv	3646	0	0	1	Removed reading targets a single column and leaves yellow blocks unread. The reference encodes one column as a count effect of removal without explicitly binding it as the stopping condition.
+replica	909	diagram/charts-06.csv	1053	0	1	0	Selects the Orders by weekday chart and sets its title to exactly Q3 at a glance.
+blind	120	diagram/nodes-06.csv	33	L4	L4	0	The new proposal and a retained one both show values on the named Sales Q1-Q4 chart. The new proposal adds an explicit page lookup and preserves the closing courtesy.
+blind	178	drawing/scenes-06.csv	713	L4	L4	1	The earlier complete proposal retains several little ducks on the lake and preserves the rest. A new alternative also binds the written quantity and normalizes little to small. The reference treats preservation as filler.
+blind	296	diagram/charts-07.csv	1163	L4	L4	0	An added owned-effects proposal shows values on Team sizes using a named chart lookup. A retained proposal already binds the same chart and effect.
+blind	383	drawing/placement-02.csv	2555	L2c	L4	1	The added proposal sets the farm scene and creates a barn, two cows and a pond. Earlier proposals leave the farm setting unread. The reference treats farm as filler.
+blind	539	drawing/scenes-06.csv	628	L2c	L2c	1	The best new proposal binds a few boats and preserves the rest but leaves across the lake unread. The reference treats preservation as filler.
+blind	613	diagram/nodes-12.csv	275	L2b	L4	0	A new nominal-creation proposal makes plural shapes with the written quantity a couple of. Earlier creation left the kind and quantity unbound.
+blind	750	drawing/scenes-05.csv	1020	L2b	L2b	1	The added sequence plants a few flowers in the gap, but the first step still leaves both unread and does not reliably clear both trees. The reference omits the gap placement.
+blind	818	diagram/diagrams-07.csv	393	L2b	L2b	0	New lexical alternatives bind automatic destination side and orthogonal routing, but change an existing link and leave both endpoints unbound. Retained connection candidates swallow property wording into the endpoints.
+blind	827	diagram/charts-07.csv	874	L4	L4	0	The new proposal explicitly looks up the graph and shows values. A retained alternation already selects the graph and binds the same effect.
