@@ -78,3 +78,13 @@ test('ambiguous observed circuits remain available even with a matching template
   assert.equal(templates.length, 1);
   assert.deepEqual(examples, [{ ...row(2), count: 1 }, { ...alternative, count: 1 }]);
 });
+
+test('generic connectors retain observed title width for both open operands', () => {
+  const row = (first,second) => ({
+    text: first+' for '+second,
+    sop: '@a w.request.target name='+first+'\n@b w.request.target name='+second,
+  });
+  const {templates}=train([row('Aspen','Larch'),row('Hazel','Cedar')]);
+  assert.equal(templates.length,1);
+  assert.deepEqual(templates[0].pattern.map(part=>part.titleWidth ?? part),[1,'for',1]);
+});

@@ -68,7 +68,7 @@ unique_sops([_-C|Rest], Seen, N, Answers) :-
 candidate(Q, score(4, N, 0), _{sop:Sop, source:example, support:N}) :-
     member(E, Q.examples), Sop = E.sop, N = E.count.
 candidate(Q, score(3, Specificity, N), _{sop:Sop, source:template, support:N}) :-
-    member(T, Q.templates), matches(T.pattern, Q.tokens, Q.text, [], Bindings),
+    member(T, Q.templates), matches(T.pattern, Q.tokens, Q, [], Bindings),
     maplist(part(Bindings), T.parts, Parts), atomics_to_string(Parts, Sop),
     include(string, T.pattern, Anchors), length(Anchors, Specificity), N = T.count.
 candidate(Q, score(2, Rank, Support), _{sop:Sop, source:alignment, support:Support, unread:Unread}) :-
@@ -193,16 +193,25 @@ unread(Text,S,E,N,Lines) :-
     ; Lines=[] ).
 
 matches([], [], _, Bindings, Bindings).
-matches([P|Ps], [Tok|Ts], Text, Bound, Result) :-
-    string(P), !, Tok = [P,_,_,_], matches(Ps, Ts, Text, Bound, Result).
-matches([P|Ps], Ts, Text, Bound, Result) :-
+matches([P|Ps], [Tok|Ts], Q, Bound, Result) :-
+    string(P), !, Tok = [P,_,_,_], matches(Ps, Ts, Q, Bound, Result).
+matches([P|Ps], Ts, Q, Bound, Result) :-
     is_dict(P), between(P.min,P.max,N), N > 0,
     length(Take,N), append(Take,Rest,Ts),
-    Take = [[_,_,Start,_]|_], last(Take,[_,_,_,End]), span(Text,Start,End,Value),
+    Take = [[_,_,Start,_]|_], last(Take,[_,_,_,End]), span(Q.text,Start,End,Value),
     ( get_dict(kind,P,Kind) -> slot_value(Kind,Value) ; true ),
+    ( get_dict(titleWidth,P,Width), N > Width ->
+        supported_title(Take,Q.titleConnectors)
+    ; true ),
     ( memberchk(P.slot-Existing,Bound) -> Existing == Value, Next = Bound
     ; Next = [P.slot-Value|Bound] ),
-    matches(Ps, Rest, Text, Next, Result).
+    matches(Ps, Rest, Q, Next, Result).
+
+supported_title([First|Words],Connectors) :-
+    capitalized_word(First), last(Words,Last), capitalized_word(Last),
+    forall(member(Word,Words), (capitalized_word(Word) ; Word=[Key,_,_,_], memberchk(Key,Connectors))).
+
+capitalized_word([_,Raw,_,_]) :- re_match("^[\\p{Lu}][\\p{L}\\p{M}\\p{N}_-]*$",Raw).
 
 slot_value("number",V) :- re_match("^[+-]?[0-9]+(?:\\.[0-9]+)?$", V).
 slot_value("date",V) :- re_match("^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$", V).

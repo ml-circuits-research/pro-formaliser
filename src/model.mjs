@@ -212,7 +212,9 @@ function align(text, sop, openKeys) {
   return { pattern, parts, captures };
 }
 
-function learn(group) {
+const titleWords = value => /^\p{Lu}[\p{L}\p{M}\p{N}_-]*(?:\s+\p{Lu}[\p{L}\p{M}\p{N}_-]*)*$/u.test(value);
+
+function learn(group, grammar) {
   const { pattern, parts, slots, count } = group;
   if (!slots.some(slot => slot.varies)) return undefined;
   const newSlots = new Map();
@@ -239,6 +241,18 @@ function learn(group) {
     });
   }
 
+  // Where the fixed words supply only grammar, extending a learned title
+  // to an arbitrary clause erases the sole evidence for the operation.
+  const literals = learnedPattern.filter(part => typeof part === 'string');
+  if (literals.every(word => grammar.has(word) || !/[\p{L}\p{N}]/u.test(word))) {
+    for (const slot of slots) {
+      if (!slot.varies || !slot.titles) continue;
+      for (const part of learnedPattern) {
+        if (part.slot === newSlots.get(slot.slot)) part.titleWidth = slot.max;
+      }
+    }
+  }
+
   const learnedParts = [];
   for (const part of parts) {
     if (typeof part === 'string') {
@@ -252,7 +266,7 @@ function learn(group) {
   return { pattern: learnedPattern, parts: learnedParts, count };
 }
 
-function learnTemplates(rows, openKeys) {
+function learnTemplates(rows, openKeys, grammar) {
   const byText = new Map();
   for (const { text, sop } of rows) {
     const choices = byText.get(text);
@@ -276,7 +290,7 @@ function learnTemplates(rows, openKeys) {
       if (!group) {
         const slots = captures.map(capture => {
           const length = capture.after - capture.first;
-          return { slot: capture.slot, kind: capture.kind, raw: capture.raw, max: length, varies: false };
+          return { slot: capture.slot, kind: capture.kind, raw: capture.raw, max: length, varies: false, titles: true };
         });
         group = { pattern, parts, slots, count: 0 };
         groups.set(key, group);
@@ -287,6 +301,7 @@ function learnTemplates(rows, openKeys) {
         const length = capture.after - capture.first;
         slot.max = Math.max(slot.max, length);
         slot.varies ||= slot.raw !== capture.raw;
+        slot.titles &&= titleWords(capture.raw);
       }
       if (choices.length === 1) example.group = group;
     }
@@ -294,7 +309,7 @@ function learnTemplates(rows, openKeys) {
 
   const templates = [];
   for (const group of groups.values()) {
-    const template = learn(group);
+    const template = learn(group, grammar);
     if (template) {
       group.learned = true;
       templates.push(template);
@@ -311,7 +326,7 @@ function learnTemplates(rows, openKeys) {
 
 export function train(rows) {
   const openKeys = new Set(loadWorlds().requestKeys.filter(k => k.head === 'span' && !k.values.length).map(k => k.name));
-  const { examples, templates } = learnTemplates(rows, openKeys);
+  const { examples, templates } = learnTemplates(rows, openKeys, loadWorlds().evidenceVocabulary.grammar);
   const context = contextLearner();
   const forms = slotForms();
   const modifiers=modifierLearner(loadWorlds());

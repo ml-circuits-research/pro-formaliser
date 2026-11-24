@@ -91,3 +91,7 @@
 ## Regions, retention and native property frames
 - Bound spatial regions, explicit preservation and names in creation requests. SWI-Prolog matches native property frames against catalog-backed roles.
 - Full test gate passed. 47.5% reasonable on the same 1,000 requests, previously 46.5%. See eval/THOUSAND-AUDIT.md.
+
+## Local references, additive counts and property questions
+- Bound local pronouns, additive counts and native property questions. Limited whole-clause substitutions in learned title patterns.
+- Full test gate passed. 48.0% reasonable on the same 1,000 requests, previously 47.5%. See eval/THOUSAND-AUDIT.md.

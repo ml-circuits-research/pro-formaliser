@@ -1,3 +1,4 @@
+import {sequenceReferenceReadings} from './sequence-reference.mjs';
 import {nativePropertyPacket,nativePropertyReadings} from './native-property-frames.mjs';
 import {preservationAdjunct,preservationAdjunctReading} from './preservation-adjunct.mjs';
 import { directionalResultCandidates } from './directional-result.mjs';
@@ -221,8 +222,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const memberActions=scope.restricted ? [] : memberActionPackets(text,ts,quotes,worlds);
     const coordinatedEffects=scope.restricted || quotes.length ? undefined : coordinatedPacket(ts,worlds,model.lexicon);
     const verbEffects=scope.restricted || quotes.length ? [] : [...new Set(ts.map(t=>t[0]))].flatMap(head=>verbIndex.get(head) ?? []);
-    const nativeProperties=scope.restricted ? undefined : nativePropertyPacket(text,ts,quotes,worlds);
-    const request = {text,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const nativeProperties=nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly:scope.restricted});
+    const titleConnectors = ts.map(([key])=>key).filter(key=>worlds.evidenceVocabulary.grammar.has(key));
+    const request = {text,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -260,8 +262,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         retain({...candidate,sop:resolveRelationKeys(candidate.sop)});
       }
     }
+    for (const reading of nativePropertyReadings(text,response.nativeProperties ?? [])) retain(reading);
     if (!scope.restricted) {
-      for (const reading of nativePropertyReadings(text,response.nativeProperties ?? [])) retain(reading);
       for (const candidate of compounds(text,ts,quotes)) retain(candidate);
       for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) retain(reading);
@@ -603,8 +605,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
           if (key && !seen.has(key)) {seen.add(key);candidates.push(reading);}
         }
       }
-      const qualify=clauseQualifiers(text,worlds,model,(words,quotes)=>
-        !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted);
+      const permit=(words,quotes)=>
+        !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted;
+      const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
       for (const candidate of candidates) {
         if (!candidate.sop.includes(' words=') || candidate.sop.indexOf(' w.request.request')===
@@ -613,6 +616,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (enriched) {
           const key=admissibleKey(text,enriched.sop);
           if (key) additional.set(key,enriched);
+        }
+      }
+      for (const candidate of [...candidates,...additional.values()]) {
+        if (candidate.sop.indexOf(' w.request.request')===candidate.sop.lastIndexOf(' w.request.request')) continue;
+        for (const reading of sequenceReferenceReadings(text,candidate,worlds,permit)) {
+          const key=admissibleKey(text,reading.sop);
+          if (key) additional.set(key,reading);
         }
       }
       if (additional.size) {

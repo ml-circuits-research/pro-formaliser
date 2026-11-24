@@ -11,28 +11,32 @@ native_property_frames(Q,Proofs) :-
 property_frame(Packet,Proof) :-
     member(Frame,Packet.frames),
     length(Packet.words,End),
-    walk(Frame.pattern,Packet,0,End,Family,Key,Roles),
+    walk(Frame.pattern,Packet,0,End,Frame.act,_Family,_Key,Roles),
     memberchk("thing"-Owner,Roles), memberchk("attribute"-Attribute,Roles),
-    memberchk("value"-Value,Roles), memberchk("predicate"-Predicate,Roles),
-    ( Frame.numberOnly == false ; Value.numeric == true ),
-    ( Packet.question == false ; memberchk("lead"-_,Roles) ),
-    get_dict(family,Owner,Family), get_dict(key,Attribute,Key),
-    Proof=_{act:Frame.act,frame:Frame.name,owner:Owner,attribute:Attribute,value:Value,predicate:Predicate}.
+    memberchk("predicate"-Predicate,Roles),
+    Base=_{act:Frame.act,frame:Frame.name,owner:Owner,attribute:Attribute,predicate:Predicate},
+    ( get_dict(questions,Frame,Questions) ->
+      ( Frame.numberOnly == false ; Attribute.numeric == true ),
+      put_dict(questionKinds,Base,Questions,Proof)
+    ; memberchk("value"-Value,Roles),
+      ( Frame.numberOnly == false ; Value.numeric == true ),
+      ( Packet.question == false ; memberchk("lead"-_,Roles) ),
+      put_dict(value,Base,Value,Proof) ).
 
-walk([],_,End,End,_,_,[]).
-walk([Part|Rest],Packet,At,End,Family,Key,Roles) :-
+walk([],_,End,End,_,_,_,[]).
+walk([Part|Rest],Packet,At,End,Act,Family,Key,Roles) :-
     ( get_dict(role,Part,Role) ->
-      event(Role,Packet,At,Family,Key,Event), Next=Event.b, Roles=[Role-Event|Tail]
+      event(Role,Packet,At,Act,Family,Key,Event), Next=Event.b, Roles=[Role-Event|Tail]
     ; Part.optional == true, Next=At, Roles=Tail
     ; member(Words,Part.forms), eat(Words,Packet.words,At,Next),
       ( get_dict(mark,Part,Mark) -> Roles=[Mark-[At,Next]|Tail] ; Roles=Tail ) ),
-    walk(Rest,Packet,Next,End,Family,Key,Tail).
+    walk(Rest,Packet,Next,End,Act,Family,Key,Tail).
 
-event("thing",Packet,At,Family,_,Event) :-
-    member(Event,Packet.owners), Event.a=:=At, Family=Event.family.
-event("attribute",Packet,At,Family,Key,Event) :-
+event("thing",Packet,At,Act,Family,_,Event) :-
+    member(Event,Packet.owners), Event.a=:=At, Event.act==Act, Family=Event.family.
+event("attribute",Packet,At,_,Family,Key,Event) :-
     member(Event,Packet.attrs), Event.a=:=At, Family=Event.family, Key=Event.key.
-event("value",Packet,At,Family,Key,Event) :-
+event("value",Packet,At,_,Family,Key,Event) :-
     member(Event,Packet.values), Event.a=:=At, Family=Event.family, Key=Event.key.
 
 eat([],_,At,At).

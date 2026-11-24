@@ -77,3 +77,18 @@ test('a matched whole-utterance example cannot hide two independently matched re
     assert.ok(r.alternatives.some(c=>c.sop===examples[0].sop));
   } finally {await reader.close();}
 });
+
+test('a connective between learned names admits new titles and rejects a whole command as a title', async t=>{
+  const {train}=await import('../src/model.mjs');
+  const row=(replacement,old)=>({
+    text:replacement+' for '+old,
+    sop:'@r w.request.request act=change mood=do\n@t w.request.target request=$r family=node mode=existing name='+old+
+      '\n@c w.request.constraint request=$r on=attribute attribute=node.label value='+replacement+' operator=eq phase=result',
+  });
+  const reader=createReader(train([row('Cedar','Pine'),row('Elm','Ash')]));
+  t.after(()=>reader.close());
+  const hasTemplate=async text=>(await reader.propose(text)).candidates.some(c=>c.source==='template');
+  assert.ok(await hasTemplate('Board of Governors for Trustees'));
+  assert.ok(await hasTemplate('maple for birch'));
+  assert.equal(await hasTemplate('draw two boxes for me'),false);
+});

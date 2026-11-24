@@ -18,6 +18,11 @@ const hasWords=(input,start,terms)=>terms.every((word,i)=>input[start+i]===word)
 
 export function compileNativePropertyFrames(facts) {
   const parts=new Map(), phrases=new Map(), verbs=new Map();
+  const questionKinds=new Map(facts('pro.reader.question_kind').map(wire=>[field(wire,'asks'),field(wire,'question')]));
+  const interrogatives=new Map(facts('w.lang.en.wh').flatMap(wire=>{
+    const question=questionKinds.get(field(wire,'asks'));
+    return question ? fields(wire,'text').map(text=>[norm(text),question]) : [];
+  }));
   const deontic=facts('w.lang.en.aux').filter(wire=>
     ['advice','obligation','necessity'].includes(field(wire,'modal')))
     .flatMap(wire=>fields(wire,'text').map(words));
@@ -39,12 +44,15 @@ export function compileNativePropertyFrames(facts) {
   const frames=[];
   for (const wire of facts('w.lang.en.frame')) {
     const [name,act,mode,needs]=['name','act','mode','needs'].map(key=>field(wire,key));
-    if (act!=='change' || mode!=='set' || !['attrs','number'].includes(needs) ||
+    const asking=act==='ask' && mode==='what';
+    if ((!asking && (act!=='change' || mode!=='set')) || !['attrs','number'].includes(needs) ||
         fixed.has(name) || wire.attrs.mood || wire.attrs.polarity) continue;
     const roles=fields(wire,'role');
-    if (roles.length!==3 || !['thing','attribute','value'].every(role=>roles.includes(role))) continue;
+    const required=asking ? ['thing','attribute'] : ['thing','attribute','value'];
+    if (roles.length!==required.length || !required.every(role=>roles.includes(role))) continue;
     const ordered=(parts.get(name) ?? []).slice().sort((a,b)=>Number(field(a,'at'))-Number(field(b,'at')));
     const pattern=[];
+    let questions;
     let consumed=0;
     for (const [i,part] of ordered.entries()) {
       const [kind,role,takes]=['is','role','takes'].map(key=>field(part,key));
@@ -62,7 +70,12 @@ export function compileNativePropertyFrames(facts) {
       if (kind==='verb') { forms=verbs.get(field(part,'act')); mark='predicate'; }
       if (kind==='word') {
         forms=fields(part,'word').map(words);
-        if (needs==='number' && !optional && roles[0]==='thing' && field(ordered[i-1] ?? part,'role')==='thing') {
+        if (asking && !optional && pattern.every(part=>part.mark==='lead')) {
+          forms=forms.filter(form=>interrogatives.has(form.join(' ')));
+          questions=Object.fromEntries(forms.map(form=>[form.join(' '),interrogatives.get(form.join(' '))]));
+          mark='predicate';
+        }
+        if (!asking && needs==='number' && !optional && roles[0]==='thing' && field(ordered[i-1] ?? part,'role')==='thing') {
           forms=forms.filter(form=>deontic.some(cue=>hasWords(form,0,cue)));
           mark='predicate';
         }
@@ -72,8 +85,9 @@ export function compileNativePropertyFrames(facts) {
       consumed++;
     }
     const compiledRoles=pattern.filter(part=>part.role);
-    if (consumed!==ordered.length || compiledRoles.length!==3 || pattern.filter(part=>part.mark==='predicate').length!==1) continue;
-    frames.push({name,act,numberOnly:needs==='number',pattern});
+    if (consumed!==ordered.length || compiledRoles.length!==required.length ||
+        pattern.filter(part=>part.mark==='predicate').length!==1 || asking && !questions) continue;
+    frames.push({name,act,numberOnly:needs==='number',pattern,...(questions ? {questions} : {})});
   }
   return frames;
 }
@@ -90,12 +104,12 @@ function keyFor(worlds,family,surface) {
   return first;
 }
 
-function ownerBindings(worlds,words,span,plain,det,start,end) {
+function ownerBindings(worlds,act,words,span,plain,det,start,end) {
   const owners=new Map(), {next,mode}=det(start,end);
   if (next>=end || mode && !targetDeterminers.has(mode) || !plain(next,end)) return owners;
   const description=span(start,end), raw=span(next,end);
   const bind=(family,fields)=>{
-    if (worlds.literalGrammar.licenses(family,'change')) owners.set(JSON.stringify([family,fields]),{family,...fields});
+    if (worlds.literalGrammar.licenses(family,act)) owners.set(JSON.stringify([family,fields]),{family,act,...fields});
   };
   const prefix=idPattern.exec(words(next,end))?.[1];
   if (prefix) {
@@ -105,9 +119,9 @@ function ownerBindings(worlds,words,span,plain,det,start,end) {
   }
   for (let from=next;from<end;from++) {
     const surface=words(from,end);
-    const native=worlds.ownerInventory?.get(identity('change',surface)) ?? [];
-    const lexical=worlds.lookup(surface).flatMap(([role,act,family,mode,sort])=>
-      role==='target' && act==='change' && mode==='existing' && !native.some(item=>item.family===family) ? [{family,sort}] : []);
+    const native=worlds.ownerInventory?.get(identity(act,surface)) ?? [];
+    const lexical=worlds.lookup(surface).flatMap(([role,sense,family,mode,sort])=>
+      role==='target' && sense===act && mode==='existing' && !native.some(item=>item.family===family) ? [{family,sort}] : []);
     const descriptors=words(next,from);
     if (from>next && descriptors.split(' ').some(word=>worlds.lookup(word).some(([role])=>role==='marker'))) continue;
     for (const {family,sort} of [...native,...lexical]) {
@@ -123,8 +137,8 @@ function ownerBindings(worlds,words,span,plain,det,start,end) {
     for (const {family,prefix} of worlds.instanceBindings ?? []) {
       if (suffix!==prefix) continue;
       const description=words(next,end-1);
-      if (worlds.lookup(description).some(([role,act,owner,mode])=>
-        role==='target' && act==='change' && owner===family && mode==='existing'))
+      if (worlds.lookup(description).some(([role,sense,owner,mode])=>
+        role==='target' && sense===act && owner===family && mode==='existing'))
         bind(family,{fill:'written',ids:code,head:span(next,end-1),...(mode ? {determiner:mode} : {})});
     }
   }
@@ -175,7 +189,7 @@ function admitsPrefix(frame,input) {
   return true;
 }
 
-export function nativePropertyPacket(text,ts,quotes,worlds) {
+export function nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly=false}={}) {
   if (!worlds.nativePropertyFrames?.length || !ts.length || ts.length>44) return;
   const chars=Array.from(text), input=ts.map(([word])=>word.replaceAll('’',"'"));
   const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
@@ -185,7 +199,8 @@ export function nativePropertyPacket(text,ts,quotes,worlds) {
   const question=input[end-1]==='?';
   if (['.','!','?'].includes(input[end-1]) && !hidden(end-1,end)) end--;
   if (end<4) return;
-  const frames=worlds.nativePropertyFrames.filter(frame=>admitsPrefix(frame,input)).map(frame=>({
+  const frames=worlds.nativePropertyFrames.filter(frame=>
+    (!questionsOnly || frame.act==='ask') && admitsPrefix(frame,input)).map(frame=>({
     ...frame,pattern:frame.pattern.map(part=>part.forms ? {
       ...part,forms:part.forms.filter(form=>input.some((_,i)=>hasWords(input,i,form))),
     } : part),
@@ -214,10 +229,13 @@ export function nativePropertyPacket(text,ts,quotes,worlds) {
     return {next:a};
   };
   const owners=[], attrs=[], values=[], families=new Set(), properties=new Map();
+  const acts=[...new Set(frames.map(frame=>frame.act))];
   for (let a=0;a<end;a++) for (let b=a+1;b<=Math.min(a+10,end);b++) {
-    for (const item of ownerBindings(worlds,words,span,plain,det,a,b).values()) {
-      owners.push({a,b,...item});
-      families.add(item.family);
+    for (const act of acts) {
+      for (const item of ownerBindings(worlds,act,words,span,plain,det,a,b).values()) {
+        owners.push({a,b,...item});
+        families.add(item.family);
+      }
     }
   }
   if (!owners.length) return;
@@ -227,11 +245,12 @@ export function nativePropertyPacket(text,ts,quotes,worlds) {
     for (const family of families) {
       const key=keyFor(worlds,family,words(next,b));
       if (!key) continue;
-      attrs.push({a,b,family,key:key.name,words:span(next,b)});
+      attrs.push({a,b,family,key:key.name,words:span(next,b),numeric:key.head.split('+').includes('number')});
       properties.set(identity(family,key.name),key);
     }
   }
   if (!attrs.length) return;
+  if (!acts.includes('change')) return {frames,words:input.slice(0,end),owners,attrs,values,question};
   for (let a=1;a<end;a++) for (let b=a+1;b<=Math.min(a+15,end);b++) {
     const quoted=quotes.find(q=>q.start===ts[a][2] && q.end===ts[b-1][3]);
     const source=quoted?.value ?? span(a,b);
@@ -245,30 +264,37 @@ export function nativePropertyPacket(text,ts,quotes,worlds) {
       values.push({a,b,family:key.family,key:key.name,words:source,...value});
     }
   }
-  if (!values.length) return;
+  if (!values.length && !acts.includes('ask')) return;
   return {frames,words:input.slice(0,end),owners,attrs,values,question};
 }
 
 export function nativePropertyReadings(text,proofs) {
   const ts=tokens(text), chars=Array.from(text), span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
   const alternatives=new Map();
-  for (const {act,frame,owner,attribute,value,predicate} of proofs) {
+  for (const {act,frame,owner,attribute,value,predicate,questionKinds} of proofs) {
     const key=identity(owner.family,frame), meanings=alternatives.get(key) ?? new Map();
-    const binding=JSON.stringify([owner.a,owner.b,attribute.a,attribute.b,attribute.key,value.a,value.b,value.value]);
+    const binding=JSON.stringify([owner.a,owner.b,attribute.a,attribute.b,attribute.key,value?.a,value?.b,value?.value]);
     const entries=meanings.get(binding) ?? new Map();
-    const props=value.canonical && (value.numeric || atom.test(value.value)) ? value.value : quote(value.value);
+    const writtenPredicate=span(...predicate);
+    const asking=act==='ask', question=questionKinds?.[norm(writtenPredicate)];
+    if (asking && !question) continue;
     const lines=[
-      '@r1 w.request.request act='+quote(act)+' mood=do predicate='+quote(span(...predicate))+' words='+quote(text),
+      '@r1 w.request.request act='+quote(act)+' mood='+(asking ? 'ask' : 'do')+
+        ' predicate='+quote(writtenPredicate)+' words='+quote(text)+
+        (asking ? ' question='+question+' asked='+quote(attribute.key)+' asked_words='+quote(attribute.words) : ''),
       '@r1.t w.request.target request=$r1 family='+quote(owner.family)+' mode=existing fill='+owner.fill+
         (owner.determiner ? ' determiner='+owner.determiner : '')+
         (owner.description ? ' description='+quote(owner.description) : '')+
         (owner.ids ? ' ids='+quote(owner.ids) : '')+(owner.name ? ' name='+quote(owner.name) : '')+
         (owner.sort ? ' sort='+quote(owner.sort)+' sort_words='+quote(owner.head) :
           owner.head ? ' family_words='+quote(owner.head) : ''),
-      '@r1.c w.request.constraint request=$r1 on=attribute attribute='+quote(attribute.key)+
-        ' key_words='+quote(attribute.words)+' value='+props+(value.words!==value.value ? ' words='+quote(value.words) : '')+
-        ' operator=eq phase=result',
     ];
+    if (!asking) {
+      const props=value.canonical && (value.numeric || atom.test(value.value)) ? value.value : quote(value.value);
+      lines.push('@r1.c w.request.constraint request=$r1 on=attribute attribute='+quote(attribute.key)+
+        ' key_words='+quote(attribute.words)+' value='+props+(value.words!==value.value ? ' words='+quote(value.words) : '')+
+        ' operator=eq phase=result');
+    }
     if (owner.fill==='description') lines.push('@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page');
     const sop=lines.join('\n');
     entries.set(sop,{sop,source:'native-property-frame'});

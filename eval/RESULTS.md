@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Local references, additive counts and property questions
+
+On the paired 1,000 requests, at least one proposal was reasonable on 48.0% (previously 47.5%). On the full holdout, 664 proposal sets contained the reference semantic wire set, previously 664. The first-choice WebMeet checker rejected 252 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)
+
 ## Regions, retention and native property frames
 
 On the paired 1,000 requests, at least one proposal was reasonable on 47.5% (previously 46.5%). On the full holdout, 664 proposal sets contained the reference semantic wire set, previously 663. The first-choice WebMeet checker rejected 278 of 1,889 nonempty circuits using the reference tab, previously 277. [Grades and reproduction](THOUSAND-AUDIT.md)

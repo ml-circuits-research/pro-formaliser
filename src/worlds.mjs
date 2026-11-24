@@ -1,3 +1,5 @@
+import {sequenceObjectPronouns} from './sequence-reference.mjs';
+import {compileNominalNumbers} from './nominal-number.mjs';
 import {compileNativePropertyFrames} from './native-property-frames.mjs';
 import {compilePreservationAdjuncts} from './preservation-adjunct.mjs';
 import { compileOwnerPropertyOperands } from './owner-property.mjs';
@@ -541,6 +543,7 @@ function compile(facts) {
     selectorKeys.get(family).add(name);
   }
   const spatialBindings = facts('pro.reader.spatial').map(wire => ({
+    regionKey:one(wire,'region_key'),
     tab: one(wire, 'tab'), family: one(wire, 'family'),
     relationKey: one(wire, 'relation_key'), anchorKey: one(wire, 'anchor_key'),
     namedActs: values(wire,'named_act'),
@@ -562,9 +565,10 @@ function compile(facts) {
   }
   return {
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
-    nominalNumbers:new Map(facts('w.lang.en.number').filter(w =>
-      ['cardinal','ordinal','group'].includes(one(w,'kind')) && /^\d+$/u.test(one(w,'value')))
-      .map(w=>[phrase(one(w,'text')),{kind:one(w,'kind'),value:one(w,'value')}])),
+    nominalNumbers:compileNominalNumbers(facts),
+    sequenceObjectPronouns:sequenceObjectPronouns(facts),
+    singularArticles:new Set(facts('w.lang.en.det').filter(w=>one(w,'kind')==='article' &&
+      one(w,'number')==='sg' && one(w,'definite')==='no').flatMap(w=>values(w,'text').map(phrase))),
     stativeVerbAliases:stativeVerbAliases(facts),
     languageFrames:languageFrames(facts),
     alternations:compileAlternations(facts),

@@ -50,10 +50,39 @@ test('reads a numerical requirement from native modality and keeps factual or co
     'Set the width of node to 30 and add a chart',
     'Set o8 to the seat',
     'Set the variant of the house to modern',
-    'What is the width of the node?',
   ]) {
     const answer=await reader.propose(text);
     assert.deepEqual(native(answer.candidates),[],text);
+  }
+});
+
+test('asks both native property orders and numeric quantities without emitting an assignment',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,question,attribute,word,ids] of [
+    ['What is the width of shape n8?','what','node.width','width','n8'],
+    ['Which colour is n9','which','node.colour','colour','n9'],
+    ['How many bins does the chart have?','count','chart.bins','bins',undefined],
+  ]) {
+    const {candidates}=await reader.propose(text);
+    const wires=native(candidates).find(wires=>field(typed(wires,'request'),'asked')===attribute);
+    assert.ok(wires,text);
+    const request=typed(wires,'request');
+    assert.equal(field(request,'question'),question,text);
+    assert.equal(field(request,'asked_words'),word,text);
+    assert.equal(field(request,'words'),text,text);
+    assert.equal(field(typed(wires,'target'),'ids'),ids,text);
+    assert.equal(wires.some(wire=>field(wire,'phase')==='result'),false,text);
+    if (!ids) assert.ok(typed(wires,'lookup'),text);
+  }
+  for (const text of [
+    'What label is UNKNOWNCODE?',
+    'How many labels does the node have?',
+    'What is the label of shape n8 and remove it?',
+    'What is not the width of n8?',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.deepEqual(native(candidates),[],text);
   }
 });
 
@@ -62,7 +91,7 @@ test('reads fresh native frame and catalog roles in an overlay',async t=>{
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
   writeFileSync(join(dir,'controls.sop'),[
     '@studio std.schema.world name=w.studio',
-    '@module std.schema.kind of=w.studio.module world=w.studio acts=change',
+    '@module std.schema.kind of=w.studio.module world=w.studio acts=change acts=ask',
     '@fixture core.word text=goniometer means=w.studio.module',
     '@sampling w.request.key tab=studio family=module name=module.samples head=number',
     '@w.studio.module.response core.slot of=w.studio.module key=response enum=linear enum=logarithmic',
@@ -76,6 +105,11 @@ test('reads fresh native frame and catalog roles in an overlay',async t=>{
     '@o w.lang.en.part frame=lab.assign at=4 is=role role=thing takes=words',
     '@to w.lang.en.part frame=lab.assign at=5 is=word word=to',
     '@value w.lang.en.part frame=lab.assign at=6 is=role role=value takes=words',
+    '@ask w.lang.en.frame name=lab.ask act=ask mode=what needs=attrs role=attribute role=thing',
+    '@wh w.lang.en.part frame=lab.ask at=1 is=word word=what',
+    '@askprop w.lang.en.part frame=lab.ask at=2 is=role role=attribute takes=lexicon lexicon=attribute',
+    '@asklink w.lang.en.part frame=lab.ask at=3 is=word word=inside',
+    '@askowner w.lang.en.part frame=lab.ask at=4 is=role role=thing takes=words',
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[dir]}));
   t.after(()=>reader.close());
@@ -89,4 +123,9 @@ test('reads fresh native frame and catalog roles in an overlay',async t=>{
     assert.equal(field(typed(wires,'constraint'),'value'),value,text);
     assert.equal(field(typed(wires,'target'),'family_words'),'goniometer',text);
   }
+  const {candidates}=await reader.propose('What response inside the goniometer?');
+  const question=native(candidates).find(wires=>field(typed(wires,'request'),'asked')==='module.response');
+  assert.ok(question);
+  assert.equal(field(typed(question,'target'),'description'),'the goniometer');
+  assert.equal(field(typed(question,'request'),'asked_words'),'response');
 });
