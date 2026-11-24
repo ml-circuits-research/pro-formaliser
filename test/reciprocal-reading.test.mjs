@@ -36,7 +36,8 @@ test('public proposals keep the selected pair, lawn, and filler while binding or
   assert.deepEqual(wires.find(wire=>wire.type==='w.relational.reciprocal').attrs,{
     request:['$r'],members:['$t'],predicate:['$w.relational.faces'],words:['"facing each other"']
   });
-  const originals=parse(base).filter(wire=>wire.type!=='w.request.unread');
+  assert.equal(validate(reading.sop.replace(/ count=2(?=\s|$)/u,' count=3'),worlds),false);
+  const originals=parse(base.replace('count_words=two','count_words=two count=2')).filter(wire=>wire.type!=='w.request.unread');
   assert.deepEqual(wires.filter(wire=>wire.type!=='w.relational.reciprocal'),originals);
   assert.equal(wires.filter(wire=>wire.type==='w.request.target').length,1);
   assert.equal(validate(reading.sop,loadWorlds({paths:[]})),false);

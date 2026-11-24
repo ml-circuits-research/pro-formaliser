@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import { createReader } from '../src/runtime.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
 import { parse } from '../src/schema.mjs';
+import { preservationAdjunct, preservationAdjunctReading } from '../src/preservation-adjunct.mjs';
 
 const value=(wire,key)=>{
   const item=wire?.attrs[key]?.[0];
@@ -47,8 +48,62 @@ test('requires a complete local preservation frame outside quotations and condit
     'If needed, draw a circle, keeping the rest unchanged.',
     'Draw a circle, keep the rest unchanged and remove the triangle.',
     'Draw a circle, keep the rest on the left.',
+    'Do not draw a circle, keeping everything else where it is.',
+    'Draw a circle, do not leave everything else unchanged.',
     'Where is the circle? Keep the rest unchanged.',
   ]) assert.equal((await read(reader,text)).length,0,text);
+});
+
+const ownedText='Draw a kite under the bridge facing the moon';
+const retentionText='keeping everything else where it is';
+const fullText=ownedText+', '+retentionText+'.';
+const original=[
+  '@r w.request.request act=make mood=do predicate=Draw words='+JSON.stringify(fullText),
+  '@t w.request.target request=$r family=drawn mode=new determiner=indefinite sort=kite',
+  '@p w.request.constraint request=$r on=place attribute=drawn.relation value=under operator=relation phase=result words="under the bridge"',
+  '@a w.request.constraint request=$r on=place attribute=drawn.anchor value="the bridge" operator=relation phase=selector',
+  '@f w.request.constraint request=$r on=attribute attribute=drawn.facing value=moon operator=eq phase=result open_value=true key_words=facing words="the moon"',
+  '@filler w.request.filler text="keeping everything else"',
+].join('\n');
+
+test('preserves a fully grounded base available only in a full-input candidate',async t=>{
+  const reader=createReader({version:1,examples:[{text:fullText,sop:original,count:4}],templates:[],lexicon:{}});
+  t.after(()=>reader.close());
+  const full=await reader.propose(fullText,{evidence:true});
+  const typed=full.candidates.find(c=>c.source==='preservation-adjunct' && c.sop.includes('drawn.facing'));
+  assert.ok(typed,fullText);
+  assert.ok(full.candidates.some(c=>c.sop.includes('@filler w.request.filler')));
+  const wires=parse(typed.sop);
+  assert.equal(value(wires.find(w=>w.id==='r'),'words'),ownedText);
+  assert.equal(value(wires.find(w=>w.id==='a'),'value'),'the bridge');
+  assert.equal(value(wires.find(w=>w.id==='f'),'words'),'the moon');
+  assert.equal(value(wires.find(w=>value(w,'attribute')==='drawn.keep'),'value'),'place');
+  assert.ok(!wires.some(w=>w.id==='filler'));
+  assert.deepEqual(typed.evidence.missing,[]);
+  assert.equal(typed.evidence.counts.unread,undefined);
+});
+
+test('rejects suffix effects and preserves unresolved base text of a full-input candidate',()=>{
+  const worlds=loadWorlds();
+  const split=preservationAdjunct(fullText,worlds);
+  assert.ok(split);
+  const compose=sop=>preservationAdjunctReading(fullText,split,{sop},worlds);
+  const extra='\n@x w.request.constraint request=$r on=attribute attribute=drawn.label value="everything else"';
+  assert.equal(compose(original+extra),undefined);
+  assert.equal(compose(original+'\n@x w.request.request act=change words="'+retentionText+'"'),undefined);
+  const partial=original.split('\n').filter(line=>!line.startsWith('@f ')).join('\n')+
+    '\n@u w.request.unread request=$r text='+JSON.stringify('facing the moon, '+retentionText+'.');
+  const candidate=compose(partial);
+  assert.ok(candidate);
+  assert.equal(value(parse(candidate.sop).find(w=>w.id==='u'),'text'),'facing the moon');
+  assert.equal(compose(partial+' note="unresolved relation"'),undefined);
+  const mixed='Remove the chart; '+fullText;
+  const other=[
+    '@other w.request.request act=remove mood=do predicate=Remove words="Remove the chart"',
+    '@other.t w.request.target request=$other family=chart mode=existing fill=description description="the chart"'
+  ].join('\n');
+  assert.equal(preservationAdjunctReading(mixed,preservationAdjunct(mixed,worlds),
+    {sop:other+'\n'+original},worlds),undefined);
 });
 
 test('binds a compatible catalog preservation key in another family',async t=>{

@@ -90,3 +90,9 @@ Cu modulul relațional, **fără model**, cererea care numește înălțimea are
 ```
 
 Pentru „Could you set the product photo to 6.5 inches wide and double the width?”, niciun rezultat fără model nu introduce înălțimea. Cu modelul activ, o alternativă veche din alinierea exemplelor încă atribuie „double the width” cheii de înălțime. Este o eroare de transfer. Regula relațională nouă cere identificarea în text a proprietății rezultat și nu produce acea alternativă. Pilotul demonstrează interpretarea formulei, fără execuție sau conversie în unități de pagină. Solicităm verificarea independentă a celor două rezultate pe același commit. [Test inclusiv într-o lume separată](test/owner-property.test.mjs)
+
+### Răspuns la verificarea independentă din bcfd6b4
+
+Confirmăm observația despre prima alegere la „double the width”. Pe versiunea verificată de voi, alinierea putea prelua din adnotări o înălțime pe care textul nu o numea. Am corectat transferul. În reluarea prin CLI cu modelul instalat și cu fila „diagram”, niciuna dintre cele 27 de propuneri pentru cererea numai despre lățime nu mai introduce înălțimea. Prima este o secvență parțială. Pentru exemplul care cere explicit înălțimea, relația de proporție este încă prezentă. [Teste de transfer](test/transfer.test.mjs)
+
+Confirmăm și lipsa numărului pe ținta copiilor. După verificarea cantității scrise „two” și a apartenenței la acea țintă, cititorul înscrie și `count=2` pe firul `members`, lângă `count_words=two`. Alternativa returnată prin CLI trece verificarea nativă. Schimbarea lui `count` în 3 face ca același circuit să fie respins. Direcția raței singure este păstrată. [Testul de cardinalitate](test/reciprocal-reading.test.mjs)

@@ -124,6 +124,9 @@ export function reciprocalReading(text,candidate,worlds) {
   const [{start,end,relation}]=matches;
   if (words.test(input.find(token=>token.start>=end)?.key ?? '')) return;
   if (!placeBridge(text,wires,owner,heads[0][1],start)) return;
+  // The quantity was grounded on this target by pairAt. Record it where
+  // the native pair-cardinality rule checks the members of the relation.
+  target.attrs.count=['2'];
   const retained=consumeUnread(wires,text,heads[0][0],end);
   let id=request.id+'.reciprocal';
   for (let n=2;retained.some(wire=>wire.id===id);n++) id=request.id+'.reciprocal.'+n;

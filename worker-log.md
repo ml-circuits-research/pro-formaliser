@@ -137,3 +137,6 @@
 
 ## Verification on all 1,000 paired inputs
 - Replayed 5f41cd2 and 9011c80 through the public text-only CLI with the frozen training model. The final run recovered one additional reasonable case, reaching 48.6% with no observed losses. See eval/THOUSAND-AUDIT.md.
+
+## Grounded request openings, anchors and clause preservation
+- Added opt-in SOP opening roles, written spatial landmarks, full-input preservation composition and numeric-property transfer checks. The pair-size guard now sees the grounded target count. Public probes and the 279-test gate passed.

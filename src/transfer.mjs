@@ -1,6 +1,7 @@
 import { tokenize } from './model.mjs';
 import { parse } from './schema.mjs';
 import { signatures } from './signatures.mjs';
+import { quotedSpans } from './literal-roles.mjs';
 
 const terminal = new Set(['.', '!', '。', '！']);
 const separators = new Set([',', '.', '!', ':', '–', '—', '，', '。', '！']);
@@ -217,7 +218,86 @@ function valueFor(field, oldSurface, surface, delimited, resolveValue) {
   if (typeof value === 'string' && value.length) return value;
 }
 
-function align(example, source, text, { core: input, extras }, resolveValue, envelope, typedSlot) {
+function checkNumericResultKeys(propertyLabels, requestKeys, joiners) {
+  if (!propertyLabels?.size || !requestKeys?.length) return wires=>wires;
+  const numeric=new Set(requestKeys.filter(key=>key.head.split('+').includes('number'))
+    .map(key=>JSON.stringify([key.family,key.name])));
+  const cuts=new Set(['sequence','coordination','contrast','clause']);
+  return (wires,text)=>{
+    const requests=new Map(wires.filter(w=>w.type==='w.request.request').map(w=>['$'+w.id,w]));
+    const targets=wires.filter(w=>w.type==='w.request.target');
+    const labels=(ts,family)=>{
+      const found=new Set();
+      for (let start=0;start<ts.length;start++) {
+        let surface='';
+        for (let end=start;end<Math.min(ts.length,start+8);end++) {
+          surface+=(end===start ? '' : ' ')+ts[end].key;
+          const keys=propertyLabels.get(JSON.stringify([surface,family])) ?? [];
+          for (const {attribute} of keys) {
+            if (numeric.has(JSON.stringify([family,attribute]))) found.add(attribute);
+          }
+        }
+      }
+      return found;
+    };
+    const affected=[];
+    for (const constraint of wires) {
+      if (constraint.type!=='w.request.constraint' || first(constraint,'phase')==='selector' ||
+          first(constraint,'on')!=='attribute') continue;
+      const ref=first(constraint,'request'), req=requests.get(ref);
+      const [target,...others]=targets.filter(w=>first(w,'request')===ref);
+      if (!req || !target || others.length) continue;
+      const family=first(target,'family'), key=first(constraint,'attribute');
+      if (!numeric.has(JSON.stringify([family,key]))) continue;
+      const surface=first(constraint,'words') ?? first(constraint,'value');
+      if (!surface || !/\p{L}/u.test(surface)) continue;
+      const mentions=labels(tokens(surface),family);
+      if (!mentions.size || mentions.has(key)) continue;
+      const scope=first(req,'words') ?? text, source=tokens(scope), matches=spans(source,surface);
+      if (matches.length!==1) continue;
+      const [[start,end]]=matches;
+      const chars=Array.from(scope);
+      const quotes=quotedSpans(scope).map(({start,end})=>[
+        chars.slice(0,start).join('').length,chars.slice(0,end).join('').length]);
+      const visible=token=>!quotes.some(([a,b])=>a<token.end && token.start<b);
+      if (!source.slice(start,end).every(visible)) continue;
+      let left=start;
+      while (left>0 && !terminal.has(source[left-1].key) &&
+        !/^[,，;—–]$/u.test(source[left-1].key) && !cuts.has(joiners[source[left-1].key])) left--;
+      // Explicit roles earlier in this local clause can identify a result
+      // whose value mentions a different property, as in a relative measure.
+      const local=source.slice(left,start);
+      const writtenKey=(constraint.attrs.key_words ?? []).map(decode).some(words=>
+        labels(tokens(words),family).has(key) && spans(local,words).length===1);
+      if (writtenKey || labels(local.filter(visible),family).has(key)) continue;
+      affected.push({constraint,ref,surface});
+    }
+    if (!affected.length) return wires;
+    const removed=new Set(affected.map(({constraint})=>constraint.id));
+    const kept=wires.filter(w=>!removed.has(w.id));
+    if (kept.some(w=>localRefs(w).some(ref=>removed.has(ref)))) return;
+    const ids=new Set(wires.map(w=>w.id));
+    const partial=new Set();
+    for (const {ref,surface} of affected) {
+      const evidence=JSON.stringify([ref,surface]);
+      if (partial.has(evidence)) continue;
+      partial.add(evidence);
+      const existing=kept.find(w=>w.type==='w.request.unread' && first(w,'request')===ref && first(w,'text')===surface);
+      if (existing) {
+        delete existing.attrs.note;
+        delete existing.attrs.value;
+      } else {
+        let id='alignment.property';
+        while (ids.has(id)) id+='_';
+        ids.add(id);
+        kept.push({id,type:'w.request.unread',attrs:{request:[ref],text:[JSON.stringify(surface)]}});
+      }
+    }
+    return kept;
+  };
+}
+
+function align(example, source, text, { core: input, extras }, resolveValue, envelope, typedSlot, checkProperties) {
   const { wires, fields, starts, fillers } = prepare(example, source, envelope) ?? {};
   if (!wires) return [];
   const memo = new Map();
@@ -351,7 +431,12 @@ function align(example, source, text, { core: input, extras }, resolveValue, env
       if (context) attrs.request = ['$' + root];
       copy.push({ id, type: context ? 'w.request.unread' : 'w.request.filler', attrs });
     }
-    const sop=serialize(copy);
+    const checked=checkProperties(copy,text);
+    if (!checked) continue;
+    if (checked!==copy) {
+      unread.push(...checked.filter(w=>w.type==='w.request.unread').map(w=>first(w,'text')));
+    }
+    const sop=serialize(checked);
     if (typed && results.some(result=>result.sop===sop)) continue;
     results.push({ sop, similarity: anchors / Math.max(1, anchors + changed), unread: unread.join(' ') });
   }
@@ -684,9 +769,11 @@ function headingIndex(envelope, determiners, fillerPhrases) {
   return {observe,find};
 }
 
-export function createTransfer(examples, { resolveValue, typedSlot, fillerPhrases = [], determiners = {} } = {}) {
+export function createTransfer(examples, { resolveValue, typedSlot, fillerPhrases = [], determiners = {},
+  propertyLabels, requestKeys, joiners = {} } = {}) {
   const envelope = makeEnvelope(fillerPhrases);
   const headings=headingIndex(envelope,determiners,fillerPhrases);
+  const checkProperties=checkNumericResultKeys(propertyLabels,requestKeys,joiners);
   const postings = new Map();
   const indexed = [];
   function index(example) {
@@ -729,7 +816,7 @@ export function createTransfer(examples, { resolveValue, typedSlot, fillerPhrase
         const {example} = indexed[index];
         if (text === example.text && !example.excerpt) continue;
         try {
-          for (const { sop, similarity, unread } of align(example, source, text, input, resolveValue, envelope, typedSlot)) {
+          for (const { sop, similarity, unread } of align(example, source, text, input, resolveValue, envelope, typedSlot, checkProperties)) {
             if (exclude.has(sop)) continue;
             const support = example.count ?? 1;
             const previous = candidates.get(sop);

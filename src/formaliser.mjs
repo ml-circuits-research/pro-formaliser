@@ -121,7 +121,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   const phraseHeads=new Set(Object.keys(model.nominalPhrases ?? {}).map(k=>JSON.parse(k)[3]));
   const knownModifiers=new Set(Object.keys(model.modifiers ?? {}).map(k=>JSON.parse(k)[1]));
   const predicateTransfer=createPredicateTransfer(model.examples,worlds);
-  const nearExample = createNearExample(model.examples,{discourse:worlds.discourse});
+  const nearExample = createNearExample(model.examples,{discourse:worlds.discourse,worlds});
   const closedKeys=new Map();
   for (const {family,name,values} of worlds.requestKeys) {
     if (!values.length) continue;
@@ -130,6 +130,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     closedKeys.set(key,bank);
   }
   const transfer = createTransfer(model.examples, {
+    propertyLabels:worlds.ownerPropertyLabels,requestKeys:worlds.requestKeys,joiners:worlds.joiners,
     resolveValue:valueResolver(worlds,model.lexicon,model.forms), fillerPhrases:worlds.discourse,
     typedSlot(field,value) {
       if (field.key==='sort') return true;
@@ -628,7 +629,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (retained && !requestScope(text,maskQuoted(text,quotedSpans(text)),worlds,[]).restricted) {
         const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
         const steps=sequenceParts(retained.body,tokens(retained.body),worlds.joiners,sequenceOptions);
-        for (const base of await wrapped(retained.body)) {
+        const bodyReadings=await wrapped(retained.body);
+        for (const base of [...bodyReadings,...candidates]) {
           if (steps.length && parse(base.sop).filter(w=>w.type==='w.request.request').length<steps.length) continue;
           const reading=preservationAdjunctReading(text,retained,base,worlds);
           const key=reading && admissibleKey(text,reading.sop);

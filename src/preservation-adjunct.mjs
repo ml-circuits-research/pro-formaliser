@@ -1,6 +1,7 @@
 import { tokens } from './lexicon.mjs';
 import { quotedSpans } from './literal-roles.mjs';
 import { literalRanges } from './evidence.mjs';
+import { evidenceInText } from './grounding.mjs';
 import { parse, serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 
 const quote=JSON.stringify;
@@ -13,6 +14,8 @@ const atom=/^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u;
 const boundary=new Set([',',';','—','–']);
 const request='w.request.request';
 const target='w.request.target';
+const filler='w.request.filler';
+const unread='w.request.unread';
 
 export function compilePreservationAdjuncts(facts,requestKeys) {
   const cues=new Map(facts('w.lang.en.cue').filter(wire=>one(wire,'on')==='reaction' &&
@@ -95,8 +98,33 @@ export function preservationAdjunct(text,worlds) {
 }
 
 export function preservationAdjunctReading(text,split,candidate,worlds) {
-  if (!candidate?.sop || !literalRanges(text,split.suffix).length) return;
-  const wires=parse(candidate.sop);
+  if (!candidate?.sop) return;
+  const bodyRanges=literalRanges(text,split.body), suffixRanges=literalRanges(text,split.suffix);
+  if (bodyRanges.length!==1 || suffixRanges.length!==1) return;
+  const [[start,stop]]=bodyRanges, [[suffixStart,suffixEnd]]=suffixRanges;
+  if (stop>=suffixStart) return;
+  const tailEnd=/^[\s.!]*$/u.test(text.slice(suffixEnd)) ? text.length : suffixEnd;
+  const removed=new Set();
+  const wires=[];
+  for (const wire of parse(candidate.sop)) {
+    if ([filler,unread].includes(wire.type)) {
+      const written=one(wire,'text');
+      const hits=literalRanges(text,written);
+      if (hits.length===1) {
+        const [[a,b]]=hits;
+        if (suffixStart<=a && a<suffixEnd && b<=tailEnd) {
+          removed.add('$'+wire.id);
+          continue;
+        }
+        if (wire.type===unread && a>=start && a<stop && b>suffixStart && b<=tailEnd &&
+            !wire.attrs.note && !wire.attrs.value && !wire.attrs.n) {
+          wire.attrs.text=[quote(text.slice(a,stop))];
+        }
+      }
+    }
+    wires.push(wire);
+  }
+  if (removed.size && wires.some(wire=>Object.values(wire.attrs).flat().some(value=>removed.has(value)))) return;
   const requests=wires.filter(wire=>wire.type===request);
   const last=requests.at(-1);
   if (!last || ![undefined,'do'].includes(one(last,'mood'))) return;
@@ -105,11 +133,31 @@ export function preservationAdjunctReading(text,split,candidate,worlds) {
   const family=one(targets[0],'family'), keys=split.keys.get(family);
   if (keys?.size!==1 || !worlds.literalGrammar.licenses(family,one(last,'act')) ||
     !worlds.literalGrammar.licenses(family,'change')) return;
+  if (split.scope==='remainder' && requests.some(req=>{
+    const local=wires.filter(wire=>wire.type===target && wire.attrs.request?.[0]==='$'+req.id);
+    return local.length!==1 || one(local[0],'family')!==family;
+  })) return;
+  let cursor=start;
   for (const req of requests) {
     const words=one(req,'words');
-    if (!words && requests.length===1) req.attrs.words=[quote(split.body)];
-    else if (!words || literalRanges(split.body,words).length!==1) return;
+    if (!words && requests.length===1) {
+      req.attrs.words=[quote(split.body)];
+      continue;
+    }
+    const hits=literalRanges(text,words);
+    if (hits.length!==1) return;
+    const [[a,b]]=hits;
+    if (a<cursor || a>=stop) return;
+    if (b>stop) {
+      if (req!==last || b>tailEnd) return;
+      req.attrs.words=[quote(text.slice(a,stop))];
+    }
+    cursor=Math.min(b,stop);
   }
+  // Any inferred action, property or relation must still have its evidence
+  // inside the original base clause after removing preservation bookkeeping.
+  const body=serialize(wires);
+  if (!evidenceInText(split.body,body,worlds)) return;
   const [key]=keys;
   let id='preserve';
   while (wires.some(wire=>wire.id===id || wire.id.startsWith(id+'.'))) id+='_';
@@ -123,6 +171,6 @@ export function preservationAdjunctReading(text,split,candidate,worlds) {
     '@'+id+'.c w.request.constraint request=$'+id+' on=attribute attribute='+quote(key)+
       ' value='+split.value+' words='+quote(split.suffix)+' operator=eq phase=result',
   ].join('\n');
-  return {sop:serialize(wires)+'\n'+suffix,
+  return {sop:body+'\n'+suffix,
     source:'preservation-adjunct',status:candidate.status};
 }

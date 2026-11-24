@@ -11,6 +11,34 @@ const bank = { fillerPhrases: [
 ] };
 const target = '@t w.request.target request=$r family=shape mode=existing';
 
+test('keeps conflicting inherited numeric roles unread while preserving an explicitly named result',()=>{
+  const width='@a w.request.constraint request=$r on=attribute attribute=filter.spacing value=5 phase=result';
+  const inherited='@b w.request.constraint request=$r on=attribute attribute=filter.capacity words="double the spacing" phase=result';
+  const root=request+' predicate=set\n'+target.replace('family=shape','family=filter')+' sort=screen\n'+width+'\n'+inherited;
+  const options={
+    requestKeys:['filter.spacing','filter.capacity'].map(name=>({family:'filter',name,head:'number'})),
+    propertyLabels:new Map(['spacing','capacity'].map(name=>[
+      JSON.stringify([name,'filter']),[{attribute:'filter.'+name}],
+    ])),
+    joiners:{and:'coordination'},
+  };
+  const examples=[
+    {text:'set the screen spacing to 5 and double the spacing',sop:root+
+      '\n@u w.request.unread request=$r text="double the spacing" note="capacity relation"'},
+    {text:'set the screen spacing to 5 and the capacity to double the spacing',sop:root+' key_words=capacity'},
+    {text:'set the screen to the usual amount',sop:request+' predicate=set\n'+
+      target.replace('family=shape','family=filter')+' sort=screen\n'+inherited.replace('double the spacing','the usual amount')},
+  ];
+  const lookup=createTransfer(examples,options);
+  const [different]=lookup(examples[0].text+'.');
+  assert.match(different.sop,/attribute=filter\.spacing value=5/u);
+  assert.doesNotMatch(different.sop,/capacity/u);
+  assert.match(different.sop,/w\.request\.unread request=\$r text="double the spacing"/u);
+  assert.equal(different.unread,'double the spacing');
+  assert.match(lookup(examples[1].text+'.')[0].sop,/attribute=filter\.capacity/u);
+  assert.match(lookup(examples[2].text+'.')[0].sop,/attribute=filter\.capacity/u);
+});
+
 test('reprojects a grounded target description when its typed nominal changes',()=>{
   const lookup=createTransfer([{
     text:'polish the old panel blue',

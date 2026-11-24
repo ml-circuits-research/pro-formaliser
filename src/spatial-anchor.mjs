@@ -15,13 +15,13 @@ const boundary=/^[,;.!?—–，。！？；]$/u;
 const forms=text=>tokens(text).map(t=>t[0]).join(' ');
 
 const triggers=new WeakMap();
-function hasDefiniteTail(text,worlds) {
+function hasAnchorTail(text,worlds) {
   if (!triggers.has(worlds)) {
     const terms=Object.entries(worlds.determiners).filter(([,mode])=>mode==='definite')
       .map(([term])=>term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
     triggers.set(worlds,terms.length ? new RegExp('\\s(?:'+terms.join('|')+')\\s+\\p{L}','iu') : null);
   }
-  return triggers.get(worlds)?.test(text);
+  return triggers.get(worlds)?.test(text) || /\s\p{Lu}[\p{L}\p{M}\d_]*(?=\s|[.,;!?]|$)/u.test(text);
 }
 
 function owned(text,scope) {
@@ -60,8 +60,8 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
   const markerForms=(a,b)=>worlds.lookup(phrase(a,b)).filter(
     ([role,license,slot,value])=>role==='marker' && relationBank.includes(value) &&
        (license==='*' && slot==='spatial' || license===act && slot==='place'));
-  for (let markerAt=start;markerAt<Math.min(start+6,end-2);markerAt++) {
-    for (let markerEnd=markerAt+1;markerEnd<Math.min(markerAt+6,end-1);markerEnd++) {
+  for (let markerAt=start;markerAt<Math.min(start+6,end-1);markerAt++) {
+    for (let markerEnd=markerAt+1;markerEnd<Math.min(markerAt+6,end);markerEnd++) {
       const marker=span(markerAt,markerEnd);
       const values=new Set(markerForms(markerAt,markerEnd).map(entry=>entry[3]));
       if (relation) {
@@ -75,22 +75,31 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
       if (values.size!==1) continue;
       const value=[...values][0];
       const det=worlds.determiners[ts[markerEnd][0]];
-      if (det!=='definite' || end-markerEnd>9 ||
-          !ts.slice(markerEnd,end).every(([key])=>word.test(key))) continue;
-      // A landmark is a complete noun phrase at the end of this local span.
-      // Require a typed terminal noun and keep every written modifier.
-      let headAt=markerEnd+1;
-      for (;headAt<end;headAt++) {
-        const surface=phrase(headAt,end);
-        const local=worlds.lookup(surface).flatMap(([role,,family])=>role==='target' ? [family] : []);
-        const inventory=(worlds.ownerInventory?.get(JSON.stringify(['change',surface])) ?? [])
-          .map(({family})=>family);
-        if ([...local,...inventory].some(family=>worlds.familyTabs[family]?.includes(binding.tab))) break;
+      const tail=ts.slice(markerEnd,end);
+      if (tail.length>9 || !tail.every(([key])=>word.test(key))) continue;
+      if (det==='definite') {
+        // A landmark is a complete noun phrase at the end of this local span.
+        // Require a typed terminal noun and keep every written modifier.
+        let headAt=markerEnd+1;
+        for (;headAt<end;headAt++) {
+          const surface=phrase(headAt,end);
+          const local=worlds.lookup(surface).flatMap(([role,,family])=>role==='target' ? [family] : []);
+          const inventory=(worlds.ownerInventory?.get(JSON.stringify(['change',surface])) ?? [])
+            .map(({family})=>family);
+          if ([...local,...inventory].some(family=>worlds.familyTabs[family]?.includes(binding.tab))) break;
+        }
+        if (headAt>=end) continue;
+        if (ts.slice(markerEnd+1,headAt).some(([key])=>worlds.joiners[key] || worlds.determiners[key] ||
+            worlds.evidenceVocabulary.grammar.has(key) || worlds.scopeGrammar.auxiliary.has(key) ||
+            worlds.lookup(key).some(([role])=>['act','marker','reference'].includes(role)))) continue;
+      } else {
+        // A proper name can select an existing landmark. Keep its spelling
+        // as the lookup operand; instance resolution belongs to the next layer.
+        if (markerAt!==start || tail.length>4 || !tail.every(([key,raw])=>
+            /^\p{Lu}[\p{L}\p{M}\d_]*$/u.test(raw) &&
+            !worlds.evidenceVocabulary.grammar.has(key) && !worlds.negatives.has(key) &&
+            !worlds.joiners[key] && !worlds.isReference(key))) continue;
       }
-      if (headAt>=end) continue;
-      if (ts.slice(markerEnd+1,headAt).some(([key])=>worlds.joiners[key] || worlds.determiners[key] ||
-          worlds.evidenceVocabulary.grammar.has(key) || worlds.scopeGrammar.auxiliary.has(key) ||
-          worlds.lookup(key).some(([role])=>['act','marker','reference'].includes(role)))) continue;
       const region=(worlds.nominalPositions.get(binding.family)?.get(ts[markerAt][0]) ?? []).some(
         ([keys,,,,operator])=>operator==='region' && keys.join(' ')===phrase(markerAt,end));
       if (region) continue;
@@ -111,7 +120,7 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
 
 export function spatialAnchorReadings(text,candidate,worlds,permit) {
   if (!candidate.sop?.includes(' '+type('unread')+' ') ||
-      !candidate.sop.includes(' '+type('target')+' ') || !hasDefiniteTail(text,worlds)) return [];
+      !candidate.sop.includes(' '+type('target')+' ') || !hasAnchorTail(text,worlds)) return [];
   const wires=parse(candidate.sop), requests=wires.filter(w=>w.type===type('request'));
   const targets=wires.filter(w=>w.type===type('target'));
   const ids=new Set(wires.map(w=>w.id)), outputs=[];

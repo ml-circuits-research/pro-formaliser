@@ -55,3 +55,15 @@ test('does not invent a landmark or reuse a quoted, conditional or ambiguous sco
     assert.ok(candidates.every(c=>c.source!=='spatial-anchor'),text);
   }
 });
+
+test('a written proper name can supply the lookup for a spatial landmark',async t=>{
+  const reader=createReader(model);t.after(()=>reader.close());
+  const {candidates}=await reader.propose('Draw a seal above North Pier');
+  assert.ok(anchors(candidates.filter(c=>c.source==='spatial-anchor'),'North Pier').some(({same,anchor})=>
+    same.some(w=>field(w,'attribute')==='drawn.relation' && field(w,'value')==='above') &&
+    same.some(w=>field(w,'constraint')==='$'+anchor.id && field(w,'from')==='page')));
+  for (const text of ['Draw a seal above north pier','Draw a seal above North and Pier',
+      'Do not draw a seal above North Pier','Draw a seal under North beside Pier']) {
+    assert.equal((await reader.propose(text)).candidates.some(c=>c.source==='spatial-anchor'),false,text);
+  }
+});

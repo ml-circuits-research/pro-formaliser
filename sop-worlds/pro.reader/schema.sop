@@ -205,3 +205,8 @@
 # A reciprocal pronoun completes a declared binary predicate in this language.
 @pro.reader.reciprocal_marker core.type of=pro.reader.reciprocal_marker closed=true
 @pro.reader.reciprocal_marker.text core.slot of=pro.reader.reciprocal_marker key=text kind=string many=true required=true
+
+# How a sentence opening licenses reuse of an otherwise identical body.
+@pro.reader.body_lead core.type of=pro.reader.body_lead closed=true
+@pro.reader.body_lead.role core.slot of=pro.reader.body_lead key=role enum=neutral enum=action_only enum=nominal required=true
+@pro.reader.body_lead.text core.slot of=pro.reader.body_lead key=text kind=string many=true required=true
