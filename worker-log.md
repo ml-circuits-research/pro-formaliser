@@ -119,3 +119,7 @@
 
 ## Joint reciprocal and property-copy pilot
 - Replayed four integration probes with and without the installed model. Published actual readings, missing relations, and proposed observable effects in the formaliser response.
+
+## Grounded endpoints and properties
+- Public reader now binds ordered endpoint selectors and multiple explicit measurements for one owner. Transfer can rebind a uniquely grounded description containing a typed variable.
+- All 262 tests passed, including unrelated overlays and negative cases. Replayed integration examples and published the observed improvements in integration-review.responses.md.

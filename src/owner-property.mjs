@@ -7,6 +7,7 @@ const quote = JSON.stringify;
 const word = /^[\p{L}\p{M}\p{N}_]+$/u;
 const decoded = value => value?.startsWith('"') ? JSON.parse(value) : value;
 const atom = /^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u;
+const decimal = /^[+-]?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)$/u;
 
 const valuesOf=(wire,key)=>(wire.attrs[key] ?? []).map(decoded);
 const identity=(family,key)=>JSON.stringify([family,key]);
@@ -40,17 +41,52 @@ export function compileOwnerPropertyOperands(facts,requestKeys,words) {
       validBackings.has(key.means))).map(([id])=>id));
 
   const ownerInventory=new Map(), cache=new Map();
+  const addOwner=(act,surface,family,sort)=>{
+    const lookup=identity(act,surface), entries=ownerInventory.get(lookup) ?? [];
+    entries.push({family,sort});
+    ownerInventory.set(lookup,entries);
+  };
   for (const binding of facts('pro.reader.owner_inventory')) {
     const [tab,family,act,provider]=['tab','family','act','provider'].map(key=>valuesOf(binding,key)[0]);
     if (!tab || !family || !act || !provider || !requestKeys.some(key=>key.tab===tab && key.family===family)) continue;
     if (!cache.has(provider)) cache.set(provider,nativeInventory(facts,provider,words));
     for (const [surface,sorts] of cache.get(provider)) {
-      const lookup=identity(act,surface), entries=ownerInventory.get(lookup) ?? [];
-      for (const sort of sorts) entries.push({family,sort});
-      ownerInventory.set(lookup,entries);
+      for (const sort of sorts) addOwner(act,surface,family,sort);
     }
   }
-  return {ownerPropertyOpen,ownerInventory};
+  for (const binding of facts('pro.reader.owner_sort')) {
+    const [tab,family,act,slot]=['tab','family','act','slot'].map(key=>valuesOf(binding,key)[0]);
+    if (!act || !slot || !requestKeys.some(key=>key.tab===tab && key.family===family && key.means===slot)) continue;
+    const allowed=new Set(slots.filter(w=>w.id===slot).flatMap(w=>valuesOf(w,'enum')));
+    for (const wire of words) {
+      if (!valuesOf(wire,'of').includes(slot)) continue;
+      const [sort]=valuesOf(wire,'means');
+      if (!allowed.has(sort)) continue;
+      for (const surface of valuesOf(wire,'text')) addOwner(act,form(surface),family,sort);
+    }
+  }
+  const quantities=new Map(), unitNames=new Map(), ownerPropertyUnits=new Map();
+  const add=(table,surface,quantity)=>{
+    if (!table.has(surface)) table.set(surface,new Set());
+    table.get(surface).add(quantity);
+  };
+  for (const wire of facts('k.units.unit')) {
+    const [name]=valuesOf(wire,'name'), [quantity]=valuesOf(wire,'quantity');
+    if (!name || !quantity) continue;
+    for (const surface of [name,...valuesOf(wire,'symbol')]) add(unitNames,form(surface),quantity);
+    add(quantities,name,quantity);
+  }
+  for (const wire of words) {
+    if (!valuesOf(wire,'of').includes('k.units.unit.name')) continue;
+    for (const name of valuesOf(wire,'means')) for (const quantity of quantities.get(name) ?? []) {
+      for (const surface of valuesOf(wire,'text')) add(unitNames,form(surface),quantity);
+    }
+  }
+  for (const wire of facts('pro.reader.property_quantity')) {
+    const [family,key,quantity]=['family','key','quantity'].map(field=>valuesOf(wire,field)[0]);
+    if (family && key && quantity) add(ownerPropertyUnits,identity(family,key),quantity);
+  }
+  return {ownerPropertyOpen,ownerInventory,ownerPropertyUnits,ownerPropertyUnitNames:unitNames};
 }
 
 function catalogProperty(worlds,family,surface) {
@@ -108,6 +144,76 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
     if (!owner[0] || !value[0]) continue;
     const overlapsConnector=(a,b)=>keys.slice(a,b).some((_,j)=>
       [owner,value].some(part=>a+j+part.length<=b && matches(a+j,part)));
+    const propertyValues=(family,first,label,payload)=>{
+      const segments=[];
+      let start=payload;
+      for (let i=payload;i<end;i++) {
+        if (quoted(i) || worlds.joiners[keys[i]]!=='coordination') continue;
+        const stop=i-Number(keys[i-1]===',' && !quoted(i-1));
+        if (stop<=start) return [];
+        segments.push([start,stop]);
+        start=i+1;
+      }
+      segments.push([start,end]);
+      const seen=new Set(), records=[];
+      for (const [i,[a,b]] of segments.entries()) {
+        let options=[{property:first,label,start:a}];
+        if (i>0) {
+          options=[];
+          const from=detAt(a,b).next;
+          for (let j=from+1;j<Math.min(from+9,b);j++) {
+            if (!matches(j,value) || j+value.length>=b || !plain(from,j)) continue;
+            const property=catalogProperty(worlds,family,before(from,j));
+            if (property) options.push({property,label:span(from,j),start:j+value.length});
+          }
+        }
+        if (options.length!==1) return [];
+        const [{property,label:keyWords,start:from}]=options;
+        if (from>=b || seen.has(property.name)) return [];
+        seen.add(property.name);
+        const quotedValue=quotes.find(q=>q.start===ts[from][2] && q.end===ts[b-1][3]);
+        const raw=span(from,b), words=quotedValue?.value ?? raw;
+        const heads=property.head.split('+');
+        const number=heads.includes('number') && !property.values.length;
+        if (!words.trim() || !quotedValue && (unsafe(from,b) || overlapsConnector(from,b) ||
+            !number && !plain(from,b))) return [];
+        let resolved;
+        if (property.values.length) resolved=closedValue(worlds,property,form(words));
+        else if (number && !quotedValue) {
+          const unit=worlds.ownerPropertyUnits?.get(identity(family,property.name));
+          for (let j=b;j>from;j--) {
+            const written=span(from,j), numeral=worlds.nominalNumbers.get(before(from,j));
+            const literal=decimal.test(written) && Number.isFinite(Number(written));
+            if (!literal && !(numeral?.kind==='cardinal' && /^\d+$/u.test(numeral.value))) continue;
+            if (j===b) {
+              resolved=literal ? written : numeral.value;
+              break;
+            }
+            const quantity=worlds.ownerPropertyUnitNames?.get(before(j,b));
+            if (unit?.size===1 && quantity?.size===1 && unit.has([...quantity][0])) resolved=raw;
+          }
+          // A written reference to an earlier property is not a scalar
+          // operand. Preserve it without evaluating it or guessing a formula.
+          if (!resolved && i>0 && plain(from,b) && !worlds.lookup(before(from,from+1)).some(([role])=>role==='act')) {
+            const reference=keys.slice(from+1,b).some((_,offset)=>{
+              const at=from+offset+1, det=detAt(at,b);
+              if (det.mode!=='definite') return false;
+              const referenced=catalogProperty(worlds,family,before(det.next,b))?.name;
+              return seen.has(referenced) && referenced!==property.name;
+            });
+            if (reference) {
+              records.push({unread:span(a,b)});
+              continue;
+            }
+          }
+        } else if (heads.includes('span') || worlds.ownerPropertyOpen?.has(identity(family,property.name))) {
+          resolved=words;
+        }
+        if (!resolved || resolved!==words && !atom.test(resolved) && !decimal.test(resolved)) return [];
+        records.push({property:property.name,keyWords,words,resolved});
+      }
+      return records;
+    };
     for (let verbAt=0;verbAt<Math.min(12,end);verbAt++) {
       const lead=before(0,verbAt);
       if (lead && !worlds.literalGrammar.leads.has(lead) && !worlds.fillerPhrases.has(lead)) continue;
@@ -126,11 +232,6 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
                 overlapsConnector(start,valueAt) || unsafe(propertyAt,valueAt)) continue;
             const payload=valueAt+value.length;
             if (payload>=end) continue;
-            const quotedValue=quotes.find(q=>q.start===ts[payload][2] && q.end===ts[end-1][3]);
-            if (!quotedValue && (!plain(payload,end) || unsafe(payload,end) ||
-                overlapsConnector(payload,end))) continue;
-            const words=quotedValue?.value ?? span(payload,end);
-            if (!words.trim()) continue;
             const nounOptions=[];
             for (let noun=det.next;noun<valueAt;noun++) {
               const surface=before(noun,valueAt);
@@ -149,22 +250,23 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
             }
             for (const {noun,family,sort,property} of nounOptions) {
               if (noun!==firstByFamily.get(family)) continue;
-              const resolved=property.values.length ? closedValue(worlds,property,form(words)) :
-                (property.head.split('+').includes('span') ||
-                  worlds.ownerPropertyOpen?.has(identity(family,property.name))) ? words : undefined;
-              if (!resolved || resolved!==words && !atom.test(resolved)) continue;
+              const records=propertyValues(family,property,span(propertyAt,ownerAt),payload);
+              if (!records.length) continue;
               const head=span(noun,valueAt);
-              const encodedValue=resolved===words ? quote(resolved) : resolved;
               const sop=[
                 '@r1 w.request.request act='+quote(act)+' mood=do predicate='+quote(span(verbAt,verbEnd)),
                 '@r1.t w.request.target request=$r1 family='+quote(family)+' mode=existing fill=description'+
                   (det.mode ? ' determiner='+det.mode : '')+' description='+quote(span(start,valueAt))+
                   (sort ? ' sort='+quote(sort)+' sort_words='+quote(head) : ' family_words='+quote(head)),
-                '@r1.c1 w.request.constraint request=$r1 on=attribute attribute='+quote(property.name)+
-                  ' value='+encodedValue+' operator=eq phase=result key_words='+quote(span(propertyAt,ownerAt))+' words='+quote(words)
+                ...records.map(({unread,property,keyWords,words,resolved},i)=>unread ?
+                  '@r1.u'+(i+1)+' w.request.unread request=$r1 text='+quote(unread) :
+                  '@r1.c'+(i+1)+' w.request.constraint request=$r1 on=attribute attribute='+quote(property)+
+                  ' value='+(resolved===words || decimal.test(resolved) ? quote(resolved) : resolved)+
+                  ' operator=eq phase=result key_words='+quote(keyWords)+' words='+quote(words))
               ].join('\n');
               const alternatives=outputs.get(family) ?? new Map();
-              alternatives.set(sop,{sop,source:'owner-property'});
+              const unread=records.flatMap(record=>record.unread ? [record.unread] : []).join(' ');
+              alternatives.set(sop,{sop,source:'owner-property',...(unread ? {unread} : {})});
               outputs.set(family,alternatives);
             }
           }

@@ -175,7 +175,15 @@ function prepare(example, ts, envelope) {
   for (const field of slotFields) {
     if (field.matches.length !== 1) continue;
     const span = field.matches[0];
-    const peers = slotFields.filter(peer => peer.matches.some(match => overlaps(span, match)));
+    const peers = slotFields.filter(peer => {
+      const outer=peer.matches[0];
+      // A written description can enclose its independently typed noun or
+      // name. Its full span is reprojected from the finished alignment.
+      if (field.type==='w.request.target' && ['sort','name','ids'].includes(field.key) &&
+          peer.index===field.index && peer.key==='description' && peer.matches.length===1 &&
+          outer[0]<=span[0] && span[1]<=outer[1] && !sameSpan(outer,span)) return false;
+      return peer.matches.some(match => overlaps(span, match));
+    });
     if (peers.some(peer => peer.matches.length !== 1 || !sameSpan(span, peer.matches[0]))) continue;
     if (!starts.has(span[0])) starts.set(span[0], { span, fields: peers });
   }

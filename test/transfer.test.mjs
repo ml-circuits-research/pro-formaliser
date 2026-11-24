@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createTransfer } from '../src/transfer.mjs';
+import { createReader } from '../src/runtime.mjs';
 
 const request = '@r w.request.request act=change mood=do';
 const bank = { fillerPhrases: [
@@ -9,6 +10,40 @@ const bank = { fillerPhrases: [
   { text: 'thanks', class: 'politeness' },
 ] };
 const target = '@t w.request.target request=$r family=shape mode=existing';
+
+test('reprojects a grounded target description when its typed nominal changes',()=>{
+  const lookup=createTransfer([{
+    text:'polish the old panel blue',
+    sop:request+' predicate=polish\n'+target+' sort=panel fill=description description="the old panel"\n'+
+      '@c w.request.constraint request=$r on=attribute attribute=shape.colour value=blue phase=result',
+  }],{
+    resolveValue:({key,family,surface})=>key==='sort' && family==='shape' && surface==='prism' ? 'prism' : undefined,
+  });
+  const [candidate]=lookup('polish the old prism blue');
+  assert.match(candidate.sop,/sort=prism fill=description description="the old prism"/u);
+  assert.deepEqual(lookup('polish the old unlicensed blue'),[]);
+  assert.deepEqual(lookup('polish the new prism blue'),[]);
+  assert.deepEqual(lookup('polish the old prism blue and remove it'),[]);
+  assert.deepEqual(lookup('do not polish the old prism blue'),[]);
+  const ambiguous=createTransfer([{
+    text:'polish the old panel near the old panel',
+    sop:request+' predicate=polish\n'+target+' sort=panel fill=description description="the old panel"',
+  }],{resolveValue:({key,surface})=>key==='sort' ? surface : undefined});
+  assert.deepEqual(ambiguous('polish the old prism near the old panel'),[]);
+});
+
+test('retains the learned target description on a novel request through the normal API',async t=>{
+  const reader=createReader({version:1,templates:[],examples:[{
+    text:'paint the old panel blue',
+    sop:request+' predicate=paint\n@t w.request.target request=$r family=drawn mode=existing sort=panel fill=description description="the old panel"\n'+
+      '@c w.request.constraint request=$r on=attribute attribute=drawn.colour value=blue operator=eq phase=result',
+  }],forms:{'["drawn","sort","panel"]':'panel','["drawn","sort","prism"]':'prism'},
+  lexicon:{prism:[['target','change','drawn','existing','prism',5]]}});
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose('paint the old prism blue');
+  assert.ok(candidates.some(c=>c.source==='alignment' &&
+    c.sop.includes('description="the old prism"') && c.sop.includes('sort=prism') && c.sop.includes('drawn.colour')));
+});
 
 test('transfers an aligned request across punctuation, courtesy and case with input evidence', () => {
   const lookup = createTransfer([{

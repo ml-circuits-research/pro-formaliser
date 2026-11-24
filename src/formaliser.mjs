@@ -15,6 +15,7 @@ import { ownerPropertyReadings } from './owner-property.mjs';
 import { serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { alternateBodies } from './request-alternations.mjs';
 import { evidenceReport } from './evidence.mjs';
+import {createEndpointReferenceReader} from './endpoint-reference.mjs';
 import {createCompoundReferenceReader} from './compound-reference.mjs';
 import {nominalScaleReading} from './nominal-scales.mjs';
 import { sequencePacket,sequenceReading,sequenceFrameReading } from './argument-sequences.mjs';
@@ -142,6 +143,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   const ground = constraintGrounder();
   const resolveRelationKeys = createRelationKeyResolver(worlds);
   const compounds=createCompoundReferenceReader(worlds);
+  const endpoints=createEndpointReferenceReader(worlds);
   const instanceReferences = createInstanceReferenceReader(worlds);
   const preservation = createPreservation(model.examples,worlds,model.lexicon);
   const sequenceOptions = {
@@ -280,6 +282,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     for (const reading of nativePropertyReadings(text,response.nativeProperties ?? [])) retain(reading);
     if (!scope.restricted) {
       for (const candidate of compounds(text,ts,quotes)) retain(candidate);
+      for (const candidate of endpoints(text,ts,quotes)) retain(candidate);
       for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of transformationReadings(text,ts,quotes,worlds)) retain(reading);
