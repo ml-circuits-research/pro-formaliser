@@ -23,6 +23,8 @@
   </nav>
   <main>
     <h1>Design decisions and unresolved issues</h1>
+    <h2>Read number pairs and respect list boundaries</h2>
+    <p>The sentence “put house at 260,180” formerly left both coordinates unread. A world can declare a cue, action and two ordered numeric keys. The parser binds the two written values together, including signed decimals and parenthesized pairs. A third number or list of pairs prevents the pair reading. Quoted values stay literal. Clause splitting protects matched square-bracket lists containing commas, semicolons or imperative-looking items. Open-ended noun lists in scene descriptions can still lose objects and their attributes. <a href="../resources/worlds.md">World declarations</a> · <a href="../eval/THOUSAND-AUDIT.md">Paired benchmark</a></p>
     <h2>Keep domain choice downstream</h2>
     <p>The generator formerly scored target families from utterance-wide training associations. The twelve-candidate limit could then hide a less frequent SOP-declared meaning before discussion context was available. Training now retains action associations only. For a shared target phrase, search preserves a representative for each directly grounded action, span and declared family alongside the ordinary shortlist. Clause composition still has a finite search budget.</p>
     <p>Literal payloads, names, spatial keys and shared preservation concepts have explicit SOP bindings. A domain can choose unrelated property names. The default CLI returns the proposed circuits. The separate pipeline can use an active tab to rank that set. <a href="../test/ambiguity.test.mjs">Regression with fourteen new families</a> · <a href="../eval/CANDIDATE-AUDIT.md">Meaning review on the held-out sample</a></p>

@@ -26,6 +26,12 @@ test('coalesces adjacent connectors and preserves quoted or possessive content',
   assert.deepEqual(split('paint the circle; move the box'), ['paint the circle','move the box']);
 });
 
+test('keeps bracketed list items together across commas and semicolons', () => {
+  assert.deepEqual(split('create [red, move the box; remove the circle], then paint the list'),
+    ['create [red, move the box; remove the circle]','paint the list']);
+  assert.deepEqual(split('create [red; remove the circle'), ['create [red','remove the circle']);
+});
+
 const worlds = {
   requestKeys:[
     {name:'node.keep',family:'node',head:'class',values:['place','all']},

@@ -77,6 +77,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (outside && !outside.has(ts[j][2])) break;
         words += (j===i?'':' ') + ts[j][0];
         for (const property of worlds.properties(words)) properties.push([ts[i][2],ts[j][3],property]);
+        if (/^(?:[0-9]+|[(:=+-])$/u.test(ts[j+1]?.[0] ?? '')) {
+          for (const tuple of worlds.tuples(words)) properties.push([ts[i][2],ts[j][3],tuple]);
+        }
         if (Object.hasOwn(worlds.determiners,words)) determiners.push([ts[i][2],ts[j][3],worlds.determiners[words]]);
         if (worlds.negatives.has(words) || ['contrast','sequence','clause'].includes(worlds.joiners[words])) blocksResult = true;
         const learned = Object.hasOwn(model.lexicon ?? {},words) ? model.lexicon[words] : [];

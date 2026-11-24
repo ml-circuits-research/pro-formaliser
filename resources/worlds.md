@@ -164,3 +164,21 @@ named property keys also work through the ordinary property lexicon.
 Given a target-kind binding for “stamp”, the reader can interpret “Create
 a stamp marked Aurora containing ‘Copper, not brass.’” and keep the
 name and quoted payload in their respective keys.
+
+## Numeric pairs
+
+A `pro.reader.tuple` declaration assigns two ordered numeric result keys
+to a cue for particular acts. Both keys must be open number keys declared
+for the same family and tab. For example, a workbench can map a placement
+phrase to its own two axes.
+
+```sop
+@workbench.rise w.request.key tab=workbench family=instrument name=instrument.rise head=number
+@workbench.arc w.request.key tab=workbench family=instrument name=instrument.arc head=number
+@workbench.axes pro.reader.tuple tab=workbench family=instrument first_key=instrument.rise second_key=instrument.arc act=place text="at fixed offsets"
+```
+
+With a grounded instrument target, “put the fluxometer at fixed offsets
+(-9.5, +10)” assigns the two values in declaration order. The reader
+accepts optional parentheses and leaves quoted numbers and numeric lists
+without a pair interpretation.

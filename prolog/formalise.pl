@@ -62,7 +62,7 @@ candidate(Q, score(3, Specificity, N), _{sop:Sop, source:template, support:N}) :
     include(string, T.pattern, Anchors), length(Anchors, Specificity), N = T.count.
 candidate(Q, score(2, Rank, Support), _{sop:Sop, source:alignment, support:Support, unread:Unread}) :-
     nth0(I, Q.transfers, T), Rank is -I, Support = T.support, Sop = T.sop, Unread = T.unread.
-candidate(Q, score(1, Score, 0), Candidate) :-
+candidate(Q, score(Tier, Score, 0), Candidate) :-
     member([Start,End,["act",Act,Mood,N],ActPrior], Q.actHits),
     span(Q.text, Start, End, Predicate), encode(Act, A), encode(Predicate, P),
     ( Mood == "" -> M = "" ; format(string(M), ' mood=~s', [Mood]) ),
@@ -74,8 +74,8 @@ candidate(Q, score(1, Score, 0), Candidate) :-
       target_determiner(Q,Act,Family,S,Start-End,DetStart-Det),
       direct_target(Q, Act, Start-End, S-E, DetStart),
       target(Family, Mode, Sort, Surface, Det, T),
-      attached_roles(Q, Act, Mode, E, Attached, AttachmentBounds, Blocked, AttachmentFit, FirstConstraint),
-      constraint_wires(Q, Act, Family, Mode, Start-End, S-E, Blocked, FirstConstraint, More, Covered),
+      attached_roles(Q, Act, Family, Mode, E, Attached, AttachmentBounds, Blocked, AttachmentFit, FirstConstraint),
+      constraint_wires(Q, Act, Family, Mode, Start-End, S-E, Blocked, FirstConstraint, More, Covered, Tier),
       role_fit(Q, Act, Start-End, Mode, Det, E, Covered, RoleFit),
       determiner_bounds(Q, DetStart, S, Det, DetBounds),
       append([Start-End,S-E|AttachmentBounds], Covered, BoundEvidence),
@@ -86,9 +86,9 @@ candidate(Q, score(1, Score, 0), Candidate) :-
       Extra is 5 + Evidence + RoleFit + AttachmentFit + ScopeFit + log(1+K)/2 - log(1+Gap)/2
     ; direct_reference(Q,Act,End,RS-RE),
       format(string(ReferenceRequest),'~s refers=thing',[Req]),
-      attached_roles(Q,Act,"existing",RE,Attached,Used,_,Fit,_),
-      Bounds = [Start-End,RS-RE|Used], Wires = [ReferenceRequest|Attached], Extra is 4 + Fit
-    ; Bounds = [Start-End], Wires = [Req], Extra = 0 ),
+      attached_roles(Q,Act,none,"existing",RE,Attached,Used,_,Fit,_),
+      Bounds = [Start-End,RS-RE|Used], Wires = [ReferenceRequest|Attached], Extra is 4 + Fit, Tier=1
+    ; Bounds = [Start-End], Wires = [Req], Extra = 0, Tier=1 ),
     sort(Bounds, Sorted), string_length(Q.text, Length),
     residuals(Sorted, Q.text, 0, Length, 1, Unread),
     append(Wires, Unread, All), atomics_to_string(All, "\n", Sop),
@@ -99,19 +99,21 @@ candidate(Q, score(1, Score, 0), Candidate) :-
     -> Candidate=Base.put(binding,[Start,End,Act,S,E,Family]) ; Candidate=Base ),
     Score is 12*Coverage + Extra + ActPrior + log(1+N) + min(12,End-Start)/4 - Start/3.
 
-constraint_wires(Q, Act, Family, Mode, PS-PE, TS-TE, Blocked, First, Wires, Bounds) :-
+constraint_wires(Q, Act, Family, Mode, PS-PE, TS-TE, Blocked, First, Wires, Bounds, Tier) :-
     ( Q.allowConstraints == true ->
       findall(priority(Len,N)-hit(S,E,PhaseBody),
               ( member([S,E,["constraint",Licence,Family,Body,N],_], Q.constraintHits),
                 (Licence == "*" -> true ; Licence == Act),
                 (S >= PE ; E =< PS), (S >= TE ; E =< TS),
                 \+ (member(A-B,Blocked), S < B, E > A),
-                constraint_phase(Q, Act, Family, Mode, TS-TE, S-E, Body, PhaseBody),
+                ( is_list(Body) -> S >= TE, PhaseBody=Body
+                ; constraint_phase(Q, Act, Family, Mode, TS-TE, S-E, Body, Phased), PhaseBody=[Phased] ),
                 Len is E-S ), Records),
       sort(Records, Sorted), reverse(Sorted, Ranked),
       choose_constraints(Ranked, [], Selected), sort(Selected, Chronological),
-      numbered_constraints(Chronological, First, Wires, Bounds)
-    ; Wires=[], Bounds=[] ).
+      numbered_constraints(Chronological, First, Wires, Bounds),
+      ( member(hit(_,_,[_,_|_]),Chronological) -> Tier=3.5 ; Tier=1 )
+    ; Wires=[], Bounds=[], Tier=1 ).
 
 choose_constraints([], Acc, Acc).
 choose_constraints([_-hit(S,E,Body)|Rest], Acc, Out) :-
@@ -120,9 +122,15 @@ choose_constraints([_-hit(S,E,Body)|Rest], Acc, Out) :-
     choose_constraints(Rest,Next,Out).
 
 numbered_constraints([], _, [], []).
-numbered_constraints([hit(S,E,Body)|Rest], N, [Line|Lines], [S-E|Spans]) :-
+numbered_constraints([hit(S,E,Bodies)|Rest], N, Wires, [S-E|Spans]) :-
+    numbered_bodies(Bodies,N,Wires,Lines,Next),
+    numbered_constraints(Rest,Next,Lines,Spans).
+
+numbered_bodies([], N, Lines, Lines, N).
+numbered_bodies([Body|Bodies], N, [Line|Wires], Lines, Next) :-
     format(string(Line),'@r1.c~d w.request.constraint request=$r1 ~s',[N,Body]),
-    Next is N+1, numbered_constraints(Rest,Next,Lines,Spans).
+    Following is N+1,
+    numbered_bodies(Bodies,Following,Wires,Lines,Next).
 
 target_mode("auto","make","new") :- !.
 target_mode("auto",_,"existing") :- !.

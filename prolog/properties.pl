@@ -10,6 +10,19 @@ property_constraints(Q, Hits) :-
     ; Hits = [] ).
 
 property_hit(Text, [Start, KeyEnd, Property],
+             [Start, End, ["constraint", Act, Family, Bodies, 0], 0]) :-
+    Property.kind == "tuple", !,
+    Act = Property.act, Family = Property.family,
+    property_outside_quotes(Text, Start),
+    sub_string(Text, KeyEnd, _, 0, Suffix),
+    property_prefix(Suffix, PrefixLength, Tail),
+    tuple_values(Tail, Length, First, Second),
+    End is KeyEnd + PrefixLength + Length,
+    KeyLength is KeyEnd - Start,
+    sub_string(Text, Start, KeyLength, _, KeyWords),
+    maplist(tuple_body(KeyWords), Property.keys, [First,Second], Bodies).
+
+property_hit(Text, [Start, KeyEnd, Property],
              [Start, End, ["constraint", "*", Family, Body, 0], 0]) :-
     Family = Property.family,
     property_outside_quotes(Text, Start),
@@ -24,6 +37,22 @@ property_hit(Text, [Start, KeyEnd, Property],
     format(string(Body),
            'on=attribute attribute=~s value=~s operator=eq phase=result key_words=~s~s',
            [Attribute, Encoded, KeyEvidence, Evidence]).
+
+tuple_values(Tail, Length, First, Second) :-
+    Number = "[+-]?[0-9]+(?:\\.[0-9]+)?",
+    format(string(Pair), '(?<first>~s)[ \\t]*,[ \\t]*(?<second>~s)', [Number,Number]),
+    % A third number after a comma or conjunction makes this a list.
+    Boundary = "(?=$|[ \\t;!?]|[,.](?=$|[ \\t]))(?![ \\t]*(?:,[ \\t]*(?:and[ \\t]+)?|and[ \\t]+)(?:\\([ \\t]*)?[+-]?[0-9])",
+    ( sub_string(Tail,0,1,_,"(") ->
+      format(string(Pattern), '^(?<whole>\\([ \\t]*~s[ \\t]*\\))~s', [Pair,Boundary])
+    ; format(string(Pattern), '^(?<whole>~s)~s', [Pair,Boundary]) ),
+    re_matchsub(Pattern,Tail,Groups,[]),
+    string_length(Groups.whole,Length), First=Groups.first, Second=Groups.second.
+
+tuple_body(KeyWords, Key, Value, Body) :-
+    maplist(property_quote, [Key, Value, KeyWords], [Attribute, Encoded, Cue]),
+    format(string(Body), 'on=attribute attribute=~s value=~s operator=eq phase=result key_words=~s',
+           [Attribute,Encoded,Cue]).
 
 property_value("number", Suffix, Consumed, Value, Value) :-
     property_prefix(Suffix, Start, Tail),

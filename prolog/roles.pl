@@ -1,4 +1,4 @@
-:- module(roles, [index_roles/3, reset_role_cache/0, direct_target/5, direct_reference/4, target_determiner/6, attached_roles/9, constraint_phase/8, role_fit/8]).
+:- module(roles, [index_roles/3, reset_role_cache/0, direct_target/5, direct_reference/4, target_determiner/6, attached_roles/10, constraint_phase/8, role_fit/8]).
 :- use_module(library(http/json)).
 :- use_module(library(ordsets)).
 :- use_module(library(pcre)).
@@ -66,15 +66,16 @@ marker(Q, Act, M-N, Role, Relation, Specific) :-
 % Marker spans determine where direct value attachment stops. Ground the
 % anchor only when there is a nominal reading, keeping its descriptive words
 % as evidence for the page lookup.
-attached_roles(Q, Act, Mode, End, Wires, Bounds, Blocked, Bonus, FirstConstraint) :-
-    ( attached_cache(Act,Mode,End,Options) -> true
-    ; findall(Option, candidate_attachment(Q,Act,Mode,End,Option), Options),
-      assertz(attached_cache(Act,Mode,End,Options)) ),
+attached_roles(Q, Act, Family, Mode, End, Wires, Bounds, Blocked, Bonus, FirstConstraint) :-
+    ( attached_cache(Act-Family,Mode,End,Options) -> true
+    ; findall(Option, candidate_attachment(Q,Act,Family,Mode,End,Option), Options),
+      assertz(attached_cache(Act-Family,Mode,End,Options)) ),
     member(attachment(Wires,Bounds,Blocked,Bonus,FirstConstraint),Options).
 
-candidate_attachment(Q,Act,Mode,End,attachment(Wires,Bounds,Blocked,Bonus,FirstConstraint)) :-
+candidate_attachment(Q,Act,Family,Mode,End,attachment(Wires,Bounds,Blocked,Bonus,FirstConstraint)) :-
     ( Q.allowConstraints == true ->
-      findall(M-N, (marker(Q,Act,M-N,_,_,_), M >= End), Raw),
+      findall(M-N, (marker(Q,Act,M-N,_,_,_), M >= End,
+                     \+ tuple_marker(Q,Act,Family,M-N)), Raw),
       sort(Raw, Markers),
       % Keep the preferred reading and one alternate per genuinely
       % ambiguous attachment, without forming every combination of phases.
@@ -84,6 +85,10 @@ candidate_attachment(Q,Act,Mode,End,attachment(Wires,Bounds,Blocked,Bonus,FirstC
         marker(Q,Act,Override,_,Relation,yes), Relation \== "" ),
       attachments(Markers,Q,Act,Mode,Override,Wires,Bounds,Blocked,Bonus,1,FirstConstraint)
     ; Wires=[], Bounds=[], Blocked=[], Bonus=0, FirstConstraint=1 ).
+
+tuple_marker(Q, Act, Family, M-N) :-
+    member([S,E,["constraint",Act,Family,Bodies,_],_], Q.constraintHits),
+    is_list(Bodies), S =< M, E >= N.
 
 attachments([], _, _, _, _, [], [], [], 0, I, I).
 attachments([M-N|Rest], Q, Act, Mode, Override, Wires, Bounds, Blocked, Bonus, I, Count) :-
@@ -133,9 +138,9 @@ reachable_prefix(Q, Scope, [Start|Pending], End) :-
 
 modifier_end(Q, nominal, Start, End) :-
     ( member([Start,End,_], Q.determiners)
-    ; member([Start,End,["constraint",_,_,_,_],_], Q.constraintHits) ).
+    ; member([Start,End,["constraint",_,_,Body,_],_], Q.constraintHits), string(Body) ).
 modifier_end(Q, family(Act,Family), Start, End) :-
-    member([Start,End,["constraint",Licence,Family,_,_],_], Q.constraintHits),
+    member([Start,End,["constraint",Licence,Family,Body,_],_], Q.constraintHits), string(Body),
     ( Licence == "*" ; Licence == Act ).
 
 next_token(Q, From, Limit, Start) :-

@@ -12,7 +12,7 @@ const keyOf = text => tokens(text).map(([key]) => key).join(' ');
 
 function visibleTokens(chars, ts) {
   let quote = '';
-  return ts.map(([word, raw, start, end]) => {
+  const visible = ts.map(([word, raw, start, end]) => {
     if ((raw === "'" || raw === '’') &&
         /[\p{L}\p{N}]/u.test(chars[start-1] ?? '') && /[\p{L}\p{N}]/u.test(chars[end] ?? '')) return '';
     if (quote) {
@@ -26,6 +26,17 @@ function visibleTokens(chars, ts) {
     if (quotes.has(raw)) { quote = quotes.get(raw); return ''; }
     return word;
   });
+  // A literal list can contain words that are also imperative verbs. Only
+  // matched brackets protect a span, so an unfinished list cannot hide the tail.
+  const starts = [];
+  for (let i=0;i<visible.length;i++) {
+    if (visible[i]==='[') starts.push(i);
+    if (visible[i]===']' && starts.length) {
+      const start=starts.pop();
+      visible.fill('',start,i+1);
+    }
+  }
+  return visible;
 }
 
 export function coordinationActs(worlds, learned = {}) {

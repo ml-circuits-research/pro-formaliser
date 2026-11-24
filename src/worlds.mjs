@@ -11,7 +11,7 @@ const types = new Set([
   'w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
-  'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation',
+  'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
   'w.lang.en.cue',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
   'w.reader.en.binding', 'w.reader.en.feature', 'w.reader.en.filter',
@@ -168,6 +168,19 @@ function compile(facts) {
     surfaces: values(wire,'text').map(phrase),
   })).filter(binding => requestKeys.some(key => key.family === binding.family && key.name === binding.attribute &&
     key.head.split('+').includes('span') && !key.values.length));
+  const tuples = new Map();
+  for (const wire of facts('pro.reader.tuple')) {
+    const family = one(wire,'family'), tab = one(wire,'tab');
+    const keys = [one(wire,'first_key'),one(wire,'second_key')];
+    if (!family || !tab || keys[0] === keys[1] || !keys.every(name => requestKeys.some(key =>
+      key.family === family && key.tab === tab && key.name === name && key.head.split('+').includes('number') &&
+      !key.values.length))) continue;
+    for (const act of values(wire,'act').filter(act => actNames.has(act))) {
+      for (const cue of values(wire,'text')) {
+        index(tuples,phrase(cue),{kind:'tuple',family,act,keys});
+      }
+    }
+  }
   const keysByOwner = new Map();
   const slotOwners = new Map(), slotNames = new Map();
   for (const wire of facts('core.slot')) {
@@ -451,6 +464,7 @@ function compile(facts) {
     familyTabs: Object.fromEntries([...familyTabs].map(([family, tabs]) => [family, [...new Set(tabs)]])),
     lexicon: Object.fromEntries(acts),
     properties: surface => propertiesBySurface.get(surface) ?? [],
+    tuples: surface => tuples.get(surface) ?? [],
     isReference: text => references.has(phrase(text)),
     lookup(surface, activeActs = actNames) {
       const entries = [...(acts.get(surface) ?? []), ...(constraints.get(surface) ?? []), ...(markers.get(surface) ?? [])];

@@ -21,3 +21,10 @@
 @reader.calendar.meeting.title pro.reader.literal family=meeting attribute=meeting.title role=name text=titled
 @reader.calendar.person.name pro.reader.literal family=person attribute=person.name role=name
 @reader.calendar.room.name pro.reader.literal family=room attribute=room.name role=name
+
+# Ordered page coordinates.
+@reader.drawing.drawn.coordinates pro.reader.tuple tab=drawing family=drawn first_key=drawn.x second_key=drawn.y act=place act=make act=copy text=at text=to text="at coordinates"
+@reader.drawing.part.coordinates pro.reader.tuple tab=drawing family=part first_key=part.x second_key=part.y act=place act=make act=copy text=at text=to text="at coordinates"
+@reader.diagram.node.coordinates pro.reader.tuple tab=diagram family=node first_key=node.x second_key=node.y act=place act=make act=copy text=at text=to text="at coordinates"
+@reader.diagram.chart.coordinates pro.reader.tuple tab=diagram family=chart first_key=chart.x second_key=chart.y act=place act=make act=copy text=at text=to text="at coordinates"
+@reader.diagram.group.coordinates pro.reader.tuple tab=diagram family=group first_key=group.x second_key=group.y act=place act=make act=copy text=at text=to text="at coordinates"

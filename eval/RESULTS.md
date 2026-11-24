@@ -1,6 +1,6 @@
 # WebMeet held-out benchmark
 
-[Latest L0–L4 review and domain-neutral generator benchmark](CANDIDATE-AUDIT.md)
+[1,000-request L0–L4 audit after numeric-pair and punctuation changes](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
 ## Domain-neutral proposals
 

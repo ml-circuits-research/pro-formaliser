@@ -1,5 +1,5 @@
 # Optional bindings between an application's declared kinds and w.request targets.
-@pro.reader core.module name=pro.reader version=1 exports=target exports=spatial exports=evidence_role exports=preservation exports=literal
+@pro.reader core.module name=pro.reader version=1 exports=target exports=spatial exports=evidence_role exports=preservation exports=literal exports=tuple
 @pro.reader.target core.type of=pro.reader.target closed=true
 @pro.reader.target.of core.slot of=pro.reader.target key=of kind=atom
 @pro.reader.target.family core.slot of=pro.reader.target key=family kind=atom required=true
@@ -37,3 +37,12 @@
 @pro.reader.literal.attribute core.slot of=pro.reader.literal key=attribute kind=atom required=true
 @pro.reader.literal.role core.slot of=pro.reader.literal key=role enum=payload enum=name required=true
 @pro.reader.literal.text core.slot of=pro.reader.literal key=text kind=string many=true
+
+# Two ordered, open number keys read together after a declared cue.
+@pro.reader.tuple core.type of=pro.reader.tuple closed=true
+@pro.reader.tuple.family core.slot of=pro.reader.tuple key=family kind=atom required=true
+@pro.reader.tuple.tab core.slot of=pro.reader.tuple key=tab kind=atom required=true
+@pro.reader.tuple.first_key core.slot of=pro.reader.tuple key=first_key kind=atom required=true
+@pro.reader.tuple.second_key core.slot of=pro.reader.tuple key=second_key kind=atom required=true
+@pro.reader.tuple.act core.slot of=pro.reader.tuple key=act kind=atom many=true required=true
+@pro.reader.tuple.text core.slot of=pro.reader.tuple key=text kind=string many=true required=true
