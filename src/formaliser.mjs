@@ -1,3 +1,4 @@
+import { directionalResultCandidates } from './directional-result.mjs';
 import { verbEffectIndex,verbEffectReading } from './verb-effects.mjs';
 import { transformationReadings } from './transformation.mjs';
 import { numberedQualifierReadings } from './numbered-qualifier.mjs';
@@ -11,7 +12,7 @@ import { alternateBodies } from './request-alternations.mjs';
 import { evidenceReport } from './evidence.mjs';
 import {createCompoundReferenceReader} from './compound-reference.mjs';
 import {nominalScaleReading} from './nominal-scales.mjs';
-import { sequencePacket,sequenceReading } from './argument-sequences.mjs';
+import { sequencePacket,sequenceReading,sequenceFrameReading } from './argument-sequences.mjs';
 import { propertyCommandPacket } from './property-commands.mjs';
 import { createPredicateTransfer } from './predicate-transfer.mjs';
 import { fixedPropertyReadings } from './fixed-properties.mjs';
@@ -259,6 +260,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     if (!scope.restricted) {
       for (const candidate of compounds(text,ts,quotes)) retain(candidate);
       for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
+      for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of transformationReadings(text,ts,quotes,worlds)) retain(reading);
       for (const reading of ownerPropertyReadings(text,ts,quotes,worlds)) retain(reading);
     }
@@ -359,6 +361,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
     }
     for (const proof of response.sequences ?? []) {
+      if (proof.owned) {
+        const reading=sequenceFrameReading(text,proof);
+        if (reading) retain(reading);
+        continue;
+      }
       for (const candidate of [...candidates]) {
         const reading=sequenceReading(text,candidate,proof);
         if (reading) retain(reading);
@@ -464,6 +471,29 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const input of plan.inputs) {
         if (!inputs.has(input)) inputs.set(input,await read(input));
         results.push(inputs.get(input));
+      }
+      if (plan.singleNominal) {
+        const [{alternatives,...first}]=results;
+        const item={act:plan.act,predicate:plan.predicate,targets:plan.items[0]};
+        const [article,articleText]=tokens(text)[0];
+        const determiner=worlds.determiners[article];
+        for (const choice of [first,...alternatives]) {
+          const wires=composableWires(choice,item);
+          if (!wires || wires.some(w=>['w.request.previous','w.request.clock','w.request.context'].includes(w.type))) continue;
+          const req=wires.find(w=>w.type==='w.request.request');
+          delete req.attrs.predicate;
+          delete req.attrs.words;
+          const target=wires.find(w=>w.type==='w.request.target');
+          if (valueOf(target,'determiner') && valueOf(target,'determiner')!==determiner) continue;
+          target.attrs.determiner=[determiner];
+          const retained=wires.filter(w=>w.type!=='w.request.unread' ||
+            valueOf(w,'text')!==articleText);
+          const proof=evidenceReport(text,retained,worlds.evidenceVocabulary);
+          if (proof.missing.length || proof.counts.uncovered || proof.counts.unread) continue;
+          const sop=serialize(retained);
+          if (admissibleKey(text,sop)) readings.push({sop,source:'nominal-creation',status:'matched'});
+        }
+        continue;
       }
       const headings=plan.prefix ? transfer.sceneHeadings(plan.prefix) : [];
       if (headings.length) {

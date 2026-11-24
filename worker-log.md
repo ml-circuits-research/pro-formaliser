@@ -83,3 +83,7 @@
 ## Written complements, named landmarks and predicate effects
 - Bound creation complements and named landmarks, retained typed transformations, and matched predicate effects in SWI-Prolog.
 - Full test gate passed. 45.9% reasonable on the same 1,000 requests, previously 45.0%. See eval/THOUSAND-AUDIT.md.
+
+## Nominal requests, direction and typed arguments
+- Added fully grounded indefinite noun phrases, native property owners and directional results. SWI-Prolog binds ordered arguments around their declared owner.
+- Full test gate passed. 46.5% reasonable on the same 1,000 requests, previously 45.9%. See eval/THOUSAND-AUDIT.md.

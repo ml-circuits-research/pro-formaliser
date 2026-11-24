@@ -1,0 +1,2 @@
+# An explicit property owner can be named by the drawing object inventory.
+@reader.owner.drawn_kind pro.reader.owner_inventory tab=drawing family=drawn act=change provider=k.objects.object

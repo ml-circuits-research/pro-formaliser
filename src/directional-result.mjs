@@ -1,0 +1,125 @@
+import {nativeInventory} from './native-inventory.mjs';
+import { tokens } from './lexicon.mjs';
+
+const values=(wire,key)=>(wire.attrs[key] ?? []).map(value=>value.startsWith('"') ? JSON.parse(value) : value);
+const one=(wire,key)=>values(wire,key)[0];
+const normal=text=>tokens(text).map(([term])=>term).join(' ');
+const quote=JSON.stringify;
+const endings=new Set(['.','!','?']);
+const existingDeterminers=new Set(['definite','demonstrative','possessive']);
+const atom=/^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u;
+
+export function compileDirectionalResults(facts,requestKeys,words=facts('core.word')) {
+  const placeFrames=new Set(facts('w.lang.en.frame')
+    .filter(wire=>one(wire,'act')==='place').map(wire=>one(wire,'name')));
+  const parts=facts('w.lang.en.part');
+  const directionalFrames=new Set(parts.filter(wire=>one(wire,'is')==='role' &&
+    one(wire,'takes')==='lexicon' && one(wire,'lexicon')==='acts.dir' &&
+    placeFrames.has(one(wire,'frame'))).map(wire=>one(wire,'frame')));
+  const placeVerbs=new Set(facts('k.actions.verb')
+    .filter(wire=>one(wire,'act')==='place' && one(wire,'object')==='thing')
+    .flatMap(wire=>values(wire,'text').map(normal)));
+  const predicates=new Set(parts.filter(wire=>one(wire,'is')==='word' && one(wire,'act')==='place' &&
+    directionalFrames.has(one(wire,'frame'))).flatMap(wire=>values(wire,'word').map(normal))
+    .filter(form=>placeVerbs.has(form)));
+  const degrees=new Set(facts('w.lang.en.phrase').filter(wire=>one(wire,'name')==='degree.slight' ||
+    one(wire,'name')==='degree.strong').flatMap(wire=>values(wire,'item').map(normal)));
+  const directions=nativeInventory(facts,'k.values.direction',words);
+  const bindings=[];
+  for (const wire of facts('pro.reader.motion')) {
+    const [tab,family,act,directionKey,degreeKey,offsetKey,targetType]=
+      ['tab','family','act','direction_key','degree_key','offset_key','target_type'].map(key=>one(wire,key));
+    const keys=requestKeys.filter(key=>key.tab===tab && key.family===family);
+    const direction=keys.find(key=>key.name===directionKey && key.head.split('+').includes('class'));
+    if (!act || !direction?.values.length) continue;
+    bindings.push({family,act,directionKey,directions:new Map([...directions].flatMap(([form,names])=>{
+      const allowed=[...names].filter(name=>atom.test(name) && direction.values.includes(name));
+      return allowed.length===1 ? [[form,allowed[0]]] : [];
+    })),degreeKey:keys.some(key=>key.name===degreeKey && key.head==='candidate' && !key.values.length) ? degreeKey : undefined,
+    offsetKey:keys.some(key=>key.name===offsetKey && key.head.split('+').includes('number')) ? offsetKey : undefined,
+    targets:targetType ? nativeInventory(facts,targetType,words) : new Map()});
+  }
+  return {predicates,degrees,bindings};
+}
+
+function targetIn(worlds,binding,start,end,phrase,span) {
+  const description=span(start,end), whole=phrase(start,end);
+  if (worlds.isReference(whole)) return ' fill=context family_words='+quote(description);
+  let first=start, determiner;
+  for (let i=Math.min(start+5,end-1);i>start;i--) {
+    determiner=worlds.determiners[phrase(start,i)];
+    if (!determiner) continue;
+    if (!existingDeterminers.has(determiner)) return;
+    first=i;
+    break;
+  }
+  const nominal=phrase(first,end);
+  if (worlds.scopeGrammar.auxiliary.has(nominal) || worlds.isReference(nominal)) return;
+  const sorts=new Set(binding.targets.get(nominal) ?? []);
+  for (const [role,act,family,mode,sort] of worlds.lookup(nominal)) {
+    if (role==='target' && (act==='place' || act===binding.act) && family===binding.family &&
+      mode!=='new' && sort) sorts.add(sort);
+  }
+  if (sorts.size!==1) return;
+  const [sort]=sorts, sortWords=span(first,end);
+  return ' fill=description sort='+quote(sort)+' description='+quote(description)+
+    (sort!==sortWords ? ' sort_words='+quote(sortWords) : '')+
+    (determiner ? ' determiner='+determiner : '');
+}
+
+export function directionalResultCandidates(text,ts,quotes,worlds) {
+  const motion=worlds.directionalResults;
+  if (!motion?.bindings.length || ts.length<3 || quotes.length) return [];
+  const chars=Array.from(text);
+  const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
+  const phrase=(a,b)=>ts.slice(a,b).map(([part])=>part).join(' ');
+  let stop=ts.length;
+  while (endings.has(ts[stop-1]?.[0])) stop--;
+  if (!stop) return [];
+  const question=ts.slice(stop).some(([term])=>term==='?');
+  const output=[];
+  for (let start=0;start<Math.min(12,stop-2);start++) {
+    const lead=phrase(0,start).replace(/ ,$/u,'');
+    if ((lead || question) && !worlds.literalGrammar.leads.has(lead) &&
+      (question || !worlds.fillerPhrases.has(lead))) continue;
+    for (let head=start+1;head<Math.min(start+8,stop-1);head++) {
+      const predicate=phrase(start,head);
+      if (!motion.predicates.has(predicate) ||
+          !worlds.lookup(predicate).some(([role,act,mood])=>role==='act' && act==='place' && (!mood || mood==='do'))) continue;
+      const content=ts.slice(head,stop).map(([term])=>term);
+      if (content.some(term=>!/^[\p{L}\p{M}\p{N}_]+$/u.test(term) || worlds.negatives.has(term) || worlds.joiners[term])) continue;
+      for (const binding of motion.bindings) {
+        if (!worlds.literalGrammar.licenses(binding.family,binding.act)) continue;
+        for (let from=head+1;from<stop;from++) {
+          for (let to=from+1;to<=stop;to++) {
+            const direction=binding.directions.get(phrase(from,to));
+            if (!direction || (to<stop && !motion.degrees.has(phrase(to,stop)))) continue;
+            for (let end=head+1;end<=from;end++) {
+              if (end<from && (to<stop || !motion.degrees.has(phrase(end,from)))) continue;
+              const target=targetIn(worlds,binding,head,end,phrase,span);
+              if (!target) continue;
+              const degree=end<from ? span(end,from) : to<stop ? span(to,stop) : undefined;
+              const directionWords=span(from,to);
+              const lines=[
+                '@r1 w.request.request act='+quote(binding.act)+' mood=do predicate='+quote(span(start,head))+' words='+quote(text),
+                '@r1.t w.request.target request=$r1 family='+quote(binding.family)+' mode=existing'+target,
+                '@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page',
+                '@r1.c1 w.request.constraint request=$r1 on=attribute attribute='+quote(binding.directionKey)+
+                  ' value='+direction+' operator=eq phase=result'+
+                  (directionWords!==direction ? ' words='+quote(directionWords) : ''),
+              ];
+              const unread=degree && !binding.degreeKey;
+              if (degree && binding.degreeKey) lines.push('@r1.c2 w.request.constraint request=$r1 on=attribute attribute='+
+                quote(binding.degreeKey)+' value='+quote(degree)+' operator=eq phase=result');
+              if (unread) lines.push('@r1.u1 w.request.unread request=$r1 text='+quote(degree)+
+                (binding.offsetKey ? ' note='+quote(binding.offsetKey) : ''));
+              if (start) lines.push('@f1 w.request.filler text='+quote(span(0,start)));
+              output.push({sop:lines.join('\n'),source:'directional-result',status:unread ? 'partial' : 'matched'});
+            }
+          }
+        }
+      }
+    }
+  }
+  return output;
+}

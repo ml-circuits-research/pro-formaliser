@@ -302,6 +302,15 @@ The owner’s catalog supplies the property key. A key with a value bank
 accepts a canonical value or a scoped alias. An open `span` key accepts the
 written payload, which can be quoted. Each independently licensed family can
 supply a candidate when it has one unambiguous reading of all three roles.
+For charts, `chart.xLabel` and `chart.yLabel` carry displayed axis titles.
+Use catalog data keys such as `chart.measure` and `chart.dimension` for
+data arguments when the frame licenses those roles.
+
+Use `pro.reader.owner_inventory` with `tab`, `family`, `act` and `provider`
+to license owner nouns from a native fact type. A candidate key with an empty
+value bank can accept written content when its `means` resolves to a native
+slot of kind `string` with no value restrictions.
+[Owner inventory example](pro.reader/owner-inventory.sop)
 
 ## Request and question alternations
 
@@ -401,6 +410,32 @@ requires one matching split for the full argument tail. A candidate qualifies
 when its action, target mode and family match and its existing fields agree with
 the bindings.
 
+An owned sequence declares its nominal phrases in `owner` and locates the
+owner within `part` with `$owner`. In a new-target frame, optional
+`owner_key` and `owner_value` supply a catalog result associated with that
+nominal. Each `tail` declares a boundary where the matched sequence can end.
+Subsequent words remain unread. Use `part="$unread"` to preserve a bounded
+operand when the frame identifies its wording but the catalog lacks a data
+role for it. This lets another operand in the same request receive a typed
+binding, such as the field controlling the colour of scatter points.
+[Owned argument frames](pro.reader/argument-frames.sop)
+
+## Anchorless directional results
+
+A `pro.reader.motion` binding maps a native directional construction to an
+existing target family. The direction key must have a class bank that
+includes the native canonical direction. The reader uses English frames with
+a direction role and corroborates the predicate against a native place
+sense. It accepts a reference, a declared target noun, or a noun from the
+optional `target_type` inventory. A declared `degree_key` with an empty
+candidate bank accepts a written qualitative degree from the native English
+phrase inventory. With no compatible degree key, that wording stays unread.
+An optional numeric `offset_key` identifies the property it could qualify.
+
+```sop
+@reader.drawing.motion pro.reader.motion tab=drawing family=drawn act=change direction_key=drawn.direction degree_key=drawn.distanceGrade offset_key=drawn.offset target_type=k.objects.object
+```
+
 ## Nominal scales
 
 Declare `pro.reader.nominal_scale` to associate a class or step request key with
@@ -427,6 +462,11 @@ family while the two adjacent labels supply the selectors.
 ```
 
 ## Scene settings and counted sets
+
+A bare indefinite noun phrase can offer a creation proposal where the
+existing nominal scene reader grounds the new target and all local
+qualifiers. This path uses the normal family and target declarations.
+[Implicit creation tests](../test/nominal-creation.test.mjs)
 
 A scene setting can use any family’s licensed context target and result
 keys. Training examples should annotate the setting as one independent

@@ -1,3 +1,4 @@
+import {nativeInventory} from './native-inventory.mjs';
 import { tokens } from './lexicon.mjs';
 
 const strings=(wire,key)=>(wire.attrs[key] ?? []).map(value=>value.startsWith('"') ? JSON.parse(value) : value);
@@ -13,28 +14,7 @@ const valueDeterminers=new Set(['indefinite','definite']);
 export function compileTransformations(facts,requestKeys,words) {
   const inventories=new Map(), heads=new Map();
   function inventory(type) {
-    if (!inventories.has(type)) {
-      const labels=new Map(), names=new Set();
-      for (const wire of facts(type)) {
-        const name=field(wire,'name');
-        if (!name) continue;
-        names.add(name);
-        const key=normal(name), existing=labels.get(key) ?? new Set();
-        existing.add(name);
-        labels.set(key,existing);
-      }
-      for (const wire of words) {
-        if (!strings(wire,'of').includes(type+'.name')) continue;
-        for (const name of strings(wire,'means').filter(meaning=>names.has(meaning))) {
-          for (const text of strings(wire,'text')) {
-            const key=normal(text), existing=labels.get(key) ?? new Set();
-            existing.add(name);
-            labels.set(key,existing);
-          }
-        }
-      }
-      inventories.set(type,labels);
-    }
+    if (!inventories.has(type)) inventories.set(type,nativeInventory(facts,type,words));
     return inventories.get(type);
   }
   for (const wire of facts('pro.reader.transformation')) {

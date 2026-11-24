@@ -125,6 +125,17 @@
 @pro.reader.argument_sequence.prefix core.slot of=pro.reader.argument_sequence key=prefix kind=string many=true required=true
 @pro.reader.argument_sequence.part core.slot of=pro.reader.argument_sequence key=part kind=atom kind=string many=true required=true
 
+@pro.reader.argument_sequence.owner core.slot of=pro.reader.argument_sequence key=owner kind=string many=true
+@pro.reader.argument_sequence.owner_key core.slot of=pro.reader.argument_sequence key=owner_key kind=atom
+@pro.reader.argument_sequence.owner_value core.slot of=pro.reader.argument_sequence key=owner_value kind=atom kind=string
+@pro.reader.argument_sequence.tail core.slot of=pro.reader.argument_sequence key=tail kind=string many=true
+
+@pro.reader.owner_inventory core.type of=pro.reader.owner_inventory closed=true
+@pro.reader.owner_inventory.tab core.slot of=pro.reader.owner_inventory key=tab kind=atom required=true
+@pro.reader.owner_inventory.family core.slot of=pro.reader.owner_inventory key=family kind=atom required=true
+@pro.reader.owner_inventory.act core.slot of=pro.reader.owner_inventory key=act kind=atom required=true
+@pro.reader.owner_inventory.provider core.slot of=pro.reader.owner_inventory key=provider kind=atom required=true
+
 @pro.reader.owner_property core.type of=pro.reader.owner_property closed=true
 @pro.reader.owner_property.act core.slot of=pro.reader.owner_property key=act kind=atom required=true
 @pro.reader.owner_property.owner core.slot of=pro.reader.owner_property key=owner kind=string required=true

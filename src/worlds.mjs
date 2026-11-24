@@ -1,3 +1,5 @@
+import { compileOwnerPropertyOperands } from './owner-property.mjs';
+import { compileDirectionalResults } from './directional-result.mjs';
 import { nativeVerbEffects } from './verb-effects.mjs';
 import { compileTransformations } from './transformation.mjs';
 import { compileCreationRoles } from './literal-roles.mjs';
@@ -27,7 +29,7 @@ const types = new Set([
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
-  'k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
+  'k.values.direction','pro.reader.motion','pro.reader.owner_inventory','k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue', 'w.lang.en.number',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
@@ -580,6 +582,8 @@ function compile(facts) {
     argumentSequences:argumentSequences(facts,requestKeys),
     ownerPropertyFrames:facts('pro.reader.owner_property').map(w=>({act:one(w,'act'),owner:one(w,'owner'),value:one(w,'value')})),
     ...effectGrammar(facts,requestKeys),
+    ...compileOwnerPropertyOperands(facts,requestKeys,words),
+    directionalResults:compileDirectionalResults(facts,requestKeys,words),
     transformations:compileTransformations(facts,requestKeys,words),
     trailingDiscourse:compileTrailingDiscourse(facts),
     memberActions:facts('pro.reader.member_action').map(w=>({family:one(w,'family'),tab:one(w,'tab'),act:one(w,'act'),mode:one(w,'mode'),key:one(w,'key'),phase:one(w,'phase'),separators:values(w,'separator'),suffixes:values(w,'suffix')})),
@@ -637,6 +641,8 @@ function providerTypes(facts) {
   for (const frame of facts.get('pro.reader.transformation')?.values() ?? []) {
     sources.push(one(frame,'owner_type'),one(frame,'value_type'));
   }
+  for (const frame of facts.get('pro.reader.motion')?.values() ?? []) sources.push(one(frame,'target_type'));
+  for (const binding of facts.get('pro.reader.owner_inventory')?.values() ?? []) sources.push(one(binding,'provider'));
   return new Set(sources.filter(Boolean));
 }
 

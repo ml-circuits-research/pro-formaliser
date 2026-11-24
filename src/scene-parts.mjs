@@ -137,6 +137,15 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
     i=next;
   }
   if (chunk<ts.length && !add(ts.length)) return null;
+  // A standalone indefinite noun phrase can share the creation reading of
+  // an item in a list. Its projected circuit must ground the whole phrase.
+  if (!prefix && synthesize && start===0 && parts.length===1 &&
+      worlds.determiners[head[0]]==='indefinite' && ts.every(([key])=>
+        !worlds.negatives.has(key) && !worlds.scopeGrammar.conditionals.has(key) &&
+        !worlds.scopeGrammar.auxiliary.has(key) && !worlds.scopeGrammar.copulas.has(key) &&
+        !worlds.joiners[key] && (word.test(key) || key==='-' || key==='.' || key==='!'))) {
+    return {act:'make',predicate,parts,inputs,items,singleNominal:true};
+  }
   if (!punctuated || items.filter(Boolean).length<2 || parts.length>8) return null;
   return {act:'make',predicate,parts,inputs,items,prefix,firstObject,syntheticPredicate:synthesize};
 }

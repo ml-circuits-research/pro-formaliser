@@ -1,3 +1,4 @@
+import {nativeInventory} from './native-inventory.mjs';
 import { tokens } from './lexicon.mjs';
 import { parse } from './schema.mjs';
 
@@ -6,6 +7,51 @@ const quote = JSON.stringify;
 const word = /^[\p{L}\p{M}\p{N}_]+$/u;
 const decoded = value => value?.startsWith('"') ? JSON.parse(value) : value;
 const atom = /^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u;
+
+const valuesOf=(wire,key)=>(wire.attrs[key] ?? []).map(decoded);
+const identity=(family,key)=>JSON.stringify([family,key]);
+
+export function compileOwnerPropertyOperands(facts,requestKeys,words) {
+  const slots=facts('core.slot');
+  const slotsByField=new Map();
+  for (const slot of slots) {
+    const id=identity(valuesOf(slot,'of')[0],valuesOf(slot,'key')[0]);
+    const group=slotsByField.get(id) ?? [];
+    group.push(slot);
+    slotsByField.set(id,group);
+  }
+  const openString=slot=>{
+    const kinds=valuesOf(slot,'kind');
+    return kinds.length===1 && kinds[0]==='string' &&
+      !['enum','ref','type','by','prefix','min','max','step','range','match','excludes','unique','id','to']
+        .some(key=>slot.attrs[key]?.length);
+  };
+  const validBackings=new Set(slots.filter(slot=>openString(slot) &&
+    slotsByField.get(identity(valuesOf(slot,'of')[0],valuesOf(slot,'key')[0])).every(openString))
+    .map(slot=>slot.id));
+  const groups=new Map();
+  for (const key of requestKeys) {
+    const groupKey=identity(key.family,key.name), group=groups.get(groupKey) ?? [];
+    group.push(key);
+    groups.set(groupKey,group);
+  }
+  const ownerPropertyOpen=new Set([...groups].filter(([,keys])=>keys.every(key=>
+    !key.values.length && key.head.split('+').includes('candidate') &&
+      validBackings.has(key.means))).map(([id])=>id));
+
+  const ownerInventory=new Map(), cache=new Map();
+  for (const binding of facts('pro.reader.owner_inventory')) {
+    const [tab,family,act,provider]=['tab','family','act','provider'].map(key=>valuesOf(binding,key)[0]);
+    if (!tab || !family || !act || !provider || !requestKeys.some(key=>key.tab===tab && key.family===family)) continue;
+    if (!cache.has(provider)) cache.set(provider,nativeInventory(facts,provider,words));
+    for (const [surface,sorts] of cache.get(provider)) {
+      const lookup=identity(act,surface), entries=ownerInventory.get(lookup) ?? [];
+      for (const sort of sorts) entries.push({family,sort});
+      ownerInventory.set(lookup,entries);
+    }
+  }
+  return {ownerPropertyOpen,ownerInventory};
+}
 
 function catalogProperty(worlds,family,surface) {
   const aliases = worlds.ownerPropertyLabels?.get(JSON.stringify([surface,family])) ?? [];
@@ -87,8 +133,12 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
             if (!words.trim()) continue;
             const nounOptions=[];
             for (let noun=det.next;noun<valueAt;noun++) {
-              for (const [role,sense,family,mode,sort] of worlds.lookup(before(noun,valueAt))) {
-                if (role !== 'target' || sense!==act || mode!=='existing') continue;
+              const surface=before(noun,valueAt);
+              const fromInventory=worlds.ownerInventory?.get(identity(act,surface)) ?? [];
+              const fromLexicon=worlds.lookup(surface).flatMap(([role,sense,family,mode,sort])=>
+                role==='target' && sense===act && mode==='existing' ? [{family,sort}] : []);
+              for (const {family,sort} of [...fromInventory,...fromLexicon]) {
+                if (!sort && fromInventory.some(item=>item.family===family)) continue;
                 const property=catalogProperty(worlds,family,before(propertyAt,ownerAt));
                 if (property) nounOptions.push({noun,family,sort,property});
               }
@@ -100,7 +150,8 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
             for (const {noun,family,sort,property} of nounOptions) {
               if (noun!==firstByFamily.get(family)) continue;
               const resolved=property.values.length ? closedValue(worlds,property,form(words)) :
-                property.head.split('+').includes('span') ? words : undefined;
+                (property.head.split('+').includes('span') ||
+                  worlds.ownerPropertyOpen?.has(identity(family,property.name))) ? words : undefined;
               if (!resolved || resolved!==words && !atom.test(resolved)) continue;
               const head=span(noun,valueAt);
               const encodedValue=resolved===words ? quote(resolved) : resolved;

@@ -106,3 +106,61 @@ test('keeps independently licensed target families for a shared nominal cue', ()
   check(text,candidates.find(c=>c.sop.includes('node.label')),configured,
     'the regional chart','node.label','Orders','title');
 });
+
+test('uses the native drawing owner inventory and exact backing string slot', async () => {
+  const text='Change the label on the house to Home Sweet Home';
+  const reader=createReader(undefined,worlds);
+  try {
+    const {candidates}=await reader.propose(text);
+    const candidate=candidates.find(c=>c.source==='owner-property' && c.sop.includes('drawn.label'));
+    check(text,candidate,worlds,'the house','drawn.label','Home Sweet Home','label');
+    const target=parse(candidate.sop).find(w=>w.type==='w.request.target');
+    assert.equal(field(target,'sort'),'house');
+  } finally {await reader.close();}
+});
+
+test('compiles owner inventories and backing slot types from an unrelated overlay', async t=>{
+  const dir=mkdtempSync(fileURLToPath(new URL('../.cache/owner-inventory-overlay-',import.meta.url)));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  writeFileSync(join(dir,'inventory.sop'),[
+    '@lab std.schema.world name=w.lab',
+    '@device std.schema.kind of=w.lab.instrument world=w.lab acts=change',
+    '@backing.caption core.slot of=w.lab.instrument key=caption kind=string',
+    '@backing.count core.slot of=w.lab.instrument key=count kind=integer min=1',
+    '@backing.option core.slot of=w.lab.instrument key=option kind=string enum=basic',
+    '@backing.protocol core.slot of=w.lab.instrument key=protocol kind=string type=k.lab.protocol by=name',
+    '@a_protocol k.lab.protocol name=calibrated',
+    '@caption w.request.key tab=lab family=instrument name=instrument.caption head=candidate means=backing.caption',
+    '@count w.request.key tab=lab family=instrument name=instrument.count head=candidate means=backing.count',
+    '@option w.request.key tab=lab family=instrument name=instrument.option head=candidate means=backing.option',
+    '@protocol w.request.key tab=lab family=instrument name=instrument.protocol head=candidate means=backing.protocol',
+    '@inventory pro.reader.owner_inventory tab=lab family=instrument act=change provider=k.lab.tools',
+    '@glass k.lab.tools name=quill_scope',
+    '@stone k.lab.tools name=bore_scope',
+    '@alias core.word text="sun viewer" means=glass of=k.lab.tools.name lang=en',
+    '@alias.first core.word text=viewer means=glass of=k.lab.tools.name lang=en',
+    '@alias.second core.word text=viewer means=stone of=k.lab.tools.name lang=en',
+  ].join('\n'));
+  const configured=loadWorlds({paths:[dir]});
+  const reader=createReader(undefined,configured);
+  try {
+    const text='Change the caption on the east sun viewer to “Do not shift”';
+    const {candidates}=await reader.propose(text);
+    const candidate=candidates.find(c=>c.source==='owner-property');
+    check(text,candidate,configured,'the east sun viewer','instrument.caption','Do not shift','caption');
+    const target=parse(candidate.sop).find(w=>w.type==='w.request.target');
+    assert.equal(field(target,'sort'),'quill_scope');
+    assert.equal(field(target,'sort_words'),'sun viewer');
+    for (const input of [
+      'Change the caption on the unknown clarifier to Slate Alloy',
+      'Change the caption on the viewer to Slate Alloy',
+      'Change the count on the sun viewer to Slate Alloy',
+      'Change the option on the sun viewer to Slate Alloy',
+      'Change the protocol on the sun viewer to Slate Alloy',
+      'Change the caption on the sun viewer to Slate Alloy and delete it'
+    ]) {
+      const proposals=await reader.propose(input);
+      assert.ok(proposals.candidates.every(c=>c.source!=='owner-property'),input);
+    }
+  } finally {await reader.close();}
+});
