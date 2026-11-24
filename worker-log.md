@@ -227,3 +227,6 @@
 
 ## Full replay with argument-local restriction evidence
 - Default 51.2% original and 52.7% with spelling; all staged worlds 52.5% and 53.9%. Staged replica reached 44.5%. Each profile ran 1,000 inputs, both actual spelling runs edited 5.0%. All changed sets are recorded in SET-SCOPE-REPLAY.tsv.
+
+## Word order challenge before further reader changes
+- Measured 24 new utterances absent from the entire pinned dataset. With no trained model and all staged worlds, 9/12 in the familiar order and 0/12 with equivalent alternate syntax had a complete circuit. The pairwise report and public replay are in eval/CONSTRUCTION-TRANSFER.md.
