@@ -1,0 +1,519 @@
+proposal_set	sample	source	row	previous	current	reason
+inventory-primary	2	calendar/meetings-01.csv	1618	L3	L3	All prior proposals remain.
+inventory-primary	6	diagram/nodes-01.csv	1413	L2a	L2a	List contents and indentation remain unbound.
+inventory-primary	7	diagram/charts-01.csv	223	L3	L3	All prior proposals remain.
+inventory-primary	11	drawing/scenes-06.csv	2684	L4	L4	Retains the beach at sunset and all four placed objects.
+inventory-primary	24	drawing/scenes-03.csv	4098	L2c	L2c	No circuit attaches round glasses to the girl with the round shape bound.
+inventory-primary	31	diagram/charts-01.csv	1690	L3	L3	All prior proposals remain.
+inventory-primary	32	calendar/meetings-02.csv	656	L3	L3	All prior proposals remain.
+inventory-primary	34	diagram/nodes-03.csv	1218	L2b	L2b	The new slide targets still leave the number 2 unread.
+inventory-primary	39	drawing/scenes-03.csv	2019	L4	L4	All prior proposals remain.
+inventory-primary	41	diagram/nodes-01.csv	452	L4	L4	All prior proposals remain.
+inventory-primary	54	drawing/scenes-13.csv	1892	L4	L4	Retains stripes and the thin white outline on the existing shirt.
+inventory-primary	55	diagram/nodes-06.csv	2818	L4	L4	All prior proposals remain.
+inventory-primary	61	drawing/scenes-04.csv	909	L4	L4	All prior proposals remain.
+inventory-primary	63	drawing/scenes-10.csv	659	L4	L4	All prior proposals remain.
+inventory-primary	67	diagram/charts-05.csv	807	L4	L4	All prior proposals remain.
+inventory-primary	73	drawing/objects-01.csv	409	L2c	L2c	New candidates misread glasses as targets and omit the persistent avatar setting.
+inventory-primary	77	diagram/charts-01.csv	2607	L3	L3	All prior proposals remain.
+inventory-primary	93	diagram/diagrams-01.csv	4077	L3	L3	All prior proposals remain.
+inventory-primary	95	drawing/scenes-13.csv	3648	L3	L3	All prior proposals remain.
+inventory-primary	98	drawing/scenes-07.csv	3552	L2b	L2b	No circuit places the pair of new boats on opposite sides of the tree line.
+inventory-primary	107	drawing/scenes-19.csv	149	L4	L4	Retains the complete house-label change.
+inventory-primary	108	diagram/diagrams-01.csv	1942	L4	L4	All prior proposals remain.
+inventory-primary	110	diagram/nodes-06.csv	164	L3	L3	All prior proposals remain.
+inventory-primary	113	diagram/nodes-01.csv	2513	L4	L4	All prior proposals remain.
+inventory-primary	115	diagram/nodes-12.csv	3463	L1a	L1a	Added people-as-target readings lack the node color-by-cluster instruction.
+inventory-primary	117	drawing/scenes-14.csv	407	L2b	L3	New exact circuit mirrors the row of trees across the lake.
+inventory-primary	120	drawing/scenes-11.csv	3414	L1a	L1a	The new readings do not replace the first boy with the placed girl.
+inventory-primary	124	diagram/nodes-01.csv	1490	L2b	L2a	Lost the joint reading with the correct link endpoints. Retained alternatives do not both connect Roast to Sift and color the resulting link.
+inventory-primary	130	drawing/scenes-08.csv	934	L4	L4	Retains the noon harbor and all requested objects, including six fish.
+inventory-primary	134	drawing/scenes-16.csv	649	L3	L3	All prior proposals remain.
+inventory-primary	138	drawing/placement-05.csv	516	L1b	L1b	The added targets still confuse the mover with the orange-hatted landmark.
+inventory-primary	147	diagram/nodes-06.csv	2789	L4	L4	All prior proposals remain.
+inventory-primary	153	diagram/nodes-01.csv	340	L4	L4	All prior proposals remain.
+inventory-primary	154	diagram/nodes-01.csv	2084	L2c	L2c	The boxes are recognized but chaining them in order is still missing.
+inventory-primary	155	diagram/diagrams-03.csv	355	L4	L4	All prior proposals remain.
+inventory-primary	156	diagram/charts-01.csv	2673	L3	L3	All prior proposals remain.
+inventory-primary	162	calendar/meetings-02.csv	528	L3	L3	All prior proposals remain.
+inventory-primary	174	drawing/scenes-03.csv	4072	L2b	L4	For the request to draw a coat on the woman, a green coat placed on the woman is a reasonable drawn overlay. The same circuit faces the woman right by the lake. The owner-part encoding is another reading.
+inventory-primary	175	diagram/nodes-04.csv	2689	L2a	L2a	One option counts five boxes, but the change to the prior diagram and per-box labeling remain missing.
+inventory-primary	186	drawing/scenes-24.csv	519	L4	L4	Retains a written o1 identity and the bench as its seat result.
+inventory-primary	187	drawing/scenes-08.csv	787	L2c	L4	A new circuit keeps nine apples in a row at the bottom plus all five other object groups, their counts, poses, colors and landmarks.
+inventory-primary	190	diagram/nodes-14.csv	3	L3	L3	All prior proposals remain.
+inventory-primary	193	diagram/diagrams-03.csv	3209	L2c	L2c	Still lacks the swap of the two middle items.
+inventory-primary	197	drawing/scenes-08.csv	4342	L4	L4	Retains the placements and facing directions of all three figures.
+inventory-primary	200	drawing/scenes-07.csv	1019	L1c	L1c	The added man and shirt readings lose the boy and his ordering.
+inventory-primary	205	drawing/objects-04.csv	1799	L4	L4	The snake reading creates the requested serpent.
+inventory-primary	210	drawing/placement-02.csv	4334	L2c	L2c	The synonym child leaves the reaching pose and left placement unbound.
+inventory-primary	211	drawing/scenes-04.csv	437	L2b	L4	A new drawing circuit preserves “a couple of” as the quantity on child.
+inventory-primary	217	diagram/nodes-12.csv	4611	L2b	L2b	The retained and added readings still lack the requested description of the canvas.
+inventory-primary	218	drawing/scenes-08.csv	2237	L1b	L1b	No circuit binds the separate red and blue bike frames to the corresponding colors.
+inventory-primary	226	diagram/charts-01.csv	3095	L2c	L2c	The requested average, measure and comparison are still missing.
+inventory-primary	229	drawing/objects-01.csv	376	L1a	L1a	New glasses targets do not set a persistent avatar.
+inventory-primary	233	diagram/charts-06.csv	3588	L1d	L1d	The new combined reading creates labels rather than retaining the existing ones.
+inventory-primary	242	diagram/nodes-01.csv	1815	L2c	L2c	The new request asks about nodes and leaves the horizontal routing unread.
+inventory-primary	244	drawing/scenes-11.csv	4160	L4	L4	A native sidewalk reading preserves pavement as the affected surface and shallow puddles as its fill.
+inventory-primary	245	diagram/charts-05.csv	3362	L2c	L2c	The stacked chart’s roles remain missing, despite a retained right-legend effect.
+inventory-primary	257	drawing/objects-01.csv	524	L4	L4	Retains a preference change to a child avatar across every tab.
+inventory-primary	258	drawing/scenes-10.csv	2068	L1c	L1c	New readings recolor the table or apply a broad effect without isolating highlights and preserving shadows.
+inventory-primary	259	diagram/nodes-13.csv	786	L2c	L2c	Neither the added group nor connection hypotheses spread out the boxes.
+inventory-primary	261	drawing/scenes-11.csv	4665	L2c	L2c	New variants identify the picture but omit its bordered art-print arrangement.
+inventory-primary	262	drawing/scenes-05.csv	2278	L1a	L1a	A new candidate changes one man and leaves the swap unread.
+inventory-primary	264	drawing/scenes-10.csv	3274	L3	L3	All prior proposals remain.
+inventory-primary	266	drawing/scenes-18.csv	51	L4	L4	All prior proposals remain.
+inventory-primary	276	diagram/nodes-01.csv	4433	L2c	L2c	An added undo hypothesis omits the requested overlap fix.
+inventory-primary	286	calendar/meetings-01.csv	1679	L3	L3	All prior proposals remain.
+inventory-primary	287	drawing/scenes-20.csv	1393	L2b	L2b	An added “switch” object leaves the golden-hour scene instruction unread.
+inventory-primary	289	drawing/objects-03.csv	4847	L3	L4	The exact plural reference is replaced by a reasonable creation of one cheesecake.
+inventory-primary	293	drawing/scenes-03.csv	3998	L1c	L1c	No candidate keeps the ordered hat, bow and collar placements.
+inventory-primary	300	diagram/nodes-07.csv	13	L2c	L2c	New circuits may preserve style, colour and arrow direction but still omit the Main label.
+inventory-primary	302	drawing/scenes-04.csv	955	L4	L4	A complete circuit retains the ordered chairs, umbrella and seated woman with their landmark relations.
+inventory-primary	308	diagram/diagrams-03.csv	2585	L2b	L2b	The added table targets do not place the new cloud left of Rota.
+inventory-primary	319	drawing/scenes-16.csv	644	L3	L3	The exact blue car named pig pen remains.
+inventory-primary	320	diagram/diagrams-04.csv	643	L3	L3	All prior proposals remain.
+inventory-primary	329	diagram/charts-04.csv	1249	L1d	L1d	Added hat targets still do not bind both typography and error-bar cap on the profit chart.
+inventory-primary	333	drawing/objects-04.csv	184	L3	L4	A new singular locket creation is reasonable after the exact plural reference drops.
+inventory-primary	336	drawing/scenes-07.csv	1668	L1d	L1d	The added child reading still imposes an unsupported grade of far and leaves the requested gaze toward the kite unread.
+inventory-primary	339	drawing/scenes-13.csv	3992	L1a	L1a	The new reading creates an artist's palette. The request sets a continuing default for pastel colours.
+inventory-primary	353	drawing/scenes-04.csv	544	L4	L4	A new circuit creates a medium child in front of the tent and binds the rightward facing change to that child.
+inventory-primary	354	drawing/placement-01.csv	222	L1c	L2a	One new circuit creates a basket on the mat with the correct relation. It omits the separate request to add the picnic mat on the grass.
+inventory-primary	356	drawing/scenes-20.csv	946	L4	L4	The prior complete circuit still turns the existing tree trunk upright.
+inventory-primary	358	diagram/charts-01.csv	2558	L3	L3	The exact complete bar chart of registrations split by course remains.
+inventory-primary	361	drawing/scenes-13.csv	2724	L2c	L2c	The small barn reading remains partial. The new lane reading does not encode a barn across the road with a lane and verge intervening.
+inventory-primary	362	diagram/diagrams-04.csv	2415	L3	L3	The exact question about the Guest network's displayed values remains.
+inventory-primary	366	diagram/charts-02.csv	90	L4	L4	The chart-specific reading still hides the value labels on Expenses by department.
+inventory-primary	367	drawing/scenes-05.csv	1568	L2c	L2c	The new alternatives identify people. Facing the sun as a continuing instruction remains unread.
+inventory-primary	370	drawing/scenes-13.csv	3730	L4	L4	The retained reading makes the two existing people shake hands.
+inventory-primary	375	drawing/scenes-10.csv	2131	L2b	L2b	The set can edit the player and remove either the tarp or the netting. It still lacks a proposal removing both and placing the wire ball cart at the court's side.
+inventory-primary	381	drawing/scenes-13.csv	3309	L2b	L2b	The added reading targets the cap and leaves the girl and her expression unread. Retained readings still fail to identify the girl by the cap she wears.
+inventory-primary	391	diagram/charts-04.csv	1260	L2a	L2a	The profit chart cap-size reading remains. No new circuit combines it with the font and grid-line changes.
+inventory-primary	392	drawing/people-04.csv	954	L2c	L2c	The added glasses creation leaves the beret variant unread.
+inventory-primary	394	diagram/diagrams-04.csv	2230	L3	L3	The exact question for the values displayed by Gateway remains.
+inventory-primary	396	drawing/scenes-08.csv	3553	L4	L4	A sequence puts the child on the bench facing left and the bear in front of the woods facing right.
+inventory-primary	400	diagram/nodes-01.csv	432	L2c	L2c	The set still has partial box creation with the requested name Cool unread.
+inventory-primary	404	diagram/diagrams-04.csv	2947	L3	L3	The exact question about the values displayed by Hospital beds remains.
+inventory-primary	412	diagram/diagrams-01.csv	781	L2b	L2b	The added flask creation does not move the existing node Flask. The small even gap and top-to-bottom layout remain ungrounded.
+inventory-primary	413	diagram/charts-02.csv	443	L2c	L2c	A retained proposal inserts a bar chart and leaves data reuse unread. The retained exact reference instead changes an existing chart.
+inventory-primary	415	drawing/scenes-06.csv	886	L1c	L1c	The best existing circuit still adds downward movement to the second bench. The new picture readings leave the bench placements unread.
+inventory-primary	422	diagram/nodes-03.csv	1409	L3	L3	The exact circuit copying only the picture remains.
+inventory-primary	431	drawing/scenes-11.csv	3379	L2a	L2a	The prior replacement woman at the left remains available. The departure of the original woman in the red shirt is still missing.
+inventory-primary	432	diagram/nodes-12.csv	4891	L4	L4	The retained reading focuses the existing arrow identified by both written endpoints.
+inventory-primary	442	calendar/meetings-01.csv	1779	L3	L3	The exact Work 6 calendar booking with the title, date, time and duration remains.
+inventory-primary	448	drawing/scenes-11.csv	849	L2c	L2c	The added alternatives either ask about or create people, with blue one spot as a landmark. The best retained circuit still omits the movement distance or preservation requirements.
+inventory-primary	449	drawing/placement-01.csv	2501	L1c	L1c	New picture-level readings do not bind the objects. The closest retained circuit still attaches the tree and sun placements to the house.
+inventory-primary	452	diagram/nodes-05.csv	1119	L2b	L2b	The nearest reading still recognizes an arrow move and omits the ID e2 and the corner being dragged.
+inventory-primary	455	drawing/objects-04.csv	667	L3	L3	The exact boot creation remains.
+inventory-primary	456	drawing/scenes-10.csv	2940	L2b	L2b	The added readings take slide as an object. Existing movement readings still omit the ordered block references or the one-space offset.
+inventory-primary	465	drawing/scenes-03.csv	3644	L4	L4	A retained circuit changes the man's existing tie to black.
+inventory-primary	466	drawing/objects-03.csv	2344	L3	L3	The exact harness creation remains.
+inventory-primary	469	drawing/scenes-21.csv	649	L4	L4	A retained sequence moves the house to 260,180 and then colours it blue.
+inventory-primary	475	diagram/diagrams-01.csv	741	L1b	L1b	The added readings treat Slide as the object to edit or create. The request repositions Sample beside Slide.
+inventory-primary	476	diagram/diagrams-03.csv	2908	L4	L4	A retained bar chart groups by support topic and uses the count of tickets as its measure.
+inventory-primary	483	drawing/scenes-06.csv	3625	L2c	L2c	The replacement still creates two birds on the fence and can preserve the rest. Reciprocal facing remains unread.
+inventory-primary	487	diagram/nodes-06.csv	4021	L4	L4	A retained sequence creates the Team sizes triangle and links it to Engineering.
+inventory-primary	488	drawing/scenes-05.csv	1382	L2a	L2a	The retained cat placement remains partial. New picture-level readings omit the separate small bird and the continuing cat placement.
+inventory-primary	491	drawing/people-01.csv	285	L4	L4	A retained circuit selects the existing hat part and applies the crown variant.
+inventory-primary	493	diagram/charts-05.csv	284	L2c	L2c	The retained weekly claims chart still leaves the above-target filter unread.
+inventory-primary	495	diagram/nodes-12.csv	2500	L4	L4	The complete retained grouping circuit includes both Input and Stock as members.
+inventory-primary	496	drawing/scenes-03.csv	3409	L2c	L2c	The retained whole-house brick finish still omits roughness. New coat readings interpret the verb as a garment.
+inventory-primary	497	drawing/scenes-07.csv	1075	L1c	L1c	The closest retained reading still treats the blue jacket as a location. New slide and coat readings leave the boy's move incomplete.
+inventory-primary	499	diagram/nodes-03.csv	1014	L2b	L2b	An added sequence undoes the swap, restores something into a row, and asks about original figures. It leaves the removed box identity unbound.
+inventory-primary	502	diagram/diagrams-04.csv	935	L3	L3	The exact yellow recolouring of the named Login box remains.
+inventory-primary	507	diagram/charts-07.csv	772	L4	L4	The retained chart circuit sets the title to Revenue by quarter.
+inventory-primary	510	drawing/scenes-11.csv	2614	L2a	L2a	The replacements include a tower creation fragment and still omit the center tower and ordered placements of the lower pair.
+inventory-primary	512	diagram/nodes-04.csv	2671	L2c	L2c	New proposals encode a count of five in isolation. No single circuit applies five boxes as the revision to the prior diagram.
+inventory-primary	514	drawing/scenes-16.csv	2158	L4	L4	A retained sequence creates a square named pelican and places it below dock.
+inventory-primary	518	diagram/nodes-12.csv	2916	L4	L4	The retained question asks for the count of existing text boxes.
+inventory-primary	519	drawing/scenes-07.csv	1144	L1c	L1c	New alternatives target clothing. The closest retained move still treats garment clues as spatial or colour effects on the boy.
+inventory-primary	524	diagram/nodes-04.csv	2075	L2c	L2c	The retained yellow box and caption sequence still omits caption placement under every box, nonoverlap, and label clarity.
+inventory-primary	527	drawing/people-09.csv	199	L4	L4	The retained part circuit applies the top-hat variant to the avatar.
+inventory-primary	528	document/text-01.csv	3755	L4	L4	The retained circuit creates Key points with the exact quoted sentence.
+inventory-primary	530	diagram/charts-05.csv	3048	L2c	L2c	The added alternatives still omit category sales rank and ties. The retained bar chart is partial.
+inventory-primary	535	diagram/nodes-05.csv	1400	L2c	L2c	New alternatives do not reverse the first two boxes. The retained reading still lacks the reversal.
+inventory-primary	549	diagram/nodes-07.csv	289	L2c	L2c	The retained Intro link selection leaves the Main-side qualifier unread.
+inventory-primary	551	diagram/nodes-07.csv	2165	L2c	L2c	The retained temporary-setting interpretation still fails to enable ID labels. New readings interpret labels as drawn objects.
+inventory-primary	568	drawing/objects-04.csv	917	L4	L4	A new circuit creates a wharf and adds no second action.
+inventory-primary	570	drawing/placement-01.csv	3750	L1d	L1d	The strongest reading still invents a grade from far and omits the lower-edge clipping. Added alternatives act on a picture instead of adding the boat.
+inventory-primary	574	drawing/scenes-21.csv	645	L4	L4	The existing sequence still moves the house to 260,180 and then colours the same house blue.
+inventory-primary	590	drawing/scenes-05.csv	221	L2a	L2a	The retained small cat by the bench remains available. New garment readings still omit the swap of the two people.
+inventory-primary	591	diagram/nodes-01.csv	3031	L4	L4	The retained circuit sets both bold weight and italic slant on Crush.
+inventory-primary	600	diagram/charts-05.csv	2718	L2a	L2a	The new sequence recognizes a copy step but fails to construct the Q1 and Q2 profit charts with synchronized y axes.
+inventory-primary	601	calendar/meetings-03.csv	326	L1a	L1a	The added question about a guest still leaves the request to count people on the guest list unread.
+inventory-primary	602	drawing/placement-01.csv	3075	L2c	L2c	A retained circuit creates the tall woman. The placement reference and her carrying the picnic basket remain unread or unlinked.
+inventory-primary	610	drawing/objects-04.csv	1775	L3	L3	The exact shoe creation remains.
+inventory-primary	618	drawing/objects-04.csv	2261	L4	L4	A new proposal creates a cassette with no unsupported action.
+inventory-primary	620	diagram/charts-05.csv	1797	L2c	L2c	New chart proposals leave the requested axes unread. The best retained reading still includes up in the vertical label.
+inventory-primary	622	diagram/nodes-01.csv	2261	L4	L4	The retained circuit bolds the existing Start label.
+inventory-primary	629	document/text-02.csv	2852	L3	L3	The exact creation of the Results table heading remains.
+inventory-primary	632	drawing/scenes-07.csv	3459	L2a	L2a	New alternatives recognize hats or a hat colour. None encodes the exchange between the two women.
+inventory-primary	634	drawing/scenes-10.csv	2682	L1c	L1c	The new readings target clothes as objects or places. The closest retained proposal still misuses the garment clues and omits the requested exchange and one-place move.
+inventory-primary	635	diagram/nodes-02.csv	1050	L2c	L2c	New alternatives leave the size and grouping unread. The prior partial reading still omits 6.5-inch width, twice-width height, and the box counterpart.
+inventory-primary	636	drawing/scenes-03.csv	3909	L2c	L2c	New alternatives can add a striped shirt or place a jacket over a shirt. The set still omits a complete circuit grounding the wearer, denim, and layering.
+inventory-primary	640	drawing/scenes-08.csv	1813	L4	L4	A retained circuit gives the sunny early-morning terrace all four object groups, the standing man, three small blue cups, and the requested placements.
+inventory-primary	643	diagram/charts-01.csv	2458	L4	L4	The retained pie chart distributes ships by flag.
+inventory-primary	644	drawing/scenes-11.csv	4379	L2c	L2c	The added scarf alternatives still omit the freeze, scarf length, and recipient. The retained preservation reading remains partial.
+inventory-primary	647	drawing/scenes-11.csv	2128	L1c	L1c	New alternatives either treat the shirt as a location or make it the target. A faithful creation and preservation sequence remains absent.
+inventory-primary	648	diagram/charts-05.csv	1542	L4	L4	The retained bar chart uses orders as its measure and bucket of order quantities as the grouping field.
+inventory-primary	656	diagram/charts-03.csv	407	L2c	L2c	The added stacking attribute only appears in alternatives that fail to create the requested chart. Its ordered categories and percentages remain ungrounded.
+inventory-primary	661	diagram/charts-01.csv	1379	L3	L3	The exact bar chart of classes by room remains.
+inventory-primary	668	drawing/scenes-11.csv	4115	L2c	L2c	The prior bench reading remains partial. New answers treat cap as a new object and still omit the soaked state.
+inventory-primary	670	drawing/scenes-16.csv	2083	L4	L4	The retained sequence creates a tree named Zebra and places that existing Zebra below Savannah.
+inventory-primary	671	diagram/diagrams-07.csv	1055	L2b	L2b	The new drawn-arrow readings leave Start, Review and the port unbound.
+inventory-primary	672	drawing/placement-03.csv	218	L2a	L2a	The new picture readings still attach both relationships to one target without separate continuing cat and rabbit instructions.
+inventory-primary	674	drawing/scenes-20.csv	49	L2c	L2c	The arrow readings still leave the requested rightward rotation unread.
+inventory-primary	675	drawing/placement-01.csv	2217	L2b	L2b	The three-stage girl reading remains. New coat readings supply no link between the girl’s sitting pose and the bench.
+inventory-primary	676	calendar/meetings-02.csv	1052	L3	L3	The exact reading of the calendar creation and dated meeting remains.
+inventory-primary	679	drawing/objects-03.csv	4872	L3	L4	The exact spelling-preserving circuit is absent. A new complete variant creates the requested cider, interpreting ciders as its written plural.
+inventory-primary	681	diagram/diagrams-01.csv	4411	L4	L4	The retained sequence keeps separate chart dates and shared axes.
+inventory-primary	682	drawing/scenes-17.csv	3573	L3	L3	The exact mug recoloring remains available.
+inventory-primary	683	diagram/charts-04.csv	4133	L2a	L2a	New arrow targets do not bind the requested medium size and curved style together.
+inventory-primary	689	diagram/nodes-04.csv	796	L2b	L2b	New generic arrow readings leave the existing Payment arrowhead and Confirm edge unbound.
+inventory-primary	697	drawing/placement-06.csv	117	L4	L4	The earlier small cement mixer beside the road remains. The added mixer-only reading drops the concrete modifier.
+inventory-primary	700	drawing/scenes-07.csv	3128	L2c	L2c	The earlier left-side tree reading remains partial, and the new picture targets do not bind the every-picture scope.
+inventory-primary	704	diagram/nodes-04.csv	1186	L2c	L2c	The caption is still placed below the picture. The title remains unread or goes to a separate chart, and no new reading writes it to the caption.
+inventory-primary	708	drawing/scenes-10.csv	3229	L1c	L1c	The new man reading writes green as a result and treats one place as a landmark, leaving the clothing selector and movement unresolved.
+inventory-primary	721	drawing/objects-04.csv	1317	L3	L4	The exact circuit is absent. A new alternative still creates the cinnamon stick with only the courtesy lead unread.
+inventory-primary	722	diagram/charts-05.csv	362	L2a	L2a	New readings recognize the bar-chart kind in isolation. They omit the revenue aggregation, ordering and separate zero-baseline step.
+inventory-primary	723	diagram/diagrams-03.csv	2738	L2c	L2c	New box readings leave the requested class diagram, replication per class and nested attributes uncombined.
+inventory-primary	724	diagram/charts-05.csv	3496	L2c	L2c	New generic chart and slide readings do not supply average profit, both grouping dimensions or mark values.
+inventory-primary	726	drawing/objects-03.csv	2328	L3	L3	The exact globe and requested view remain.
+inventory-primary	727	drawing/scenes-10.csv	1258	L4	L4	The earlier flower recoloring remains, alongside a new reading that treats paint as an object.
+inventory-primary	731	diagram/nodes-13.csv	270	L4	L4	The retained circuit picks the existing arrow using both directed endpoints.
+inventory-primary	733	diagram/charts-05.csv	2516	L2c	L2c	The stacked chart remains available, while profit, grouping and normalized shares are still not combined.
+inventory-primary	734	drawing/scenes-08.csv	4042	L4	L4	The complete kid placement and preservation remains, and a new equivalent reads kid as the declared alias of child.
+inventory-primary	735	calendar/meetings-02.csv	274	L4	L4	The complete calendar and meeting reading remains.
+inventory-primary	737	drawing/scenes-07.csv	1792	L1c	L1c	The new readings make the yellow dress itself face right. No added circuit uses the dress as the girl’s identifying clothing.
+inventory-primary	740	drawing/scenes-17.csv	4846	L3	L3	The exact color question for Sky remains.
+inventory-primary	744	drawing/scenes-08.csv	3723	L1c	L1c	The new child reading grounds the bench but still treats the red cap as a container and yellow as the child’s color.
+inventory-primary	749	drawing/objects-03.csv	688	L3	L3	The exact flag creation remains.
+inventory-primary	753	drawing/scenes-16.csv	3507	L3	L3	The exact orange house named ice cream van remains.
+inventory-primary	758	drawing/scenes-08.csv	121	L2c	L2c	The stall, four flowers, boy and vendor remain grounded in the dusk scene. New proposals leave the upset expression unread and miss the continuing foreground instruction.
+inventory-primary	761	diagram/diagrams-04.csv	2632	L3	L3	The exact values question remains.
+inventory-primary	768	diagram/diagrams-03.csv	72	L2c	L2c	A new drawing alternative creates a generic bar-chart image. The true chart candidates still lack the order-quantity grouping and requested relationship.
+inventory-primary	776	diagram/nodes-03.csv	500	L2a	L2a	A new sequence places text near the start, then creates a different bold label. It leaves nonoverlap and label clarity unread.
+inventory-primary	777	drawing/scenes-13.csv	3283	L1c	L1c	The new picture bindings leave dusk colors unread. The prior scene-time change still mistakes the requested color treatment.
+inventory-primary	780	diagram/diagrams-03.csv	2226	L0	L0	The new partial readings contain no Revenue by region filter and leave the sales-versus-target criterion unread.
+inventory-primary	788	diagram/charts-01.csv	2212	L3	L3	The exact payments-by-method bar chart remains.
+inventory-primary	794	diagram/charts-01.csv	1830	L3	L3	The exact accelerators-by-operating-system bar chart remains.
+inventory-primary	804	diagram/diagrams-03.csv	4087	L2b	L2b	A new reading resolves chair as a generic seat or a removal target. No candidate opens both written targets.
+inventory-primary	810	drawing/scenes-04.csv	279	L4	L4	The retained complete circuit creates a medium bench low on the ground.
+inventory-primary	815	drawing/scenes-08.csv	2641	L2c	L2c	The earlier dog and night lighting remain. New picture bindings do not ground the full-page neon treatment.
+inventory-primary	819	diagram/charts-01.csv	317	L4	L4	The retained hiring-by-name chart remains.
+inventory-primary	820	drawing/scenes-17.csv	1615	L3	L3	The exact purple Nurse Hat change remains.
+inventory-primary	824	diagram/nodes-05.csv	264	L2a	L2a	The new box readings create objects. They do not combine the two ordered swaps and the preservation instruction.
+inventory-primary	831	drawing/people-05.csv	2847	L3	L3	The exact glasses-variant change remains.
+inventory-primary	835	diagram/diagrams-01.csv	1709	L2c	L2c	The new box readings treat line as a landmark. They do not align the selected top edges.
+inventory-primary	836	diagram/nodes-07.csv	93	L2c	L2c	New slide and chart readings leave the named pie chart, labels and values uncombined.
+inventory-primary	842	drawing/scenes-06.csv	3613	L2c	L2c	The new circuit binds two dogs and tent placement, but leaves their mutual facing unread.
+inventory-primary	845	drawing/scenes-03.csv	1915	L2c	L2c	The new person creation grounds the bench but does not select the existing right-side man or set his sitting pose.
+inventory-primary	849	drawing/scenes-03.csv	1582	L1b	L1b	The new jacket reading does not select the boy or move him one place left.
+inventory-primary	853	drawing/people-04.csv	120	L3	L3	The exact bearded-man face change remains.
+inventory-primary	854	drawing/objects-03.csv	4187	L3	L4	The exact spelling-preserving circuit disappears. A new complete circuit creates a flea, preserving the written noun as evidence.
+inventory-primary	856	diagram/charts-03.csv	4523	L2c	L2c	The new table readings do not create the pie chart above it.
+inventory-primary	857	drawing/placement-01.csv	666	L2c	L2c	Added picture readings do not bind the boy’s kick.
+inventory-primary	861	drawing/scenes-17.csv	1663	L3	L3	The exact orange-shark recoloring remains.
+inventory-primary	863	calendar/meetings-01.csv	10	L3	L3	The exact meeting with its calendar and time remains.
+inventory-primary	864	drawing/scenes-13.csv	3074	L2b	L2b	The new shoes target still does not preserve only the leather shoes while removing the rest.
+inventory-primary	871	diagram/charts-05.csv	4527	L2a	L2a	The added drawing proposal is unrelated to the sales total and prior-quarter comparison.
+inventory-primary	876	diagram/diagrams-01.csv	707	L2b	L1c	The new place candidate finds the written Fridge landmark and the contextual object, but makes the requested right-of destination a selector.
+inventory-primary	877	diagram/charts-04.csv	3416	L4	L4	The retained circuit positions the legend at right on the regional bar chart.
+inventory-primary	887	diagram/charts-03.csv	764	L2b	L2b	The new label creation does not bind either the source edit or the destination chart.
+inventory-primary	893	drawing/scenes-08.csv	4324	L4	L4	A retained sequence creates the bear, kid, and owl with their respective placements and facing directions. The new child alias preserves those effects.
+inventory-primary	898	drawing/scenes-08.csv	1475	L4	L4	The retained library scene sets evening and includes the requested woman, armchair, cat, and three books.
+inventory-primary	908	diagram/charts-01.csv	111	L3	L3	The exact student bars grouped by department remain.
+inventory-primary	912	drawing/scenes-11.csv	242	L2a	L2a	New garment and person readings omit the blue-jacketed woman’s separate arrival at the left end.
+inventory-primary	916	drawing/scenes-06.csv	2990	L2a	L2a	The new hat readings do not combine dog creation with removal of the specified man and preservation of the rest.
+inventory-primary	918	drawing/scenes-11.csv	2631	L2a	L2a	The new two-block reading preserves the walls but describes existing blocks and fails to bind the gap between those walls.
+inventory-primary	921	drawing/scenes-11.csv	770	L2c	L2c	New proposals confuse the poster layout with a font and still omit the flat plane and unchanged membership.
+inventory-primary	922	drawing/scenes-10.csv	1400	L1c	L1c	The new table-cloth alias still treats blue as a landmark instead of making blue and red checks.
+inventory-primary	923	drawing/scenes-07.csv	539	L4	L4	The retained qualifier circuit identifies the tall boy by his red hat and changes only his facing.
+inventory-primary	924	drawing/scenes-06.csv	454	L2c	L2c	The added person reading binds the tent but leaves the requested orientation toward the house unread.
+inventory-primary	926	drawing/scenes-13.csv	3925	L1c	L1c	The new garment readings do not select the two clothed people and place them level with each other.
+inventory-primary	927	drawing/placement-02.csv	4129	L1c	L1c	Added cap targets do not attach each clothing bundle to its boy or preserve the two requested placements.
+inventory-primary	928	calendar/meetings-01.csv	1536	L3	L3	The exact Work 6 calendar booking remains.
+inventory-primary	933	drawing/scenes-06.csv	2051	L4	L4	The complete classroom scene with six separately described creations remains.
+inventory-primary	938	drawing/placement-04.csv	512	L4	L4	The existing written mango and its separate pear landmark remain available.
+inventory-primary	946	diagram/ui-coverage.csv	650	L2b	L2b	The new drawing reading does not bind Monthly visitors as the conversion source.
+inventory-primary	953	drawing/scenes-11.csv	4372	L2b	L2b	The new scarf reading still does not bind the child as its recipient.
+inventory-primary	960	diagram/diagrams-01.csv	4071	L2c	L2c	The stacked chart and right-side legend remain available, but added chart readings do not bind the channel breakdown.
+inventory-primary	964	drawing/objects-04.csv	2611	L4	L4	The retained cello creation remains available.
+inventory-primary	966	drawing/scenes-08.csv	698	L4	L4	The complete orchard circuit retains the far-left press, other objects and quantities, and the continuing foreground instruction.
+inventory-primary	968	drawing/scenes-08.csv	707	L4	L4	The full orchard, afternoon, and all five requested object groups with their counts remain available.
+inventory-primary	970	drawing/scenes-03.csv	2790	L2c	L2c	The new hat and person readings do not turn the left direction into movement of the specified man.
+inventory-primary	976	drawing/scenes-16.csv	2566	L4	L4	The retained sequence names the circle beach ball and places that written object below the chair.
+inventory-primary	977	drawing/scenes-07.csv	1828	L1c	L1c	The new clothing readings do not treat the scarf as the woman’s identifying qualifier with facing right as the effect.
+inventory-primary	981	drawing/scenes-11.csv	1728	L2c	L2c	The new garment alternatives still do not link the dressed man to the right-end destination while preserving the rest.
+inventory-primary	990	drawing/scenes-09.csv	360	L2a	L2a	New alternatives still do not combine the forward lean, page-wide pixel-art styling and preservation without an extra effect.
+inventory-primary	991	drawing/scenes-08.csv	3888	L4	L4	The retained circuit makes the child feed the ducks.
+inventory-primary	992	drawing/scenes-04.csv	840	L2c	L2c	The new scene evidence still leaves the girl’s kneeling pose unread.
+inventory-primary	996	drawing/people-01.csv	406	L4	L4	The retained reading changes the existing hair back part to the bun variant.
+inventory-replica	2	diagram/diagrams-04.csv	2140	1	1	Hall to Kitchen remains intact.
+inventory-replica	4	calendar/meetings-01.csv	802	1	1	The exact complete booking remains.
+inventory-replica	5	diagram/nodes-06.csv	3575	1	1	All prior proposals remain.
+inventory-replica	10	calendar/meetings-01.csv	892	1	1	All prior proposals remain.
+inventory-replica	16	drawing/scenes-06.csv	1990	0	0	No circuit assigns all five objects their requested attributes and positions.
+inventory-replica	18	drawing/placement-01.csv	595	1	1	A retained circuit places the seated boy on the left.
+inventory-replica	21	drawing/scenes-13.csv	3224	0	0	The new photo creation omits the other-photo selection and warmth preservation.
+inventory-replica	26	diagram/charts-04.csv	4672	0	0	The cap adjustment remains available without the tick range.
+inventory-replica	27	diagram/charts-06.csv	4054	0	0	The added target does not bind either ordered count to Archive.
+inventory-replica	30	calendar/meetings-01.csv	296	1	1	All prior proposals remain.
+inventory-replica	35	drawing/scenes-08.csv	615	1	1	Retains the complete evening carnival, counts and placements.
+inventory-replica	36	drawing/scenes-11.csv	4186	1	1	All prior proposals remain.
+inventory-replica	40	calendar/meetings-07.csv	58	0	0	The yoga move to the named Gym calendar remains unread.
+inventory-replica	42	drawing/people-10.csv	232	0	0	No circuit combines baby, human and teacher on the avatar.
+inventory-replica	43	drawing/scenes-10.csv	407	0	0	No circuit binds both the downpour and the supplied umbrella.
+inventory-replica	44	diagram/nodes-04.csv	1699	0	0	No proposal connects the router to the switch and the switch to both laptops.
+inventory-replica	55	drawing/scenes-08.csv	995	1	1	Retains the misty sunset harbor, woman, three lamps, dog and bench.
+inventory-replica	61	calendar/meetings-01.csv	852	1	1	All prior proposals remain.
+inventory-replica	63	diagram/nodes-05.csv	1580	0	0	The three requested swaps remain absent.
+inventory-replica	65	drawing/scenes-06.csv	2389	0	0	The added green-apple readings do not supply the four ordered objects and their placements.
+inventory-replica	70	diagram/charts-05.csv	1812	0	0	The gridline reading lacks the chart dimensions, values and sorting.
+inventory-replica	74	diagram/nodes-01.csv	4095	0	0	The added box readings leave the right margin unread.
+inventory-replica	75	diagram/nodes-12.csv	1845	0	0	No candidate labels the connection with both endpoints bound.
+inventory-replica	78	diagram/diagrams-03.csv	3900	0	0	The candidate for height omits the other page edits and page 0 ownership.
+inventory-replica	79	diagram/diagrams-03.csv	309	0	0	A new switch object does not enable the leader lines.
+inventory-replica	83	diagram/diagrams-03.csv	2564	1	1	All prior proposals remain.
+inventory-replica	96	drawing/scenes-07.csv	2483	1	1	All prior proposals remain.
+inventory-replica	98	drawing/scenes-08.csv	3305	1	1	Retains the seated position on the bench, facing right, and preservation.
+inventory-replica	110	diagram/nodes-07.csv	372	0	0	No Intro link reading binds the dotted style and Main label.
+inventory-replica	117	drawing/objects-04.csv	2409	1	1	The doghouse remains available as a kennel.
+inventory-replica	119	drawing/scenes-03.csv	3318	0	0	The figs remain unattached to the basket.
+inventory-replica	121	diagram/nodes-06.csv	1485	1	1	Retains the red diamond named Pilot.
+inventory-replica	125	diagram/nodes-04.csv	329	0	0	The actor and message ordering remain unbound.
+inventory-replica	127	drawing/scenes-13.csv	2999	0	0	No circuit excludes boats while placing the small cat left.
+inventory-replica	128	drawing/scenes-10.csv	1520	0	0	The purple person and leftmost blue landmark remain unbound.
+inventory-replica	131	drawing/scenes-06.csv	2818	1	1	Retains the complete scene with two chairs, bear, boy, desk and cat.
+inventory-replica	133	drawing/scenes-03.csv	2029	0	0	The requested turn toward the tree remains unread.
+inventory-replica	138	diagram/nodes-04.csv	630	0	0	No proposal creates and labels the full four-box chain.
+inventory-replica	142	drawing/scenes-11.csv	913	0	0	No circuit preserves the ordered dog, removal, and replacement.
+inventory-replica	146	drawing/scenes-03.csv	4092	0	0	The new glass target does not make the girl wear round glasses and face right.
+inventory-replica	152	diagram/nodes-06.csv	4381	1	1	All prior proposals remain.
+inventory-replica	155	drawing/objects-04.csv	2327	1	1	The singular iceberg correctly follows “an icebergs.”
+inventory-replica	158	diagram/charts-07.csv	1124	0	0	No proposal sets Visitors per day as the title.
+inventory-replica	159	diagram/charts-03.csv	4179	0	0	Neither endpoint pair nor creation of two arrows is complete.
+inventory-replica	170	drawing/people-05.csv	1893	1	1	All prior proposals remain.
+inventory-replica	173	drawing/placement-06.csv	838	1	1	A new exact circuit places the requested taxi left of the mountain.
+inventory-replica	174	drawing/scenes-06.csv	1163	0	0	The new options lose the dog and the scope of the shirt recoloring.
+inventory-replica	175	diagram/nodes-03.csv	1320	0	0	The yellow slide result lacks page number 3.
+inventory-replica	177	diagram/charts-03.csv	903	0	0	Dark blue is assigned to a new label rather than the existing sales chart labels.
+inventory-replica	180	diagram/charts-03.csv	400	0	0	The new page and the complete category data remain unresolved.
+inventory-replica	183	drawing/scenes-09.csv	70	0	0	The sky placement lacks the requested heavy outline.
+inventory-replica	185	diagram/nodes-01.csv	1500	1	1	All prior proposals remain.
+inventory-replica	190	drawing/scenes-05.csv	1097	0	1	New exact circuit removes clouds while excluding the small cloud.
+inventory-replica	193	diagram/diagrams-01.csv	4109	1	1	All prior proposals remain.
+inventory-replica	197	drawing/scenes-03.csv	2022	0	0	No remaining circuit turns all people toward the tree.
+inventory-replica	198	calendar/meetings-01.csv	1417	1	1	The exact calendar booking remains.
+inventory-replica	209	drawing/scenes-12.csv	452	0	0	No circuit moves the same red-hatted person in both steps.
+inventory-replica	212	calendar/meetings-02.csv	342	1	1	Retains complete calendar creation and the Review booking.
+inventory-replica	220	drawing/placement-02.csv	3818	0	0	The woman’s outstretched arms remain unread.
+inventory-replica	223	drawing/placement-06.csv	3253	1	1	All prior proposals remain.
+inventory-replica	226	diagram/charts-04.csv	1641	1	1	All prior proposals remain.
+inventory-replica	230	diagram/charts-04.csv	1243	0	0	The added hat question omits all three changes.
+inventory-replica	235	drawing/scenes-17.csv	1026	1	1	Retains the color change to the existing Sky target.
+inventory-replica	237	drawing/scenes-13.csv	1311	0	0	The new small chandelier is not a transformation of the white fan.
+inventory-replica	242	diagram/nodes-03.csv	1104	0	0	The box is not bound to the restored figure.
+inventory-replica	246	diagram/charts-05.csv	115	0	0	The added slide targets do not build the requested chart.
+inventory-replica	250	drawing/scenes-06.csv	531	0	0	The six trees and bird still lack the requested placements.
+inventory-replica	252	diagram/charts-05.csv	2295	0	0	The new visual readings omit the chart roles and title.
+inventory-replica	254	drawing/scenes-03.csv	3647	0	0	The woman is not bound as the owner of the hat being recolored.
+inventory-replica	255	calendar/meetings-01.csv	1023	1	1	The exact booking remains.
+inventory-replica	259	diagram/nodes-06.csv	865	1	1	All prior proposals remain.
+inventory-replica	261	drawing/scenes-03.csv	4298	0	0	Neither participant receives the right wearable effect in one circuit.
+inventory-replica	267	calendar/meetings-01.csv	153	1	1	The exact booking remains.
+inventory-replica	268	document/text-01.csv	809	1	1	Retains the named document section and exact replacement quote.
+inventory-replica	270	diagram/charts-05.csv	4482	0	0	The store creation does not answer either profit question.
+inventory-replica	272	drawing/people-04.csv	1213	0	0	The new shirt leaves the requested beard unread.
+inventory-replica	273	drawing/scenes-15.csv	60	0	0	The green-jacket boy and leftmost blue landmark remain separate and unbound.
+inventory-replica	280	diagram/nodes-01.csv	4181	0	0	No candidate resolves the repeated edit and even spacing.
+inventory-replica	282	diagram/nodes-05.csv	819	1	1	All prior proposals remain.
+inventory-replica	283	drawing/scenes-06.csv	3623	0	0	The birds’ mutual facing remains unread.
+inventory-replica	286	diagram/nodes-13.csv	206	1	1	All prior proposals remain.
+inventory-replica	287	calendar/meetings-02.csv	372	1	1	Retains Work 8 creation and the complete Review booking.
+inventory-replica	290	diagram/diagrams-07.csv	1602	1	1	All prior proposals remain.
+inventory-replica	291	drawing/scenes-05.csv	2088	0	0	No new circuit answers both the facing and count questions.
+inventory-replica	297	diagram/charts-05.csv	365	0	0	The revenue-per-order sort criterion remains unread.
+inventory-replica	301	diagram/charts-02.csv	2267	0	0	No circuit binds the named chart, larger callout arrowhead, and both grid lines.
+inventory-replica	303	drawing/placement-01.csv	4801	0	0	The wide-arm pose still remains unread.
+inventory-replica	305	drawing/placement-02.csv	4395	0	0	The girl’s right-side placement remains unread even in the scene with the zoo and all six groups.
+inventory-replica	306	diagram/charts-06.csv	553	1	1	Retains eight bins and visible grid on the same Monthly sales chart.
+inventory-replica	308	drawing/scenes-10.csv	3648	0	0	The desired seat and identical position remain unbound.
+inventory-replica	311	drawing/scenes-08.csv	2182	0	0	Leo is not bound as the second jacket’s owner.
+inventory-replica	320	diagram/nodes-01.csv	3885	0	0	The Weigh box is not bound as the table’s landmark.
+inventory-replica	323	drawing/objects-02.csv	2306	0	0	No circuit selects Intro 2 from the bundle.
+inventory-replica	324	diagram/nodes-06.csv	1272	1	1	All prior proposals remain.
+inventory-replica	326	drawing/placement-06.csv	764	1	1	Retains a small kiwi bird left of the house.
+inventory-replica	331	diagram/diagrams-01.csv	3464	0	0	The measure, channel dimension, and sheet order remain unread.
+inventory-replica	332	drawing/scenes-07.csv	1800	0	0	The added readings place or change a dress rather than preserving the attire selector and facing effect.
+inventory-replica	344	drawing/scenes-08.csv	1703	0	0	A new circuit adds a small black cap on the traveler in isolation. No complete circuit takes in the afternoon lounge and all six object groups and qualifiers.
+inventory-replica	352	drawing/scenes-08.csv	1796	1	1	The retained exact circuit sets the evening rooftop terrace under a clear sky and creates all four groups with their stated details.
+inventory-replica	355	diagram/nodes-01.csv	4811	0	0	Added picture readings recognize a height of three in isolation. The complete sequence still lacks bolding the text on page 9.
+inventory-replica	365	diagram/nodes-01.csv	1454	1	1	A retained circuit connects Start to Bake with a dashed arrow.
+inventory-replica	372	diagram/nodes-06.csv	2808	1	1	A retained circuit creates the named Grains star, connects it to Harvest, makes it red, and positions it below Harvest.
+inventory-replica	374	drawing/scenes-06.csv	2014	0	0	The added compositions still fail to locate the medium green plant beside the bookshelf while preserving the other three items and their qualifiers.
+inventory-replica	394	drawing/objects-03.csv	4133	1	1	A replacement circuit creates a closet as requested. The exact reference was removed.
+inventory-replica	396	diagram/charts-01.csv	824	1	1	The retained exact circuit creates a bar chart of allergies split by types.
+inventory-replica	400	drawing/people-04.csv	162	1	1	A retained circuit applies the old-woman preset to a face.
+inventory-replica	402	diagram/nodes-12.csv	1421	1	1	The retained n2 edit sets width 320 and height 130.
+inventory-replica	405	drawing/scenes-03.csv	298	0	0	New alternatives treat the eagle as a landmark or leave the transformation unread. No circuit transforms a bird over the lake into an eagle.
+inventory-replica	407	drawing/scenes-16.csv	1850	1	1	A retained sequence names the new square Hat and places it below Avatar.
+inventory-replica	408	drawing/people-04.csv	727	0	0	Added readings select or ask about an existing hat and leave the new hat's size and shape unread.
+inventory-replica	418	diagram/nodes-02.csv	1505	0	0	The added alternatives act on a slide. The request for a closed loop at a vertex remains unbound.
+inventory-replica	419	calendar/meetings-01.csv	18	1	1	The exact Review booking on Work 4 retains the date, UTC time, and duration.
+inventory-replica	420	drawing/scenes-13.csv	564	0	0	The added readings target or create garments or people. None orients both existing people toward their respective landmarks.
+inventory-replica	422	drawing/scenes-19.csv	62	1	1	A retained circuit creates an arrow and labels that result EXIT.
+inventory-replica	440	drawing/scenes-03.csv	2112	1	1	The added exact circuit sets every existing person's facing toward the bench.
+inventory-replica	443	drawing/scenes-12.csv	538	0	0	The new reading treats green back as a landmark. A paired backward move with separate clothing selectors remains absent.
+inventory-replica	444	diagram/charts-05.csv	488	0	0	Added chart readings omit the five-region limit and tie inclusion.
+inventory-replica	447	diagram/nodes-02.csv	1379	0	0	New readings recognize a link but leave its wavy styling and route unread.
+inventory-replica	448	drawing/placement-02.csv	4704	0	1	A single new circuit adds one child next to the house and keeps everything else in place.
+inventory-replica	450	diagram/nodes-06.csv	1240	1	1	A retained sequence creates the ellipse labelled Votes per option and links it to Budget split.
+inventory-replica	453	diagram/nodes-13.csv	816	1	1	A retained reading moves the existing Finish box with the destination left open by the request.
+inventory-replica	460	drawing/placement-01.csv	650	0	0	The new circuit encodes cross-legged pose and rightward facing but treats the center as an anchor and omits the small bench on the left.
+inventory-replica	464	diagram/diagrams-03.csv	721	1	1	A retained circuit places the smallest box next to the largest.
+inventory-replica	466	diagram/nodes-01.csv	797	0	0	A new circuit positions a picture at the top right but leaves its ward-logo content unread.
+inventory-replica	471	drawing/scenes-07.csv	3309	1	1	The retained exact circuit removes the girl identified by her red jacket.
+inventory-replica	475	diagram/nodes-04.csv	1427	1	1	A retained node circuit creates a box above Monitor.
+inventory-replica	476	drawing/scenes-11.csv	2049	0	0	New targets include clothing and people. No complete circuit places all three distinctly identified people and swaps the last two.
+inventory-replica	482	diagram/charts-01.csv	1660	1	1	The retained exact chart plots staff split by building.
+inventory-replica	485	drawing/scenes-16.csv	2233	1	1	A retained sequence creates the Avatar 1 star and places it below Mop.
+inventory-replica	486	drawing/objects-04.csv	553	1	1	A complete circuit still creates the requested cabaret.
+inventory-replica	501	diagram/nodes-04.csv	1455	0	0	New readings recognize the box or upward direction but leave placement above Publish unresolved.
+inventory-replica	502	diagram/diagrams-01.csv	174	0	0	The new alternatives act on a generic box. The placement of box three and undo are still not paired faithfully.
+inventory-replica	504	drawing/scenes-08.csv	3702	0	0	New readings act on garments separately or apply their colours to the wrong target. The woman wearing both specified garments is still unbound.
+inventory-replica	506	drawing/placement-01.csv	643	0	0	A new person reading treats the middle, picture and scene as landmarks. The middle position is still not grounded as a region.
+inventory-replica	524	diagram/nodes-06.csv	808	1	1	The retained exact chart is titled Team sizes and binds both named values.
+inventory-replica	533	calendar/meetings-01.csv	787	1	1	The retained exact Review booking preserves calendar, UTC date and time, and duration.
+inventory-replica	535	diagram/diagrams-04.csv	600	1	1	The retained exact reading makes Store stock by week blue.
+inventory-replica	544	drawing/scenes-04.csv	828	0	0	The new hat reading puts a yellow hat on the girl in isolation. The set still lacks a single circuit for the complete four-object scene.
+inventory-replica	545	calendar/meetings-02.csv	490	1	1	A retained sequence creates Work 1 and schedules Review on it with the written timing.
+inventory-replica	550	calendar/meetings-01.csv	1402	1	1	The retained exact Review booking preserves calendar, UTC date and time, and duration.
+inventory-replica	558	diagram/charts-05.csv	1959	0	0	New alternatives recognize a chart while leaving colour per segment and palette accessibility unbound.
+inventory-replica	560	drawing/scenes-07.csv	3949	0	0	New picture readings conflate the landmark relations with the picture itself. No circuit creates the requested boardwalk in the rain at dusk with all six groups.
+inventory-replica	565	diagram/charts-05.csv	1498	0	0	A new circuit creates a bar chart but leaves sales grouped into 500-wide price bands unread.
+inventory-replica	568	calendar/meetings-02.csv	102	0	0	Added sequences can recover Work 7 or the note. None creates the calendar, books Review at the requested time and duration, and adds the note in one circuit.
+inventory-replica	573	document/text-01.csv	2823	1	1	A retained circuit creates Holes notes and includes the exact quoted sentence.
+inventory-replica	574	drawing/objects-05.csv	405	0	1	The added exact circuit asks for the colour of the existing clouds.
+inventory-replica	584	document/text-03.csv	376	0	0	New table readings fail to build the block with its Intro scope, Main row, Second header, and inherited name.
+inventory-replica	587	drawing/people-09.csv	83	0	0	The source leaves the garment unspecified after small. The retained exact annotation assigns small as a part variant without identifying a garment.
+inventory-replica	589	diagram/charts-01.csv	659	1	1	The retained exact chart plots documents split by type.
+inventory-replica	593	calendar/meetings-01.csv	1321	1	1	The retained exact Review booking preserves calendar, UTC date and time, and duration.
+inventory-replica	594	diagram/charts-05.csv	4612	0	0	The added shop creation does not answer the filtered count and share-of-orders question.
+inventory-replica	597	diagram/nodes-02.csv	2019	0	0	New alternatives can select three trees. They do not create the forest with labelled trees, one olive tree, a highlight, and a colour legend.
+inventory-replica	603	diagram/diagrams-03.csv	1898	0	0	Some new proposals make the bars blue. The set still lacks the requested ranking with ties, background gridlines, and bottom legend in one chart.
+inventory-replica	623	diagram/charts-04.csv	1162	0	0	The added readings treat cap as headwear. No complete circuit applies the cap-size and three gridline changes to the revenue trend.
+inventory-replica	626	drawing/scenes-16.csv	2504	1	1	A retained sequence creates the fish named castle and places it below flag.
+inventory-replica	627	drawing/objects-04.csv	2303	1	1	A replacement circuit creates the requested hearth.
+inventory-replica	632	calendar/meetings-01.csv	1552	1	1	The retained exact Review booking preserves calendar, UTC date and time, and duration.
+inventory-replica	633	calendar/meetings-01.csv	541	1	1	The retained exact Review booking preserves calendar, UTC date and time, and duration.
+inventory-replica	634	calendar/meetings-01.csv	1482	1	1	The retained exact Review booking preserves calendar, UTC date and time, and duration.
+inventory-replica	640	diagram/nodes-03.csv	25	0	0	New alternatives recognize a box. The restriction to the key term and the coloured-box composition remain unbound.
+inventory-replica	641	diagram/charts-02.csv	4221	0	0	The new view reading leaves the transparent blue-to-purple surface colour map unread.
+inventory-replica	642	diagram/charts-06.csv	2924	1	1	A retained circuit filters the bar chart to scores from 60 to 90.
+inventory-replica	644	drawing/placement-02.csv	3489	0	0	A new sequence creates one child by the house and recognizes the tiny bird. It treats the top as a landmark and does not preserve everything else in place.
+inventory-replica	646	diagram/nodes-06.csv	3913	1	1	A retained sequence creates the star labelled Email template and links it to Footer note.
+inventory-replica	650	diagram/nodes-13.csv	990	0	0	Added readings recognize a box or an arrow in isolation. None removes Start and its arrow while preserving everything else.
+inventory-replica	652	calendar/meetings-01.csv	1827	1	1	The retained exact Review booking preserves calendar, UTC date and time, and duration.
+inventory-replica	657	drawing/placement-01.csv	1794	0	0	The added readings can recognize preservation as an effect but do not add the small dog at the bottom and move the woman in orange all the way right.
+inventory-replica	659	diagram/nodes-06.csv	4497	1	1	A retained sequence creates the Rainfall hexagon, links it to Mar and colours it green.
+inventory-replica	667	diagram/nodes-03.csv	1340	0	0	The new generic slide readings still omit the separate bold and underline changes on slides 4 and 5.
+inventory-replica	670	diagram/nodes-04.csv	984	0	0	Added arrow readings do not select the Order-to-Ship link or reverse it.
+inventory-replica	671	diagram/diagrams-01.csv	1705	0	0	New box bindings still leave top-edge alignment to a common line unread.
+inventory-replica	672	drawing/objects-05.csv	393	1	1	The replacement still asks to list all drawn boats.
+inventory-replica	675	diagram/charts-03.csv	3791	0	0	New box readings do not combine the faculty org chart, top-down growth and grid alignment.
+inventory-replica	680	drawing/scenes-16.csv	2772	1	1	The earlier sequence still creates the circle named Tower 2 and places it below Flag.
+inventory-replica	681	drawing/objects-03.csv	4304	1	1	A new reasonable alternative creates a newt, with the user’s spelling retained as evidence.
+inventory-replica	686	diagram/charts-06.csv	4238	0	0	New arrow readings leave Approve unbound as the requested endpoint.
+inventory-replica	694	diagram/nodes-02.csv	597	0	0	No added reading creates the slide with the exact title and Calibri at 36 points.
+inventory-replica	695	calendar/meetings-01.csv	1341	1	1	The prior complete calendar booking remains.
+inventory-replica	697	diagram/diagrams-04.csv	2425	1	1	The prior question asking which values Laptop shows remains.
+inventory-replica	698	diagram/diagrams-04.csv	1958	1	1	The retained connection uses Reply box as its source and Thread as its destination.
+inventory-replica	699	diagram/nodes-03.csv	685	0	0	No added reading builds the page and its three separately specified charts.
+inventory-replica	702	drawing/objects-03.csv	3543	1	1	The earlier blanched-almond creation remains.
+inventory-replica	707	diagram/nodes-01.csv	3901	1	1	The prior complete reading places the existing picture below the triangle.
+inventory-replica	710	drawing/scenes-03.csv	3040	1	1	The retained sequence faces the man left and sets his running pose.
+inventory-replica	711	calendar/meetings-02.csv	1111	1	1	The complete personal calendar named Work 3 remains available.
+inventory-replica	714	drawing/scenes-07.csv	1115	0	0	The new person reading treats the green dress as a landmark and still omits the destination at the right end.
+inventory-replica	719	drawing/scenes-04.csv	369	1	1	The retained cloud creation keeps both the approximate quantity and the sky landmark.
+inventory-replica	728	drawing/scenes-16.csv	843	1	1	The prior sequence creates the car named sand castle and places that written target below crab.
+inventory-replica	730	diagram/nodes-12.csv	1987	0	0	The new link readings do not identify the link just drawn and set it dotted.
+inventory-replica	731	calendar/meetings-01.csv	1632	1	1	The prior booking retains its calendar, date, UTC time and duration.
+inventory-replica	733	drawing/scenes-07.csv	1141	1	1	The prior circuit retains the two clothing selectors and their separate left and right positions.
+inventory-replica	737	diagram/nodes-13.csv	59	0	0	Added arrow targets do not select r1, r2 and a1 together.
+inventory-replica	740	diagram/nodes-05.csv	20	0	0	The new box readings omit the two ordinal-specific label replacements.
+inventory-replica	743	diagram/nodes-01.csv	2948	1	1	The prior complete readings retain distinct rotations of 45 and 90 degrees.
+inventory-replica	745	diagram/nodes-03.csv	1282	0	0	No added circuit removes personal information from slide 22 and preserves the rest of that page.
+inventory-replica	751	drawing/scenes-10.csv	1388	1	1	The replacement still applies the full pink stripes finish to the curtains.
+inventory-replica	755	drawing/scenes-05.csv	1164	0	0	The added picture targets do not remove the background hills while excluding the front ones.
+inventory-replica	757	diagram/nodes-06.csv	3334	1	1	The retained sequence creates Hiring and links it to Recruiter.
+inventory-replica	764	diagram/nodes-04.csv	875	0	0	The new arrow targets do not bind e3 or set its orthogonal route.
+inventory-replica	766	diagram/nodes-04.csv	1273	0	0	The new box readings attach to the word step instead of creating a box below Refund.
+inventory-replica	790	drawing/scenes-10.csv	3309	0	0	New clothing and person readings do not bind the specified man and the one-space leftward move together.
+inventory-replica	794	calendar/meetings-01.csv	550	1	1	The complete Work 7 booking remains.
+inventory-replica	795	diagram/nodes-03.csv	335	0	0	The added arrow readings still do not point a new start arrow at the first state.
+inventory-replica	796	diagram/charts-01.csv	270	1	1	The prior chart counts staff grouped by sex.
+inventory-replica	799	diagram/charts-01.csv	264	1	1	The prior chart counts staff grouped by sex.
+inventory-replica	802	diagram/charts-01.csv	1017	1	1	The prior chart counts products with a bar for each name.
+inventory-replica	806	drawing/objects-03.csv	4877	1	1	A new candidate creates the requested cider, preserving ciders as the written noun.
+inventory-replica	807	drawing/scenes-05.csv	670	1	1	The complete removal of all clouds remains.
+inventory-replica	808	diagram/charts-01.csv	3577	0	0	The new chart alternatives do not combine the ranked top-three aggregation, mark values, legend and title.
+inventory-replica	811	drawing/scenes-08.csv	1764	0	0	The rooftop terrace and placements remain in partial readings. No added circuit combines the small woman’s happy face, right-facing orientation and parapet placement.
+inventory-replica	818	drawing/scenes-10.csv	3148	0	0	The new dress reading creates clothing and still does not identify the three women or place one between the other two.
+inventory-replica	820	diagram/charts-05.csv	2083	0	0	The new box readings do not add a callout marking and labeling the chart’s peak.
+inventory-replica	822	drawing/scenes-07.csv	708	0	0	The new child reading binds both landmarks, but leaves the right-facing change and preservation unread.
+inventory-replica	823	diagram/nodes-02.csv	2254	0	0	The added slide readings do not encode the hiring flowchart, numbered steps and slide-fit condition.
+inventory-replica	824	diagram/diagrams-03.csv	929	1	1	The prior bar chart showing invoices by payment remains.
+inventory-replica	826	diagram/diagrams-01.csv	3257	0	0	The added ticket drawing does not compute the three departmental averages.
+inventory-replica	828	diagram/nodes-01.csv	1278	0	0	The new picture readings omit the requested centering.
+inventory-replica	829	diagram/nodes-04.csv	17	0	0	The new table readings do not create a table with the requested standard size.
+inventory-replica	832	drawing/placement-01.csv	2005	0	0	The new picture readings omit the requested top-half cut.
+inventory-replica	848	diagram/diagrams-01.csv	3765	1	1	The prior customer-by-status bar chart remains.
+inventory-replica	851	diagram/nodes-01.csv	1379	0	0	The added circuit creates a bullet and does not retain and place the existing bullet list below the subtitle.
+inventory-replica	853	calendar/meetings-02.csv	529	1	1	The prior complete calendar creation and booking remains.
+inventory-replica	854	drawing/placement-02.csv	3433	0	0	The added picture readings still do not cleanly place a large tree behind the boy on the current canvas.
+inventory-replica	857	drawing/scenes-21.csv	178	0	0	The new box readings do not bind both identifiers, dimensions and coordinates together.
+inventory-replica	859	drawing/scenes-08.csv	3829	0	0	The added picture readings do not ground the bear’s action of sniffing the fish.
+inventory-replica	864	diagram/charts-05.csv	801	1	1	The prior bar chart of monthly order totals remains.
+inventory-replica	878	diagram/nodes-12.csv	1083	0	0	The new box readings do not select Monitor and all its connections.
+inventory-replica	879	diagram/diagrams-01.csv	4096	1	1	The prior companies-by-city bar chart remains.
+inventory-replica	886	drawing/scenes-11.csv	1692	0	0	The new person readings can preserve the rest but still omit the dog and the specified man’s move to the far right past the last person.
+inventory-replica	891	diagram/nodes-13.csv	182	0	0	New readings refer to the two boxes without placing them next to each other.
+inventory-replica	897	drawing/scenes-16.csv	1066	1	1	A retained sequence creates a circle named octopus and places that written object below submarine.
+inventory-replica	905	calendar/meetings-01.csv	87	1	1	The prior booking retains Work 4, the date, UTC time and duration.
+inventory-replica	907	diagram/nodes-04.csv	1362	0	0	The new flow and box readings do not create a box immediately next to Sample.
+inventory-replica	911	diagram/nodes-01.csv	4223	0	0	The new box readings leave the middle-line alignment unresolved.
+inventory-replica	912	drawing/scenes-03.csv	3871	1	1	The prior reading still adds the straw hat to the girl.
+inventory-replica	913	drawing/scenes-03.csv	2480	0	0	The new child reading creates a child and does not increase both existing children’s size.
+inventory-replica	919	document/text-01.csv	957	1	1	The retained replacement writes the full supplied text to Cover email to Dr Okafor.
+inventory-replica	920	drawing/scenes-04.csv	289	0	0	The added circuit preserves the rest but creates a sky rather than placing the requested cloud against it.
+inventory-replica	921	calendar/meetings-01.csv	259	1	1	The complete Work 3 booking remains.
+inventory-replica	929	calendar/meetings-02.csv	278	1	1	The retained sequence creates Work 3 and books Review on it with the specified UTC time and duration.
+inventory-replica	932	diagram/nodes-04.csv	1922	0	0	The new box readings do not combine the legend’s top-left placement, matching dash patterns and spacing.
+inventory-replica	937	diagram/nodes-01.csv	2795	0	0	The added label creation leaves the requested weight of the existing Sow label unread.
+inventory-replica	940	drawing/scenes-08.csv	3696	0	0	The added person or garment readings do not attach both specified colored garments to a woman in the garden.
+inventory-replica	945	drawing/scenes-04.csv	1378	1	1	The retained alignment creates the fountain, three pigeons, girl and man. Independent slot evidence supports the human noun reading when the inventory also licenses a generic person.
+inventory-replica	946	drawing/placement-01.csv	3149	0	0	The new child reading can bind three children and preservation, but leaves the tiny bird unread and uses the top landmark for the children.
+inventory-replica	948	calendar/meetings-07.csv	18	0	0	The new calendar alternatives fail to combine a calendar named Garden with the exact lime-green color.
+inventory-replica	949	diagram/nodes-06.csv	3946	1	1	The retained sequence creates Ledger flow and links it to Entry.
+inventory-replica	959	drawing/scenes-08.csv	1486	1	1	A retained circuit sets the library and early morning, creates all five requested objects with their placements and includes seven books.
+inventory-replica	960	diagram/nodes-14.csv	51	0	0	The added chart readings still do not bind Sales as the title and A and B to their exact values.
+inventory-replica	963	calendar/meetings-01.csv	986	1	1	The complete Work 5 booking remains.
+inventory-replica	965	diagram/charts-05.csv	433	0	0	The new chart readings do not combine the requested aggregation and ranking with the accessible palette.
+inventory-replica	970	drawing/scenes-08.csv	2136	1	1	The retained summer fair circuit includes all four objects, three hot dogs and the continuing people-in-foreground instruction.
+inventory-replica	971	drawing/scenes-03.csv	2859	0	0	New jacket targets do not use the clothing and absent hat to identify the boy moving away from the bench.
+inventory-replica	976	drawing/objects-03.csv	2154	1	1	A complete barricade creation remains.
+inventory-replica	979	drawing/scenes-18.csv	125	1	1	The prior garden-picture creation remains.
+inventory-replica	991	drawing/placement-04.csv	320	1	1	The retained circuit places the kitchen table to the left of the fruit bowl.
+all-primary	28	drawing/scenes-04.csv	849	L2c	L4	One new circuit gives all four objects their sizes and colors, puts the crab deep in the pool and the bucket beside it, and places the kneeling boy facing left on the right.
+all-primary	52	drawing/scenes-11.csv	710	L2c	L2c	The bird gains a perched pose, but no complete circuit also gives it the top-right placement and applies the meadow glow with the requested limits.
+all-primary	107	drawing/scenes-19.csv	149	L4	L4	Retains the house label set to Home Sweet Home.
+all-primary	181	diagram/nodes-12.csv	3901	L4	L4	A change circuit applies curved routing to all existing connections.
+all-primary	251	drawing/scenes-07.csv	1953	L2b	L4	A new circuit selects the cat by the bench, turns it toward the house, and leaves everything else where it is.
+all-primary	323	drawing/scenes-04.csv	853	L1c	L1c	The boy can now kneel, but the new proposals still put other objects’ colors and landmarks on him.
+all-primary	402	diagram/charts-06.csv	651	L4	L4	Retains the y-axis title Headcount on the regional revenue chart.
+all-primary	758	drawing/scenes-08.csv	121	L2c	L4	One circuit sets the market at dusk, places all four object groups with their counts and attributes, adds the boy’s upset expression, and keeps the people in the foreground.
+all-primary	815	drawing/scenes-08.csv	2641	L2c	L2c	The dog gains the lying-down pose, but no new circuit applies the requested full-picture neon treatment.
+all-primary	921	drawing/scenes-11.csv	770	L2c	L2c	The new readings bind the perch and film-poster layout, but still omit the top-right placement, flat plane, and unchanged membership.
+all-primary	937	drawing/scenes-07.csv	1604	L2c	L4	A new circuit selects the car on the path, turns it toward the house, and preserves the rest of the scene.
+all-primary	958	drawing/scenes-08.csv	1617	L2c	L4	A single circuit sets the aquarium at noon, binds the boy’s curious expression, places the blue bucket at the bottom and both animal groups on the ledge, and keeps animals in the foreground. It includes four silver fish.
+all-primary	992	drawing/scenes-04.csv	840	L2c	L4	A new circuit sets the beach and creates all six objects, including the kneeling girl, her yellow hat, and the towel under the umbrella, with their requested sizes, colors, and placements.

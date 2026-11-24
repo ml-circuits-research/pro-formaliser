@@ -1,0 +1,19 @@
+sample	previous	current	reference_issue	reference_issue_and_reasonable	reason
+48	L2c	L4	0	0	Corrected circuit aligns Process, Done and n4 at their centers.
+100	L2b	L2c	0	0	Corrected circuit selects Summary and binds index 2 and height 30. It leaves Roadmap unaccounted for.
+150	L2b	L2c	0	0	Corrected circuit identifies a paragraph, Main Track and level 3. The proposed target is still existing, leaving the insertion of a new paragraph underspecified.
+154	L2c	L4	0	0	Corrected circuit chains the existing boxes in order.
+278	L2b	L4	0	0	Corrected circuit removes the boy’s outfit and gives him a white baseball uniform.
+308	L2b	L4	0	0	Corrected circuit inserts a cloud shape and places it left of the Rota table.
+392	L2c	L4	0	0	Corrected part circuit sets the beret variant on the glasses, a plausible reading of the terse request.
+431	L2a	L2c	0	0	Corrected circuit removes the woman in the red shirt and creates the woman in the blue jacket on the left. It leaves the exact slot at the end of the existing line unread.
+506	L2c	L4	0	0	Corrected circuit distributes all existing elements vertically.
+543	L2c	L4	0	0	Corrected circuit sets a continuing rule for animals to face away from the viewer.
+546	L2b	L2c	1	0	Corrected circuit retains Sales by month as the chart target. It leaves the larger legend-font change unbound.
+592	L2b	L4	0	0	Corrected circuit adds a theater.
+699	L2b	L4	0	0	Corrected circuit makes the color bar a little taller on Sensor readings by depth.
+762	L2c	L4	0	0	Corrected circuit binds both solid surface fill and blue color.
+771	L2b	L4	0	0	Corrected circuit adds a pumpkin.
+792	L2b	L4	0	0	Corrected circuit adds an island.
+817	L2b	L4	0	0	Corrected question identifies shape n1 and its requested color, with the color-blind comment as explanation.
+993	L2c	L4	0	0	Corrected circuit colors existing nodes by cluster.

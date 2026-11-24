@@ -12,3 +12,5 @@ A `pro.reader.target_inventory` declaration projects native facts to targets wit
 This pilot uses `k.objects.object`, `k.objects.stand_in`, `k.people.kind` and `k.people.role`. The emitted sort keeps the source identity, such as `boy` or `explorer`, and an alias such as `lad` keeps its written evidence. The join confirms that the source can be drawn. The circuit only carries the kind identity. Its drawing, face preset, role attributes and other defaults remain the executor’s responsibility.
 
 The optional expression pattern has family-level scope. A non-person drawable can receive an expression proposal when explicitly requested, such as a happy penguin or a tree with a sad face. The inventory supplies no guarantee of expression support for that drawing. Host capability and attachment of a face to the drawing remain separate from target and expression recognition.
+
+On two independent 1,000-request samples, adding this inventory raised original-text reasonable coverage from 51.1% to 51.5% and from 44.1% to 44.4%. All requests were read without a suggested tab. [Paired judgments](../../eval/WORLD-INVENTORY-REPLAY.tsv)

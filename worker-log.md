@@ -209,3 +209,6 @@
 
 ## Retaining independently supported target readings
 - Fixed learned slot alignment when a native vocabulary licenses multiple meanings. The parent request supplies its action and target mode. The fountain scene retains all four requests. Two normal-path controls cover compatible and incompatible senses. All 350 tests passed.
+
+## Native-world and spelling replay
+- Reader 22dbc70, 1,000 primary requests: all staged worlds yielded 52.1% reasonable, 53.5% including spelling. Native inventory alone moved primary 51.1% to 51.5% and replication 44.1% to 44.4%. Reviewed all changed sets. The 258 changed sets outside Drawing yielded no complete gains.

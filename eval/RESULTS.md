@@ -2,6 +2,36 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Native vocabulary and all staged worlds
+
+At reader `22dbc70`, the same 1,000 primary requests were read without a suggested tab or conversation context. A request passes if any one proposal conveys it in full. Percentages are semantic judgments by LLM reviewers. The three profiles share the trained model.
+
+| Worlds enabled | Original primary | Original or corrected primary | Original independent replica |
+| --- | ---: | ---: | ---: |
+| Default | 51.1% | 52.6% | 44.1% |
+| Default and native target inventory | 51.5% | — | 44.4% |
+| All staged worlds | 52.1% | **53.5%** | — |
+
+The inventory alone recovered four primary requests and three independent requests. Adding the other worlds recovered six more primary requests. All ten primary gains involved drawings. They establish reuse of world declarations and interaction among target names, postures, expressions and relations. Productivity on a new application domain has yet to be measured. The working inventory preserves competing readings when the existing model supports both. This recovered a four-object scene on the replica. [Each changed proposal set and judgment](WORLD-INVENTORY-REPLAY.tsv)
+
+With all staged worlds and original texts, the grades were L0 fail 1.3%, L1 wrong 9.5%, L2 incomplete 37.1%, L3 reasonable and identical 20.5%, and L4 reasonable alternative 31.6%. Spelling recovered a further 1.4% of whole requests. The original coat-on-woman reading and its corrected reading both count for the same request. Reviewers flagged a material reference issue on 23.5% of primary requests. Of all primary requests, 3.2% had both a material reference issue and a reasonable proposal with the staged worlds. [Primary audit](THOUSAND-AUDIT.md)
+
+| Grade with all staged worlds | Original | Original or corrected |
+| --- | ---: | ---: |
+| L0 – Fail | 1.3% | 1.3% |
+| L1 – Wrong | 9.5% | 9.5% |
+| L2 – Incomplete | 37.1% | 35.7% |
+| L3 – Reasonable and identical | 20.5% | 20.5% |
+| L4 – Reasonable alternative | 31.6% | 33.0% |
+
+Spelling gained fourteen complete readings and improved four still-incomplete bindings. [Spelling grade changes](WORLD-SPELL-REPLAY.tsv)
+
+To exercise the combined reader after setup and the bucket-0 training command in the primary audit:
+
+```sh
+SOP_WORLDS=sop-worlds .cache/node/bin/node bin/formalise.mjs --model .cache/bindings-model.json --spell --json 'Draw a lad with a happy face'
+```
+
 ## Repeated landmarks, page regions and missing spaces
 
 The default reader reached **51.1%** reasonable on the original primary requests and **52.6%** with spelling. The independent replica reached **44.1%**. Across the three lots of 1,000, no previously reasonable request lost a complete reading. On the third lot, two scene requests and two identity selectors gained reasonable readings. Only changed sets have semantic judgments in that third lot, so its absolute rate is unknown. [All changed sets](LANDMARK-REPLAY.tsv)

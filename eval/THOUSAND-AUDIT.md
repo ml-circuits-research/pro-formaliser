@@ -1,5 +1,9 @@
 # Text-only formalisation on 1,000 random requests
 
+The combined staged worlds reached **52.1%** on original requests and **53.5%** with spelling at reader `22dbc70`. [Profile comparison and paired judgments](RESULTS.md#native-vocabulary-and-all-staged-worlds)
+
+## Default reader
+
 **51.1%** of the original requests had at least one reasonable proposal, up from **51.0%**. Accepting proposals from either original or spell-corrected text reaches **52.6%** after replaying all 50 edited requests. [Spelling audit](SPELL-AUDIT.md)
 
 | Formaliser grade | Previous | Current |
