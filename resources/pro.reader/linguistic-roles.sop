@@ -94,3 +94,14 @@
 @reader.diagram.chart.grid.visibility pro.reader.fixed_property tab=diagram family=chart attribute=chart.grid on_value=show off_value=hide
 @reader.diagram.chart.values.visibility pro.reader.fixed_property tab=diagram family=chart attribute=chart.show_values on_value=show off_value=hide
 @reader.diagram.chart.kind pro.reader.nominal_class tab=diagram family=chart attribute=chart.type noun="chart" noun="plot" noun="graph"
+
+@reader.drawing.extent pro.reader.nominal_scale tab=drawing family=drawn attribute=drawn.size scale=size on=size
+@reader.diagram.termini pro.reader.compound_reference family=link first_key=link.from second_key=link.to delimiter="-"
+@reader.region.left_side w.lang.en.cue name=place.left_side on=place relation=at value=left takes=none lead="on the left-hand side" lead="on the left hand side"
+@reader.region.right_side w.lang.en.cue name=place.right_side on=place relation=at value=right takes=none lead="on the right-hand side" lead="on the right hand side"
+@reader.diagram.chart.grouped_totals pro.reader.argument_sequence tab=diagram family=chart act=make mode=new prefix="chart of" prefix="chart of the" part=chart.aggregate part=by part=chart.dimension part=for part=chart.measure
+@reader.diagram.chart.grouped_measure pro.reader.argument_sequence tab=diagram family=chart act=make mode=new prefix="chart of" prefix="chart of the" part=chart.aggregate part=chart.measure part=by part=chart.dimension
+@reader.diagram.chart.grouped_measure_of pro.reader.argument_sequence tab=diagram family=chart act=make mode=new prefix="chart of" prefix="chart of the" part=chart.aggregate part=of part=chart.measure part=by part=chart.dimension
+@reader.diagram.chart.sum_alias core.word text=totals means=sum of=chart.aggregate
+@reader.diagram.chart.avg_alias core.word text=average means=avg of=chart.aggregate
+@reader.diagram.chart.total_alias core.word text=total means=sum of=chart.aggregate

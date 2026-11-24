@@ -6,6 +6,7 @@
 :- use_module(library(pcre)).
 :- use_module(properties).
 :- use_module(property_commands).
+:- use_module(argument_sequences).
 :- use_module(roles).
 :- use_module(language_frames).
 :- initialization(main, main).
@@ -19,7 +20,8 @@ main :- repeat,
       nl, flush_output, fail ).
 
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,proofs:Proofs}) :-
+answer(Q, _{candidates:Answers,proofs:Proofs,sequences:Sequences}) :-
+    argument_sequences(Q,Sequences),
     frame_proofs(Q.language,Proofs),
     property_constraints(Q, ExtraHits), append(Q.hits,ExtraHits,Hits),
     findall(B, (member(P,Proofs), target_scope(Q.tokens,Q.targetRoles,P,B)), RawBounds), sort(RawBounds, Bounds),

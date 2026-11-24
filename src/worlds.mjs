@@ -1,3 +1,5 @@
+import {nominalScaleForms,nominalScaleTypes} from './nominal-scales.mjs';
+import {argumentSequences} from './argument-sequences.mjs';
 import { compileFixedProperties } from './fixed-properties.mjs';
 import { nominalPositionForms } from './nominal-phrases.mjs';
 import { spatialAliases } from './spatial-aliases.mjs';
@@ -13,12 +15,12 @@ import { createNominalInflection, nominalInflectionTypes } from './nominal-infle
 
 const pinned = fileURLToPath(new URL('../.cache/knowledge/docs/worlds/', import.meta.url));
 const types = new Set([
-  ...nominalInflectionTypes,
+  ...nominalInflectionTypes,...nominalScaleTypes,
   'w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
-  'pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
+  'pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue', 'w.lang.en.number',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
@@ -562,11 +564,14 @@ function compile(facts) {
       family:one(wire,'family'), attribute:one(wire,'attribute'), concept:one(wire,'concept'),
     })),
     fixedProperties:compileFixedProperties(facts,requestKeys),
+    argumentSequences:argumentSequences(facts,requestKeys),
+    compoundReferences:facts('pro.reader.compound_reference').map(w=>({family:one(w,'family'),firstKey:one(w,'first_key'),secondKey:one(w,'second_key'),delimiter:one(w,'delimiter')})),
     nominalClasses, spatialBindings, selectorKeys, identityAssignmentVerbs,
     predicateTransferFacts:{
       verbs:facts('k.actions.verb'), frames:facts('w.lang.en.frame'),
       parts:facts('w.lang.en.part'), fixed:facts('w.lang.en.fixed'),
     },
+    nominalScales:nominalScaleForms(facts,requestKeys),
     nominalPositions:nominalPositionForms(facts,requestKeys),
     instanceBindings: facts('pro.reader.instance_code').map(wire => ({
       family:one(wire,'family'), prefix:one(wire,'prefix')?.toLowerCase(),

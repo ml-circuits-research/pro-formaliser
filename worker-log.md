@@ -67,3 +67,7 @@
 ## Grounded descriptive and property phrases
 - Composed independently grounded setting fragments and local edits. SWI-Prolog joins learned command leads to compatible complete property phrases.
 - Full test gate passed. 42.7% reasonable on the same 1,000 requests, previously 41.8%. See eval/THOUSAND-AUDIT.md.
+
+## Sizes, regions, compound references and ordered arguments
+- Read declared scales, stacked quantities, regions and compound references. SWI-Prolog binds ordered arguments to catalog fields.
+- Full test gate passed. 43.8% reasonable on the same 1,000 requests, previously 42.7%. See eval/THOUSAND-AUDIT.md.

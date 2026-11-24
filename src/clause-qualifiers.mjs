@@ -1,3 +1,4 @@
+import {nominalScaleReading} from './nominal-scales.mjs';
 import { identitySelectorReadings } from './identity-selectors.mjs';
 import { fixedPropertyReadings } from './fixed-properties.mjs';
 import { parse, serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
@@ -114,6 +115,7 @@ export function clauseQualifiers(text, worlds, model, permit) {
         let result={sop:packet};
         if (permit(words,quotes)) {
           if (model.modifiers) result=modifierReading(words,ts,quotes,result,model.modifiers) ?? result;
+          result=nominalScaleReading(words,ts,quotes,result,worlds) ?? result;
           result=identitySelectorReadings(words,result,worlds)[0] ?? result;
           result=nominalNumberReading(words,result,worlds.nominalNumbers,quotes,model.modifiers) ?? result;
           result=nativeNominalPhraseReadings(words,ts,quotes,result,worlds.nominalPositions,worlds)[0] ?? result;

@@ -102,3 +102,25 @@
 @pro.reader.nominal_class.family core.slot of=pro.reader.nominal_class key=family kind=atom required=true
 @pro.reader.nominal_class.attribute core.slot of=pro.reader.nominal_class key=attribute kind=atom required=true
 @pro.reader.nominal_class.noun core.slot of=pro.reader.nominal_class key=noun kind=string many=true required=true
+
+@pro.reader.nominal_scale core.type of=pro.reader.nominal_scale closed=true
+@pro.reader.nominal_scale.tab core.slot of=pro.reader.nominal_scale key=tab kind=atom required=true
+@pro.reader.nominal_scale.family core.slot of=pro.reader.nominal_scale key=family kind=atom required=true
+@pro.reader.nominal_scale.attribute core.slot of=pro.reader.nominal_scale key=attribute kind=atom required=true
+@pro.reader.nominal_scale.scale core.slot of=pro.reader.nominal_scale key=scale kind=atom required=true
+@pro.reader.nominal_scale.on core.slot of=pro.reader.nominal_scale key=on kind=atom required=true
+
+@pro.reader.compound_reference core.type of=pro.reader.compound_reference closed=true
+@pro.reader.compound_reference.family core.slot of=pro.reader.compound_reference key=family kind=atom required=true
+@pro.reader.compound_reference.first_key core.slot of=pro.reader.compound_reference key=first_key kind=atom required=true
+@pro.reader.compound_reference.second_key core.slot of=pro.reader.compound_reference key=second_key kind=atom required=true
+@pro.reader.compound_reference.delimiter core.slot of=pro.reader.compound_reference key=delimiter kind=string required=true
+
+# Following the nominal prefix, each part is a catalog key or a literal separator.
+@pro.reader.argument_sequence core.type of=pro.reader.argument_sequence closed=true
+@pro.reader.argument_sequence.tab core.slot of=pro.reader.argument_sequence key=tab kind=atom required=true
+@pro.reader.argument_sequence.family core.slot of=pro.reader.argument_sequence key=family kind=atom required=true
+@pro.reader.argument_sequence.act core.slot of=pro.reader.argument_sequence key=act kind=atom required=true
+@pro.reader.argument_sequence.mode core.slot of=pro.reader.argument_sequence key=mode enum=new enum=existing required=true
+@pro.reader.argument_sequence.prefix core.slot of=pro.reader.argument_sequence key=prefix kind=string many=true required=true
+@pro.reader.argument_sequence.part core.slot of=pro.reader.argument_sequence key=part kind=atom kind=string many=true required=true

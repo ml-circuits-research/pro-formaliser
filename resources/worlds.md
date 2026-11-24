@@ -221,6 +221,51 @@ the reference. The separator inside the quote stays part of the operand. The
 reader checks the selected clause and the existing wires before accepting the
 pair. Ambiguous operand boundaries can leave text unread.
 
+## Ordered argument sequences
+
+Declare a native nominal prefix and its argument order with
+`pro.reader.argument_sequence`. Each repeated `part` names a request key in the
+declared tab and family or provides a literal separator. A key can use an
+enumerated `class` or `candidate` bank, or capture an open `span`. At least two
+different keys are required. A `core.word` with `of` referring to the key and
+`means` naming a bank value adds a surface alias.
+
+```sop
+@reader.chart.grouped pro.reader.argument_sequence tab=diagram family=chart act=make mode=new prefix="chart of" part=chart.aggregate part=chart.measure part=by part=chart.dimension
+@reader.chart.avg core.word text=average means=avg of=chart.aggregate
+```
+
+Here “chart of average Net Sales by Customer Region” binds `avg`, `Net Sales`
+and `Customer Region` in that order. The reader keeps the written words and
+requires one matching split for the full argument tail. A candidate qualifies
+when its action, target mode and family match and its existing fields agree with
+the bindings.
+
+## Nominal scales
+
+Declare `pro.reader.nominal_scale` to associate a class or step request key with
+a `k.values.scale` in the same target context.
+
+```sop
+@reader.drawing.extent pro.reader.nominal_scale tab=drawing family=drawn attribute=drawn.size scale=size on=size
+```
+
+The reader gets canonical values from `k.values.step` and English aliases
+from `core.word` rows with `of=k.values.step.name`. The adjective must qualify
+the grounded noun in the local clause. A size of a new object is a result.
+The same adjective on an existing object forms a selector.
+
+## Compact compound references
+
+Use `pro.reader.compound_reference` to give an existing target two ordered
+identity keys and a literal delimiter. The keys must both be open `fill+span`
+slots on the same family and tab. A native action and noun supply the target
+family while the two adjacent labels supply the selectors.
+
+```sop
+@reader.diagram.termini pro.reader.compound_reference family=link first_key=link.from second_key=link.to delimiter="-"
+```
+
 ## Scene settings and counted sets
 
 A scene setting can use any family’s licensed context target and result

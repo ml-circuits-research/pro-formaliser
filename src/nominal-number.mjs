@@ -8,9 +8,15 @@ const first = (wire,key) => {
   return raw?.startsWith('"') ? JSON.parse(raw) : raw;
 };
 
-function qualifierBefore(text,input,position,numbers,numberOf,modifiers,family) {
+function qualifierBefore(text,input,position,numbers,numberOf,modifiers,family,grounded) {
   let after=position;
-  while (after>0 && Object.hasOwn(modifiers,JSON.stringify([family,input[after-1].key]))) after--;
+  while (after>0) {
+    const modifiersAt=grounded.get(input[after-1].end);
+    if (modifiersAt?.conflict || modifiersAt?.starts.length>1) return;
+    if (modifiersAt?.starts.length===1) after=modifiersAt.starts[0];
+    else if (Object.hasOwn(modifiers,JSON.stringify([family,input[after-1].key]))) after--;
+    else break;
+  }
   let i=after-1, number=numberOf(input[i]);
   // Match a declared multi-token numeral as a whole, including internal hyphens.
   for (let start=Math.max(0,after-8);start<after-1;start++) {
@@ -21,6 +27,31 @@ function qualifierBefore(text,input,position,numbers,numberOf,modifiers,family) 
       (numberOf(input[i-2]) || ['-','+'].includes(input[i-1].key))) return;
   const start=input[i].start, end=input[after-1].end;
   return {start,end,surface:text.slice(start,end),number,position};
+}
+
+function groundedModifiers(wires,input,text,scope,target,numberOf) {
+  const request=first(target,'request'), phase=first(target,'mode')==='new' ? 'result' : 'selector';
+  const owned=wires.filter(w=>w.type==='w.request.constraint' && first(w,'request')===request);
+  const grounded=new Map();
+  for (const wire of owned) {
+    const op=first(wire,'operator') ?? 'eq', key=first(wire,'attribute');
+    if (!key || !['eq','degree'].includes(op) || op==='eq' && first(wire,'on')!=='attribute' ||
+      (first(wire,'phase') ?? 'result')!==phase || wire.attrs.value?.length!==1 || wire.attrs.want ||
+      wire.attrs.key_words || wire.attrs.of || wire.attrs.thing || first(wire,'open_value')==='true') continue;
+    const evidence=first(wire,'words') ?? first(wire,'value');
+    const spans=literalRanges(text,evidence,...scope);
+    if (spans.length!==1) continue;
+    const [[start,end]]=spans;
+    const firstToken=input.findIndex(token=>token.start===start);
+    const lastToken=input.findIndex(token=>token.end===end);
+    if (firstToken<0 || lastToken<firstToken ||
+      input.slice(firstToken,lastToken+1).some(token=>numberOf(token) || !/^\p{L}[\p{L}\p{M}]*$/u.test(token.key))) continue;
+    const evidenceAt=grounded.get(end) ?? {starts:[],conflict:false};
+    evidenceAt.starts.push(firstToken);
+    evidenceAt.conflict ||= owned.filter(w=>first(w,'attribute')===key).length>1;
+    grounded.set(end,evidenceAt);
+  }
+  return grounded;
 }
 
 export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers={}) {
@@ -54,7 +85,8 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
       }));
     positions=positions.filter(i=>!payloads.some(([a,b])=>a<=input[i].start && headEnd(i)<=b));
   }
-  const qualified=positions.map(i=>qualifierBefore(text,input,i,numbers,numberOf,modifiers,first(target,'family')))
+  const grounded=groundedModifiers(wires,input,text,[left,right],target,numberOf);
+  const qualified=positions.map(i=>qualifierBefore(text,input,i,numbers,numberOf,modifiers,first(target,'family'),grounded))
     .filter(q=>q && q.start>=left && !inQuotes(q.start,headEnd(q.position)));
   // A later number may belong to a payload or a second object. An earlier
   // plausible head or another qualified occurrence leaves the binding open.

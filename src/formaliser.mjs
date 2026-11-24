@@ -1,3 +1,6 @@
+import {createCompoundReferenceReader} from './compound-reference.mjs';
+import {nominalScaleReading} from './nominal-scales.mjs';
+import { sequencePacket,sequenceReading } from './argument-sequences.mjs';
 import { propertyCommandPacket } from './property-commands.mjs';
 import { createPredicateTransfer } from './predicate-transfer.mjs';
 import { fixedPropertyReadings } from './fixed-properties.mjs';
@@ -62,6 +65,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   const targetRoles=[...new Set(worlds.languageFrames.bindings.filter(b=>b.type==='w.request.target').map(b=>b.role))];
   const ground = constraintGrounder();
   const resolveRelationKeys = createRelationKeyResolver(worlds);
+  const compounds=createCompoundReferenceReader(worlds);
   const instanceReferences = createInstanceReferenceReader(worlds);
   const preservation = createPreservation(model.examples,worlds,model.lexicon);
   const sequenceOptions = {
@@ -153,7 +157,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const transfers = exact.length ? [] : transfer(text);
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
     const propertyCommands=scope.restricted || quotes.length ? undefined : propertyCommandPacket(text,ts,model.propertyCommands);
-    const request = {text,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const argumentSequences=scope.restricted || quotes.length ? [] : sequencePacket(ts,worlds);
+    const request = {text,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -178,6 +183,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         contextualTargets.push({...plain,sop});
       }
     }
+    if (!scope.restricted) for (const candidate of compounds(text,ts,quotes)) retain(candidate);
     for (const candidate of instanceReferences(text,ts,quotes,hits)) retain(candidate);
     // Family hypotheses for pronouns follow the text's own readings. The
     // independent estimator can promote one when there is supporting context.
@@ -197,6 +203,12 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const candidate of [...candidates]) {
         const modified=modifierReading(text,ts,quotes,candidate,model.modifiers);
         if (modified) retain(modified);
+      }
+    }
+    if (!scope.restricted && worlds.nominalScales?.byFamily.size) {
+      for (const candidate of [...candidates]) {
+        const reading=nominalScaleReading(text,ts,quotes,candidate,worlds);
+        if (reading) retain(reading);
       }
     }
     if (ts.some(t=>worlds.nominalNumbers.has(t[0]) || /^\d+$/u.test(t[0]))) {
@@ -266,6 +278,12 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (candidate.sop.includes('phase=result')) {
           for (const selected of identitySelectorReadings(text,candidate,worlds)) retain(selected);
         }
+      }
+    }
+    for (const proof of response.sequences ?? []) {
+      for (const candidate of [...candidates]) {
+        const reading=sequenceReading(text,candidate,proof);
+        if (reading) retain(reading);
       }
     }
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};

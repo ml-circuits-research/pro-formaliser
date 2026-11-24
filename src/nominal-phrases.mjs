@@ -239,7 +239,8 @@ export function nominalPositionForms(facts, requestKeys) {
         prop.head.split('+').some(h=>h==='class' || h==='candidate'));
       const value=values.find(value=>property?.values.includes(value));
       const words=normalize(surface).split(' ');
-      if (!value || words.length<2 || !words.every(token=>word.test(token))) continue;
+      if (!value || words.length<2 || !words.every((token,i)=>word.test(token) ||
+        token==='-' && word.test(words[i-1] ?? '') && word.test(words[i+1] ?? ''))) continue;
       const operator=kind==='region' ? 'region' : 'eq';
       const byLead=indexes.get(family) ?? new Map();
       if (!indexes.has(family)) indexes.set(family,byLead);
@@ -368,19 +369,32 @@ export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, 
   const byLead=index.get(family), position=head && nounPosition(ts,head);
   if (!byLead || !position || field(target,'request')!=='$'+request.id) return [];
   const [start,after]=position;
+  const mode=field(target,'mode'), ref='$'+request.id;
+  const owned=()=>wires.filter(w=>w.type===constraintType && field(w,'request')===ref);
+  const grounded=at=>uniqueParts(partsAt(owned(),ts,at,worlds,family,mode));
+  const placement=at=>groundedPlacementEnd(owned(),ts,at,worlds,family);
+  const options=at=>(byLead.get(ts[at]?.[0]) ?? []).filter(([words])=>matchesAt(ts,at,words));
   let revised;
   for (let at=after;at<ts.length;) {
-    const options=(byLead.get(ts[at][0]) ?? []).filter(([words])=>
-      words.every((token,i)=>ts[at+i]?.[0]===token) && separatesPhrase(ts,at+words.length,worlds));
-    const length=Math.max(0,...options.map(([words])=>words.length));
-    const best=options.filter(([words])=>words.length===length);
-    if (best.length!==1) break;
-    const attached=attachPhrase(text,ts,quotes,wires,request,target,start,at,best[0],worlds);
-    if (attached?.sop) {
-      revised=attached;
-      wires=parse(attached.sop);
+    const entries=options(at), existing=grounded(at);
+    const length=Math.max(0,...entries.map(([words])=>words.length));
+    const best=entries.filter(([words])=>words.length===length);
+    if (existing.length>1 || best.length>1) break;
+    const [entry]=best, [covered]=existing;
+    if (covered) {
+      if (!covered.meaning || entry && (covered.words.join(' ')!==entry[0].join(' ') ||
+        JSON.stringify(JSON.parse(covered.meaning).slice(0,4))!==JSON.stringify(entry.slice(1)))) break;
+      at+=covered.words.length;
+      continue;
     }
-    at+=length;
+    if (!entry) break;
+    const next=at+length;
+    const following=options(next).length===1 || grounded(next).some(part=>part.meaning) || Boolean(placement(next));
+    const attached=attachPhrase(text,ts,quotes,wires,request,target,start,at,entry,worlds,following);
+    if (!attached?.sop) break;
+    revised=attached;
+    wires=parse(attached.sop);
+    at=next;
   }
   return revised ? [revised] : [];
 }

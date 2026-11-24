@@ -1,0 +1,27 @@
+:- module(argument_sequences,[argument_sequences/2]).
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+:- use_module(library(solution_sequences)).
+
+argument_sequences(Q,Proofs) :-
+    ( get_dict(argumentSequences,Q,Frames) ->
+      findall(Proof,
+        (member(F,Frames), once(findnsols(2,B,distinct(B,sequence(F.parts,F.input,B)),Answers)),Answers=[Bindings],
+         Proof=_{family:F.family,act:F.act,mode:F.mode,anchor:F.anchor,start:F.start,end:F.end,bindings:Bindings}), Proofs)
+    ; Proofs=[] ).
+
+sequence([],[],[]).
+sequence([Part|Tail],Tokens,Bindings) :-
+    ( get_dict(literal,Part,Words) -> eat(Words,Tokens,Rest), Bs=Bindings
+    ; Tokens=[[_,Start,_,_]|_],
+      ( get_dict(bank,Part,Bank) ->
+        member([Words,Canonical],Bank), eat(Words,Tokens,Rest)
+      ; Canonical="", between(1,12,N), length(Taken,N),append(Taken,Rest,Tokens),
+        maplist(open_token,Taken) ),
+      append(Consumed,Rest,Tokens),last(Consumed,[_,_,End,_]),
+      Bindings=[[Part.key,Canonical,Start,End]|Bs] ),
+    sequence(Tail,Rest,Bs).
+
+eat([],Ts,Ts).
+eat([K|Ks],[[K,_,_,_]|Ts],Rest) :- eat(Ks,Ts,Rest).
+open_token([_,_,_,true]).

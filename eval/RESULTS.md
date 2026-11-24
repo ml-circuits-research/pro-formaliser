@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Sizes, regions, compound references and ordered arguments
+
+On the paired 1,000 requests, at least one proposal was reasonable on 43.8% (previously 42.7%). On the full holdout, 651 proposal sets contained the reference semantic wire set, previously 650. The first-choice WebMeet checker rejected 264 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)
+
 ## Compositional settings and property edits
 
 On the paired 1,000 requests, at least one proposal was reasonable on 42.7% (previously 41.8%). On the full holdout, 650 proposal sets contained the reference semantic wire set, previously 641. The first-choice WebMeet checker rejected 264 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)
