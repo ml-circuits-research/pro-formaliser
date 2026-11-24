@@ -208,3 +208,13 @@ In eight pinned primary requests the reference puts a native spatial value in `n
 ## Response to the node-position and threshold review at d0d4ae5
 
 We agree on moving the spatial fact to the position key. Our proximity proposal is an additional reading of an immediate directional phrase. In the Fridge command it emits both right_of and near with separate written evidence and the same landmark. The direction-only proposal remains available. The pinned checker accepted the two-relation circuit with one warning about the introductory words “and now”. The new threshold pilot recovers the single comparison independently of the diagram placement issue. The application still needs to resolve the named threshold. The catalog's chart.only describes a literal category or series. The claims-by-week reference instead places the whole comparison in that slot. [Threshold pilot](sop-worlds/chart-predicate-pilot/README.md)
+
+## Response to the source-container review at 1663ca9
+
+The opt-in `w.relational.source_scope` relates the request to its affected target and records the source container's family, written alias and page lookup. “Remove the paragraph from the document” now has one `w.request.target`. A test renames every wire and reverses wire order, then verifies the typed reference and request ownership. It also verifies that the validator rejects a cross-request reference or a reference to a wire of the wrong type. The default profile retains the original single target and leaves “from the document” unread.
+
+A read-only probe of the PSys2 dataset converter confirms the original failure. The second target overwrote the paragraph with the document. With the typed relation and renamed IDs, the converter retained the paragraph and dropped the source relation. It still requires the request before its target. The probe verifies conversion and target identity. Applying the source restriction during removal awaits application support. [Schema and reproduction](sop-worlds/README.md#ce-reprezintă-modulul-propus)
+
+## Response to the replay on f5c3c82
+
+The two scenes-05 conversions show a second failure mode. The converter preserves `kind=tree` and `quantifier=all` from the affected selection while taking `type=page` and `fill=context` from the source wire. The resulting hybrid target also keeps the beside-house exception. This is a schema and converter ambiguity tracked separately from the 24.3% material reference-issue finding. The typed relation preserves the distinction in the graph, and the converter still needs support for the source role.

@@ -26,16 +26,16 @@
     <h1>Evaluation and reproduction</h1>
     <p>The random 1,000-request review assesses complete text-only proposal sets under the shared WebMeet grading rules. The audit records the benchmark configuration, exclusion from the earlier review, random seed, grade distribution and row-level judgments. <a href="../eval/THOUSAND-AUDIT.md">Random-sample audit</a> · <a href="../../webmeet-dataset/LEGEND.md">Grading legend</a></p>
     <section lang="ro" id="staged-worlds">
-      <h2>Rezultatele reviziei <code>1663ca9</code></h2>
+      <h2>Rezultatele reviziei <code>f5c3c82</code></h2>
       <p>Evaluatorii LLM au verificat aceleași 1.000 de cereri din eșantionul principal, fără indicații despre aplicație sau istoricul conversației. O cerere este considerată acoperită dacă cel puțin o propunere îi redă complet sensul. Configurațiile folosesc același model antrenat. <a href="../eval/THOUSAND-AUDIT.md">Protocolul evaluării</a></p>
       <table>
         <thead><tr><th scope="col">Configurație</th><th scope="col">Eșantion principal, text original</th><th scope="col">Eșantion principal, text original sau corectat</th><th scope="col">Replică independentă, text original</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Implicită</th><td>51,2 %</td><td>52,7 %</td><td>44,2 %</td></tr>
+          <tr><th scope="row">Implicită</th><td>51,1 %</td><td>52,6 %</td><td>44,2 %</td></tr>
           <tr><th scope="row">Toate modulele experimentale</th><td>52,5 %</td><td>53,9 %</td><td>44,5 %</td></tr>
         </tbody>
       </table>
-      <p>Reevaluarea a găsit interpretări complete noi pentru excluderea unor obiecte dintr-o operație, filtrarea unui grafic după un prag și plasarea imediat la dreapta unui reper. Rezultatele măsoară propunerile disponibile. Alegerea propunerii și executarea cererii în aplicație necesită evaluări separate. <a href="../eval/RESULTS.md">Rezultate și reproducere</a> · <a href="../eval/SET-SCOPE-REPLAY.tsv">Verdicte pentru propunerile modificate</a></p>
+      <p>În testul separat cu aceeași cerere reformulată, cititorul acoperă acum 5 din 12 formulări în ordine diferită. Pe cele două eșantioane aleatoare, procentul cu toate modulele rămâne stabil. Fără modulul relațional, o cerere de ștergere păstrează acum sursa ca necitită. Rezultatele măsoară propunerile disponibile. Alegerea propunerii și executarea cererii în aplicație necesită evaluări separate. <a href="../eval/RESULTS.md">Rezultate și reproducere</a> · <a href="../eval/PREDICATE-ORDER-REPLAY.tsv">Verdicte pentru propunerile modificate</a></p>
     </section>
     <h2>Holdout and metrics</h2>
     <p>The benchmark reads committed WebMeet blobs from revision <code>a85de79de826f983855aa2dafc6de7548978fbff</code> and uses knowledge revision <code>ba7cbcf2ab78b8b99d077e8958013d52618c6d04</code>. It groups texts globally using Unicode NFKC, lowercase and collapsed whitespace. A SHA-256 bucket determines whether the whole group is held out. Reported counts are row-weighted, so multiple annotations of the same text can contribute multiple rows. Related templates and paraphrases can straddle partitions. <a href="../src/corpus.mjs">Corpus input</a> · <a href="../eval/RESULTS.md">Benchmark methodology and tables</a></p>

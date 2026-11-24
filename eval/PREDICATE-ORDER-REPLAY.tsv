@@ -1,0 +1,13 @@
+profile	sample	source	row	previous	current	reference_note	reason
+primary	171	drawing/scenes-05.csv	1148	L2c	L2c	The reference represents the source scene as a second target of removal.	The source scene now has a dedicated scope wire. The affected circuit still uses placement, and the retained removal reading leaves the rear-hill restriction and front-hill exception unresolved.
+primary	428	drawing/scenes-05.csv	1089	L4	L4	The reference represents the source scene as a second target of removal.	The replacement circuit explicitly scopes removal to the current scene, removes all trees there and preserves the trees beside the house.
+primary	755	diagram/diagrams-05.csv	355	L4	L4		The complete link-style reading selecting every arrow remains. The added drawable alternative uses the dotted fill property.
+primary-spell	171	drawing/scenes-05.csv	1148	L2c	L2c	The reference represents the source scene as a second target of removal.	The source scene now has a dedicated scope wire. The affected circuit still uses placement, and the retained removal reading leaves the rear-hill restriction and front-hill exception unresolved.
+primary-spell	341	drawing/scenes-13.csv	3061	L3	L3		The exact removal of all boats from the lake remains. The added reading leaves the lake restriction unread.
+primary-spell	428	drawing/scenes-05.csv	1089	L4	L4	The reference represents the source scene as a second target of removal.	The replacement circuit explicitly scopes removal to the current scene, removes all trees there and preserves the trees beside the house.
+primary-spell	755	diagram/diagrams-05.csv	355	L4	L4		The complete link-style reading selecting every arrow remains. The added drawable alternative uses the dotted fill property.
+base-primary	171	drawing/scenes-05.csv	1148	L2c	L2c		The unsupported two-target candidate is gone. No retained circuit removes only the rear hills and preserves the front ones.
+base-primary	428	drawing/scenes-05.csv	1089	L4	L2c		All trees and the beside-house exception still bind. The explicitly written scene source remains unread in the default profile.
+default-spell	171	drawing/scenes-05.csv	1148	0	0		The unsupported two-target candidate is gone. There is still no circuit that removes only the rear hills.
+default-spell	428	drawing/scenes-05.csv	1089	1	0		The original and corrected texts still bind all trees and the exception, but both leave the scene source unread. The corrected verb does not resolve it.
+blind	869	drawing/scenes-13.csv	3507	0	0		The retained removal circuit selects a tail but leaves “on the cat” and “from the scene” unread. The dropped scene-bound alternative also left the owner unread.

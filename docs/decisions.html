@@ -23,6 +23,8 @@
   </nav>
   <main>
     <h1>Design decisions and unresolved issues</h1>
+    <section><h2>Ordinea cuvintelor și rolul sursei</h2>
+    <p>O lume poate declara unde apare predicatul într-o construcție. Prolog leagă argumentele de pozițiile lor din text inclusiv când filtrul precedă comanda. Un cuantificator precum „all” poate desemna o categorie din inventarul lumii dacă numărul gramatical și operația sunt compatibile. Când textul numește documentul din care trebuie șters un paragraf, numai paragraful devine ținta ștergerii. Modulul relațional leagă documentul ca sursă. Fără el, cititorul păstrează fragmentul ca necitit. <a href="../eval/CONSTRUCTION-TRANSFER.md">Exemple și limite observate</a></p></section>
     <h2>Read number pairs and respect list boundaries</h2>
     <p>The sentence “put house at 260,180” formerly left both coordinates unread. A world can declare a cue, action and two ordered numeric keys. The parser binds the two written values together, including signed decimals and parenthesized pairs. A third number or list of pairs prevents the pair reading. Quoted values stay literal. Clause splitting protects matched square-bracket lists containing commas, semicolons or imperative-looking items. Open-ended noun lists in scene descriptions can still lose objects and their attributes. <a href="../resources/worlds.md">World declarations</a> · <a href="../eval/THOUSAND-AUDIT.md">Paired benchmark</a></p>
     <h2>Keep domain choice downstream</h2>

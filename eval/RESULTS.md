@@ -2,6 +2,25 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Predicate order and quantified targets
+
+Reader `f5c3c82` ran on the same frozen models and 1,000-request samples. Each spelling profile generated proposals from the original and corrected text. Reviewers examined every changed proposal set. On the primary sample with all staged worlds and spelling, **L0 Fail 1.3%, L1 Wrong 9.4%, L2 Incomplete 35.4%, L3 Identical and reasonable 20.5%, L4 Reasonable alternative 33.4%**. Material reference issues remain at 24.3%. A reasonable proposal coexists with a flagged reference on 3.5% of all requests. [Paired verdicts](PREDICATE-ORDER-REPLAY.tsv)
+
+| Profile | Primary original | Primary including spelling | Independent original |
+| --- | ---: | ---: | ---: |
+| Default | 51.1% | 52.6% | 44.2% |
+| All staged worlds | 52.5% | **53.9%** | **44.5%** |
+
+All-staged coverage held steady on the two random samples. The default reader lost one previously credited case. It now leaves the explicit source of tree removal unread. With the relational module installed, a typed source scope keeps the scene separate from the trees being removed. In an independent conversion check, the old encoding combined page and tree attributes into one target. We track this schema/converter ambiguity separately from the material-reference percentage. [Integration response](../integration-review.responses.md)
+
+The paired wording challenge improved from 9/12 to 10/12 familiar forms and from 0/12 to 5/12 reordered forms. They include fronted thresholds and exceptions. The sparse random-sample change and this direct transfer test measure different things. [Inputs, controls and remaining failures](CONSTRUCTION-TRANSFER.md)
+
+### Where incomplete proposals lose meaning
+
+Among 184 primary L2 cases with no identified material annotation issue and at least one comparable reference obligation, 177 (96.2%) had a reference obligation missing across the **entire** proposal set. In 153 (83.2% of the 184), at least one missing obligation described the requested result. Only one had all measured obligations spread over several alternatives with no single proposal containing them together. Six had all measured obligations together and still failed semantic review. The comparison measures exact catalog fields within the same request position. Another encoding can express equivalent meaning, and extra instructions can make an otherwise complete field match unreasonable. These diagnostic counts did not change any verdict. [Comparison code](proposal-gaps.mjs)
+
+For example, “put a tall woman there, carrying a picnic basket” yields the woman and height but leaves the carrying relation unread. A different request asks to move a boat exactly level with a bench and retains the preceding cat placement while losing the alignment. In both cases choosing a different proposal still leaves a written requirement missing. Coverage on the full primary spelling sample was 69.3% for one to seven words and 37.9% for 15 to 29 words (Unicode word runs). The next mechanism to investigate is binding an expressed property or relation to its participant inside longer descriptions. The benchmark alone cannot apportion missing role bindings between grammar and absent world declarations.
+
 ## Set restrictions and written operands
 
 Reader `1663ca9` was run through the public CLI without a tab or discussion history. Each spelling profile was run on all 1,000 primary requests and retained both original and corrected proposals. Each made a spelling change on 5.0% of inputs. Models and sample order were held fixed. Unchanged sets kept their previous grades. LLM reviewers judged the changed sets as whole requests. [Paired judgments across profiles](SET-SCOPE-REPLAY.tsv)

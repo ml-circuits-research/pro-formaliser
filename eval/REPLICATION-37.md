@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Predicate order at f5c3c82
+
+On the same independent 1,000 original texts, the all-staged result is **44.5%**, with **44.2%** on default worlds. [Row review](PREDICATE-ORDER-REPLAY.tsv)
+
 ## Set restrictions at 1663ca9
 
 The same 1,000 requests reached **44.2%** with the default configuration and **44.5%** with all staged worlds. “Every single flower” now scopes the blue result to the entire set. All previous complete readings survived. [Changes and judgments](SET-SCOPE-REPLAY.tsv)

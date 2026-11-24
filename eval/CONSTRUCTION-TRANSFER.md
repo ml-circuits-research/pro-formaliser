@@ -1,5 +1,20 @@
 # Transfer to novel operands and alternate word order
 
+## Reordered predicates and typed quantified targets
+
+On reader `f5c3c82`, all staged worlds complete **10/12 familiar forms (83.3%)** and **5/12 reordered forms (41.7%)**. These are the same 12 pairs defined before the changes. They now serve as regression cases. The random 1,000-request results are reported separately in [RESULTS.md](RESULTS.md).
+
+| Construction | Familiar, all staged | Reordered, all staged | Familiar, chart pilot only | Reordered, chart pilot only |
+| --- | ---: | ---: | ---: | ---: |
+| Chart threshold | 3/3 | 3/3 | 3/3 | 3/3 |
+| Directed proximity | 2/3 | 0/3 | 0/3 | 0/3 |
+| Set exception | 2/3 | 2/3 | 1/3 | 1/3 |
+| Explicit member list | 3/3 | 0/3 | 3/3 | 0/3 |
+
+The same threshold, measure and grouping now bind when the user writes the restriction first. An exception can precede the command, and “all circles” can bind to an existing kind when the inventory licenses deletion. The remaining exception involves “the bridge”. Its noun and verb readings coexist in the vocabulary, and the current exclusion reader rejects the landmark upon seeing the verb reading. All three fronted destinations and all three reordered member lists still lack a complete circuit.
+
+## Previous reader
+
 On reader `b3ba9f6`, all staged worlds offered a complete proposal for **9 of 12** new operand combinations in the published constructions and **0 of 12** equivalent alternate word orders. Restricting the optional catalogs to the chart predicate pilot reduced the canonical result to **7 of 12**. Both profile summaries reproduced on `124e6a5`. These figures describe this authored challenge.
 
 The 12 pairs were written before running the reader. Each pair holds the requested roles fixed while changing their order or syntactic position. The script contains all 24 inputs and their shared semantic obligations. A normalized whole-utterance comparison using the benchmark’s `normalizeText` found **0 overlaps** across all **189,021** text rows at WebMeet revision `a85de79de826f983855aa2dafc6de7548978fbff`.
