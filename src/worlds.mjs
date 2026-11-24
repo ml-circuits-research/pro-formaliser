@@ -37,6 +37,7 @@ import { evidenceVocabulary } from './evidence.mjs';
 import { scopeGrammar } from './scope-grammar.mjs';
 import { tokens } from './lexicon.mjs';
 import { createNominalInflection, nominalInflectionTypes } from './nominal-inflection.mjs';
+import { nativeTargetInventory, nativeTargetInventoryType, nativeTargetProviderTypes } from './native-target-inventory.mjs';
 
 const pinned = fileURLToPath(new URL('../.cache/knowledge/docs/worlds/', import.meta.url));
 const types = new Set([
@@ -45,7 +46,7 @@ const types = new Set([
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'pro.reader.nominal_pattern','pro.reader.nominal_value','pro.reader.dependent_operand','w.lang.en.answer','k.feelings.feeling',
   'pro.reader.owned_effect','pro.reader.effect_sense','pro.reader.effect_owner','pro.reader.landmark_surface','pro.reader.appositive_selector','pro.reader.quantified_verb','pro.reader.quantified_marker','pro.reader.quantified_reference','pro.reader.topic_command','pro.reader.postposed_clause','pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
-  'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
+  nativeTargetInventoryType, 'core.type', 'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
   'k.layouts.slot','pro.reader.region_form','pro.reader.retention','k.values.direction','pro.reader.motion','pro.reader.owner_inventory','k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
@@ -396,9 +397,8 @@ function compile(facts) {
   // from the vocabulary of the domain schema.
   const explicit = facts('pro.reader.target');
   const mapped = new Set(explicit.map(wire => one(wire, 'of')).filter(Boolean));
-  for (const binding of kindBindings) {
-    if (!mapped.has(binding.of)) bind(binding);
-  }
+  const targetFamilies=kindBindings.filter(binding=>!mapped.has(binding.of));
+  for (const binding of targetFamilies) bind(binding);
   for (const wire of explicit) {
     const of = one(wire, 'of');
     const family = one(wire, 'family');
@@ -410,12 +410,15 @@ function compile(facts) {
     const sort = one(wire, 'sort') ?? '';
     const surfaces = values(wire, 'text');
     const actionNames = values(wire, 'act');
-    bind({
+    const binding={
       of, family, sort, mode, tab: one(wire, 'tab') ?? kind?.tab,
       acts: actionNames.length ? actionNames : kind?.acts ?? [],
       surfaces: surfaces.length ? surfaces : sort ? [label(sort)] : kind?.surfaces ?? [],
-    });
+    };
+    bind(binding);
+    targetFamilies.push(binding);
   }
+  for (const binding of nativeTargetInventory(facts,words,targetFamilies)) bind(binding);
 
   // A bare value needs a single declared key in its family. An explicit key
   // surface can disambiguate otherwise overlapping value banks.
@@ -679,7 +682,7 @@ function collect(facts, file, selection) {
   return wires;
 }
 
-function providerTypes(facts) {
+function providerTypes(facts, effective=facts) {
   const sources=[...(facts.get('w.reader.en.binding')?.values() ?? [])].map(w=>one(w,'source_type'));
   for (const frame of facts.get('pro.reader.transformation')?.values() ?? []) {
     sources.push(one(frame,'owner_type'),one(frame,'value_type'));
@@ -691,6 +694,8 @@ function providerTypes(facts) {
   for (const frame of facts.get('pro.reader.orientation')?.values() ?? []) sources.push(one(frame,'landmark_type'));
   for (const frame of facts.get('pro.reader.motion')?.values() ?? []) sources.push(one(frame,'target_type'));
   for (const binding of facts.get('pro.reader.owner_inventory')?.values() ?? []) sources.push(one(binding,'provider'));
+  sources.push(...nativeTargetProviderTypes(type=>[...((type===nativeTargetInventoryType ? facts : effective)
+    .get(type)?.values() ?? [])]));
   return new Set(sources.filter(Boolean));
 }
 
@@ -726,13 +731,17 @@ export function loadWorlds({ paths = (process.env.SOP_WORLDS ?? '').split(delimi
     }
   }
   const facts = new Map([...baseFacts].map(([type, wires]) => [type, new Map(wires)]));
-  const extra = new Set([...providerTypes(overlay)].filter(type => !types.has(type) && !pinnedProviders.has(type)));
-  if (extra.size) loadPinned(facts, extra);
-  for (const [type, wires] of overlay) {
-    for (const [id, wire] of wires) {
+  const mergeOverlay=()=>{
+    for (const [type, wires] of overlay) {
       if (!facts.has(type)) facts.set(type, new Map());
-      facts.get(type).set(id, wire);
+      for (const [id, wire] of wires) facts.get(type).set(id, wire);
     }
+  };
+  mergeOverlay();
+  const extra = new Set([...providerTypes(overlay,facts)].filter(type => !types.has(type) && !pinnedProviders.has(type)));
+  if (extra.size) {
+    loadPinned(facts, extra);
+    mergeOverlay();
   }
   const worlds=compileFacts(facts);
   // Only a request extension explicitly selected by the caller participates

@@ -192,3 +192,7 @@ The expression pattern needs a grounded figure target. Extending its finite valu
 ## Response to page-edge review at 501950a
 
 The dog’s stated bottom-edge position can be bound in its own request using the region key. A roof rim in the following request needs its own owner and landmark. The scoped dataset repair and the independent scatter replay are consistent with the public controls here. On the 1,000 primary requests, installing the expression pilot on top of the placement change now yields complete market and aquarium circuits, up from two partial circuits in the previous pilot replay.
+
+## Native noun inventories for the worlds-only expression control
+
+A new opt-in target inventory uses the typed joins of k.people.kind, k.people.role and k.objects.stand_in to k.objects.object. It also admits identities of k.objects.object itself. With both the inventory and expression pilots selected, a worlds-only public run binds “boy with a happy face”, “lad with a happy face” and “explorer with an upset face”. The emitted target keeps its semantic kind. The join to person identifies the drawing representation only. The generic loader requires a declared identity, a valid typed join when one is requested, and an already licensed action, family and mode. An independent workbench test exercises homonymous nouns and a missing join target. The reader proposes target kinds; drawing defaults and rendering capabilities remain open.

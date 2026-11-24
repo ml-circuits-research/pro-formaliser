@@ -203,3 +203,6 @@
 
 ## Missing word boundaries and three-cohort semantic review
 - The corrected/original union reached 52.6% on primary, original text reached 51.1%, and replication reached 44.1%. The optional expression world reached 51.3% on original primary texts. All 347 tests passed. A separate 1,902-request spacing challenge restored 48.4% of deleted spaces.
+
+## Opt-in native target inventories
+- A worlds-only public test binds written figure nouns and their expressions through typed provider identities, with no model. An unrelated world verifies joins, homonyms and action/mode licensing. All 349 tests passed. The default reader's independent full 1% run reproduced all 1,000 reviewed proposal sets.

@@ -51,3 +51,6 @@ git -C ../sop-knowledge-worlds fetch origin
 ```
 
 Raportul compară declarațiile după identificator și după conținutul câmpurilor. O integrare rescrisă în altă schemă se verifică prin exemplele din review și prin efectul asupra cititorului. Când integrarea este confirmată, eliminăm declarațiile locale preluate și păstrăm restul propunerii. Pentru cunoașterea folosită implicit, actualizăm întâi versiunea oficială instalată de proiect și verificăm cititorul cu copia locală eliminată.
+
+
+The [drawable inventory pilot](drawable-inventory-pilot/README.md) reads typed entity names from native object and person inventories. It can be installed independently or with the expression pilot. The generic mechanism and an unrelated-world test live in the reader.
