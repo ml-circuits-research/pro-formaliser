@@ -212,3 +212,6 @@
 
 ## Native-world and spelling replay
 - Reader 22dbc70, 1,000 primary requests: all staged worlds yielded 52.1% reasonable, 53.5% including spelling. Native inventory alone moved primary 51.1% to 51.5% and replication 44.1% to 44.4%. Reviewed all changed sets. The 258 changed sets outside Drawing yielded no complete gains.
+
+## Destination of a direct-pronoun move
+- The native spatial relation and the licensed action can now ground the destination of “place it just right of Fridge”. The original selector survives. Eight contrast inputs retained all old proposals, including removal, query and source clauses. The full gate passed all 351 tests.
