@@ -26,26 +26,32 @@ export function valueResolver(worlds, learned = {}, forms = {}) {
     }
     if (!family) return undefined;
     if (key === 'value' && oldValue === oldSurface && open.has(JSON.stringify([family,attribute]))) return surface;
-    const values = new Set();
+    const values = new Set(), compatibleSorts = new Set();
     if (key === 'value') {
       const closed = keys.get(JSON.stringify([family,attribute]))?.get(term);
       if (closed !== undefined) values.add(closed);
     }
-    for (const [role,,target,payload,sort] of worlds.lookup(term)) {
+    for (const [role,license,target,payload,sort] of worlds.lookup(term)) {
       if (target !== family) continue;
-      if (key === 'sort' && role === 'target' && sort) values.add(sort);
+      if (key === 'sort' && role === 'target' && sort) {
+        values.add(sort);
+        if ((!act || license === act || license === '*') && (!mode || payload === mode)) compatibleSorts.add(sort);
+      }
       if (key !== 'value' || role !== 'constraint') continue;
       const [wire] = parse('@c w.request.constraint ' + payload);
       if (decode(wire.attrs.attribute?.[0]) === attribute && wire.attrs.value?.length === 1) {
         values.add(decode(wire.attrs.value[0]));
       }
     }
-    if (values.size) return values.size === 1 ? [...values][0] : undefined;
+    if (values.size === 1) return [...values][0];
     if (key !== 'value' && key !== 'sort') return undefined;
     const slot = key === 'sort' ? 'sort' : attribute;
     const observed = word => forms[JSON.stringify([family,slot,normalize(word)])];
     if (!oldSurface || observed(oldSurface) !== oldValue) return undefined;
     const result = observed(surface);
+    // A corroborated donor and recipient mapping can resolve an ambiguous
+    // native sort for transfer while the ordinary lexical alternatives remain.
+    if (values.size) return key === 'sort' && compatibleSorts.has(result) ? result : undefined;
     const bank = keys.get(JSON.stringify([family,attribute]));
     if (result && (!bank?.size || bank.has(normalize(result)))) return result;
   };

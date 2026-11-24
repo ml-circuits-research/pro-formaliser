@@ -206,3 +206,6 @@
 
 ## Opt-in native target inventories
 - A worlds-only public test binds written figure nouns and their expressions through typed provider identities, with no model. An unrelated world verifies joins, homonyms and action/mode licensing. All 349 tests passed. The default reader's independent full 1% run reproduced all 1,000 reviewed proposal sets.
+
+## Retaining independently supported target readings
+- Fixed learned slot alignment when a native vocabulary licenses multiple meanings. The parent request supplies its action and target mode. The fountain scene retains all four requests. Two normal-path controls cover compatible and incompatible senses. All 350 tests passed.

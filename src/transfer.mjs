@@ -145,6 +145,7 @@ function prepare(example, ts, envelope) {
         wire.type === 'w.request.lookup' && first(wire, 'from') === 'previous')) return;
   const fields = [];
   const full = tokens(example.text);
+  const requestActs=new Map(wires.filter(w=>w.type==='w.request.request').map(w=>['$'+w.id,first(w,'act')]));
   const targets = new Map();
   for (const wire of wires) {
     if (wire.type !== 'w.request.target') continue;
@@ -167,6 +168,8 @@ function prepare(example, ts, envelope) {
           const matches = slotSurface(wire, key, value, ts);
           if (!matches.length && spans(full, value).length) return;
           fields.push({ index, key, item, encoded, value, matches,
+            ...(key==='sort' && wire.type==='w.request.target' ?
+              {act:requestActs.get(first(wire,'request')),mode:first(wire,'mode')} : {}),
             type: wire.type, attribute: first(wire, 'attribute'),
             family: first(wire, 'family') ?? targets.get(first(wire, 'request')),
             open: first(wire, 'open_value') === 'true' });

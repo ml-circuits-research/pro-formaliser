@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createTransfer } from '../src/transfer.mjs';
+import { valueResolver } from '../src/grounding.mjs';
 import { createReader } from '../src/runtime.mjs';
 
 const request = '@r w.request.request act=change mood=do';
@@ -266,4 +267,33 @@ test('keeps a written predicate with adjacent independently typed arguments',()=
   assert.match(found.sop,/value=blue words="deep blue"/);
   assert.deepEqual(lookup('paint street deep blue'),[]);
   assert.deepEqual(lookup('erase cube deep blue'),[]);
+});
+
+
+test('uses a corroborated donor mapping to transfer among licensed native sorts',()=>{
+  const worlds={requestKeys:[],lookup:surface=>surface==='mixer' ? [
+    ['target','make','device','new','mixer',0],
+    ['target','make','device','new','blender',0],
+    ['target','change','device','existing','console',0],
+  ] : []};
+  const query={key:'sort',family:'device',surface:'mixer',oldSurface:'whisk',oldValue:'whisk',
+    act:'make',mode:'new'};
+  const form=(word,value)=>[JSON.stringify(['device','sort',word]),value];
+  const resolve=(sort,donor='whisk')=>valueResolver(worlds,{},Object.fromEntries(
+    [form('mixer',sort),form('whisk',donor)]));
+  assert.equal(resolve('blender')(query),'blender');
+  assert.equal(resolve('blender','beater')(query),undefined);
+  assert.equal(resolve('agitator')(query),undefined);
+  assert.equal(resolve('console')(query),undefined);
+  assert.equal(valueResolver(worlds)(query),undefined);
+  assert.equal(worlds.lookup('mixer').length,3);
+  const donor={
+    text:'create the old whisk now',
+    sop:'@r w.request.request act=make mood=do predicate=create\n'+
+      '@t w.request.target request=$r family=device mode=new sort=whisk'
+  };
+  for (const [candidate,expected] of [['blender',true],['console',false]]) {
+    const transfer=createTransfer([donor],{resolveValue:resolve(candidate)});
+    assert.equal(transfer('create the old mixer now').some(c=>c.sop.includes('sort='+candidate)),expected);
+  }
 });

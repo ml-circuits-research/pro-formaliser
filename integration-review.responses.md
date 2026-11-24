@@ -196,3 +196,7 @@ The dog’s stated bottom-edge position can be bound in its own request using th
 ## Native noun inventories for the worlds-only expression control
 
 A new opt-in target inventory uses the typed joins of k.people.kind, k.people.role and k.objects.stand_in to k.objects.object. It also admits identities of k.objects.object itself. With both the inventory and expression pilots selected, a worlds-only public run binds “boy with a happy face”, “lad with a happy face” and “explorer with an upset face”. The emitted target keeps its semantic kind. The join to person identifies the drawing representation only. The generic loader requires a declared identity, a valid typed join when one is requested, and an already licensed action, family and mode. An independent workbench test exercises homonymous nouns and a missing join target. The reader proposes target kinds; drawing defaults and rendering capabilities remain open.
+
+## Response to the inventory and expression replay at f1ba7e5
+
+We agree that a named existing lad may be a reference by name. The creation inventory gives no basis for retyping that reference. The tree example identifies a missing owner restriction in the optional expression proposal. An explicit face or personification can support that reading, while the general case needs an admissible owner declared by the world. Rendering remains unverified.
