@@ -239,3 +239,7 @@
 ## Random replay and diagnosis of incomplete proposals
 - Replayed the fixed 1,000-request lots on f5c3c82. All-staged primary 53.9% including spelling, independent 44.5% on originals. Default primary fell to 52.6% with spelling after one ambiguous removal lost its source reading.
 - Of 184 unflagged incomplete cases with comparable reference fields, 153 lacked at least one result field across all proposals. Reordering proposals cannot recover these fields. Counts, limits and changed-row judgments are in eval/RESULTS.md.
+
+## Participants, fronted destinations and periodic results
+- Prolog binds a destination before the command from original offsets. A typed landmark can retain its noun sense alongside a verb sense. Worlds declare held/worn participants and period–operation–measure combinations.
+- All 370 tests pass. All-staged transfer passes 11/12 familiar and 7/12 alternate forms. On trained primary #602 the native checker accepts the woman, height, carried basket and unresolved written destination.

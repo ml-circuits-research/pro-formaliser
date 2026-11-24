@@ -1,3 +1,4 @@
+import {compileParticipantAdjuncts} from './participant-adjunct.mjs';
 import {compileUniversalInventory,universalInventoryProviderTypes,universalInventoryType} from './universal-inventory.mjs';
 import {compileSourceContainers} from './source-container.mjs';
 import {compileSetExclusions} from './set-exclusion.mjs';
@@ -48,7 +49,7 @@ const types = new Set([
   ...nominalInflectionTypes,...nominalScaleTypes,...affectedMorphologyTypes,
   'w.lang.en.alternation','w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
-  'pro.reader.nominal_pattern','pro.reader.nominal_value','pro.reader.dependent_operand','w.lang.en.answer','k.feelings.feeling',
+  'pro.reader.nominal_pattern','pro.reader.nominal_value','pro.reader.participant_adjunct', 'pro.reader.dependent_operand','w.lang.en.answer','k.feelings.feeling',
   'pro.reader.owned_effect','pro.reader.effect_sense','pro.reader.effect_owner','pro.reader.landmark_surface','pro.reader.appositive_selector','pro.reader.quantified_verb','pro.reader.quantified_marker','pro.reader.quantified_reference','pro.reader.topic_command','pro.reader.postposed_clause','pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
   nativeTargetInventoryType, universalInventoryType, 'pro.reader.universal_agreement', 'core.type', 'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
@@ -650,7 +651,7 @@ function compile(facts) {
     ownerPropertyValues:compatibleValues,
     compoundReferences:facts('pro.reader.compound_reference').map(w=>({family:one(w,'family'),firstKey:one(w,'first_key'),secondKey:one(w,'second_key'),delimiter:one(w,'delimiter')})),
     universalInventory:compileUniversalInventory(facts,words,targetFamilies),
-    nominalClasses, sourceContainers:compileSourceContainers(facts), setExclusions:compileSetExclusions(facts), spatialModifiers:compileSpatialModifiers(facts), spatialBindings, selectorKeys, identityAssignmentVerbs,
+    nominalClasses, participantAdjuncts:compileParticipantAdjuncts(facts,requestKeys), sourceContainers:compileSourceContainers(facts), setExclusions:compileSetExclusions(facts), spatialModifiers:compileSpatialModifiers(facts), spatialBindings, selectorKeys, identityAssignmentVerbs,
     predicateTransferFacts:{
       verbs:facts('k.actions.verb'), frames:facts('w.lang.en.frame'),
       parts:facts('w.lang.en.part'), fixed:facts('w.lang.en.fixed'),

@@ -28,7 +28,7 @@ main :- repeat,
 
 answer(Q, Plans) :- get_dict(setExclusion,Q,Packet), !, exclusion_plans(Packet,Plans).
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,universalCandidates:Universal,proofs:Proofs,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
+answer(Q, _{candidates:Answers,frontedCandidates:Fronted,universalCandidates:Universal,proofs:Proofs,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
     topic_commands(Q,Topics),
     native_property_frames(Q,NativeProperties),
     verb_effects(Q,VerbEffects),
@@ -39,6 +39,16 @@ answer(Q, _{candidates:Answers,universalCandidates:Universal,proofs:Proofs,topic
     property_constraints(Q, ExtraHits), append(Q.hits,ExtraHits,Hits),
     findall(B, (member(P,Proofs), target_scope(Q.tokens,Q.targetRoles,P,B)), RawBounds), sort(RawBounds, Bounds),
     reset_role_cache, index_roles(Q.put(roleScopes,Bounds), Hits, WithProperties),
+    ( get_dict(frontedPlan, Q, Clause) ->
+      findall(CleanFront,
+              ( member(ActHit,WithProperties.actHits),
+                ActHit=[Start,_,["act",Act,Mood,_],_], Start=:=Clause.predicate,
+                memberchk(Mood,["","do","propose"]), memberchk(Act,Clause.acts),
+                ScopedFront=WithProperties.put(_{actHits:[ActHit],frontedDestination:Clause}),
+                lexical_candidate(ScopedFront,_,Front), sub_string(Front.sop,_,_,_," operator=relation "),
+                clean_candidate(Front,CleanFront) ), Fronts),
+      list_to_set(Fronts,Fronted)
+    ; Fronted=[] ),
     universal_inventory_plans(WithProperties, Plans),
     findall(CleanUniversal,
             ( member(Plan, Plans), Target=Plan.targetHit,

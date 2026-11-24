@@ -66,3 +66,20 @@ test('a qualified direction binds proximity to the same landmark and phase',asyn
     assert.ok(answer.candidates.every(c=>c.source!=='spatial-modifier'),control);
   }
 });
+
+test('grounds a preposed destination and keeps all evidence in its original position',async t=>{
+  const reader=createReader(); t.after(()=>reader.close());
+  const text='Immediately left of the shape, move them.';
+  const readings=relations(await reader.propose(text,{evidence:true}),'place','the shape');
+  const matches=readings.filter(({candidate,relation,target})=>get(relation,'phase')==='result' &&
+    get(relation,'value')==='left_of' && get(target,'fill')==='context' &&
+    parse(candidate.sop).some(w=>get(w,'value')==='near' && get(w,'words')==='Immediately'));
+  assert.deepEqual(new Set(matches.map(r=>get(r.target,'family'))),new Set(['drawn','node']));
+  for (const {candidate} of matches) assert.deepEqual(candidate.evidence.missing,[]);
+  for (const control of ['Left of the shape, remove them.','If left of the shape, move them.',
+    'Left of the shape, do not move them.','Left of the shape, move them below the box.',
+    'Left of the shape or the box, move them.']) {
+    const result=await reader.propose(control);
+    assert.ok(result.candidates.every(c=>c.source!=='fronted-destination'),control);
+  }
+});

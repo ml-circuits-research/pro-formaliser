@@ -34,13 +34,16 @@ function readPair(scope,family,worlds,exceptionWords,chars) {
     if (!landmark.every(([key])=>lexical.test(key)) || landmark.length>7) continue;
     if (['definite','demonstrative'].includes(det)) {
       if (landmark.length<2 || landmark.slice(1).some(([key])=>worlds.determiners[key] ||
-          worlds.evidenceVocabulary.grammar.has(key) || worlds.lookup(key).some(([role])=>role==='act' || role==='marker'))) continue;
+          worlds.evidenceVocabulary.grammar.has(key) || worlds.lookup(key).some(([role])=>role==='marker'))) continue;
     } else if (!landmark.every(([,written])=>title.test(written))) continue;
+    const nominal=landmark.slice(1);
+    // A typed noun suffix must account for any word also read as an action.
+    const firstAct=nominal.findIndex(([key])=>worlds.lookup(key).some(([role])=>role==='act'));
+    const nouns=nominal.slice(0,firstAct===-1 ? nominal.length : firstAct+1).map((_,j)=>norm(i+1+j));
     for (const binding of worlds.spatialBindings.filter(b=>b.family===family)) {
       const bank=worlds.requestKeys.find(k=>k.name===binding.relationKey && k.tab===binding.tab && k.family===family);
       if (!bank || !worlds.requestKeys.some(k=>k.name===binding.anchorKey && k.tab===binding.tab && k.family===family &&
           k.head==='fill+span' && !k.values.length)) continue;
-      const nouns=landmark.slice(1).map((_,j)=>norm(i+1+j));
       if (det && !nouns.some(noun=>worlds.lookup(noun).some(([role,,owner])=>role==='target' &&
           worlds.familyTabs[owner]?.includes(binding.tab)) ||
           ['change','place','pick'].some(act=>worlds.ownerInventory?.get(JSON.stringify([act,noun]))

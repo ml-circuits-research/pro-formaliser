@@ -1,13 +1,34 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { createReader } from '../src/runtime.mjs';
 import { parse } from '../src/schema.mjs';
+import { loadWorlds } from '../src/worlds.mjs';
 
 const get=(wire,key)=>{
   const raw=wire?.attrs[key]?.[0];
   return raw?.startsWith('"') ? JSON.parse(raw) : raw;
 };
 const exclusions=result=>result.candidates.filter(candidate=>candidate.source==='set-exclusion');
+
+test('grounds a definite landmark noun that also has an action reading',async t=>{
+  const path=fileURLToPath(new URL('../sop-worlds/universal-inventory-pilot/',import.meta.url));
+  const worlds=loadWorlds({paths:[path]});
+  const reader=createReader(undefined,worlds); t.after(()=>reader.close());
+  const prefix='Remove every single tree but keep the ones above ';
+  assert.ok(worlds.lookup('bridge').some(([role])=>role==='act'));
+  const result=await reader.propose(prefix+'the bridge.',{evidence:true});
+  assert.ok(exclusions(result).some(c=>{
+    const wires=parse(c.sop);
+    const anchor=wires.find(w=>get(w,'attribute')==='drawn.anchor' && get(w,'value')==='the bridge');
+    return anchor && wires.some(w=>get(w,'constraint')==='$'+anchor.id && get(w,'from')==='page') &&
+      wires.some(w=>get(w,'attribute')==='drawn.relation' && get(w,'value')==='above' &&
+        get(w,'phase')==='selector' && get(w,'want')==='no') && c.evidence.missing.length===0;
+  }));
+  for (const landmark of ['the erase.','the erase house.','the bridge house.']) {
+    assert.deepEqual(exclusions(await reader.propose(prefix+landmark)),[],landmark);
+  }
+});
 
 test('subtracts a written spatial or property exception from a universal existing target',async t=>{
   const reader=createReader(); t.after(()=>reader.close());

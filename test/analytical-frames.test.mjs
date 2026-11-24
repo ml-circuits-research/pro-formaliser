@@ -240,3 +240,17 @@ test('keeps chart threshold predicates separate from fields and literal categori
       wire.type === 'w.request.request' && decode(wire.attrs.act?.[0]) === 'remove'));
   assert.ok(requests);
 });
+
+test('composes periodic summaries from catalogued periods and operations',async t=>{
+  const reader=createReader(); t.after(()=>reader.close());
+  await proves(reader,'Show monthly averages of donations as a line chart.',
+    {'chart.period':'month','chart.aggregate':'avg','chart.measure':'donations','chart.type':'line'});
+  await proves(reader,'Plot a bar chart of quarterly totals of parcels.',
+    {'chart.period':'quarter','chart.aggregate':'sum','chart.measure':'parcels','chart.type':'bar'});
+  for (const input of ['Show weekly red of donations as a line chart.',
+    'Show weekly totals of donations or refunds as a line chart.']) {
+    const result=await reader.propose(input);
+    assert.ok(result.candidates.every(c=>!properties(parse(c.sop))['chart.period'] ||
+      !properties(parse(c.sop))['chart.aggregate']),input);
+  }
+});

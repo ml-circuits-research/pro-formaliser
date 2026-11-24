@@ -1,3 +1,4 @@
+import {participantAdjunctReadings} from './participant-adjunct.mjs';
 import {universalInventoryPacket} from './universal-inventory.mjs';
 import {sourceContainerMatch,sourceContainerReading} from './source-container.mjs';
 import {setExclusionReadings} from './set-exclusion.mjs';
@@ -264,7 +265,18 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const nativeProperties=nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly:scope.restricted});
     const titleConnectors = ts.map(([key])=>key).filter(key=>worlds.evidenceVocabulary.grammar.has(key));
     const universalInventory=scope.restricted ? undefined : universalInventoryPacket(ts,quotes,worlds);
-    const request = {text,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    // Pass the comma boundary and world-licensed roles to the independent
+    // fronted search. Ordinary search keeps its own alternatives and limits.
+    const comma=ts.findIndex(([key])=>key===',');
+    const frontedPlan=!scope.restricted && !quotes.length && comma>0 && comma<ts.length-2 &&
+      !ts.slice(comma+1).some(([key])=>[',',';','?'].includes(key)) &&
+      hits.some(([start,,[role]])=>start===ts[comma+1][2] && role==='act') &&
+      hits.some(([,end,[role,,slot]])=>end<=ts[comma][2] && role==='marker' && ['place','spatial'].includes(slot)) ? {
+        comma:ts[comma][2],anchorEnd:ts[comma-1][3],predicate:ts[comma+1][2],
+        acts:[...new Set(worlds.spatialBindings.flatMap(binding=>binding.namedActs))],
+        modifiers:[...worlds.spatialModifiers.rules.keys()].map(words=>words.split(/\s+/u)),
+      } : undefined;
+    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -287,6 +299,16 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (named) retain(named);
       for (const sop of resolveRelationKeys.targetlessAlternatives(answer.sop)) {
         contextualTargets.push({...plain,sop});
+      }
+    }
+    for (const answer of response.frontedCandidates ?? []) {
+      for (const sop of [resolveRelationKeys(answer.sop),...resolveRelationKeys.targetlessAlternatives(answer.sop)]) {
+        const wires=parse(sop), target=wires.find(w=>w.type==='w.request.target');
+        if (!target) continue;
+        const act=valueOf(wires.find(w=>w.type==='w.request.request'),'act');
+        const allowed=worlds.spatialBindings.filter(b=>b.family===valueOf(target,'family') && b.namedActs.includes(act));
+        if (wires.some(w=>w.type==='w.request.constraint' && valueOf(w,'phase')==='result' &&
+            allowed.some(b=>b.relationKey===valueOf(w,'attribute')))) retain({sop,source:'fronted-destination'});
       }
     }
     const dialogue=dialogueCoverage(text);
@@ -709,7 +731,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
-      for (const reading of [...await effectSequence(text,read), ...await setExclusionReadings(text,worlds,read,permit,packet=>worker.request({setExclusion:packet}))]) {
+      for (const reading of [...await participantAdjunctReadings(text,worlds,wrapped,permit), ...await effectSequence(text,read), ...await setExclusionReadings(text,worlds,read,permit,packet=>worker.request({setExclusion:packet}))]) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);
       }

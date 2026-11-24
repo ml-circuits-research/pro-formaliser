@@ -5,6 +5,7 @@ Pachetul se poate revizui și integra pe bucăți. Piloții pentru posturi și e
 | Fișier | Ce adaugă | Ce funcționează azi |
 | --- | --- | --- |
 | [pro.reader/](pro.reader/) | Schemele și regulile folosite deja implicit de formalizator, inclusiv roluri, regiuni și păstrarea stării. | Cititorul le încarcă la pornire. |
+| [Obiect ținut sau purtat](participant-adjunct-pilot/README.md) | O propoziție cu „carrying”, „holding” sau „wearing” leagă obiectul scris de figura descrisă. | „Put a tall woman there, carrying a picnic basket” păstrează femeia, înălțimea, coșul și destinația de rezolvat în context. |
 | [Categorii cuantificate](universal-inventory-pilot/inventory.sop) | O lume declară ce categorii existente admit o operație și ce formă de cuantificator se potrivește numărului gramatical. | În „make all arrows dotted”, rezultatul se aplică tuturor săgeților. Pentru schimbare se cere și un rezultat exprimat. |
 | [Filtrarea observațiilor dintr-un grafic](chart-predicate-pilot/README.md) | Trei chei pentru grupul filtrat, comparație și pragul scris. | „Only the weeks above target” păstrează săptămânile, comparația și referința la țintă. Rezolvarea pragului revine aplicației. |
 | [Câmpurile unui grafic de dispersie](scatter-fields-pilot/README.md) | Două chei pentru datele de pe axe și reguli pentru ordinea câmpurilor. | Pilotul păstrează separat titlurile axelor și câmpurile. Execuția în aplicație rămâne de verificat. |

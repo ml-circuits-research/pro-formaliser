@@ -53,3 +53,12 @@
 @pro.reader.argument_label core.type of=pro.reader.argument_label closed=true
 @pro.reader.argument_label.key core.slot of=pro.reader.argument_label key=key kind=atom required=true
 @pro.reader.argument_label.text core.slot of=pro.reader.argument_label key=text kind=string many=true required=true
+
+# Periodic summaries may name their display before or after the data operand.
+@reader.chart.period_summary.line pro.reader.analytical_frame tab=diagram family=chart layout=ordered_fields owner_key=chart.type owner_value=line owner="a line chart" owner="a line graph" prefix=show prefix=plot prefix=render prefix=draw prefix=make prefix="show me" prefix="give me" prefix="I need to see" pattern="{chart.period} {chart.aggregate} of {chart.measure} as {$owner}" pattern="{$owner} of {chart.period} {chart.aggregate} of {chart.measure}" open_boundary=or open_boundary=and open_boundary=except open_boundary=excluding open_boundary=without
+@reader.chart.period_summary.bar pro.reader.analytical_frame tab=diagram family=chart layout=ordered_fields owner_key=chart.type owner_value=bar owner="a bar chart" owner="a column chart" prefix=show prefix=plot prefix=render prefix=draw prefix=make prefix="show me" prefix="give me" prefix="I need to see" pattern="{chart.period} {chart.aggregate} of {chart.measure} as {$owner}" pattern="{$owner} of {chart.period} {chart.aggregate} of {chart.measure}" open_boundary=or open_boundary=and open_boundary=except open_boundary=excluding open_boundary=without
+@reader.chart.period_adjective.day core.word of=chart.period means=day text=daily text=day-by-day
+@reader.chart.period_adjective.week core.word of=chart.period means=week text=weekly text=week-by-week
+@reader.chart.period_adjective.month core.word of=chart.period means=month text=monthly
+@reader.chart.period_adjective.quarter core.word of=chart.period means=quarter text=quarterly text=quarter-by-quarter
+@reader.chart.period_adjective.year core.word of=chart.period means=year text=annual text=yearly text=year-by-year

@@ -66,6 +66,18 @@ marker(Q, Act, M-N, Role, Relation, Specific) :-
 % Marker spans determine where direct value attachment stops. Ground the
 % anchor only when there is a nominal reading, keeping its descriptive words
 % as evidence for the page lookup.
+% A preposed destination must end at the comma and the affected nominal
+% must finish the command. Both spans use offsets in the original utterance.
+attached_roles(Q, Act, _, Mode, End, Wires, Bounds, Bounds, Fit, Next) :-
+    get_dict(frontedDestination,Q,Clause), !,
+    memberchk(Act,Clause.acts),
+    forall((member([Key,_,Start,_],Q.tokens), Start>=End), memberchk(Key,[".","!"])),
+    marker(Q,Act,M-N,Role,Relation,_), memberchk(Role,["place","spatial"]), Relation \== "",
+    findall(Key,(member([Key,_,_,Finish],Q.tokens), Finish=<M),Prefix),
+    ( Prefix=[] ; memberchk(Prefix,Clause.modifiers) ),
+    nominal_anchor(Q,N,Clause.comma,_,AnchorEnd), AnchorEnd=:=Clause.anchorEnd,
+    attachment(Q,Act,Mode,M-N,Clause.comma,none,Wires,Bounds,_,Fit,1,Next),
+    Wires=[_,_].
 attached_roles(Q, Act, Family, Mode, End, Wires, Bounds, Blocked, Bonus, FirstConstraint) :-
     ( attached_cache(Act-Family,Mode,End,Options) -> true
     ; findall(Option, candidate_attachment(Q,Act,Family,Mode,End,Option), Options),
