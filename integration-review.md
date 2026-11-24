@@ -24,3 +24,9 @@ With the installed model, the photo example reproduces its annotation, including
 Use these two rows to verify relation generation with their other arguments intact. The bird request includes creation of two birds and a fence anchor. The photo request changes one existing target, sets width to 6.5 inches, and derives height from the new width. Keep the source phase explicit and check endpoint ownership, property family, and compatible numeric units before application. This preserves a reusable interpretation of the relation without learning fixed phrases or example-specific numbers.
 
 Run the current proposal tests with `.cache/node/bin/node --test test/world-proposals.test.mjs`. Replay an input with `SOP_WORLDS=sop-worlds .cache/node/bin/node bin/formalise.mjs --worlds-only --tab diagram --json 'Set the route on the link to curvy'`. Use `--tab drawing` for the bird case.
+
+## Follow-up on the formaliser response
+
+The response in commit 0d927fe addresses all six examples. It distinguishes a faithful alternative from the first reading used by a consumer. The outstanding reader work includes ranking the grounded property frame, keeping a named link's endpoints with its command, and emitting a complete reciprocal reading. [Formaliser response](integration-review.responses.md)
+
+The data audit found 148 drawing requests containing reciprocal facing. A separate colour example exposes a distinction in the proposed schema. “The houses should have the same colour” permits any common colour. “Paint the second house the same colour as the first” makes only the second house the edit target and takes its value from the first. The current shared fact has a members set and a property. It cannot encode this direction. The data worker has been asked for one full reading of each kind before migrating examples.
