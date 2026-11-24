@@ -23,13 +23,33 @@ estimate(Q, Result) :-
           ( get_dict(textEvidence,C,Proof) -> Row=Base.put(textEvidence,Proof) ; Row=Base ) ),
         Scored),
     keysort(Scored,Asc), reverse(Asc,Desc), pairs_rows(Desc,ContextRanking),
-    text_ranking(ContextRanking,Ranked), maplist(drop_text_packet,Ranked,Ranking),
+    text_ranking(ContextRanking,Ranked), maybe_rank_relations(Ranked,Relations),
+    maplist(drop_text_packet,Relations,Ranking),
     decision(Ranking,Decision,Index),
     Result = _{selectedIndex:Index,decision:Decision,ranking:Ranking}.
 
 pairs_rows([],[]).
 pairs_rows([_-X|Xs],[X|Rs]) :- pairs_rows(Xs,Rs).
 drop_text_packet(Row,Public) :- (del_dict(textEvidence,Row,_,Public) -> true ; Public=Row).
+
+% Promote only over a peer with the same grounded body. Use the peer's
+% position so unrelated interpretations keep their contextual rank.
+maybe_rank_relations(Ranking,Ranked) :-
+    ( member(Row,Ranking), get_dict(textEvidence,Row,Proof), get_dict(relationPeers,Proof,_) ->
+        relation_ranking(Ranking,Ranked)
+    ; Ranked=Ranking ).
+
+relation_ranking([],[]).
+relation_ranking([Row|Rest],[Promoted|Ranked]) :-
+    ( append(Before,[Extension|After],Rest),
+      get_dict(textEvidence,Extension,Proof),
+      get_dict(relationPeers,Proof,Peers), memberchk(Row.index,Peers),
+      Extension.contextScore >= Row.contextScore ->
+        append(Before,[Row|After],Next),
+        append(Extension.reasons,[_{signal:"grounded_relation_extension",peer:Row.index,weight:0}],Reasons),
+        Promoted=Extension.put(reasons,Reasons)
+    ; Promoted=Row, Next=Rest ),
+    relation_ranking(Next,Ranked).
 
 % Text compares only compatible act/owner interpretations, leaving their
 % shared positions relative to other interpretations as ranked by context.

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { createFormaliser } from '../src/formaliser.mjs';
+import { quotedLiteralCleanup } from '../src/literal-attachment.mjs';
 import { evidenceInText } from '../src/grounding.mjs';
 import { parse, validate } from '../src/schema.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
@@ -66,4 +67,63 @@ test('reads a literal cue and field contributed by an independently declared fam
   assert.ok(grounded);
   assert.ok(evidenceInText(text,grounded.sop,worlds));
   assert.ok(validate(grounded.sop,worlds));
+});
+
+function copiedLiteral(family, key, value, extra = '') {
+  return {source:'alignment',status:'matched',sop:[
+    '@r w.request.request act=make mood=do predicate=add',
+    '@t w.request.target request=$r family='+family+' mode=new',
+    '@c w.request.constraint request=$r on=attribute attribute='+key+' operator=eq phase=result value='+JSON.stringify(value),
+    extra
+  ].filter(Boolean).join('\n')};
+}
+
+test('cleans a quoted display payload and keeps grounded placement', async t => {
+  const worlds=loadWorlds();
+  assert.ok(!worlds.literalGrammar.bindings.some(binding=>binding.family==='drawn' && binding.role==='payload' && binding.attribute==='drawn.text'));
+  const text="add the word 'BAKERY' above the gate";
+  const candidate=copiedLiteral('drawn','drawn.text',"the word 'BAKERY'",[
+    '@p w.request.constraint request=$r on=place attribute=drawn.relation value=above operator=relation phase=result',
+    '@a w.request.constraint request=$r on=place attribute=drawn.anchor value="the gate" operator=relation phase=selector'
+  ].join('\n'));
+  const reader=createFormaliser({version:1,examples:[{text,sop:candidate.sop,count:1}],templates:[],lexicon:{}},worlds);
+  t.after(()=>reader.close());
+  const result=await reader.formalise(text);
+  const cleaned=result.candidates.find(c=>c.source==='quoted-literal-cleanup');
+  assert.ok(cleaned);
+  assert.ok(hasField(cleaned,'drawn.text','BAKERY'));
+  for (const id of ['p','a']) assert.deepEqual(parse(cleaned.sop).find(w=>w.id===id).attrs,
+    parse(candidate.sop).find(w=>w.id===id).attrs);
+  assert.ok(evidenceInText(text,cleaned.sop,worlds));
+  assert.ok(validate(cleaned.sop,worlds));
+});
+
+test('requires a uniquely located authored quote, licensed introducer and bound literal role', t=>{
+  const dir=mkdtempSync(fileURLToPath(new URL('../.cache/quoted-cleanup-test-',import.meta.url)));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  const overlay=join(dir,'press.sop');
+  writeFileSync(overlay,`
+@press std.schema.world name=w.press
+@poster std.schema.kind of=w.press.poster world=w.press acts=make
+@title w.request.key tab=diagram family=poster name=poster.heading head=span
+@title.role pro.reader.literal family=poster attribute=poster.heading role=payload text=headline
+`);
+  const worlds=loadWorlds({paths:[overlay]});
+  const value='the headline “Café & scones!”';
+  const text='add '+value;
+  const candidate=copiedLiteral('poster','poster.heading',value);
+  const cleaned=quotedLiteralCleanup(text,candidate,worlds);
+  assert.ok(hasField(cleaned,'poster.heading','Café & scones!'));
+  assert.ok(validate(cleaned.sop,worlds));
+  assert.ok(evidenceInText(text,cleaned.sop,worlds));
+  for (const [text,key,value] of [
+    ['add the headline “Saved”','poster.unknown','the headline “Saved”'],
+    ['add the title “Saved”','poster.heading','the title “Saved”'],
+    ['add every headline “Saved”','poster.heading','every headline “Saved”'],
+    ['add the headline “Some ‘nested’ text”','poster.heading','the headline “Some ‘nested’ text”'],
+    ['add the headline “Saved”','poster.heading','the headline “Different”'],
+    ['add the headline “Saved” on top','poster.heading','the headline “Saved” on top'],
+    ['add the headline “Saved” then add the headline “Saved”','poster.heading','the headline “Saved”'],
+    ['add “the headline ‘Saved’”','poster.heading','the headline ‘Saved’'],
+  ]) assert.equal(quotedLiteralCleanup(text,copiedLiteral('poster',key,value),worlds),undefined,text);
 });

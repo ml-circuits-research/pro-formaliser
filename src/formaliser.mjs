@@ -31,7 +31,7 @@ import { nativeNominalPhraseReadings, nominalPhraseReadings } from './nominal-ph
 import { sequenceNameReadings } from './sequence-names.mjs';
 import { postfixSetQuestions, universalTargetReading } from './set-query.mjs';
 import { modifierReading } from './nominal-modifiers.mjs';
-import { literalAttachments } from './literal-attachment.mjs';
+import { literalAttachments, quotedLiteralCleanup } from './literal-attachment.mjs';
 import { createNearExample } from './near-example.mjs';
 import { nominalNumberReading } from './nominal-number.mjs';
 import { namedTargetReading } from './target-names.mjs';
@@ -660,6 +660,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const candidate of [...candidates,...additional.values()]) {
         for (const reading of spatialAnchorReadings(text,candidate,worlds,permit)) {
           const key=admissibleKey(text,reading.sop);
+          if (key) additional.set(key,reading);
+        }
+      }
+      if (quotedSpans(text).length) {
+        for (const candidate of [...candidates,...additional.values()]) {
+          const reading=quotedLiteralCleanup(text,candidate,worlds);
+          const key=reading && admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
         }
       }

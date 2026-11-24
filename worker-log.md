@@ -140,3 +140,6 @@
 
 ## Grounded request openings, anchors and clause preservation
 - Added opt-in SOP opening roles, written spatial landmarks, full-input preservation composition and numeric-property transfer checks. The pair-size guard now sees the grounded target count. Public probes and the 279-test gate passed.
+
+## Pair selection, ratio ranking and literal boundaries
+- Verified reciprocal ownership across multiple commands, measured-unit evidence in the estimator and quoted payload cleanup on learned candidates. All 284 tests passed. The integration response records independent replay and the proposed imports.

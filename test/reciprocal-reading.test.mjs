@@ -85,3 +85,67 @@ test('an unrelated declared predicate and marker work on a different pair',async
   assert.equal(relation.attrs.predicate[0],'$w.relational.routes');
   assert.equal(relation.attrs.words[0],'"routing to its counterpart"');
 });
+
+test('enriches an explicitly scoped pair without changing a separate right-facing target',async t=>{
+  const worlds=loadWorlds({paths:[local]});
+  const first='show two dogs by the tent facing one another';
+  const second='a small dog on the left facing right';
+  const input=first+', and '+second+' — exactly where the picture needs it';
+  const firstWires=[
+    '@r1 w.request.request act=make mood=do predicate=show words='+JSON.stringify(first),
+    '@r1.t w.request.target request=$r1 family=drawn mode=new sort=dog sort_words=dogs count_words=two',
+    '@r1.p w.request.constraint request=$r1 on=place attribute=drawn.relation value=by words="by the tent" operator=relation phase=result open_value=true',
+    '@r1.a w.request.constraint request=$r1 on=place attribute=drawn.anchor value="the tent" operator=relation phase=selector',
+    '@r1.u w.request.unread request=$r1 text="dogs by the tent facing one another"',
+  ];
+  const secondWires=[
+    '@r2 w.request.request act=make mood=do words='+JSON.stringify(second),
+    '@r2.t w.request.target request=$r2 family=drawn mode=new sort=dog',
+    '@r2.s w.request.constraint request=$r2 on=size attribute=drawn.size value=small operator=degree phase=result',
+    '@r2.p w.request.constraint request=$r2 on=attribute attribute=drawn.at value=left words="on the left" operator=region phase=result',
+    '@r2.f w.request.constraint request=$r2 on=attribute attribute=drawn.facing value=right operator=eq phase=result key_words=facing',
+  ];
+  const sop=[...firstWires,...secondWires].join('\n');
+  const reader=createReader(model(input,sop),worlds);
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose(input);
+  const reading=candidates.find(item=>item.source==='reciprocal');
+  assert.ok(reading);
+  const wires=parse(reading.sop);
+  assert.ok(validate(reading.sop,worlds));
+  assert.ok(evidenceInText(input,reading.sop,worlds));
+  assert.equal(wires.find(w=>w.id==='r1.t').attrs.count[0],'2');
+  assert.deepEqual(wires.filter(w=>w.type==='w.relational.reciprocal').map(w=>w.attrs.members),[['$r1.t']]);
+  assert.deepEqual(wires.filter(w=>w.id==='r2' || w.attrs.request?.[0]==='$r2'),parse(secondWires.join('\n')));
+  assert.equal(reciprocalReading(input,{sop,source:'lexicon'},worlds),undefined);
+  assert.equal(reciprocalReading('Do not '+input,{sop,source:'example'},worlds),undefined);
+  const swapped=sop.replace(first,first.replace('facing one another','facing right'));
+  assert.equal(reciprocalReading(input,{sop:swapped,source:'example'},worlds),undefined);
+});
+
+test('only replaces an exact open directional value for the declared key',async t=>{
+  const worlds=loadWorlds({paths:[local]});
+  const prefix='show two bears by the woods facing one another';
+  const input=prefix+', so the whole scene still reads';
+  const sop=[
+    '@f w.request.filler text="so the whole scene still reads"',
+    '@r w.request.request act=make mood=do predicate=show words='+JSON.stringify(prefix),
+    '@t w.request.target request=$r family=drawn mode=new sort=bear sort_words=bears count_words=two',
+    '@p w.request.constraint request=$r on=place attribute=drawn.relation value=by words="by the woods" operator=relation phase=result open_value=true',
+    '@d w.request.constraint request=$r on=attribute attribute=drawn.facing value="one another" operator=eq phase=result open_value=true key_words=facing words="facing one another"',
+  ].join('\n');
+  const reader=createReader(model(input,sop),worlds);
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose(input);
+  const reading=candidates.find(item=>item.source==='reciprocal');
+  assert.ok(reading);
+  assert.ok(validate(reading.sop,worlds));
+  const wires=parse(reading.sop);
+  assert.ok(!wires.some(w=>w.id==='d'));
+  assert.ok(wires.some(w=>w.id==='f'));
+  assert.deepEqual(wires.find(w=>w.type==='w.relational.reciprocal').attrs.words,['"facing one another"']);
+  const use=sop+'\n@l w.request.lookup request=$r constraint=$d key=thing from=page';
+  assert.equal(reciprocalReading(input,{sop:use,source:'example'},worlds),undefined);
+  const conflicting=sop.replace('value="one another"','value=right');
+  assert.equal(reciprocalReading(input,{sop:conflicting,source:'example'},worlds),undefined);
+});

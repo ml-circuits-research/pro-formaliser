@@ -583,7 +583,8 @@ function compile(facts) {
     scopeGrammar:scopeGrammar(facts),
     literalGrammar: {
       creationRoles:compileCreationRoles(facts,requestKeys,words),
-      leads, contentLeads, namingLeads, bindings:literalBindings,
+      leads, contentLeads, namingLeads, bindings:literalBindings.filter(binding=>binding.role!=='quoted'),
+      quoteBindings:literalBindings,
       verbs: surface => literalVerbs.get(surface) ?? [],
       licenses: (family, act) => familyActs.get(family)?.includes(act),
     }, evidenceVocabulary:evidenceVocabulary(facts),

@@ -12,6 +12,32 @@ const decimal = /^[+-]?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)$/u;
 const valuesOf=(wire,key)=>(wire.attrs[key] ?? []).map(decoded);
 const identity=(family,key)=>JSON.stringify([family,key]);
 
+export function resolveWrittenMeasurement(text,worlds,family,key) {
+  const ts=tokens(text), chars=Array.from(text);
+  const dimensions=worlds.ownerPropertyUnits?.get(identity(family,key));
+  const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
+  const before=(a,b)=>ts.slice(a,b).map(([term])=>term).join(' ');
+  let measurement;
+  for (let j=ts.length;j>0;j--) {
+    const written=span(0,j), numeral=worlds.nominalNumbers.get(before(0,j));
+    const literal=decimal.test(written) && Number.isFinite(Number(written));
+    if (!literal && !(numeral?.kind==='cardinal' && /^\d+$/u.test(numeral.value))) continue;
+    const number=literal ? written : numeral.value;
+    if (j===ts.length) return {value:number};
+    const units=new Map([
+      ...(worlds.ownerPropertyUnitNames?.get(before(j,ts.length)) ?? []),
+      ...(worlds.ownerPropertyUnitSymbols?.get(span(j,ts.length)) ?? [])
+    ]);
+    if (dimensions?.size!==1 || units.size!==1 || written.startsWith('-')) continue;
+    const [unit]=units.values();
+    if (!dimensions.has(unit.quantity)) continue;
+    if (measurement) return null;
+    const measure=number.replace(/^\+/u,'').replace(/^\./u,'0.');
+    measurement={measure,unit:unit.name,words:written};
+  }
+  return measurement ? {value:text,measurement} : {};
+}
+
 export function compileOwnerPropertyOperands(facts,requestKeys,words) {
   const slots=facts('core.slot');
   const slotsByField=new Map();
@@ -212,27 +238,9 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
         let resolved, measurement;
         if (property.values.length) resolved=closedValue(worlds,property,form(words));
         else if (number && !quotedValue) {
-          const dimensions=worlds.ownerPropertyUnits?.get(identity(family,property.name));
-          for (let j=b;j>from;j--) {
-            const written=span(from,j), numeral=worlds.nominalNumbers.get(before(from,j));
-            const literal=decimal.test(written) && Number.isFinite(Number(written));
-            if (!literal && !(numeral?.kind==='cardinal' && /^\d+$/u.test(numeral.value))) continue;
-            if (j===b) {
-              resolved=literal ? written : numeral.value;
-              break;
-            }
-            const units=new Map([
-              ...(worlds.ownerPropertyUnitNames?.get(before(j,b)) ?? []),
-              ...(worlds.ownerPropertyUnitSymbols?.get(span(j,b)) ?? [])
-            ]);
-            if (dimensions?.size!==1 || units.size!==1 || written.startsWith('-')) continue;
-            const [unit]=units.values();
-            if (!dimensions.has(unit.quantity)) continue;
-            if (measurement) return [];
-            const measure=(literal ? written : numeral.value).replace(/^\+/u,'').replace(/^\./u,'0.');
-            measurement={measure,unit:unit.name,words:written};
-            resolved=raw;
-          }
+          const numeric=resolveWrittenMeasurement(raw,worlds,family,property.name);
+          if (!numeric) return [];
+          ({value:resolved,measurement}=numeric);
           // A written reference to an earlier property is not a scalar
           // operand. Preserve it without evaluating it or guessing a formula.
           if (!resolved && i>0 && plain(from,b) && !worlds.lookup(before(from,from+1)).some(([role])=>role==='act')) {

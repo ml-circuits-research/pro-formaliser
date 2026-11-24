@@ -1,6 +1,7 @@
 import { parse, serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
-import { literalField } from './evidence.mjs';
+import { literalField, literalRanges } from './evidence.mjs';
 import { tokens } from './lexicon.mjs';
+import { quotedSpans } from './literal-roles.mjs';
 
 const type = name => 'w.request.' + name;
 const raw = (wire, name) => wire.attrs[name]?.[0];
@@ -8,6 +9,7 @@ const decode = value => value?.startsWith('"') ? JSON.parse(value) : value;
 const get = (wire, name) => decode(raw(wire,name));
 const word = /^[\p{L}\p{M}\p{N}_]+$/u;
 const punctuation = new Set(['.', '!', '?']);
+const nominalDeterminers = new Set(['definite','indefinite','demonstrative','possessive']);
 
 function locations(ts, surface, start = 0) {
   const forms = tokens(surface).map(token => token[0]);
@@ -112,4 +114,64 @@ export function literalAttachments(text, candidate, worlds) {
     }
   }
   return readings;
+}
+
+// A value inherited from another reading can contain a written introducer
+// and its quotation marks. Strip those only when the existing typed slot has
+// an independent native cue for that exact written construction.
+export function quotedLiteralCleanup(text, candidate, worlds) {
+  if (!candidate?.sop?.includes(' w.request.constraint ') || !/["'‘“]/u.test(text)) return;
+  const chars = Array.from(text);
+  const authored = quotedSpans(text).map(({start,end,value}) => ({
+    start: chars.slice(0,start).join('').length, end: chars.slice(0,end).join('').length, value,
+  }));
+  if (!authored.length) return;
+  const wires = parse(candidate.sop);
+  const requests = wires.filter(wire => wire.type === type('request'));
+  let changed = false;
+  for (const request of requests) {
+    const ref = '$' + request.id;
+    const targets = wires.filter(wire => wire.type === type('target') && raw(wire,'request') === ref);
+    if (targets.length !== 1 || ![undefined,'do'].includes(get(request,'mood'))) continue;
+    const family = get(targets[0],'family');
+    const grammar = worlds.literalGrammar;
+    if (!grammar?.licenses(family,get(request,'act'))) continue;
+    const bindings = grammar.quoteBindings.filter(binding => binding.family === family);
+    if (!bindings.length) continue;
+    const scoped = get(request,'words');
+    const ranges = scoped ? literalRanges(text,scoped) : requests.length === 1 ? [[0,text.length]] : [];
+    if (ranges.length !== 1) continue;
+    const [[from,to]] = ranges;
+    for (const wire of wires) {
+      if (wire.type !== type('constraint') || raw(wire,'request') !== ref || get(wire,'on') !== 'attribute' ||
+          get(wire,'operator') !== 'eq' || ![undefined,'result'].includes(get(wire,'phase')) ||
+          ![undefined,'yes'].includes(get(wire,'want')) || wire.attrs.value?.length !== 1) continue;
+      const value = get(wire,'value'), attribute = get(wire,'attribute');
+      if (!bindings.some(binding => binding.attribute === attribute && binding.surfaces.length)) continue;
+      const occurrences = literalRanges(text,value,from,to);
+      if (occurrences.length !== 1) continue;
+      const [[start,end]] = occurrences;
+      const matching = authored.filter(q => start <= q.start && q.end <= end);
+      if (matching.length !== 1) continue;
+      const [literal] = matching;
+      if (literal.start <= start || literal.end !== end || !literal.value.trim() || quotedSpans(literal.value).length) continue;
+      const intro = text.slice(start,literal.start);
+      const terms = tokens(intro).map(([form]) => form);
+      if (!/\s$/u.test(intro) || !terms.length || terms.some(form => !word.test(form))) continue;
+      const cues = new Set();
+      for (let i = 0; i < terms.length; i++) {
+        if (i && !nominalDeterminers.has(worlds.determiners[terms.slice(0,i).join(' ')])) continue;
+        const cue = terms.slice(i).join(' ');
+        for (const binding of bindings) if (binding.surfaces.includes(cue)) cues.add(binding.attribute);
+      }
+      if (cues.size !== 1 || !cues.has(attribute)) continue;
+      const words = get(wire,'words'), quoted = text.slice(literal.start,literal.end);
+      if (words !== undefined && ![value,quoted,literal.value].includes(words)) continue;
+      wire.attrs.value = [JSON.stringify(literal.value)];
+      wire.attrs.words = [JSON.stringify(literal.value)];
+      wire.attrs.key_words ??= [JSON.stringify(intro.trimEnd())];
+      changed = true;
+    }
+  }
+  if (changed) return {...candidate,sop:serialize(wires).trimEnd(),source:'quoted-literal-cleanup'};
 }

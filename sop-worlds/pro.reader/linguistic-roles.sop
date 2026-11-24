@@ -17,6 +17,7 @@
 @reader.document.text.payload pro.reader.literal family=text attribute=text.content role=payload text=saying
 @reader.document.text.name pro.reader.literal family=text attribute=text.title role=name text=titled
 @reader.drawing.drawn.name pro.reader.literal family=drawn attribute=drawn.name role=name
+@reader.drawing.drawn.text pro.reader.literal family=drawn attribute=drawn.text role=quoted text=word
 @reader.drawing.group.name pro.reader.literal family=group attribute=group.name role=name
 @reader.diagram.chart.label pro.reader.literal family=chart attribute=chart.label role=name text=labeled text=labelled
 @reader.diagram.chart.title pro.reader.literal family=chart attribute=chart.title role=name text=titled

@@ -43,7 +43,7 @@
 @pro.reader.literal core.type of=pro.reader.literal closed=true
 @pro.reader.literal.family core.slot of=pro.reader.literal key=family kind=atom required=true
 @pro.reader.literal.attribute core.slot of=pro.reader.literal key=attribute kind=atom required=true
-@pro.reader.literal.role core.slot of=pro.reader.literal key=role enum=payload enum=name required=true
+@pro.reader.literal.role core.slot of=pro.reader.literal key=role enum=payload enum=name enum=quoted required=true
 @pro.reader.literal.text core.slot of=pro.reader.literal key=text kind=string many=true
 
 # Two ordered, open number keys read together after a declared cue.
