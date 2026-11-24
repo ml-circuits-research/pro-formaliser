@@ -1,3 +1,5 @@
+import { slotForms } from './slot-forms.mjs';
+import { loadWorlds } from './worlds.mjs';
 import { learnConstraints } from './constraints.mjs';
 import { contextLearner } from './context.mjs';
 import { learnLexicon } from './lexicon.mjs';
@@ -17,7 +19,7 @@ export function tokenize(text) {
   }));
 }
 
-function attributes(sop) {
+function attributes(sop, openKeys) {
   const fields = [];
   let offset = 0;
   for (const line of sop.split('\n')) {
@@ -36,7 +38,8 @@ function attributes(sop) {
       const start = offset + match.index + match[0].length - encoded.length;
       lineFields.push({ key, encoded, value, start, end: start + encoded.length, quoted });
     }
-    const open = lineFields.some(field => field.key === 'open_value' && field.encoded === 'true');
+    const open = lineFields.some(field => (field.key === 'open_value' && field.encoded === 'true') ||
+      (field.key === 'attribute' && openKeys.has(field.value)));
     for (const field of lineFields) {
       fields.push({ ...field, open });
     }
@@ -84,12 +87,17 @@ function isGroundingField(field) {
     field.key === 'predicate' || field.key.endsWith('_words');
 }
 
+function structuredKind(value) {
+  if (numberPattern.test(value)) return 'number';
+  if (/^\d{4}-\d{2}-\d{2}$/u.test(value)) return 'date';
+  if (/^\d{1,2}:\d{2}(?::\d{2})?$/u.test(value)) return 'time';
+}
 function isCopyableValue(field, tokens, span) {
   if (field.key === 'name') return true;
   if (field.key !== 'value') return false;
   // A grounded enum can also match the input verbatim. Generalize payloads with
   // independent evidence of being open, numeric or delimited by the speaker.
-  if (field.open || numberPattern.test(field.value)) return true;
+  if (field.open || structuredKind(field.value)) return true;
   const left = tokens[span.first - 1]?.raw;
   return sourceQuotes.has(left) && sourceQuotes.get(left) === tokens[span.after]?.raw;
 }
@@ -108,7 +116,7 @@ function outputParts(sop, fields, captures, textSpan) {
   const used = new Set();
   let previous = 0;
   for (const field of fields) {
-    if (!isGroundingField(field) && field.key !== 'value') continue;
+    if (!isGroundingField(field) && field.key !== 'value' && !(field.key === 'measure' && numberPattern.test(field.value))) continue;
     let replacement;
     const span = textSpan(field.value);
     if (!span) continue;
@@ -146,8 +154,8 @@ function outputParts(sop, fields, captures, textSpan) {
   return used.size === captures.length ? parts : undefined;
 }
 
-function align(text, sop) {
-  const fields = attributes(sop);
+function align(text, sop, openKeys) {
+  const fields = attributes(sop, openKeys);
   if (!fields.some(field => field.key === 'name' || field.key === 'value')) return undefined;
   const tokens = tokenize(text);
   const starts = new Map(tokens.map((token, index) => [token.start, index]));
@@ -170,7 +178,7 @@ function align(text, sop) {
     possible.push({
       ...span,
       raw: field.value,
-      kind: numberPattern.test(field.value) ? 'number' : undefined,
+      kind: structuredKind(field.value) ?? (field.open ? 'phrase' : undefined),
     });
   }
   if (!possible.length) return undefined;
@@ -237,7 +245,7 @@ function learn(group) {
   return { pattern: learnedPattern, parts: learnedParts, count };
 }
 
-function learnTemplates(rows) {
+function learnTemplates(rows, openKeys) {
   const byText = new Map();
   for (const { text, sop } of rows) {
     const choices = byText.get(text);
@@ -253,7 +261,7 @@ function learnTemplates(rows) {
   const groups = new Map();
   for (const choices of byText.values()) {
     for (const example of choices) {
-      const induction = align(example.text, example.sop);
+      const induction = align(example.text, example.sop, openKeys);
       if (!induction) continue;
       const { pattern, parts, captures } = induction;
       const key = JSON.stringify([pattern, parts]);
@@ -295,12 +303,14 @@ function learnTemplates(rows) {
 }
 
 export function train(rows) {
-  const { examples, templates } = learnTemplates(rows);
+  const openKeys = new Set(loadWorlds().requestKeys.filter(k => k.head === 'span' && !k.values.length).map(k => k.name));
+  const { examples, templates } = learnTemplates(rows, openKeys);
   const context = contextLearner();
-  const lexicon = learnLexicon(rows, context);
+  const forms = slotForms();
+  const lexicon = learnLexicon(rows, context, forms);
   for (const [phrase, records] of Object.entries(learnConstraints(rows))) {
     if (!Object.hasOwn(lexicon, phrase)) Object.defineProperty(lexicon, phrase, {value:[],enumerable:true});
     lexicon[phrase].push(...records);
   }
-  return { version: 1, examples, templates, lexicon, context: context.finish() };
+  return { version: 1, examples, templates, lexicon, forms:forms.finish(), context: context.finish() };
 }

@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { loadCorpus, splitCorpus } from '../src/corpus.mjs';
-import { SPELL_DICTIONARY, spellcheck, spellcheckTokens } from '../src/spell.mjs';
+import { SPELL_DICTIONARY, loadSpellingContext, spellcheck, spellcheckTokens } from '../src/spell.mjs';
 
 const allChanges = process.argv.includes('--all-changes');
+const context = process.argv.includes('--no-context') ? null : loadSpellingContext();
 const dictionary = new Set(readFileSync(SPELL_DICTIONARY, 'utf8').toLowerCase().trim().split('\n'));
 const corpus = loadCorpus();
 const { heldOut } = splitCorpus(corpus.rows);
@@ -44,7 +45,7 @@ function evaluateBatch(rows) {
     chunks.push(row.text);
     start += row.text.length + 2;
   }
-  const result = spellcheck(chunks.join('\n\n'));
+  const result = spellcheck(chunks.join('\n\n'), { context });
   for (const field of ['corrections', 'ambiguities']) {
     let index = 0;
     for (const change of result[field]) {
@@ -87,6 +88,7 @@ for (const { row, corrections, ambiguities } of corrupted) {
 const restoredCount = Object.values(restored).reduce((sum, count) => sum + count, 0);
 console.log(JSON.stringify({
   revision: corpus.revision,
+  contextTrainingRevision: context?.revision ?? null,
   heldOutRows: heldOut.length,
   spellcheckableCleanTokens: cleanTokens,
   cleanChanges: cleanChanges.length,

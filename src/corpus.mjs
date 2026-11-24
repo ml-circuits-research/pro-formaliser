@@ -60,14 +60,15 @@ export function normalizeText(text) {
   return text.normalize('NFKC').toLowerCase().trim().replace(/\s+/gu, ' ');
 }
 
-export function splitCorpus(rows) {
+export function splitCorpus(rows, bucket = 0) {
+  if (!Number.isInteger(bucket) || bucket < 0 || bucket >= 100) throw Error("Invalid holdout bucket");
   const groups = new Map();
   const training = [], heldOut = [];
   for (const row of rows) {
     const key = normalizeText(row.text);
     if (!groups.has(key)) {
       const hash = createHash('sha256').update(key).digest();
-      groups.set(key, hash.readUInt32BE(0) % 100 === 0 ? heldOut : training);
+      groups.set(key, hash.readUInt32BE(0) % 100 === bucket ? heldOut : training);
     }
     groups.get(key).push(row);
   }

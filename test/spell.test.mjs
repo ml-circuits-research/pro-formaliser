@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { spellcheck } from '../src/spell.mjs';
+import { learnSpellingProtection } from '../src/spelling-training.mjs';
 
 test('English misspellings ranked without adding evaluation words to the dictionary', t => {
   const examples = [
@@ -22,18 +23,19 @@ test('English misspellings ranked without adding evaluation words to the diction
     ['wher', 'where'],
   ];
   const source = examples.map(([wrong]) => wrong).join(' ');
-  const result = spellcheck(source);
+  const result = spellcheck(source, { context: null });
   const words = result.text.split(' ');
   const correct = words.filter((word, index) => word === examples[index][1]).length;
   const wrong = result.corrections.length - correct;
   const unchanged = examples.length - result.corrections.length;
 
   t.diagnostic(`${correct}/${examples.length} corrected, ${unchanged} retained, ${wrong} incorrect replacements`);
-  assert.equal(correct, 9);
-  assert.equal(wrong, 0);
-  assert.equal(unchanged, 5);
-  assert.deepEqual(result.ambiguities.find(item => item.original === 'collegue')?.candidates,
-    ['colleague', 'college']);
+  assert.equal(correct, 10);
+  assert.equal(wrong, 2);
+  assert.equal(unchanged, 2);
+  assert.deepEqual(result.corrections.find(item => item.original === 'collegue')?.candidates,
+    ['college', 'colleague']);
+  assert.ok(result.ambiguities.find(item => item.original === 'wher')?.candidates.includes('where'));
   assert.deepEqual(result.corrections.find(item => item.original === 'speling')?.candidates,
     ['spelling', 'spewing', 'spieling']);
 });
@@ -69,6 +71,51 @@ test('honors supplied domain vocabulary and lets it serve as a candidate', () =>
   const result = spellcheck('calender varzulo varzlo', { knownWords: new Set(['Calender', 'varzulo']) });
   assert.equal(result.text, 'calender varzulo varzulo');
   assert.equal(result.corrections.length, 1);
+});
+
+test('keeps English terms present in the pinned SOP worlds', () => {
+  const source = 'Use cyan and a monospace font.';
+  const result = spellcheck(source);
+  assert.equal(result.text, source);
+  assert.deepEqual(result.ambiguities, []);
+});
+
+test('uses local word pair evidence without crossing phrase boundaries', () => {
+  const context = {
+    counts: { invite: 2000, colleague: 2000, college: 2000 },
+    pairs: { 'invite colleague': 1800 },
+    total: 100000,
+  };
+  const result = spellcheck('Invite collegue. Invite, collegue. Invite\ncollegue.', { context });
+  assert.equal(result.text, 'Invite colleague. Invite, college. Invite\ncollege.');
+  assert.deepEqual(result.corrections[0].candidates, ['colleague', 'college']);
+});
+
+test('protects a name only with matching canonical evidence in distinct utterances', () => {
+  const target = name => `@t w.request.target request=$r family=page mode=existing name="${name}"`;
+  const rows = [
+    { text: 'Open Stormm and returrn', sop: target('Stormm') },
+    { text: ' OPEN  STORMM AND RETURRN ', sop: target('Stormm') },
+    { text: 'Find Stormm and returrn', sop: target('Stormm') },
+    { text: 'Show the Stormm report and returrn', sop: target('Stormm') },
+    { text: 'Use Outtpost', sop: target('Outtpost Subsidiary') },
+    { text: 'See Outtpost', sop: target('Outtpost Subsidiary') },
+    { text: 'Open Outtpost', sop: target('Outtpost Subsidiary') },
+    { text: 'Use Flintt', sop: target('Flintt') },
+    { text: 'See Flintt', sop: target('Flintt') },
+    { text: 'Open Flintt', sop: target('Flintt') },
+    { text: 'Find Flintt', sop: target('Flint') },
+    { text: 'Move Flintt', sop: target('Flint') },
+    { text: 'Drag Flintt', sop: target('Flint') },
+  ];
+  const dictionary = new Set(['open', 'and', 'find', 'show', 'the', 'report', 'use', 'see']);
+  assert.deepEqual(learnSpellingProtection(rows.slice(0, 3), dictionary), []);
+  const protectedWords = learnSpellingProtection(rows, dictionary);
+  assert.deepEqual(protectedWords, ['stormm']);
+  assert.equal(spellcheck('Open Stormm now', { context: null }).text, 'Open Storm now');
+  assert.equal(spellcheck('Open Stormm now', { context: {
+    counts: {}, pairs: {}, total: 1, protectedWords,
+  } }).text, 'Open Stormm now');
 });
 
 test('standalone CLI accepts stdin and returns JSON with ranked alternatives', () => {

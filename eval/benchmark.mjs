@@ -9,7 +9,7 @@ import { intersectCount, signatures } from './signatures.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const cache = join(root, '.cache');
 const options = {};
-const flags = new Set(['--dataset', '--knowledge', '--revision', '--model', '--report', '--details']);
+const flags = new Set(['--dataset', '--knowledge', '--revision', '--model', '--report', '--details', '--bucket', '--context']);
 for (let i = 2; i < process.argv.length; i += 2) {
   const [flag, value] = process.argv.slice(i, i + 2);
   if (!flags.has(flag) || !value || value.startsWith('--')) throw new Error('Expected a benchmark option and value: ' + flag);
@@ -80,7 +80,8 @@ function summarize(training, heldOut) {
 }
 
 const corpus = loadCorpus({ dataset, revision });
-const { training, heldOut } = splitCorpus(corpus.rows);
+const bucket = Number(options.bucket ?? 0);
+const { training, heldOut } = splitCorpus(corpus.rows, bucket);
 const trainingGroups = new Set(training.map(row => normalizeText(row.text)));
 if (heldOut.some(row => trainingGroups.has(normalizeText(row.text)))) throw new Error('Normalized holdout leaked into training');
 if (!training.length || !heldOut.length) throw new Error('Benchmark requires both training and held-out rows');
@@ -91,13 +92,16 @@ const trainAt = performance.now();
 writeFileSync(modelPath, JSON.stringify(train(training)));
 const trainingSeconds = (performance.now() - trainAt) / 1000;
 
-const inputs = [...new Set(heldOut.map(row => row.text))];
+const context = options.context ?? 'text';
+if (!['text','tab'].includes(context)) throw Error('Expected --context text or tab');
+const query = row => JSON.stringify(context === 'tab' ? {text:row.text,tab:row.family} : {text:row.text});
+const inputs = [...new Set(heldOut.map(query))];
 const inferAt = performance.now();
 const batch = execFileSync(process.execPath, [
   join(root, 'bin/formalise.mjs'), '--model', modelPath, '--batch',
 ], {
   cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
-  input: inputs.map(text => JSON.stringify({ text })).join('\n') + '\n',
+  input: inputs.join('\n') + '\n',
 }).trim().split('\n').map(line => JSON.parse(line));
 const inferenceSeconds = (performance.now() - inferAt) / 1000;
 if (batch.length !== inputs.length) throw new Error('Expected one batch prediction per exact input');
@@ -106,7 +110,7 @@ const actMood = wires => JSON.stringify(wires.filter(w => w.type === 'w.request.
   .map(w => [w.attrs.act, w.attrs.mood]));
 const clean = sop => sop.trim().replaceAll('\r\n', '\n');
 const scored = heldOut.map(row => {
-  const prediction = predictions.get(row.text);
+  const prediction = predictions.get(query(row));
   const gold = parseCircuit(row.sop);
   if (!gold) throw new Error('Cannot parse gold ' + row.source + ':' + row.row);
   const wires = parseCircuit(prediction.sop);
@@ -152,7 +156,7 @@ try {
 }
 
 const report = {
-  datasetRevision: corpus.revision,
+  bucket, context, datasetRevision: corpus.revision,
   knowledgeRevision: options.knowledge
     ? execFileSync('git', ['-C', knowledge, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
     : readFileSync(join(knowledge, 'REVISION'), 'utf8').trim(),

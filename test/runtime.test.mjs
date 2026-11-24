@@ -36,3 +36,30 @@ test('composes a grounded result, defers negated result and inserts a lookup for
     assert.match(negative.sop,/text="but not violet"/);
   } finally { await reader.close(); }
 });
+
+test('explicit sequences preserve request-local references, quoted joiners and concurrent replies', async () => {
+  const wire = (act,predicate,name) => '@r w.request.request act='+act+' predicate='+predicate+'\n@t w.request.target request=$r family=drawn mode=new name='+JSON.stringify(name);
+  const examples = [{text:'draw comet',sop:wire('make','draw','comet'),count:2},
+    {text:'mark moon',sop:wire('change','mark','moon'),count:1}];
+  const reader=createReader({version:1,examples,templates:[],lexicon:{}});
+  try {
+    const [joined,raw] = await Promise.all([reader.formalise('draw comet, and then mark moon'),reader.formalise('draw comet')]);
+    assert.equal(joined.source,'sequence');
+    assert.match(joined.sop,/request=\$s1\.r/);
+    assert.match(joined.sop,/request=\$s2\.r/);
+    assert.match(joined.sop,/words="mark moon"/);
+    assert.equal(raw.sop,examples[0].sop);
+    assert.notEqual((await reader.formalise('draw "comet then mark moon"')).source,'sequence');
+  } finally { await reader.close(); }
+});
+
+test('discard stale evidence in an example and keep the reading grounded in the current text', async () => {
+  const model = {version:1,templates:[],examples:[
+    {text:'draw oval',sop:'@r w.request.request act=remove predicate=erase',count:99},
+    {text:'draw oval',sop:'@r w.request.request act=make predicate=draw',count:1}
+  ]};
+  const reader = createReader(model);
+  try {
+    assert.match((await reader.formalise('draw oval')).sop,/act=make/);
+  } finally { await reader.close(); }
+});

@@ -3,6 +3,7 @@
 :- use_module(library(http/json)).
 :- use_module(library(readutil)).
 :- use_module(library(pcre)).
+:- use_module(properties).
 :- initialization(main, main).
 
 main :- repeat,
@@ -14,7 +15,9 @@ main :- repeat,
       nl, flush_output, fail ).
 
 answer(Q, Answers) :-
-    findall(S-C, candidate(Q, S, C), Pairs),
+    property_constraints(Q, ExtraHits), append(Q.hits,ExtraHits,Hits),
+    WithProperties = Q.put(hits,Hits),
+    findall(S-C, candidate(WithProperties, S, C), Pairs),
     keysort(Pairs, Ascending), reverse(Ascending, Ordered),
     unique_sops(Ordered, [], 12, Answers).
 
@@ -24,33 +27,42 @@ unique_sops([_-C|Rest], Seen, N, Answers) :-
     ( memberchk(C.sop, Seen) -> unique_sops(Rest, Seen, N, Answers)
     ; Answers = [C|Tail], Next is N-1, unique_sops(Rest, [C.sop|Seen], Next, Tail) ).
 
-candidate(Q, score(3, N, 0), _{sop:Sop, source:example, support:N}) :-
+candidate(Q, score(4, N, 0), _{sop:Sop, source:example, support:N}) :-
     member(E, Q.examples), Sop = E.sop, N = E.count.
-candidate(Q, score(2, Specificity, N), _{sop:Sop, source:template, support:N}) :-
+candidate(Q, score(3, Specificity, N), _{sop:Sop, source:template, support:N}) :-
     member(T, Q.templates), matches(T.pattern, Q.tokens, Q.text, [], Bindings),
     maplist(part(Bindings), T.parts, Parts), atomics_to_string(Parts, Sop),
     include(string, T.pattern, Anchors), length(Anchors, Specificity), N = T.count.
+candidate(Q, score(2, Rank, Support), _{sop:Sop, source:alignment, support:Support, unread:Unread}) :-
+    nth0(I, Q.transfers, T), Rank is -I, Support = T.support, Sop = T.sop, Unread = T.unread.
 candidate(Q, score(1, Score, 0), _{sop:Sop, source:lexicon, support:N}) :-
     member([Start,End,["act",Act,Mood,N],ActPrior], Q.hits),
     span(Q.text, Start, End, Predicate), encode(Act, A), encode(Predicate, P),
     ( Mood == "" -> M = "" ; format(string(M), ' mood=~s', [Mood]) ),
     format(string(Req), '@r1 w.request.request act=~s~s predicate=~s', [A,M,P]),
-    ( member([S,E,["target",Act,Family,Mode,Sort,K],FamilyPrior], Q.hits),
-      ( S >= End ; E =< Start ),
-      span(Q.text, S, E, Surface), target(Family, Mode, Sort, Surface, T),
-      constraint_wires(Q, Act, Family, Mode, Start-End, S-E, More, Covered),
-      append([Start-End,S-E], Covered, Bounds), Wires = [Req,T|More],
-      length(More, Evidence), Extra is 5 + Evidence + FamilyPrior + log(1+K)/2 + min(4,E-S)/2
+    ( member([S,E,["target",Licence,Family,Declared,Sort,K],FamilyPrior], Q.hits),
+      (Licence == "*" -> true ; Licence == Act),
+      target_mode(Declared,Act,Mode), ( S >= End ; E =< Start ),
+      span(Q.text, S, E, Surface),
+      qualifier(Q.determiners,Q.tokens,S,Start-End,DetStart,Det),
+      target(Family, Mode, Sort, Surface, Det, T),
+      constraint_wires(Q, Act, Family, Mode, Start-End, DetStart-E, More, Covered),
+      append([Start-End,DetStart-E], Covered, Bounds), Wires = [Req,T|More],
+      length(More, Evidence), Gap is max(0,max(S-End,Start-E)),
+      Extra is 5 + Evidence + FamilyPrior + log(1+K)/2 - log(1+Gap)/2
     ; Bounds = [Start-End], Wires = [Req], Extra = 0 ),
     sort(Bounds, Sorted), string_length(Q.text, Length),
     residuals(Sorted, Q.text, 0, Length, 1, Unread),
     append(Wires, Unread, All), atomics_to_string(All, "\n", Sop),
-    Score is Extra + ActPrior + log(1+N) + min(12,End-Start)/4 - Start/3.
+    findall(1,(member([_,_,B,F],Q.tokens), once((member(L-R,Sorted),B>=L,F=<R))),CoveredTokens),
+    length(CoveredTokens,Grounded), length(Q.tokens,Total), Coverage is Grounded / max(1,Total),
+    Score is 12*Coverage + Extra + ActPrior + log(1+N) + min(12,End-Start)/4 - Start/3.
 
 constraint_wires(Q, Act, Family, Mode, PS-PE, TS-TE, Wires, Bounds) :-
     ( Q.allowConstraints == true ->
       findall(priority(Len,N)-hit(S,E,Body),
-              ( member([S,E,["constraint",Act,Family,Body,N],_], Q.hits),
+              ( member([S,E,["constraint",Licence,Family,Body,N],_], Q.hits),
+                (Licence == "*" -> true ; Licence == Act),
                 (S >= PE ; E =< PS), (S >= TE ; E =< TS),
                 (Mode == "new" ; S >= TE),
                 Len is E-S ), Records),
@@ -70,7 +82,18 @@ numbered_constraints([hit(S,E,Body)|Rest], N, [Line|Lines], [S-E|Spans]) :-
     format(string(Line),'@r1.c~d w.request.constraint request=$r1 ~s',[N,Body]),
     Next is N+1, numbered_constraints(Rest,Next,Lines,Spans).
 
-target(Family, Mode, Sort, Surface, Wire) :-
+target_mode("auto","make","new") :- !.
+target_mode("auto",_,"existing") :- !.
+target_mode(Mode,_,Mode).
+
+% Accept a determiner only when its evidence ends immediately before this target.
+qualifier(Dets, Tokens, TargetStart, PS-PE, Start, Det) :-
+    member([Start,End,Det],Dets),
+    (End =< PS ; Start >= PE),
+    append(_,[[_,_,_,End],[_,_,TargetStart,_]|_],Tokens), !.
+qualifier(_,_,Start,_,Start,"").
+
+target(Family, Mode, Sort, Surface, Det, Wire) :-
     encode(Family, F), encode(Surface, S),
     ( Sort == "" -> format(string(T), 'family_words=~s', [S])
     ; encode(Sort, Kind),
@@ -79,13 +102,18 @@ target(Family, Mode, Sort, Surface, Wire) :-
     ( Sort == "", Mode \== "new" ->
       Lookup = "\n@r1.l1 w.request.lookup request=$r1 target=$r1.t key=thing from=page"
     ; Lookup = "" ),
-    format(string(Wire), '@r1.t w.request.target request=$r1 family=~s mode=~s ~s~s', [F,Mode,T,Lookup]).
+    ( Det == "" -> D = "" ; format(string(D),' determiner=~s',[Det]) ),
+    ( Mode == "existing", Sort == "" -> Fill = " fill=context"
+    ; Mode == "existing" -> Fill = " fill=description"
+    ; Fill = "" ),
+    format(string(Wire), '@r1.t w.request.target request=$r1 family=~s mode=~s~s~s ~s~s', [F,Mode,D,Fill,T,Lookup]).
 
 span(Text, Start, End, Value) :- Length is End-Start, sub_string(Text, Start, Length, _, Value).
 residuals([], Text, Start, End, N, Lines) :- unread(Text,Start,End,N,Lines).
 residuals([S-E|Tail], Text, From, End, N, Lines) :-
-    unread(Text,From,S,N,Here), length(Here,K), Next is N+K,
-    residuals(Tail,Text,E,End,Next,Rest), append(Here,Rest,Lines).
+    GapEnd is max(S,From), NextStart is max(E,From),
+    unread(Text,From,GapEnd,N,Here), length(Here,K), Next is N+K,
+    residuals(Tail,Text,NextStart,End,Next,Rest), append(Here,Rest,Lines).
 unread(Text,S,E,N,Lines) :-
     span(Text,S,E,Raw), re_replace("^\\s+|\\s+$"/g, "", Raw, Trim),
     ( re_match("[\\p{L}\\p{N}]", Trim) ->
@@ -99,10 +127,15 @@ matches([P|Ps], Ts, Text, Bound, Result) :-
     is_dict(P), between(P.min,P.max,N), N > 0,
     length(Take,N), append(Take,Rest,Ts),
     Take = [[_,_,Start,_]|_], last(Take,[_,_,_,End]), span(Text,Start,End,Value),
-    ( get_dict(kind,P,"number") -> re_match("^[+-]?[0-9]+(?:\\.[0-9]+)?$", Value) ; true ),
+    ( get_dict(kind,P,Kind) -> slot_value(Kind,Value) ; true ),
     ( memberchk(P.slot-Existing,Bound) -> Existing == Value, Next = Bound
     ; Next = [P.slot-Value|Bound] ),
     matches(Ps, Rest, Text, Next, Result).
+
+slot_value("number",V) :- re_match("^[+-]?[0-9]+(?:\\.[0-9]+)?$", V).
+slot_value("date",V) :- re_match("^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$", V).
+slot_value("time",V) :- re_match("^(?:[01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?$", V).
+slot_value("phrase",V) :- \+ re_match("[;.!?]|\\b(?:not|never|without|then|instead|but)\\b"/i,V).
 
 part(_, Literal, Literal) :- string(Literal), !.
 part(Bound, Part, Value) :-

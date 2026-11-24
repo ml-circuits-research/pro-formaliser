@@ -5,21 +5,30 @@ version=2020.12.07-2
 sha256=d3e582e313163747700c84d912728fbf30ad57dc50c818b41089eed5a79ed05e
 cache=.cache/spell
 dictionary=$cache/english.txt
+frequency=$cache/frequency-en.txt
+frequency_revision=525f9b560de45753a5ea01069454e72e9aa541c6
+frequency_sha256=5351ff405b1126ef555791dd4d9798a48e3e9a501a9fc481a9da957752cfb458
 mkdir -p "$cache"
-if [[ -f "$dictionary" ]] && printf '%s  %s\n' "$sha256" "$dictionary" | sha256sum -c --status; then
-  exit 0
-fi
 
 stage=$(mktemp -d "$cache/install.XXXXXX")
 trap 'rm -rf "$stage"' EXIT
-(
-  cd "$stage"
-  apt-get download "wamerican=$version" "wbritish=$version"
-  for name in wamerican wbritish; do
-    dpkg-deb -x "${name}_${version}_all.deb" extracted
-  done
-  LC_ALL=C sort -u extracted/usr/share/dict/american-english \
-    extracted/usr/share/dict/british-english > english.txt
-  printf '%s  english.txt\n' "$sha256" | sha256sum -c
-)
-mv "$stage/english.txt" "$dictionary"
+if ! printf '%s  %s\n' "$sha256" "$dictionary" | sha256sum -c --status 2>/dev/null; then
+  (
+    cd "$stage"
+    apt-get download "wamerican=$version" "wbritish=$version"
+    for name in wamerican wbritish; do
+      dpkg-deb -x "${name}_${version}_all.deb" extracted
+    done
+    LC_ALL=C sort -u extracted/usr/share/dict/american-english \
+      extracted/usr/share/dict/british-english > english.txt
+    printf '%s  english.txt\n' "$sha256" | sha256sum -c
+  )
+  mv "$stage/english.txt" "$dictionary"
+fi
+if ! printf '%s  %s\n' "$frequency_sha256" "$frequency" | sha256sum -c --status 2>/dev/null; then
+  curl --fail --location --retry 2 \
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/$frequency_revision/content/2018/en/en_50k.txt" \
+    -o "$stage/frequency-en.txt"
+  printf '%s  %s\n' "$frequency_sha256" "$stage/frequency-en.txt" | sha256sum -c
+  mv "$stage/frequency-en.txt" "$frequency"
+fi

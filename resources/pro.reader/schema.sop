@@ -1,0 +1,10 @@
+# Optional bindings between an application's declared kinds and w.request targets.
+@pro.reader core.module name=pro.reader version=1 exports=target
+@pro.reader.target core.type of=pro.reader.target closed=true
+@pro.reader.target.of core.slot of=pro.reader.target key=of kind=atom
+@pro.reader.target.family core.slot of=pro.reader.target key=family kind=atom required=true
+@pro.reader.target.sort core.slot of=pro.reader.target key=sort kind=atom kind=string
+@pro.reader.target.mode core.slot of=pro.reader.target key=mode enum=new enum=existing enum=bound
+@pro.reader.target.text core.slot of=pro.reader.target key=text kind=atom kind=string many=true
+@pro.reader.target.act core.slot of=pro.reader.target key=act kind=atom kind=string many=true
+@pro.reader.target.tab core.slot of=pro.reader.target key=tab kind=atom

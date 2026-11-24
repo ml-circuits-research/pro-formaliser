@@ -1,38 +1,41 @@
 # pro-formaliser
 
-An English spellchecker and a text-to-SOP Lang reader with a native SWI-Prolog core and a Node.js CLI. The reader learns from WebMeet's English utterances and emits circuits in the pinned `w.request` schema. A circuit describes a request. Tool execution and the generic reasoner are future work.
+An English spellchecker and a reader that turns English requests into SOP Lang `w.request` circuits. SWI-Prolog matches and ranks interpretations. Node loads SOP declarations, prepares training examples and word candidates, aligns evidence spans, and validates resulting circuits with the native SOP world engine. Tool execution and the generic reasoner are future work.
 
 ## Run locally
 
-The supported setup uses Ubuntu 24.04, its signed APT repositories including Universe, Bash, Git, curl and dpkg. Setup downloads Node.js 22.23.2, SWI-Prolog 9.0.4, a spelling dictionary and the SOP knowledge snapshot under the ignored `.cache/` directory. It runs as an ordinary user. The Node download supports arm64 and amd64. The measured run used arm64.
-
-From the repository root, with a sibling checkout named `webmeet-dataset` containing commit `a85de79de826f983855aa2dafc6de7548978fbff`, run
+The setup uses Ubuntu 24.04, its signed APT repositories including Universe, Bash, Git, curl and dpkg. It installs pinned Node.js 22.23.2, SWI-Prolog 9.0.4, the spelling resources and knowledge snapshot under the ignored `.cache/` directory as an ordinary user. Node downloads are provided for arm64 and amd64. Validation ran on arm64.
 
 ```sh
 tools/setup
 export PATH="$PWD/.cache/node/bin:$PATH"
 npm test
 node bin/spell.mjs --json "Teh diagram"
-node eval/benchmark.mjs
-node bin/formalise.mjs --json "make the house blue"
-node bin/formalise.mjs --spell --json "make teh house blue"
-node eval/spelling.mjs
+node bin/formalise.mjs --worlds-only --json "create an object"
 ```
 
-The benchmark trains `.cache/model.json` on the training partition, runs Prolog on the holdout and writes `.cache/benchmark.json`. It reads committed Git blobs, so ongoing dataset edits never enter the run. Use `--dataset PATH` for another checkout or `--details .cache/rows.jsonl` to inspect every prediction alongside its annotation. Setup uses the pinned commit from the sibling knowledge repository if available and fetches it into the local cache otherwise. The two source repositories are read-only inputs. See the [benchmark measurements and manual audit](eval/RESULTS.md).
+With a sibling checkout named `webmeet-dataset` containing commit `a85de79de826f983855aa2dafc6de7548978fbff`, the following commands train the optional WebMeet models and run the benchmarks. The programs read committed Git blobs so ongoing dataset edits do not affect results. Setup uses the pinned commit of the sibling knowledge repository if available and fetches it into the local cache otherwise.
 
-## Interpreting a result
+```sh
+node tools/train-spelling.mjs
+node eval/spelling.mjs
+node eval/benchmark.mjs
+node bin/formalise.mjs --json "turn code on for characters 10 to 15 of Body"
+node bin/formalise.mjs --tab drawing --spell --json "make teh house blue"
+```
 
-The spellchecker searches a US/UK dictionary for single-character insertions, deletions, substitutions and transpositions. Prolog ranks candidates. A unique best spelling is applied and ambiguous ties are returned. Corrections include original offsets, replacement and alternatives. The library accepts extra known words. The standalone checker runs without an application model. The reader uses raw text by default. With `--spell --json`, it includes the original input and the spelling edits alongside the circuit.
+## Extend the reader with SOP
 
-The reader uses three sources of evidence in order:
+Set `SOP_WORLDS` to one or more SOP files or directories and start the CLI again. The same declarations feed spelling and formalisation. An action with verb aliases supplies predicates. A domain kind supplies target vocabulary. A request key and its value bindings supply typed constraints. A declarative reader binding can select facts of a new type, apply filters, and project their fields into surface words and canonical values. See the [overlay format and worked example](resources/worlds.md) and the optional [target binding schema](resources/pro.reader/schema.sop).
 
-1. A previously seen utterance with its annotated circuit.
-2. An induced pattern with literal anchors and variable spans observed in training. Prolog matches the whole utterance and binds spans into the SOP fields.
-3. A partial interpretation assembled from grounded predicates, target phrases and compatible constraints. Training counts and context words influence ranking. Residual phrases are preserved as unread wires. An existing object identified only by its family gets a lookup.
+New facts using those contracts work with an existing trained model or with `--worlds-only`. The JavaScript reader API can also load an explicit snapshot with `loadWorlds({paths})` and pass it to `createReader(model, worlds)`. A new semantic operation outside the implemented contracts still needs an interpreter. The emitted circuit vocabulary in this release is `w.request`.
 
-The native SOP world engine checks each returned circuit against the pinned schema and act vocabulary. The JSON response includes the source, its support count and up to two alternative circuits. The support count is a training frequency. A `matched` response means an example or template matched. A `partial` response calls for inspection of the act, target, constraints and unread spans. An `unresolved` response retains the input and emits an empty SOP string. Use `--batch` for newline-delimited JSON input and output, with one `{"text":"…"}` object per line.
+## Interpreting results
 
-## Spelling measurements
+The independent spellchecker enumerates single-edit candidates in Prolog, uses word frequencies and optionally neighbouring words, and returns original offsets, replacements and alternatives. `tools/train-spelling.mjs` builds optional word-pair counts and a list of domain words corroborated by training annotations. Published SOP vocabulary is available independently of that model. With `--spell --json`, the reader includes the original input, edits, and the circuit grounded in the corrected text. [Spelling resources and model](resources/spell/README.md)
 
-On the same held-out rows, 806 of 1,894 deterministic single-edit corruptions were restored (42.56%), 77 received a different replacement and 1,011 were retained. Of the injected forms, 182 were already dictionary words. On the original input, 104 of 19,519 eligible tokens changed (0.53%). That input already contains typos. Manual inspection also found errors on valid words and names, including Calibri → Calibre and Backend → Backed. Use `node eval/spelling.mjs --all-changes` for the full list.
+The reader considers exact examples, learned patterns, alignments to examples or self-contained clauses, and partial readings assembled from predicates, targets and constraints. Alignment can change a slot when its value is grounded in the input and compatible with the field. Explicit sequence boundaries can compose separate request graphs. A supplied `--tab` gives a preference to compatible interpretations. Alternatives are retained. Copied evidence must occur within its request, and the resulting SOP is checked against the request schema and available acts.
+
+The JSON response identifies the winning source. `support` is training frequency for that source. A zero count is possible for a reading licensed by the SOP worlds alone. `matched` describes a matched construction, `partial` indicates a partial reading, and `unresolved` retains the input with an empty SOP. Semantic correctness requires separate evaluation. Batch input uses `--batch` with one JSON object per line containing `text` and an optional `tab`.
+
+[Formalisation and spelling benchmarks](eval/RESULTS.md) · [Independent LLM review of formalisation disagreements](eval/SEMANTIC-AUDIT.md) · [Spelling audit](eval/SPELL-AUDIT.md)

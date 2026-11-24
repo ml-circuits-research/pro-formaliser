@@ -10,28 +10,50 @@ The split groups input globally by Unicode NFKC, lowercase, and whitespace colla
 - **Act/mood** compares the sequence of request acts and moods. **Semantic F1** measures micro-averaged wire overlap, so it can credit parts of an otherwise incorrect circuit.
 - The WebMeet checker uses the gold tab for checking its allowed families and keys after inference. Gold circuits and nonempty top predictions are checked. Warnings cover such cases as unused content words or unread meanings and are distinct from errors.
 
-## Measured results
+## Measured runs
 
-The run used knowledge revision `ba7cbcf2ab78b8b99d077e8958013d52618c6d04`. Training and model export took 9.5 seconds. Batch inference took 28.0 seconds for 1,870 distinct inputs, including model load and process startup.
+The primary measurement uses bucket 0. A second model was trained from scratch with bucket 1 held out for replication. Both partitions use the same pinned dataset and knowledge revisions. The tab-aware condition is a separate invocation on bucket 0 that includes the actual application tab with the text. The two text-only runs receive the utterance alone.
 
-| WebMeet tab | Training rows | Held-out rows | Held-out groups | Exact | Full wires | Semantic wires | Alternative only | Act/mood | Semantic F1 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Calendar | 7,972 | 74 | 50 | 0 | 0 | 0 | 0 | 42 | 15.3% |
-| Diagram | 76,833 | 768 | 761 | 15 | 15 | 16 | 19 | 429 | 19.7% |
-| Document | 11,916 | 112 | 111 | 27 | 27 | 27 | 0 | 85 | 43.0% |
-| Drawing | 90,385 | 961 | 946 | 50 | 50 | 50 | 0 | 578 | 20.4% |
-| **All** | **187,106** | **1,915** | **1,867** | **92** | **92** | **93** | **19** | **1,134** | **21.0%** |
+| Input and split | Rows | Exact | Full wires | All semantic wires | Alternative only | Act/mood | Wire F1 | Checker errors / emitted |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| First release, text, bucket 0 | 1,915 | 92 | 92 | 93 (4.86%) | 19 | 1,134 | 21.02% | 174 / 1,914 |
+| Current, text, bucket 0 | 1,915 | 381 | 473 | 519 (27.10%) | 82 | 1,277 | 41.94% | 208 / 1,912 |
+| Current, text, bucket 1 | 2,027 | 356 | 425 | 471 (23.24%) | 63 | 1,342 | 38.04% | 201 / 2,021 |
+| Current, text + tab, bucket 0 | 1,915 | 415 | 511 | 558 (29.14%) | 44 | 1,285 | 43.57% | 20 / 1,912 |
 
-The top circuit matched all semantic wires in 4.86% of rows. Counting matching alternatives raised that to 112 rows (5.85%). The reader labeled 118 rows matched, 1,796 partial and one unresolved. It returned alternatives for 1,911 rows. One exact input, “not mirrored”, has more than one semantic annotation in the holdout.
+The current primary run used 187,106 training rows and 1,867 held-out normalized texts. It returned matched constructions on 715 rows, partial readings on 1,197, and unresolved readings on 3. The checker warned on 1,134 emitted text/circuit pairs. For the annotations it reported 0 errors and 416 warnings. Knowledge revision was `ba7cbcf2ab78b8b99d077e8958013d52618c6d04`.
 
-The checker found errors in 174 of 1,914 emitted top circuits (9.1%) and none in 1,915 gold circuits. An out-of-tab target family was the most common error. Warnings occurred for 1,708 predicted and 416 gold text/circuit pairs. The checker can pass a circuit that omits intended constraints or chooses the wrong intent.
+| Area | Primary rows | Complete semantic matches | Wire F1 | Replication rows | Complete semantic matches | Wire F1 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| calendar | 74 | 52 | 86.2% | 73 | 57 | 88.8% |
+| diagram | 768 | 150 | 37.7% | 766 | 111 | 33.3% |
+| document | 112 | 23 | 49.6% | 265 | 24 | 23.9% |
+| drawing | 961 | 294 | 40.3% | 923 | 279 | 38.4% |
 
-## Manual audit
+The remaining errors include choosing the wrong family for the application, losing modifiers and binding a constraint to the wrong object or part of a request. The independent [blind semantic audit](SEMANTIC-AUDIT.md) checks disagreements without treating the annotation as authoritative. These results measure variation within WebMeet. A test grouped by template or a separately collected set of natural utterances would measure a harder form of generalisation.
 
-Record numbers below are CSV records including the header.
+## Spelling
 
-- Turning code on for characters 10 to 15 of Body produced the annotated target, format, enabled state and both range bounds. The circuit matched exactly. See `document/text-01.csv`, record 130.
-- A bar chart of students grouped by department produced a new chart with the department dimension. Bar type and students measure remained unread. See `diagram/charts-01.csv`, record 111.
-- Making Climate change blue produced a request to change a drawing object. A retained alternative matched the gold diagram node and colour constraint. The input gives no explicit tab cue. See `diagram/diagrams-04.csv`, record 167.
-- Booking Community hall for Planning on 2026-12-13 at 13:00 UTC for 15 minutes produced a make request with the booking details unread. See `calendar/meetings-01.csv`, record 768. “Unload Intro meeting” returned unresolved. See `calendar/meetings-03.csv`, record 288.
-- The request about the bearded avatar with grey hair produced a pick request for a hair part. The annotation changes the avatar and keeps its description as unread evidence. See `drawing/objects-01.csv`, record 456.
+The benchmark injects one reproducible deletion, insertion or substitution at an eligible known word per held-out row. It separately counts changes to the original inputs, which already contain some misspellings. Out of 1,894 injections, 182 produce dictionary words. The checker generally preserves recognized words.
+
+| Configuration | Restored | Wrong replacement | Left as typed | Changes in 19,519 original eligible tokens |
+| --- | ---: | ---: | ---: | ---: |
+| Original release | 806 | 77 | 1,011 | 104 |
+| Word frequencies and SOP vocabulary | 1,230 | 162 | 502 | 117 |
+| With training-only word pairs and protected terms | 1,369 | 93 | 432 | 114 |
+
+The contextual model uses only bucket 0 training rows. An independent [LLM audit of 24 sampled edits](SPELL-AUDIT.md) assessed whether changes to the original utterances corrected an error or introduced one.
+
+## Reproduction
+
+```sh
+tools/setup
+export PATH="$PWD/.cache/node/bin:$PATH"
+node tools/train-spelling.mjs
+node eval/spelling.mjs --no-context
+node eval/spelling.mjs --all-changes
+node eval/benchmark.mjs --details .cache/primary.jsonl
+node eval/benchmark.mjs --bucket 1 --model .cache/replication-model.json --report .cache/replication.json --details .cache/replication.jsonl
+node eval/benchmark.mjs --context tab --model .cache/tab-model.json --report .cache/tab.json
+node eval/sample-disagreements.mjs .cache/replication.jsonl .cache/blind
+```
