@@ -5,6 +5,7 @@ import { parse } from './schema.mjs';
 import { serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 
 const type=name=>'w.request.'+name;
+const sourceScope='w.relational.source_scope';
 const decode=raw=>raw?.startsWith('"') ? JSON.parse(raw) : raw;
 const fields=(wire,key)=>(wire?.attrs[key] ?? []).map(decode);
 const get=(wire,key)=>fields(wire,key)[0];
@@ -28,7 +29,7 @@ export function compileSourceContainers(facts) {
 
 export function sourceContainerMatch(text,worlds) {
   const inventory=worlds.sourceContainers;
-  if (!inventory?.aliases.length) return [];
+  if (!worlds.validationModules?.types.has(sourceScope) || !inventory?.aliases.length) return [];
   const ts=tokens(text), chars=Array.from(text);
   const offset=[0];
   for (const char of chars) offset.push(offset.at(-1)+char.length);
@@ -57,7 +58,8 @@ export function sourceContainerMatch(text,worlds) {
 }
 
 export function sourceContainerReading(text,candidate,worlds,matches=sourceContainerMatch(text,worlds)) {
-  if (!matches.length || !candidate.sop?.includes(' w.request.unread ')) return;
+  if (!worlds.validationModules?.types.has(sourceScope) || !matches.length ||
+      !candidate.sop?.includes(' w.request.unread ')) return;
   const wires=parse(candidate.sop);
   const requests=wires.filter(w=>w.type===type('request'));
   const members=Map.groupBy(wires,w=>get(w,'request'));
@@ -75,7 +77,7 @@ export function sourceContainerReading(text,candidate,worlds,matches=sourceConta
     const local=members.get(ref) ?? [];
     const targets=local.filter(w=>w.type===type('target'));
     const [target]=targets;
-    if (targets.length!==1 || get(target,'mode')!=='existing') continue;
+    if (targets.length!==1 || get(target,'mode')!=='existing' || local.some(w=>w.type===sourceScope)) continue;
     const family=get(target,'family'), tabs=worlds.familyTabs[family] ?? [];
     const sources=new Map();
     for (const wire of local) {
@@ -103,20 +105,15 @@ export function sourceContainerReading(text,candidate,worlds,matches=sourceConta
         !(get(request,'refers')==='thing' && tokens(before).some(([key])=>worlds.isReference(key)))) continue;
     if (local.some(w=>w.type===type('constraint') && ['words','value'].some(key=>fields(w,key).some(value=>
       literalRanges(get(source.wire,'text'),value).length)))) continue;
-    function id(key) {
-      const base=request.id+'.'+key;
-      let result=base;
-      for (let n=2;ids.has(result);n++) result=base+n;
-      ids.add(result);
-      return result;
-    }
-    const targetId=id('sourceContainer');
-    accepted.set(source.wire,[
-      {id:targetId,type:type('target'),attrs:{request:[ref],family:[source.family],mode:['existing'],
-        determiner:['definite'],fill:['context'],family_words:[JSON.stringify(source.written)]}},
-      {id:id('sourceContainerLookup'),type:type('lookup'),attrs:{
-        request:[ref],target:['$'+targetId],key:['thing'],from:['page']}},
-    ]);
+    const stem=request.id+'.sourceScope';
+    let id=stem;
+    for (let n=2;ids.has(id);n++) id=stem+n;
+    ids.add(id);
+    accepted.set(source.wire,[{id,type:sourceScope,attrs:{
+      request:[ref],affected:['$'+target.id],container_family:[source.family],
+      container_words:[JSON.stringify(source.written)],lookup:['page'],
+      words:[JSON.stringify(text.slice(source.from,source.to))],
+    }}]);
     if (!request.attrs.words) {
       accepted.set(request,[{...request,attrs:{...request.attrs,words:[JSON.stringify(scope)]}}]);
     }

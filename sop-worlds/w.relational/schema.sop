@@ -1,5 +1,5 @@
 # Proposed additive module for relationships explicitly stated in a request.
-@w.relational core.module name=w.relational version=1 imports=w.request exports=predicate exports=reciprocal exports=shared exports=scaled
+@w.relational core.module name=w.relational version=1 imports=w.request exports=predicate exports=reciprocal exports=shared exports=scaled exports=source_scope
 @w.relational.world std.schema.world name=w.relational doc="Explicit relationships among selected things and their properties"
 
 # A directed binary predicate with a known meaning. Both directions must hold
@@ -36,6 +36,16 @@
 @w.relational.scaled.factor core.slot of=w.relational.scaled key=factor kind=number required=true present=true
 @w.relational.scaled.words core.slot of=w.relational.scaled key=words kind=string required=true present=true
 
+# Resolve the written container in the current page context and constrain
+# the affected selection to that source. The container is not an action target.
+@w.relational.source_scope core.type of=w.relational.source_scope closed=true
+@w.relational.source_scope.request core.slot of=w.relational.source_scope key=request type=w.request.request required=true present=true
+@w.relational.source_scope.affected core.slot of=w.relational.source_scope key=affected type=w.request.target required=true present=true
+@w.relational.source_scope.container_family core.slot of=w.relational.source_scope key=container_family kind=atom required=true present=true
+@w.relational.source_scope.container_words core.slot of=w.relational.source_scope key=container_words kind=string required=true present=true
+@w.relational.source_scope.lookup core.slot of=w.relational.source_scope key=lookup enum=page required=true present=true
+@w.relational.source_scope.words core.slot of=w.relational.source_scope key=words kind=string required=true present=true
+
 # Explicitly stated counts must agree with the requested relation.
 @w.relational.check.members w.request.target count=?count
 @w.relational.check.pair w.relational.reciprocal members=$w.relational.check.members
@@ -56,3 +66,5 @@
 @w.relational.check.scaled_source.owner core.deny when=$w.relational.check.scaled_source when=$w.relational.check.target if=$w.relational.check.different_request why="The relation and target belong to different requests."
 @w.relational.check.scaled_result w.relational.scaled request=?relation_request result=$w.relational.check.target
 @w.relational.check.scaled_result.owner core.deny when=$w.relational.check.scaled_result when=$w.relational.check.target if=$w.relational.check.different_request why="The relation and target belong to different requests."
+@w.relational.check.source_scope w.relational.source_scope request=?relation_request affected=$w.relational.check.target
+@w.relational.check.source_scope.owner core.deny when=$w.relational.check.source_scope when=$w.relational.check.target if=$w.relational.check.different_request why="The source scope and affected target belong to different requests."

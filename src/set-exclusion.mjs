@@ -17,7 +17,7 @@ export function compileSetExclusions(facts) {
     const leads=fields(wire,'text').map(normalized).filter(Boolean);
     const acts=new Set(fields(wire,'act'));
     if (!leads.length || !acts.size) return [];
-    return [{leads,acts,anaphors:new Set(fields(wire,'anaphor').map(normalized))}];
+    return [{leads,acts,order:get(wire,'order') ?? 'after',anaphors:new Set(fields(wire,'anaphor').map(normalized))}];
   });
 }
 
@@ -75,7 +75,7 @@ function readProperty(terms,family,act,worlds,exceptionWords) {
   if (options.size===1) return {attrs:options.values().next().value};
 }
 
-export async function setExclusionReadings(text,worlds,read,permit=()=>true) {
+export async function setExclusionReadings(text,worlds,read,permit,planClauses) {
   const specs=worlds.setExclusions ?? [];
   if (!specs.length) return [];
   const ts=tokens(text), keys=ts.map(([key])=>key), chars=Array.from(text);
@@ -86,22 +86,19 @@ export async function setExclusionReadings(text,worlds,read,permit=()=>true) {
   const end=/^[.!]$/u.test(keys.at(-1) ?? '') ? ts.length-1 : ts.length;
   if ([...worlds.scopeGrammar.conditionals.keys()].some(form=>keys.some((_,i)=>
       sub(i,i+form.split(' ').length)===form))) return [];
-  const matches=specs.flatMap(spec=>spec.leads.flatMap(lead=>{
-    const size=lead.split(' ').length;
-    return keys.flatMap((_,i)=>i>0 && i+size<end && sub(i,i+size)===lead ? [{spec,start:i,after:i+size}] : []);
-  }));
+  if (!specs.some(spec=>spec.leads.some(lead=>keys.includes(lead.split(' ')[0])))) return [];
+  const rules=specs.map((spec,index)=>({index,order:spec.order,markers:spec.leads.map(lead=>lead.split(' '))}));
+  const matches=await planClauses({tokens:keys.slice(0,end),rules});
   if (matches.length!==1) return [];
-  const [{spec,start,after}]=matches;
-  const stop=keys[start-1]===',' ? start-1 : start;
-  if (!stop) return [];
-  const main=span(0,stop);
+  const [{rule,main:[begin,stop],start,after,end:exceptEnd}]=matches;
+  const spec=specs[rule], main=span(begin,stop);
   if (!permit(main,[])) return [];
-  const tail=ts.slice(after,end);
+  const tail=ts.slice(after,exceptEnd);
   if (!tail.length || !tail.every(([key])=>lexical.test(key) && !worlds.negatives.has(key) &&
       !worlds.scopeGrammar.negatives.has(key) && !worlds.joiners[key])) return [];
   const det=!spec.anaphors.has(tail[0][0]) &&
     ['definite','demonstrative'].includes(worlds.determiners[tail[0][0]]) ? 1 : 0;
-  const exceptionWords=span(start,end);
+  const exceptionWords=span(start,exceptEnd);
   const base=await read(main), outputs=new Map(), mainTokens=tokens(main);
   for (const candidate of [base,...(base.alternatives ?? [])]) {
     if (!candidate.sop) continue;
@@ -111,7 +108,7 @@ export async function setExclusionReadings(text,worlds,read,permit=()=>true) {
     const [request]=actions,[target]=subjects;
     const predicate=get(request,'predicate'),act=get(request,'act');
     if (!spec.acts.has(act) || request.attrs.polarity || ![undefined,'do','propose'].includes(get(request,'mood')) ||
-        !predicate || normalized(predicate)!==sub(0,tokens(predicate).length) ||
+        !predicate || normalized(predicate)!==sub(begin,begin+tokens(predicate).length) ||
         get(target,'mode')!=='existing' || get(target,'request')!=='$'+request.id) continue;
     const universal=get(target,'fill')==='all' && get(target,'quantifier')==='all' ? candidate :
       universalTargetReading(main,mainTokens,worlds,candidate,[]);

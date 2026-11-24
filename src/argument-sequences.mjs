@@ -9,6 +9,7 @@ const one=(w,k)=>many(w,k)[0];
 const keys=s=>tokens(s).map(t=>t[0]);
 const encode=s=>JSON.stringify(s);
 const ownerPart='$owner';
+const predicatePart='$predicate';
 const unreadPart='$unread';
 const matchesAt=(ts,start,words)=>words.every((word,i)=>ts[start+i]?.[0]===word);
 const atom=/^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u;
@@ -44,6 +45,8 @@ function addressedLead(ts,end,worlds) {
 
 export function argumentSequences(facts,catalog) {
   const forms=new Map();
+  const conjunctions=facts('w.lang.en.closed').filter(w=>one(w,'class')==='conjunction')
+    .flatMap(w=>many(w,'text').map(keys));
   for (const w of facts('core.word')) {
     for (const owner of many(w,'of')) {
       if (!forms.has(owner)) forms.set(owner,[]);
@@ -56,10 +59,12 @@ export function argumentSequences(facts,catalog) {
     const props=new Map(catalog.filter(k=>k.family===family && k.tab===one(w,'tab')).map(k=>[k.name,k]));
     const owners=many(w,'owner').map(keys).filter(words=>words.length), ownerKey=one(w,'owner_key'),ownerValue=one(w,'owner_value');
     const owned=owners.length>0;
+    const predicateBank=many(w,'predicate_surface').map(keys).filter(words=>words.length);
     if (Boolean(ownerKey)!==Boolean(ownerValue) || ownerKey && (mode!=='new' || !props.get(ownerKey)?.values.includes(ownerValue))) continue;
     const parts=many(w,'part').map(p=>{
       if (p===ownerPart) return owned ? (mode==='existing' ? {key:p,nominal:owners} :
         {key:p,bank:owners.map(words=>[words,''])}) : null;
+      if (p===predicatePart) return owned && predicateBank.length ? {key:p,bank:predicateBank.map(words=>[words,''])} : null;
       if (p===unreadPart) return owned ? {key:p} : null;
       const prop=props.get(p);
       if (!prop) {
@@ -78,11 +83,13 @@ export function argumentSequences(facts,catalog) {
     if (slots.length<2 || new Set(slots).size!==slots.length ||
         owned && (!slots.includes(ownerPart) || slots.includes(ownerKey))) continue;
     const tails=owned ? many(w,'tail').map(keys).filter(words=>words.length) : [];
-    const boundaries=many(w,'open_boundary').map(keys).filter(words=>words.length);
+    const bindsPredicate=slots.includes(predicatePart);
+    const boundaries=[...many(w,'open_boundary').map(keys),...bindsPredicate ? conjunctions : []].filter(words=>words.length);
     const numericModifiers=many(w,'numeric_modifier').map(keys).filter(words=>words.length);
     for (const prefix of many(w,'prefix').map(keys).filter(prefix=>prefix.length)) {
       const entries=index.get(prefix[0]) ?? [];
-      entries.push({prefix,parts,family,act,mode,owned,ownerKey,ownerValue,tails,boundaries,numericModifiers});index.set(prefix[0],entries);
+      entries.push({prefix,parts,family,act,mode,owned,ownerKey,ownerValue,tails,boundaries,numericModifiers,
+        bindsPredicate});index.set(prefix[0],entries);
     }
   }
   for (const frames of index.values()) {
@@ -104,7 +111,7 @@ export function sequencePacket(ts,worlds) {
     if (!matchesAt(ts,i,f.prefix)) continue;
     const start=i+f.prefix.length;
     if (start>=stop) continue;
-    const addressed=f.owned && addressedLead(ts,i,worlds);
+    const addressed=f.owned && !f.bindsPredicate && addressedLead(ts,i,worlds);
     if (f.owned) {
       if (!worlds.literalGrammar.licenses(f.family,f.act) ||
           !addressed && (ts[stop]?.[0]==='?' || !admittedLead(ts,i,worlds))) continue;
@@ -146,7 +153,9 @@ export function sequencePacket(ts,worlds) {
       if (f.owned) {
         const boundary=f.prefix.findLastIndex(word=>[',',':'].includes(word));
         packet.owned={...addressed,ownerKey:f.ownerKey ?? '',ownerValue:f.ownerValue ?? '',
-          predicateStart:ts[i+boundary+1][2],predicateEnd:ts[start-1][3],utteranceEnd:ts[stop-1][3]};
+          utteranceEnd:ts[stop-1][3]};
+        if (f.bindsPredicate) packet.owned.bindsPredicate=true;
+        else Object.assign(packet.owned,{predicateStart:ts[i+boundary+1][2],predicateEnd:ts[start-1][3]});
       }
       packets.push(packet);
     }
@@ -203,13 +212,19 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
     const words=span(a,b),value=canonical || words;
     let keyWords='';
     if (labels?.has(key)) {
-      // Only the connector between bound arguments can name this role.
+      // A role label must be in an adjacent connector. A fronted role may
+      // have a label after its value and before the command delimiter.
       const previous=Math.max(proof.start,...proof.bindings.map(binding=>binding[3]).filter(end=>end<=a));
       const connector=tokens(span(previous,a));
+      const following=proof.owned.bindsPredicate && b<predicateStart ?
+        tokens(span(b,Math.min(predicateStart,...proof.bindings.map(binding=>binding[2]).filter(start=>start>=b)))) : [];
       for (const label of labels.get(key)) {
         const suffix=connector.slice(-label.words.length);
-        if (suffix.length!==label.words.length || !label.words.every((word,i)=>word===suffix[i][0])) continue;
-        const written=span(previous+suffix[0][2],previous+suffix.at(-1)[3]);
+        const prefix=following.slice(0,label.words.length);
+        const matches=parts=>label.words.every((word,i)=>word===parts[i]?.[0]);
+        const [offset,matched]=matches(suffix) ? [previous,suffix] : matches(prefix) ? [b,prefix] : [];
+        if (!matched) continue;
+        const written=span(offset+matched[0][2],offset+matched.at(-1)[3]);
         if (written.length>keyWords.length) keyWords=written;
       }
     }
@@ -217,7 +232,7 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
       ' value='+(canonical && atom.test(canonical) ? canonical : encode(value))+
       (words===value ? '' : ' words='+encode(words))+(keyWords ? ' key_words='+encode(keyWords) : '')+' operator=eq phase=result');
   }
-  const lead=span(proof.owned.courtesyStart ?? 0,predicateStart).trim();
+  const lead=span(proof.owned.courtesyStart ?? 0,proof.owned.bindsPredicate ? proof.anchor : predicateStart).trim();
   if (lead) lines.push('@f1 w.request.filler text='+encode(lead.replace(/,\s*$/u,'')));
   const remainder=span(proof.end,utteranceEnd).replace(/^\s*,?\s*/u,'');
   const unread=proof.bindings.filter(([key])=>key===unreadPart).map(([, ,a,b])=>span(a,b));

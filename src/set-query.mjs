@@ -34,13 +34,15 @@ export function* postfixSetQuestions(text, ts, worlds, hits, quotes) {
   }
 }
 
-export function universalTargetReading(text, ts, worlds, candidate, quotes) {
+export function universalTargetReading(text, ts, worlds, candidate, quotes, requiresResult=false) {
   if (!worlds.scopeGrammar.universals.size) return;
   const wires=parse(candidate.sop);
   const requests=wires.filter(w=>w.type==='w.request.request');
   const targets=wires.filter(w=>w.type==='w.request.target');
   if (requests.length!==1 || targets.length!==1) return;
   const [request]=requests, [target]=targets;
+  if (requiresResult && !wires.some(w=>w.type==='w.request.constraint' && value(w,'request')==='$'+request.id &&
+      value(w,'phase')==='result' && w.attrs.attribute && w.attrs.value && !w.attrs.want)) return;
   if (value(target,'mode')!=='existing' || ['name','description','ids','thing','count','ordinal','quantity','quantifier','count_words']
       .some(key=>target.attrs[key])) return;
   const head=value(target,'sort_words') ?? value(target,'family_words') ?? value(target,'sort');

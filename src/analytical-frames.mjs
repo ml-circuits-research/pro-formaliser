@@ -28,12 +28,12 @@ export function analyticalArgumentFacts(facts) {
     if (![take('family'),take('tab'),take('owner_key'),take('owner_value')].every(Boolean) ||
         !attrs.prefix?.length || !attrs.owner?.length) continue;
     const scope=['tab','family'].map(key=>str(take(key)));
-    const isClosedField=field=>closedFields.has(JSON.stringify([...scope,field]));
+    const isClosedField=field=>field==='$predicate' || closedFields.has(JSON.stringify([...scope,field]));
     const parts=layout==='ordered_fields' ? (attrs.pattern ?? []).flatMap(pattern=>{
       // Braces name typed catalog slots. The text between slots is one
       // authored connector. A closed value between open slots also separates
       // them, as in a threshold operator between a subject and its bound.
-      const split=str(pattern).split(/\{(\$owner|[\p{L}][\p{L}\p{N}_-]*\.[\p{L}\p{N}_.-]+)\}/u);
+      const split=str(pattern).split(/\{(\$(?:owner|predicate)|[\p{L}][\p{L}\p{N}_-]*\.[\p{L}\p{N}_.-]+)\}/u);
       if (split.length<5 || split.some((item,i)=>i%2===0 &&
           (/[{}]/u.test(item) || i>0 && i<split.length-1 && !item.trim() &&
             !isClosedField(split[i-1]) && !isClosedField(split[i+1])))) return [];
@@ -44,12 +44,20 @@ export function analyticalArgumentFacts(facts) {
     }) : groupedParts(attrs,[layout,ownerMarker,grouping,operation,measure]);
     for (const [i,part] of parts.entries()) {
       const inherited=boundaries.get(JSON.stringify(scope));
+      const bindsPredicate=part.includes('$predicate');
+      // Reuse the authored command surfaces as a closed slot. The leading
+      // literal indexes the packet while leaving the command at its written position.
+      const predicateLead=part[part.indexOf('$predicate')-1];
+      if (bindsPredicate && (!part[0].startsWith('"') || !predicateLead?.endsWith(',"'))) continue;
       frames.push({
         id:wire.id+'.argument.'+(i+1),
         type:'pro.reader.argument_sequence',
         attrs:Object.fromEntries([
-          ...['tab','family','prefix','owner','owner_key','owner_value'].map(key=>[key,attrs[key]]),
-          ['act',['make']],['mode',['new']],['part',part],['tail',attrs.tail ?? []],
+          ...['tab','family','owner','owner_key','owner_value'].map(key=>[key,attrs[key]]),
+          ['prefix',bindsPredicate ? part.slice(0,1) : attrs.prefix],
+          ['predicate_surface',bindsPredicate ? attrs.prefix : []],
+          ['act',['make']],['mode',['new']],['part',bindsPredicate ? part.slice(1) : part],
+          ['tail',bindsPredicate ? [] : attrs.tail ?? []],
           ['open_boundary',[...inherited?.open_boundary ?? [],...attrs.open_boundary ?? []]],
           ['numeric_modifier',inherited?.numeric_modifier ?? []]
         ])

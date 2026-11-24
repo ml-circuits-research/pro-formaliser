@@ -10,6 +10,8 @@
 :- use_module(topic_commands).
 :- use_module(argument_sequences).
 :- use_module(member_actions).
+:- use_module(universal_inventory).
+:- use_module(set_exclusion).
 :- use_module(verb_effects).
 :- use_module(coordinated_effects).
 :- use_module(roles).
@@ -24,8 +26,9 @@ main :- repeat,
             E, (print_message(error, E), halt(1))),
       nl, flush_output, fail ).
 
+answer(Q, Plans) :- get_dict(setExclusion,Q,Packet), !, exclusion_plans(Packet,Plans).
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,proofs:Proofs,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
+answer(Q, _{candidates:Answers,universalCandidates:Universal,proofs:Proofs,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
     topic_commands(Q,Topics),
     native_property_frames(Q,NativeProperties),
     verb_effects(Q,VerbEffects),
@@ -36,6 +39,14 @@ answer(Q, _{candidates:Answers,proofs:Proofs,topicCommands:Topics,sequences:Sequ
     property_constraints(Q, ExtraHits), append(Q.hits,ExtraHits,Hits),
     findall(B, (member(P,Proofs), target_scope(Q.tokens,Q.targetRoles,P,B)), RawBounds), sort(RawBounds, Bounds),
     reset_role_cache, index_roles(Q.put(roleScopes,Bounds), Hits, WithProperties),
+    universal_inventory_plans(WithProperties, Plans),
+    findall(CleanUniversal,
+            ( member(Plan, Plans), Target=Plan.targetHit,
+              Scoped=WithProperties.put(_{actHits:[Plan.actHit],targetHits:[Target|WithProperties.targetHits],requiredTarget:Target}),
+              lexical_candidate(Scoped, _, Candidate), clean_candidate(Candidate, CleanCandidate),
+              CleanUniversal=CleanCandidate.put(requiresResult,Plan.requiresResult) ),
+            RawUniversal),
+    list_to_set(RawUniversal, Universal),
     findall(S-C, candidate(WithProperties, S, C), Pairs),
     keysort(Pairs, Ascending), reverse(Ascending, Ordered),
     unique_sops(Ordered, [], 12, Head),
@@ -75,7 +86,9 @@ candidate(Q, score(3, Specificity, N), _{sop:Sop, source:template, support:N}) :
     include(string, T.pattern, Anchors), length(Anchors, Specificity), N = T.count.
 candidate(Q, score(2, Rank, Support), _{sop:Sop, source:alignment, support:Support, unread:Unread}) :-
     nth0(I, Q.transfers, T), Rank is -I, Support = T.support, Sop = T.sop, Unread = T.unread.
-candidate(Q, score(Tier, Score, 0), Candidate) :-
+candidate(Q, Score, Candidate) :- lexical_candidate(Q, Score, Candidate).
+
+lexical_candidate(Q, score(Tier, Score, 0), Candidate) :-
     member([Start,End,["act",Act,Mood,N],ActPrior], Q.actHits),
     request_window(Q,Start-End,Act,WindowStart-WindowEnd,Intent,Question),
     Scoped = Q.put(scopeEnd,WindowEnd),
@@ -83,7 +96,8 @@ candidate(Q, score(Tier, Score, 0), Candidate) :-
     ( Mood == "" -> M = "" ; format(string(M), ' mood=~s', [Mood]) ),
     ( Question == "" -> Query = "" ; format(string(Query),' question=~s',[Question]) ),
     format(string(Req), '@r1 w.request.request act=~s~s predicate=~s~s', [A,M,P,Query]),
-    ( member([S,E,["target",Licence,Family,Declared,Sort,K],_], Q.targetHits),
+    ( ( get_dict(requiredTarget,Q,Hit) -> true ; member(Hit,Q.targetHits) ),
+      Hit = [S,E,["target",Licence,Family,Declared,Sort,K],_],
       (Licence == "*" -> true ; Licence == Act),
       S >= WindowStart, E =< WindowEnd,
       target_mode(Declared,Act,Mode),
@@ -101,11 +115,11 @@ candidate(Q, score(Tier, Score, 0), Candidate) :-
       length(More, Evidence), Gap is max(0,max(S-End,Start-E)),
       scope_fit(Q.roleScopes,Act,Start,End,S,E,ScopeFit),
       Extra is 5 + Evidence + RoleFit + AttachmentFit + ScopeFit + log(1+K)/2 - log(1+Gap)/2
-    ; direct_reference(Q,Act,End,RS-RE), RE =< WindowEnd,
+    ; \+ get_dict(requiredTarget,Q,_), direct_reference(Q,Act,End,RS-RE), RE =< WindowEnd,
       format(string(ReferenceRequest),'~s refers=thing',[Req]),
       attached_roles(Scoped,Act,none,"existing",RE,Attached,Used,_,Fit,_),
       Bounds = [Start-End,RS-RE|Used], Wires = [ReferenceRequest|Attached], Extra is 4 + Fit, Tier=1
-    ; Bounds = [Start-End], Wires = [Req], Extra = 0, Tier=1 ),
+    ; \+ get_dict(requiredTarget,Q,_), Bounds = [Start-End], Wires = [Req], Extra = 0, Tier=1 ),
     sort(Bounds, Sorted), string_length(Q.text, Length),
     residuals(Sorted, Q.text, 0, Length, 1, Unread),
     append(Wires, Unread, All), atomics_to_string(All, "\n", Sop),

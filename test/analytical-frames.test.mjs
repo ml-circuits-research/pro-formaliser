@@ -56,9 +56,11 @@ test('loads a distinct analytical layout through a normal reader overlay', async
     '@operation w.request.key tab=audit family=screen name=screen.combine head=class value=union',
     '@subject w.request.key tab=audit family=screen name=screen.subject head=span',
     '@partition w.request.key tab=audit family=screen name=screen.partition head=span',
+    '@window w.request.key tab=audit family=screen name=screen.window head=span',
     '@style w.request.key tab=audit family=screen name=screen.style head=class value=grid',
     '@frame pro.reader.analytical_frame tab=audit family=screen layout=trailing_owner prefix=build owner="a weekly matrix" owner_key=screen.view owner_value=weekly owner_marker=as measure=screen.subject grouping=screen.partition group_marker=across operation=screen.combine operation_marker=of',
     '@ordered pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="{$owner} for {screen.subject}, partitioned across {screen.partition}, combined by {screen.combine}"',
+    '@fronted pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="during {screen.window}, {$predicate} {$owner} for {screen.subject} across {screen.partition}"',
     '@adjacent pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=merge owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="{$owner} for {screen.subject} {screen.partition}"',
     '@boundary pro.reader.analytical_boundary tab=audit family=screen text="capped at" numeric_modifier=deep',
     '@matrix.style pro.reader.analytical_owner_property tab=audit family=screen owner_key=screen.view owner_value=weekly text="a weekly matrix" key=screen.style value=grid',
@@ -70,6 +72,8 @@ test('loads a distinct analytical layout through a normal reader overlay', async
     {'screen.view':'weekly','screen.combine':'union','screen.subject':'inspection results','screen.partition':'delivery teams','screen.style':'grid'});
   await proves(reader,'Assemble a weekly matrix for repair results, partitioned across shift teams, combined by unioned',
     {'screen.view':'weekly','screen.combine':'union','screen.subject':'repair results','screen.partition':'shift teams','screen.style':'grid'});
+  await proves(reader,'During spring inventory, assemble a weekly matrix for defect reports across warehouses',
+    {'screen.view':'weekly','screen.window':'spring inventory','screen.subject':'defect reports','screen.partition':'warehouses'});
   for (const text of [
     'Merge a weekly matrix for result groups',
     'Build weighted inspection results across delivery teams as a weekly matrix',
@@ -81,6 +85,34 @@ test('loads a distinct analytical layout through a normal reader overlay', async
   ]) {
     const {candidates}=await reader.propose(text);
     assert.ok(candidates.every(candidate=>candidate.source!=='argument-frame'),text);
+  }
+});
+
+test('binds a command after a fronted threshold with literal source evidence', async t => {
+  const path = fileURLToPath(new URL('../sop-worlds/chart-predicate-pilot', import.meta.url));
+  const reader = createReader(undefined, loadWorlds({paths:[path]}));
+  t.after(() => reader.close());
+  const text = 'For branches below quota only, SHOW ME a column chart of collections by branch.';
+  const result = await proves(reader, text, {
+    'chart.type':'bar', 'chart.orientation':'vertical', 'chart.measure':'collections', 'chart.dimension':'branch',
+    'chart.filterScope':'branches', 'chart.filterOperator':'lt', 'chart.filterThreshold':'quota'
+  });
+  const wires = parse(result.sop);
+  const request = wires.find(wire => wire.type === 'w.request.request');
+  assert.equal(decode(request.attrs.predicate[0]), 'SHOW ME');
+  assert.equal(decode(request.attrs.words[0]), text);
+  const restrictor = wires.find(wire => decode(wire.attrs.attribute?.[0]) === 'chart.filterThreshold');
+  assert.equal(decode(restrictor.attrs.key_words[0]), 'only');
+  assert.equal(result.evidence.counts.uncovered, undefined);
+  for (const input of [
+    'For branches below quota only, do not draw a bar chart of collections by branch.',
+    'For branches below quota and above forecast only, draw a bar chart of collections by branch.',
+    'For branches below quota only, archive records then draw a bar chart of collections by branch.',
+    'For branches below quota only, draw a bar chart of collections by branch or district.',
+    'For branches below "quota" only, draw a bar chart of collections by branch.'
+  ]) {
+    const {candidates} = await reader.propose(input);
+    assert.ok(candidates.every(candidate => !('chart.filterOperator' in properties(parse(candidate.sop)))), input);
   }
 });
 

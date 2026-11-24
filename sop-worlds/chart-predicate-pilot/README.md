@@ -8,7 +8,7 @@ The native request catalog describes `chart.only` as a literal category or serie
 | `chart.filterOperator` | Closed comparison operator with the written comparator as evidence. |
 | `chart.filterThreshold` | Written threshold literal or reference, such as “500” or “target”. |
 
-The analytical frame keeps the chart type, measure and grouping alongside the comparison. The fixed connector “only” supplies `key_words` on the filter scope. Its evidence is local to the matching frame. Bar and line frames support one trailing “only” condition. A chart consumer must resolve the scope and threshold against the data, determine the aggregation and units, and perform the comparison. Ranges, compound comparisons and chart execution are outside this pilot.
+The analytical frame keeps the chart type, measure and grouping alongside the comparison. Bar and line frames support a single “only” condition before or after the chart command. The fixed connector “only” supplies `key_words` on the filter scope in trailing clauses and on the threshold in fronted clauses. Fronted frames use `{$predicate}` after the comma to bind a command surface from their declared `prefix` bank. A chart consumer must resolve the scope and threshold against the data, determine the aggregation and units, and perform the comparison. Ranges, compound comparisons and chart execution are outside this pilot.
 
 Run from the repository root after setup.
 

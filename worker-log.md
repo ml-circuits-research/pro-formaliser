@@ -230,3 +230,8 @@
 
 ## Word order challenge before further reader changes
 - Measured 24 new utterances absent from the entire pinned dataset. With no trained model and all staged worlds, 9/12 in the familiar order and 0/12 with equivalent alternate syntax had a complete circuit. The pairwise report and public replay are in eval/CONSTRUCTION-TRANSFER.md.
+
+## Predicate position, quantified kinds and source containment
+- SWI-Prolog binds predicates inside ordered argument patterns and locates either side of a written set exception. Quantified target kinds use installed world declarations, number agreement and action licences.
+- Source containment has one affected target and a separate typed scope. The existing dataset converter preserves the affected target and drops the scope extension.
+- All 365 tests passed. The paired wording challenge recovered 10/12 familiar and 5/12 alternate forms with all staged worlds, up from 9/12 and 0/12.

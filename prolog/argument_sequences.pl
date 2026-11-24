@@ -6,10 +6,19 @@
 argument_sequences(Q,Proofs) :-
     ( get_dict(argumentSequences,Q,Frames) ->
       findall(Proof,
-        (member(F,Frames), once(findnsols(2,B,distinct(B,sequence(F.parts,F.input,B)),Answers)),Answers=[Bindings],
+        (member(F,Frames), once(findnsols(2,B,distinct(B,sequence(F.parts,F.input,B)),Answers)),Answers=[Slots],
+         predicate_binding(F,Slots,Bindings,Owned),
          Base=_{family:F.family,act:F.act,mode:F.mode,anchor:F.anchor,start:F.start,end:F.end,bindings:Bindings},
-         ( get_dict(owned,F,Owned) -> put_dict(owned,Base,Owned,Proof) ; Proof=Base )), Proofs)
+         ( nonvar(Owned) -> put_dict(owned,Base,Owned,Proof) ; Proof=Base )), Proofs)
     ; Proofs=[] ).
+
+predicate_binding(F,Slots,Bindings,Owned) :-
+    ( get_dict(owned,F,Frame) ->
+      ( get_dict(bindsPredicate,Frame,true) ->
+        select(["$predicate",_,Start,End],Slots,Bindings),
+        put_dict(_{predicateStart:Start,predicateEnd:End},Frame,Owned)
+      ; Bindings=Slots, Owned=Frame )
+    ; Bindings=Slots ).
 
 sequence([],[],[]).
 sequence([Part|Tail],Tokens,Bindings) :-

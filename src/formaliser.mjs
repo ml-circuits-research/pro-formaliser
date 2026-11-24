@@ -1,3 +1,4 @@
+import {universalInventoryPacket} from './universal-inventory.mjs';
 import {sourceContainerMatch,sourceContainerReading} from './source-container.mjs';
 import {setExclusionReadings} from './set-exclusion.mjs';
 import {spatialModifierReadings} from './spatial-modifier.mjs';
@@ -262,7 +263,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const verbEffects=scope.restricted || quotes.length ? [] : [...new Set(ts.map(t=>t[0]))].flatMap(head=>verbIndex.get(head) ?? []);
     const nativeProperties=nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly:scope.restricted});
     const titleConnectors = ts.map(([key])=>key).filter(key=>worlds.evidenceVocabulary.grammar.has(key));
-    const request = {text,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const universalInventory=scope.restricted ? undefined : universalInventoryPacket(ts,quotes,worlds);
+    const request = {text,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -321,6 +323,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     // a new surface form cannot evict an older reading from its bounded search.
     if (!scope.restricted) for (const candidate of predicateTransfer(text)) retain(candidate);
     if (!exact.length) for (const candidate of nearExample(text)) retain({...candidate,source:'near-example'});
+    for (const answer of response.universalCandidates ?? []) {
+      const candidate={...answer,sop:resolveRelationKeys(answer.sop)};
+      const reading=universalTargetReading(text,ts,worlds,candidate,quotes,answer.requiresResult);
+      if (reading) retain({...reading,source:'universal-inventory'});
+    }
     for (const candidate of postfixSetQuestions(text,ts,worlds,hits,quotes)) retain(candidate);
     if (!scope.restricted && ts.some(t=>worlds.scopeGrammar.universalHeads.has(t[0]))) {
       for (const candidate of [...candidates]) {
@@ -702,7 +709,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
-      for (const reading of [...await effectSequence(text,read), ...await setExclusionReadings(text,worlds,read,permit)]) {
+      for (const reading of [...await effectSequence(text,read), ...await setExclusionReadings(text,worlds,read,permit,packet=>worker.request({setExclusion:packet}))]) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);
       }

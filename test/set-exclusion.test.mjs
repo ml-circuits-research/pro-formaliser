@@ -57,3 +57,22 @@ test('keeps conditions, separate preservation and competing anchors outside set 
   assert.ok(result.candidates.some(candidate=>parse(candidate.sop).some(w=>w.type==='w.request.target' &&
     get(w,'fill')==='all' && get(w,'count_words')==='every single box')));
 });
+
+test('binds a fronted exception to the following universal action',async t=>{
+  const reader=createReader(); t.after(()=>reader.close());
+  const text='Except for the blue nodes, copy all nodes.';
+  const proofs=exclusions(await reader.propose(text,{evidence:true}));
+  assert.ok(proofs.some(c=>{
+    const wires=parse(c.sop), root=wires.find(w=>w.type==='w.request.request');
+    const target=wires.find(w=>w.type==='w.request.target');
+    return get(root,'act')==='copy' && get(target,'quantifier')==='all' &&
+      wires.some(w=>get(w,'attribute')==='node.colour' && get(w,'value')==='blue' &&
+        get(w,'phase')==='selector' && get(w,'want')==='no' &&
+        get(w,'words')==='Except for the blue nodes') && !c.evidence.missing.length;
+  }));
+  for (const control of ['Except for the blue nodes, copy the node.',
+    'Except for the blue nodes, do not copy all nodes.',
+    'Except for the blue nodes, copy all houses.']) {
+    assert.deepEqual(exclusions(await reader.propose(control)),[],control);
+  }
+});
