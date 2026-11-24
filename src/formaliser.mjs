@@ -16,7 +16,7 @@ import {preservationAdjunct,preservationAdjunctReading} from './preservation-adj
 import { directionalResultCandidates } from './directional-result.mjs';
 import { verbEffectIndex,verbEffectReading } from './verb-effects.mjs';
 import { transformationReadings } from './transformation.mjs';
-import { numberedQualifierReadings } from './numbered-qualifier.mjs';
+import { numberedCreationReadings, numberedQualifierReadings } from './numbered-qualifier.mjs';
 import { coordinatedPacket,effectReading } from './coordinated-effects.mjs';
 import { discourseBody } from './trailing-discourse.mjs';
 import { memberActionPackets,memberActionReadings } from './member-actions.mjs';
@@ -416,6 +416,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
     }
     if (!scope.restricted && ts.some(([key])=>/\d/u.test(key) || worlds.nominalNumbers.has(key))) {
+      for (const reading of numberedCreationReadings(text,ts,quotes,worlds)) retain(reading);
       for (const candidate of [...candidates]) for (const reading of numberedQualifierReadings(text,candidate,worlds)) retain(reading);
     }
     if (response.verbEffects?.length) {

@@ -56,3 +56,15 @@ test('does not infer targets, conflicting values, quoted labels, units, or scope
     assert.deepEqual(read(input,sop),[],input);
   }
 });
+
+test('new objects retain their bound literal and independently labelled numeric results',()=>{
+  const base=request+'act=make mood=do predicate=add\n'+target+'family=node mode=new sort=rectangle\n'+
+    '@label w.request.constraint request=$r on=attribute attribute=node.label value=Step operator=eq phase=result key_words=labelled';
+  const [candidate]=read('add a rectangle, labelled Step, at x 240, y 110',base+'\n'+unread+'", at x 240, y 110"');
+  assert.deepEqual(fields(candidate,'constraint').map(({attribute,value})=>[attribute,value]),
+    [['node.label','Step'],['node.x','240'],['node.y','110']]);
+  assert.deepEqual(fields(candidate,'unread'),[]);
+  assert.deepEqual(read('add a rectangle, labelled Step, at x 240',base.replace('sort=rectangle','sort=Step')),[]);
+  assert.deepEqual(read('add a rectangle beside another object labelled Step, at x 240',base),[]);
+  assert.deepEqual(read('add a rectangle, labelled Step, at x 240 if needed',base),[]);
+});

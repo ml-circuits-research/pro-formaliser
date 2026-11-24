@@ -185,3 +185,6 @@
 
 ## Action and slot diagnosis on the primary 1,000
 - Existing proposals recover the reference action on 94% of incomplete single-action requests. After decoding quoted atoms, 16% also recover its typed target and property structure before checking values. See eval/TRAINING-OVERLAP.md for the same comparison on multi-action inputs and its limitations.
+
+## Numeric creation attributes, contextual properties and noun scope
+- Literal labels and numeric properties compose on new targets. Implicit property owners retain compatible world alternatives. Competing noun senses are checked against the creation action. All 330 tests passed, including an independent two-family ambiguity probe.

@@ -156,3 +156,18 @@ test('a trailing list separator has no following predicate',async t=>{
     return targets.some(w=>first(w,'sort')==='cat') && targets.some(w=>first(w,'sort')==='dog');
   }));
 });
+
+test('a learned change property does not block a counted noun in a creation list',async t=>{
+  const reader=createReader({...model,lexicon:{...model.lexicon,
+    folios:[
+      ['target','make','drawn','new','folio',30],
+      ['constraint','change','drawn','on=attribute attribute=drawn.label value=FOLIOS operator=eq phase=result',25],
+    ],
+  }});
+  t.after(()=>reader.close());
+  const result=await reader.propose('Create a red cat, two blue folios, and a green dog.');
+  assert.ok(result.candidates.some(candidate=>{
+    const targets=parse(candidate.sop).filter(wire=>wire.type==='w.request.target');
+    return targets.map(wire=>first(wire,'sort')).join(',')==='cat,folio,dog';
+  }));
+});

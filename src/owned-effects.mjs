@@ -181,6 +181,8 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
       if (ts[a][0]===word && !covered(a,a+1)) yield* match(frame,family,part+1,a+1,b,captured);
       return;
     }
+    if (slot==='property' && !covered(a,a+1) && worlds.determiners[ts[a][0]]==='definite' &&
+        !(frame.parts[part-1]?.word && worlds.determiners[frame.parts[part-1].word])) a++;
     for (let end=a+1;end<=Math.min(a+12,b);end++) {
       let result;
       if (slot==='owner') {
@@ -217,7 +219,10 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
                 const previous=operand(frame,property,{...captured,value:captured.prior},worlds,grammar);
                 if (!previous?.value || previous.open || previous.value===value.value || value.open) continue;
               }
-              result.push({family,key:property.spec.name,keyWords:captured.property.words,owner:captured.owner,value});
+              const head=frame.parts[0].word, next=frame.parts[1];
+              const predicate=head && !worlds.determiners[head] &&
+                (next?.slot==='property' || worlds.determiners[next?.word]) ? span(start,start+1) : undefined;
+              result.push({family,key:property.spec.name,keyWords:captured.property.words,owner:captured.owner,value,predicate});
             }
           }
         }
@@ -258,12 +263,14 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
       const topic=topics.at(-1);
       if (start && !topic) continue;
       const owners=[...path.map(effect=>effect.owner).filter(Boolean),...(topic ? [topic] : [])];
-      if (!owners.some(owner=>owner.licensed) || new Set(owners.map(owner=>owner.identity)).size!==1 ||
-          new Set(path.map(effect=>effect.key)).size!==path.length) continue;
+      if (new Set(path.map(effect=>effect.key)).size!==path.length) continue;
       const owner=owners.find(owner=>owner.licensed);
-      const lines=['@r w.request.request act=change mood=do words='+quote(text),
+      const contextual=!owners.length && path.every(effect=>!effect.value.open);
+      if (!contextual && (!owner || new Set(owners.map(item=>item.identity)).size!==1)) continue;
+      const predicate=contextual && path[0].predicate;
+      const lines=['@r w.request.request act=change mood=do words='+quote(text)+(predicate ? ' predicate='+quote(predicate) : ''),
         '@t w.request.target request=$r family='+quote(family)+' mode=existing '+
-          (owner.name ? 'fill=written name='+quote(owner.name) : 'fill=description description='+quote(owner.description)),
+          (contextual ? 'fill=context' : owner.name ? 'fill=written name='+quote(owner.name) : 'fill=description description='+quote(owner.description)),
         '@l w.request.lookup request=$r target=$t key=thing from=page'];
       for (const [i,effect] of path.entries()) {
         const {key,keyWords,value}=effect;
@@ -275,7 +282,7 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
             ' measure_words='+quote(value.measurement.words) : ''));
       }
       const sop=lines.join('\n');
-      readings.set(sop,{sop,source:'owned-effects',status:'matched'});
+      readings.set(sop,{sop,source:contextual ? 'contextual-effects' : 'owned-effects',status:'matched'});
     }
   }
   return [...readings.values()];

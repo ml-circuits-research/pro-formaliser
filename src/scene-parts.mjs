@@ -48,7 +48,7 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
       for (let j=Math.min(end,i+6);j>i;j--) {
         if (!head.slice(i,j).every(key=>word.test(key))) continue;
         const phrase=forms(i,j), hits=lookup(phrase);
-        const hasProperty=hits.some(([role])=>role==='constraint');
+        const hasProperty=hits.some(([role,act])=>role==='constraint' && (act==='*' || act==='make'));
         const targets=hits.flatMap(([role,act,family,mode,sort])=>role==='target' && act==='make' && mode==='new' &&
           (!hasProperty || sort===phrase)
           ? [{family,sort:sort || undefined,start:i,end:j}] : []);

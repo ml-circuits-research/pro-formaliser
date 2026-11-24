@@ -276,7 +276,8 @@ function declaredCreation(span,ts,quotes,head,worlds) {
     readings.set(rule.family,choices);
   }
   for (const nominal of phrases(ts,noun,stop)) {
-    for (const cue of phrases(ts,nominal.next,stop)) {
+    const cueStart=nominal.next+Number(ts[nominal.next]?.[0]===',');
+    for (const cue of phrases(ts,cueStart,stop)) {
       if (cue.next>=stop || quotes.some(q=>q.start<cue.end && q.end>nominal.start)) continue;
       const pending=roles.byCue.get(cue.surface);
       if (!pending?.length) continue;

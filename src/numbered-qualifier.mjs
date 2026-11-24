@@ -1,6 +1,6 @@
 import { literalRanges } from './evidence.mjs';
 import { tokens } from './lexicon.mjs';
-import { quotedSpans } from './literal-roles.mjs';
+import { literalRoleCandidates, quotedSpans } from './literal-roles.mjs';
 import { consumeUnread } from './nominal-evidence.mjs';
 import { parse } from './schema.mjs';
 import { serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
@@ -12,7 +12,7 @@ const field=(wire,key)=>{
   return value?.startsWith('"') ? JSON.parse(value) : value;
 };
 const selectors=new Set(['pick','remove']);
-const results=new Set(['change','place']);
+const results=new Set(['change','place','make']);
 const keyWord=/^[\p{L}\p{M}\p{N}_]+$/u;
 const numeric=/^[+-]?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)$/u;
 
@@ -91,6 +91,40 @@ function targetEnd(scope,target,headEnd) {
   }
 }
 
+// A new object's written properties can intervene between its noun and the
+// numeric tail. Advance only over adjacent key/value pairs already bound to it.
+function creationEnd(scope,target,headEnd,owned,worlds) {
+  const noun=field(target,'sort_words') ?? field(target,'sort') ?? field(target,'family_words');
+  const hits=literalRanges(scope,noun,headEnd);
+  if (hits.length!==1) return;
+  const intro=scope.slice(headEnd,hits[0][0]);
+  const evidence=[field(target,'count_words'),field(target,'count'),...owned.flatMap(w=>
+    field(w,'phase')==='result' && field(w,'operator')==='eq' ? [field(w,'words') ?? field(w,'value')] : [])];
+  const covered=evidence.flatMap(value=>{
+    const ranges=literalRanges(scope,value);
+    return ranges.length===1 && ranges[0][0]>=headEnd && ranges[0][1]<=hits[0][0] ? ranges : [];
+  });
+  const prefix=Array.from(intro);
+  for (const [key,,a,b] of tokens(intro)) {
+    if (Object.hasOwn(worlds.determiners,key)) continue;
+    const start=headEnd+prefix.slice(0,a).join('').length, stop=headEnd+prefix.slice(0,b).join('').length;
+    if (!covered.some(([left,right])=>left<=start && stop<=right)) return;
+  }
+  let end=hits[0][1];
+  const pairs=owned.flatMap(w=>{
+    if (field(w,'phase')!=='result' || field(w,'operator')!=='eq') return [];
+    const keys=literalRanges(scope,field(w,'key_words'),end);
+    const values=literalRanges(scope,field(w,'value'),end);
+    return keys.length===1 && values.length===1 && keys[0][1]<=values[0][0] &&
+      /^\s*$/u.test(scope.slice(keys[0][1],values[0][0])) ? [[keys[0][0],values[0][1]]] : [];
+  }).sort((a,b)=>a[0]-b[0]);
+  for (const [start,stop] of pairs) {
+    if (!/^\s*,?\s*$/u.test(scope.slice(end,start)) || start<end) break;
+    end=stop;
+  }
+  return end;
+}
+
 function makeWires(wires,text,request,records,family,phase) {
   const ref='$'+request.id;
   const owned=wires.filter(wire=>wire.type===ns+'constraint' && field(wire,'request')===ref);
@@ -135,7 +169,8 @@ export function numberedQualifierReadings(text,candidate,worlds) {
   const [request]=requests, [target]=targets;
   const act=field(request,'act'), predicate=field(request,'predicate'), mood=field(request,'mood');
   if ((!selectors.has(act) && !results.has(act)) || !predicate || mood && mood!=='do' ||
-      target && (field(target,'mode')!=='existing' || field(target,'request')!=='$'+request.id)) return [];
+      act==='make' && !target ||
+      target && (field(target,'mode')!==(act==='make' ? 'new' : 'existing') || field(target,'request')!=='$'+request.id)) return [];
   const scope=field(request,'words') ?? text, ranges=literalRanges(text,scope);
   if (ranges.length!==1) return [];
   const [offset]=ranges[0], input=tokens(scope), chars=Array.from(scope), quotes=quotedSpans(scope);
@@ -167,7 +202,9 @@ export function numberedQualifierReadings(text,candidate,worlds) {
   }
   let start, families;
   if (target) {
-    const family=field(target,'family'), after=targetEnd(scope,target,headEnd);
+    const family=field(target,'family');
+    const after=act==='make' ? creationEnd(scope,target,headEnd,wires.filter(w=>w.type===ns+'constraint' &&
+      field(w,'request')==='$'+request.id),worlds) : targetEnd(scope,target,headEnd);
     if (!after || !worlds.literalGrammar.licenses(family,act)) return [];
     const quoted=quotes.find(q=>charSpan(0,q.start).length<after && after<charSpan(0,q.end).length);
     const boundary=quoted ? charSpan(0,quoted.end).length : after;
@@ -190,4 +227,22 @@ export function numberedQualifierReadings(text,candidate,worlds) {
     const reading=makeWires(wires,text,request,records,target ? undefined : family,selectors.has(act) ? 'selector' : 'result');
     return reading ? [reading] : [];
   });
+}
+
+
+// A written literal can end at a comma when the remaining phrase itself
+// parses as typed numeric properties of that same new object.
+export function numberedCreationReadings(text,ts,quotes,worlds) {
+  const readings=[],chars=Array.from(text);
+  for (let i=1;i<ts.length-2;i++) {
+    if (ts[i][0]!==',' || quotes.some(q=>q.start<ts[i][2] && ts[i][2]<q.end)) continue;
+    const before=chars.slice(0,ts[i][2]).join('').trimEnd();
+    for (const candidate of literalRoleCandidates(before,tokens(before),quotedSpans(before),worlds)) {
+      if (candidate.source!=='literal-creation') continue;
+      const wires=parse(candidate.sop), request=wires.find(w=>w.type===ns+'request');
+      if (request.attrs.words || !request.attrs.predicate || wires.some(w=>w.type===ns+'unread')) continue;
+      readings.push(...numberedQualifierReadings(text,candidate,worlds));
+    }
+  }
+  return readings;
 }

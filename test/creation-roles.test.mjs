@@ -83,3 +83,13 @@ test('accepts an independently installed creation role and guards unsupported ta
     }
   } finally {await reader.close();}
 });
+
+test('a bounded literal precedes numeric results on the same new object',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const cue of ['labeled','labelled']) {
+    const {candidates}=await reader.propose('add a rectangle, '+cue+' Step, at x 240');
+    const valid=readings(candidates,[node('rectangle','Step')]);
+    assert.ok(valid.some(c=>parse(c.sop).some(w=>get(w,'attribute')==='node.x' && get(w,'value')==='240')));
+  }
+});
