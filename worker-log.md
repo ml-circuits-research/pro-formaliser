@@ -182,3 +182,6 @@
 
 ## Three-sample review at 33434b0
 - Replayed three lots of 1,000. Default coverage reached 50.6% on primary, 43.1% on replica; the third lot was unchanged. All 48 spelling unions reproduced byte for byte. The optional pose world yielded one additional complete primary reading. See eval/DEPENDENT-REPLAY.tsv.
+
+## Action and slot diagnosis on the primary 1,000
+- Existing proposals recover the reference action on 94% of incomplete single-action requests. Only 14% also recover its typed target and property structure before checking values. See eval/TRAINING-OVERLAP.md for the same comparison on multi-action inputs and its limitations.
