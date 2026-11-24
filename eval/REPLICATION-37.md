@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Set restrictions at 1663ca9
+
+The same 1,000 requests reached **44.2%** with the default configuration and **44.5%** with all staged worlds. “Every single flower” now scopes the blue result to the entire set. All previous complete readings survived. [Changes and judgments](SET-SCOPE-REPLAY.tsv)
+
 ## All staged worlds at 773f5ec
 
 Original-text coverage reached **44.4%**, up from **44.1%** with the default configuration. The native noun inventory supplied all three additional complete readings. Enabling the remaining staged worlds changed four sets of alternatives and recovered several written details. All four requests still lacked a complete reading. [Reviewed pairs](DESTINATION-REPLAY.tsv)

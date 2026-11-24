@@ -1,5 +1,7 @@
 # Text-only formalisation on 1,000 random requests
 
+At `1663ca9`, the combined reader reached **53.9% including spelling** on the same 1,000 original requests, and **52.5%** on the originals alone. [Current L0–L4 breakdown](RESULTS.md#set-restrictions-and-written-operands)
+
 The combined staged worlds reached **52.1%** on original requests and **53.5%** with spelling at reader `22dbc70`. [Profile comparison and paired judgments](RESULTS.md#native-vocabulary-and-all-staged-worlds)
 
 At reader `773f5ec`, a corrected destination moved one primary request from wrong to incomplete. The source still asks for a tighter placement than the circuit expresses. A catalog review also identified seven additional reference issues. [Current grading and annotation audit](RESULTS.md#separating-a-destination-from-an-existing-position)

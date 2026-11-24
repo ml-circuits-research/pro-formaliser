@@ -1,0 +1,48 @@
+profile	sample	source	row	previous	current	reference_note	reason
+base-primary	53	drawing/placement-06.csv	899	L4	L4		The complete ram placement to the left of the stated mountain remains.
+base-primary	119	document/text-03.csv	167	L2b	L2c		A new circuit underlines Intro, 2, and 3 as exact block selectors, leaving enabled and attrs explicitly unread.
+base-primary	160	drawing/placement-08.csv	17	L3	L3		The exact lake placement to the left of the house remains.
+base-primary	171	drawing/scenes-05.csv	1148	L2c	L2c		The added placement does not restrict removal to rear hills or preserve the front ones.
+base-primary	295	drawing/placement-06.csv	612	L3	L3		The previously complete reading remains.
+base-primary	428	drawing/scenes-05.csv	1089	L2c	L4		A new circuit removes all trees from the scene while excluding the trees beside the house.
+base-primary	717	drawing/scenes-06.csv	2783	L2c	L2c		The stars retain their position above the rocket, but the space-station setting and rocket’s middle placement remain unread.
+base-primary	828	drawing/placement-07.csv	44	L4	L4		The previously complete reading remains.
+base-replica	326	drawing/placement-06.csv	764	1	1		The previously complete reading remains.
+base-replica	348	drawing/scenes-13.csv	1503	0	1		A new circuit applies blue to all existing flowers.
+base-replica	425	drawing/scenes-08.csv	383	1	1		A new circuit keeps the complete village scene, including both poses, both balloons, and all four placements. It retains the intensifier in the above relation.
+base-replica	970	drawing/scenes-08.csv	2136	1	1		A replacement circuit keeps the sunny evening fair, all four placed groups including three hot dogs, and the continuing foreground rule for people.
+primary	53	drawing/placement-06.csv	899	L4	L4		A complete circuit places the big ram immediately left of the indicated mountain.
+primary	119	document/text-03.csv	167	L2b	L2c		A new circuit selects Intro, 2 and 3 as block IDs and applies underline. It leaves the enabled value and attrs instructions unread.
+primary	160	drawing/placement-08.csv	17	L3	L3		The retained exact circuit places the lake immediately left of the house.
+primary	171	drawing/scenes-05.csv	1148	L2c	L2c		The added reading recognizes the scene as the source container. It does not remove the rear hills or preserve the front hills.
+primary	295	drawing/placement-06.csv	612	L3	L3		The retained exact circuit adds a casino immediately left of the indicated lake.
+primary	428	drawing/scenes-05.csv	1089	L2c	L4		One new circuit removes all trees from the current scene and excludes the trees beside the house.
+primary	493	diagram/charts-05.csv	284	L2c	L4	The reference places a threshold predicate in chart.only, whose catalog meaning is a single literal category or series.	The new circuit creates a bar chart of claims by week and restricts the weeks to those above the named target.
+primary	717	drawing/scenes-06.csv	2783	L2c	L2c		New readings preserve the immediate placement of the stars above the rocket. A complete reading still lacks the space-station setting and the rocket's middle region.
+primary	828	drawing/placement-07.csv	44	L4	L4		A complete circuit adds the big mandrill immediately left of the mountain.
+primary	876	diagram/diagrams-01.csv	707	L2c	L4	The reference uses node.relation for node placement, where the catalog licenses node.position.	A new node circuit places the referenced object immediately right of Fridge, preserving both the direction and proximity as result constraints.
+primary	963	diagram/charts-05.csv	861	L2c	L4		The new circuit creates a line chart of average claim cost per year and preserves the written year-on-year wording.
+replica	326	drawing/placement-06.csv	764	1	1		The small kiwi bird and house anchor remain. New complete alternatives preserve left-of and add a near relation grounded by the word just.
+replica	348	drawing/scenes-13.csv	1503	0	1		The new circuit applies blue to every single flower. Only the copular wording “needs to be” remains unread.
+replica	425	drawing/scenes-08.csv	383	1	1		The full rainy early-morning village square remains, with both children, two red balloons, the dog and their placements. A replacement grounds just above on the balloons.
+replica	970	drawing/scenes-08.csv	2136	1	1		A retained circuit sets the sunny evening fair, creates all four object groups including three hot dogs, and keeps people in the foreground. A replacement also grounds the umbrella’s just-above placement.
+primary-spell	53	drawing/placement-06.csv	899	L4	L4		A complete circuit places the big ram immediately left of the indicated mountain.
+primary-spell	119	document/text-03.csv	167	L2b	L2c		A new circuit selects Intro, 2 and 3 as block IDs and applies underline. It leaves the enabled value and attrs instructions unread.
+primary-spell	160	drawing/placement-08.csv	17	L3	L3		The retained exact circuit places the lake immediately left of the house.
+primary-spell	171	drawing/scenes-05.csv	1148	L2c	L2c		The added reading recognizes the scene as the source container. It does not remove the rear hills or preserve the front hills.
+primary-spell	295	drawing/placement-06.csv	612	L3	L3		The retained exact circuit adds a casino immediately left of the indicated lake.
+primary-spell	428	drawing/scenes-05.csv	1089	L2c	L4		Complete circuits on both the original and corrected inputs remove all trees from the current scene while excluding those beside the house.
+primary-spell	493	diagram/charts-05.csv	284	L2c	L4	The reference places a threshold predicate in chart.only, whose catalog meaning is a single literal category or series.	The new circuit creates a bar chart of claims by week and restricts the weeks to those above the named target.
+primary-spell	717	drawing/scenes-06.csv	2783	L2c	L2c		New readings preserve the immediate placement of the stars above the rocket. A complete reading still lacks the space-station setting and the rocket's middle region.
+primary-spell	828	drawing/placement-07.csv	44	L4	L4		A complete circuit adds the big mandrill immediately left of the mountain.
+primary-spell	876	diagram/diagrams-01.csv	707	L2c	L4	The reference uses node.relation for node placement, where the catalog licenses node.position.	A new node circuit places the referenced object immediately right of Fridge, preserving both the direction and proximity as result constraints.
+primary-spell	963	diagram/charts-05.csv	861	L2c	L4		The new circuit creates a line chart of average claim cost per year and preserves the written year-on-year wording.
+default-spell	53	drawing/placement-06.csv	899	1	1		The complete ram placement to the left of the stated mountain remains.
+default-spell	119	document/text-03.csv	167	0	0		A new circuit underlines Intro, 2, and 3 as exact block selectors, leaving enabled and attrs explicitly unread.
+default-spell	160	drawing/placement-08.csv	17	1	1		The exact lake placement to the left of the house remains.
+default-spell	171	drawing/scenes-05.csv	1148	0	0		The added placement does not restrict removal to rear hills or preserve the front ones.
+default-spell	295	drawing/placement-06.csv	612	1	1		The previously complete reading remains.
+default-spell	428	drawing/scenes-05.csv	1089	0	1		A new circuit removes all trees from the scene while excluding the trees beside the house.
+default-spell	717	drawing/scenes-06.csv	2783	0	0		The stars retain their position above the rocket, but the space-station setting and rocket’s middle placement remain unread.
+default-spell	828	drawing/placement-07.csv	44	1	1		The previously complete reading remains.
+blind	869	drawing/scenes-13.csv	3507	0	0		The tail-removal candidate now binds the current scene. It still leaves “on the cat” unread and does not identify the tail’s owner.

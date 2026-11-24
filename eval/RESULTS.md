@@ -2,6 +2,27 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Set restrictions and written operands
+
+Reader `1663ca9` was run through the public CLI without a tab or discussion history. Each spelling profile was run on all 1,000 primary requests and retained both original and corrected proposals. Each made a spelling change on 5.0% of inputs. Models and sample order were held fixed. Unchanged sets kept their previous grades. LLM reviewers judged the changed sets as whole requests. [Paired judgments across profiles](SET-SCOPE-REPLAY.tsv)
+
+| Profile | Primary original | Primary including spelling | Independent original |
+| --- | ---: | ---: | ---: |
+| Default | 51.2% | 52.7% | 44.2% |
+| All staged worlds | 52.5% | **53.9%** | **44.5%** |
+
+| Grade | All staged worlds, original or corrected |
+| --- | ---: |
+| L0 – Fail | 1.3% |
+| L1 – Wrong | 9.4% |
+| L2 – Incomplete | 35.4% |
+| L3 – Reasonable and identical | 20.5% |
+| L4 – Reasonable alternative | 33.4% |
+
+Four primary requests gained whole readings, including the excluded trees, a directional move, the chart threshold, and year-on-year claim-cost averages after a discourse lead. One independent request gained a complete change of all flowers to blue. The third lot changed on one request, which still lacks the owner of a tail. No audited request lost a reasonable reading. The incomplete block edit now assigns underline to Intro, 2 and 3 simultaneously but still leaves the separate enabled/attrs instructions unread.
+
+The share of identified material issues in the primary annotations is **24.3%**. A reasonable proposal coexisted with an issue on **3.5%** of the primary requests. A new issue is the use of the literal-category key for the above-target comparison. On original requests with low wording overlap with training, reasonable coverage reached 42.5% on primary and 32.7% on the independent replica. [Wording comparison method](TRAINING-OVERLAP.md)
+
 ## Separating a destination from an existing position
 
 Reader `773f5ec` now gives “place it just right of Fridge” a circuit that moves the referenced object to the right of the named node. The previous circuit used that position to select what to move. The new circuit leaves “just” unread, so this request moves from L1 wrong detail to L2 incomplete. Across all 1,000 primary inputs, all previously reasonable alternatives survived. With all staged worlds, the original texts yielded **52.1%** reasonable and the original or corrected texts **53.5%**. [Changed requests](DESTINATION-REPLAY.tsv)
