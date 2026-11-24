@@ -15,6 +15,9 @@ const literalFields = new Set(['name', 'description', 'ids']);
 const contexts = new Set(['w.request.previous', 'w.request.clock', 'w.request.context']);
 const mutable = new Set(['value', 'name', 'description', 'sort', 'amount', 'quantity', 'ordinal',
   'quantifier', 'ids', 'count', 'measure', 'number', 'min', 'max']);
+const primaryLimit = 64;
+const reserveLookahead = 440;
+const reserveLimit = 32;
 const decode = value => value?.startsWith('"') ? JSON.parse(value) : value;
 const first = (wire, key) => decode(wire.attrs[key]?.[0]);
 const literal = key => key.normalize('NFKC').replace(/[‘’]/gu, "'").replace(/[“”]/gu, '"');
@@ -719,26 +722,46 @@ export function createTransfer(examples, { resolveValue, typedSlot, fillerPhrase
       }
     }
     const distance = id => Math.abs(indexed[id].length - input.core.length);
-    const ranked = [...weights].sort((a, b) => b[1] - a[1] || distance(a[0]) - distance(b[0])).slice(0, 64);
-    const candidates = new Map();
-    for (const [index] of ranked) {
-      const {example} = indexed[index];
-      if (text === example.text && !example.excerpt) continue;
-      try {
-        for (const { sop, similarity, unread } of align(example, envelope(example.text).core, text, input, resolveValue, envelope, typedSlot)) {
-          const support = example.count ?? 1;
-          const previous = candidates.get(sop);
-          if (!previous || similarity > previous.similarity) {
-            candidates.set(sop, { sop, similarity, support, source: 'alignment', unread });
-          } else if (similarity === previous.similarity) {
-            previous.support += support;
+    const ranked = [...weights].sort((a, b) => b[1] - a[1] || distance(a[0]) - distance(b[0]));
+    function readings(pool, exclude = new Map()) {
+      const candidates = new Map();
+      for (const [index,source] of pool) {
+        const {example} = indexed[index];
+        if (text === example.text && !example.excerpt) continue;
+        try {
+          for (const { sop, similarity, unread } of align(example, source, text, input, resolveValue, envelope, typedSlot)) {
+            if (exclude.has(sop)) continue;
+            const support = example.count ?? 1;
+            const previous = candidates.get(sop);
+            if (!previous || similarity > previous.similarity) {
+              candidates.set(sop, { sop, similarity, support, source: 'alignment', unread });
+            } else if (similarity === previous.similarity) {
+              previous.support += support;
+            }
           }
+        } catch (error) {
+          if (error.name !== 'SopError') throw error;
         }
-      } catch (error) {
-        if (error.name !== 'SopError') throw error;
+      }
+      return candidates;
+    }
+    const primary = readings(ranked.slice(0, primaryLimit).map(([id])=>[id,envelope(indexed[id].example.text).core]));
+    const reserve = [];
+    const query = input.core;
+    if (query.length >= 4 && query.length <= 32 && [query[0],query[1],query.at(-1)].every(token=>word.test(token.key))) {
+      for (const [id] of ranked.slice(primaryLimit,reserveLookahead)) {
+        if (distance(id)) continue;
+        const source = envelope(indexed[id].example.text).core;
+        if (source[0].key!==query[0].key || source[1].key!==query[1].key ||
+            source.at(-1).key!==query.at(-1).key) continue;
+        // Endpoint and length agreement nominate the example. The same slot
+        // alignment and evidence checks still decide whether it can transfer.
+        reserve.push([id,source]);
+        if (reserve.length===reserveLimit) break;
       }
     }
-    return [...candidates.values()].sort((a, b) => b.similarity - a.similarity || b.support - a.support);
+    const ordered = pool => [...pool.values()].sort((a,b)=>b.similarity-a.similarity || b.support-a.support);
+    return [...ordered(primary),...ordered(readings(reserve,primary))];
   }
   return Object.assign(transfer,{sceneHeadings:headings.find});
 }

@@ -45,6 +45,29 @@ test('retains the learned target description on a novel request through the norm
     c.sop.includes('description="the old prism"') && c.sop.includes('sort=prism') && c.sop.includes('drawn.colour')));
 });
 
+test('uses a bounded shape-compatible reserve when lexical neighbors crowd out a typed example',()=>{
+  const query='polish the old prism blue';
+  const result='\n@c w.request.constraint request=$r on=attribute attribute=shape.colour value=blue phase=result';
+  const primary={text:query+'.',sop:request+' predicate=polish\n'+target+' sort=prism'+result,count:3};
+  const decoys=Array.from({length:70},(_,i)=>({text:query+' #'+i,sop:primary.sop}));
+  const example={text:'polish the old panel blue',sop:request+' predicate=polish\n'+target+
+    ' sort=panel fill=description description="the old panel"'+result};
+  const optional={
+    resolveValue:({key,surface})=>key==='sort' && surface==='prism' ? 'prism' :
+      key==='value' && surface==='blue' ? 'blue' : undefined,
+  };
+  const lookup=createTransfer([primary,...decoys,example],optional);
+  const [ordinary,extra,...rest]=lookup(query);
+  assert.equal(ordinary.sop,primary.sop);
+  assert.equal(ordinary.support,3);
+  assert.match(extra.sop,/sort=prism fill=description description="the old prism"/u);
+  assert.deepEqual(rest,[]);
+  assert.deepEqual(lookup('do not '+query),[]);
+  assert.deepEqual(lookup(query+' and erase it'),[]);
+  const differentBoundary={text:'polish the old panel cyan',sop:example.sop.replace('value=blue','value=cyan')};
+  assert.deepEqual(createTransfer([primary,...decoys,differentBoundary],optional)(query),[ordinary]);
+});
+
 test('transfers an aligned request across punctuation, courtesy and case with input evidence', () => {
   const lookup = createTransfer([{
     text: 'Please, paint the circle blue. Thanks!',

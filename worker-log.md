@@ -130,3 +130,7 @@
 ## Joint pilot, native relations and measurement evidence
 - Produced the reciprocal alternative for the selected pair; tested a second predicate, single duck, and independent module validation. Both property review probes now rank the grounded reading first. Explicit measurements carry canonical unit and numeric evidence.
 - Full gate passed (270 tests). Public results and remaining gaps are in integration-review.responses.md.
+
+## Explicit relative dimensions and bounded transfer retrieval
+- The optional reader emits a typed scale for explicit, compatible properties on the same owner and retains the partial alternative. Replayed the integration team's contrast with and without a model.
+- Added a bounded fallback after the original transfer shortlist. Full gate passed (273 tests); the new row-by-row sample replay is in progress.

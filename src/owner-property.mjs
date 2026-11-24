@@ -91,8 +91,17 @@ export function compileOwnerPropertyOperands(facts,requestKeys,words) {
     if (!ownerPropertyUnits.has(id)) ownerPropertyUnits.set(id,new Set());
     ownerPropertyUnits.get(id).add(quantity);
   }
+  const ownerPropertyMultipliers=new Map();
+  for (const wire of facts('w.lang.en.number')) {
+    const [kind]=valuesOf(wire,'kind'), [text]=valuesOf(wire,'text'), [value]=valuesOf(wire,'value');
+    if (!text || !['times','multiple'].includes(kind) || !decimal.test(value) ||
+        !Number.isFinite(Number(value)) || Number(value)<=0) continue;
+    const surface=form(text), factors=ownerPropertyMultipliers.get(surface) ?? new Set();
+    factors.add(value);
+    ownerPropertyMultipliers.set(surface,factors);
+  }
   return {ownerPropertyOpen,ownerInventory,ownerPropertyUnits,
-    ownerPropertyUnitNames:unitNames,ownerPropertyUnitSymbols:unitSymbols};
+    ownerPropertyUnitNames:unitNames,ownerPropertyUnitSymbols:unitSymbols,ownerPropertyMultipliers};
 }
 
 function catalogProperty(worlds,family,surface) {
@@ -115,6 +124,23 @@ function closedValue(worlds,key,surface) {
     if (decoded(attrs.attribute?.[0])===key.name && key.values.includes(value)) values.add(value);
   }
   return values.size===1 ? [...values][0] : undefined;
+}
+
+function scaledProperty(worlds,family,source,result,multiplier) {
+  if (!source?.numeric || !worlds.validationModules?.types.has('w.relational.scaled')) return;
+  const factors=worlds.ownerPropertyMultipliers?.get(multiplier);
+  if (factors?.size!==1) return;
+  const sources=worlds.ownerPropertyUnits?.get(identity(family,source.property));
+  const results=worlds.ownerPropertyUnits?.get(identity(family,result));
+  if (sources?.size!==1 || results?.size!==1 || !results.has([...sources][0])) return;
+  const keyId=name=>{
+    const keys=worlds.requestKeys.filter(key=>key.family===family && key.name===name);
+    return keys.length===1 && atom.test(keys[0].id ?? '') ? keys[0].id : undefined;
+  };
+  const sourceKey=keyId(source.property), resultKey=keyId(result);
+  if (!sourceKey || !resultKey) return;
+  const [factor]=factors;
+  return {sourceKey,resultKey,factor:factor.replace(/^\+/u,'').replace(/^\./u,'0.')};
 }
 
 export function ownerPropertyReadings(text,ts,quotes,worlds) {
@@ -210,14 +236,17 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
           // A written reference to an earlier property is not a scalar
           // operand. Preserve it without evaluating it or guessing a formula.
           if (!resolved && i>0 && plain(from,b) && !worlds.lookup(before(from,from+1)).some(([role])=>role==='act')) {
-            const reference=keys.slice(from+1,b).some((_,offset)=>{
+            const references=keys.slice(from+1,b).flatMap((_,offset)=>{
               const at=from+offset+1, det=detAt(at,b);
-              if (det.mode!=='definite') return false;
+              if (det.mode!=='definite') return [];
               const referenced=catalogProperty(worlds,family,before(det.next,b))?.name;
-              return seen.has(referenced) && referenced!==property.name;
+              return seen.has(referenced) && referenced!==property.name ? [{referenced,at}] : [];
             });
-            if (reference) {
-              records.push({unread:span(a,b)});
+            if (references.length) {
+              const [{referenced,at}]=references;
+              const scaled=references.length===1 && scaledProperty(worlds,family,
+                records.find(record=>record.property===referenced),property.name,before(from,at));
+              records.push({unread:span(a,b),scaled});
               continue;
             }
           }
@@ -225,7 +254,7 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
           resolved=words;
         }
         if (!resolved || resolved!==words && !atom.test(resolved) && !decimal.test(resolved)) return [];
-        records.push({property:property.name,keyWords,words,resolved,measurement});
+        records.push({property:property.name,keyWords,words,resolved,measurement,numeric:number});
       }
       return records;
     };
@@ -268,22 +297,33 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
               const records=propertyValues(family,property,span(propertyAt,ownerAt),payload);
               if (!records.length) continue;
               const head=span(noun,valueAt);
-              const sop=[
+              const prefix=[
                 '@r1 w.request.request act='+quote(act)+' mood=do predicate='+quote(span(verbAt,verbEnd)),
                 '@r1.t w.request.target request=$r1 family='+quote(family)+' mode=existing fill=description'+
                   (det.mode ? ' determiner='+det.mode : '')+' description='+quote(span(start,valueAt))+
-                  (sort ? ' sort='+quote(sort)+' sort_words='+quote(head) : ' family_words='+quote(head)),
-                ...records.map(({unread,property,keyWords,words,resolved,measurement},i)=>unread ?
+                  (sort ? ' sort='+quote(sort)+' sort_words='+quote(head) : ' family_words='+quote(head))
+              ];
+              const circuit=useScaled=>[...prefix,...records.map(({unread,scaled,property,keyWords,words,resolved,measurement},i)=>{
+                if (useScaled && scaled) return '@r1.s'+(i+1)+' w.relational.scaled request=$r1 result=$r1.t'+
+                  ' result_key=$'+scaled.resultKey+' source=$r1.t source_key=$'+scaled.sourceKey+
+                  ' source_phase=result factor='+scaled.factor+' words='+quote(unread);
+                return unread ?
                   '@r1.u'+(i+1)+' w.request.unread request=$r1 text='+quote(unread) :
                   '@r1.c'+(i+1)+' w.request.constraint request=$r1 on=attribute attribute='+quote(property)+
                   ' value='+(resolved===words || decimal.test(resolved) ? quote(resolved) : resolved)+
                   ' operator=eq phase=result key_words='+quote(keyWords)+' words='+quote(words)+
                   (measurement ? ' measure='+measurement.measure+' unit='+quote(measurement.unit)+
-                    ' measure_words='+quote(measurement.words) : ''))
-              ].join('\n');
+                    ' measure_words='+quote(measurement.words) : '');
+              })].join('\n');
+              const sop=circuit(false);
               const alternatives=outputs.get(family) ?? new Map();
               const unread=records.flatMap(record=>record.unread ? [record.unread] : []).join(' ');
-              alternatives.set(sop,{sop,source:'owner-property',...(unread ? {unread} : {})});
+              const candidates=[{sop,source:'owner-property',...(unread ? {unread} : {})}];
+              if (records.some(record=>record.scaled)) {
+                const remaining=records.flatMap(record=>record.unread && !record.scaled ? [record.unread] : []).join(' ');
+                candidates.push({sop:circuit(true),source:'scaled-property',...(remaining ? {unread:remaining} : {})});
+              }
+              alternatives.set(sop,candidates);
               outputs.set(family,alternatives);
             }
           }
@@ -291,5 +331,5 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
       }
     }
   }
-  return [...outputs.values()].flatMap(readings=>readings.size===1 ? [...readings.values()] : []);
+  return [...outputs.values()].flatMap(readings=>readings.size===1 ? readings.values().next().value : []);
 }

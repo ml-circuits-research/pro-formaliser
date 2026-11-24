@@ -188,7 +188,7 @@ function compile(facts) {
   const actNames = new Set(actFacts.map(wire => one(wire, 'name')).filter(Boolean));
   const words = facts('core.word').filter(isEnglish);
   const requestKeys = facts('w.request.key').map(wire => ({
-    tab: one(wire, 'tab'), family: one(wire, 'family'), name: one(wire, 'name'),
+    id: wire.id, tab: one(wire, 'tab'), family: one(wire, 'family'), name: one(wire, 'name'),
     head: one(wire, 'head'), values: values(wire, 'value'), means: one(wire, 'means'),
   })).filter(key => key.tab && key.family && key.name && key.head);
   const literalBindings = facts('pro.reader.literal').map(wire => ({

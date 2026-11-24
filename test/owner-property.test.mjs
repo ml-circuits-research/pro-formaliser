@@ -163,6 +163,66 @@ test('binds two coordinated dimensions to one native owner and leaves relative a
   } finally { await reader.close(); }
 });
 
+test('keeps a partial reading and adds an opted-in scaled relation for one explicit owner', async () => {
+  const path=fileURLToPath(new URL('../sop-worlds/w.relational/',import.meta.url));
+  const configured=loadWorlds({paths:[path]});
+  const reader=createReader(undefined,configured);
+  try {
+    const text='Set the width of the product photo to 6.5 inches and the height to twice the width';
+    assert.ok(read(text).every(c=>c.source!=='scaled-property'));
+    const {candidates}=await reader.propose(text,{evidence:true});
+    assert.ok(candidates.some(c=>c.source==='owner-property' && c.unread==='the height to twice the width'));
+    const typed=candidates.find(c=>c.source==='scaled-property');
+    check(text,typed,configured,'the product photo','node.width','6.5 inches','width');
+    assert.deepEqual(typed.evidence.missing,[]);
+    assert.equal(typed.evidence.counts.unread,undefined);
+    const relation=parse(typed.sop).find(w=>w.type==='w.relational.scaled');
+    assert.deepEqual(['request','source','result','source_key','result_key','source_phase','factor','words']
+      .map(k=>field(relation,k)),['$r1','$r1.t','$r1.t','$w.request.key.diagram.node.width',
+      '$w.request.key.diagram.node.height','result','2','the height to twice the width']);
+    for (const input of [
+      'Set the width of the product photo to 6.5 inches and double the width',
+      'Set the width of the product photo to 6.5 inches and the height to roughly twice the width',
+      'Set the width of the product photo to 6.5 inches and the height of the backdrop to twice the width',
+      'Set the width of the product photo to 6.5 inches and the height to twice the width of the backdrop',
+      'Set the height of the product photo to twice the width',
+      'Set the width of the product photo to 6.5 inches and the height to twice the width if approved'
+    ]) {
+      const result=await reader.propose(input);
+      assert.ok(result.candidates.every(c=>c.source!=='scaled-property'),input);
+    }
+  } finally { await reader.close(); }
+});
+
+test('scales unrelated overlay keys only when their declared dimensions agree', async t=>{
+  const dir=mkdtempSync(fileURLToPath(new URL('../.cache/scaled-keys-overlay-',import.meta.url)));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  writeFileSync(join(dir,'instrument.sop'),[
+    '@lab std.schema.world name=w.lab',
+    '@device std.schema.kind of=w.lab.instrument world=w.lab acts=change',
+    '@noun core.word text="resonance meter" means=w.lab.instrument',
+    '@sample w.request.key tab=diagram family=instrument name=instrument.baseline head=number',
+    '@peak w.request.key tab=diagram family=instrument name=instrument.peak head=number',
+    '@count w.request.key tab=diagram family=instrument name=instrument.count head=number',
+    '@sample.duration pro.reader.property_quantity family=instrument key=instrument.baseline quantity=time',
+    '@peak.duration pro.reader.property_quantity family=instrument key=instrument.peak quantity=time',
+    '@count.dimension pro.reader.property_quantity family=instrument key=instrument.count quantity=length',
+  ].join('\n'));
+  const module=fileURLToPath(new URL('../sop-worlds/w.relational/',import.meta.url));
+  const reader=createReader(undefined,loadWorlds({paths:[module,dir]}));
+  try {
+    const text='Set the baseline of the resonance meter to 7 seconds and the peak to triple the baseline';
+    const {candidates}=await reader.propose(text);
+    const typed=candidates.find(c=>c.source==='scaled-property');
+    assert.ok(typed,text);
+    const relation=parse(typed.sop).find(w=>w.type==='w.relational.scaled');
+    assert.deepEqual(['source_key','result_key','factor'].map(k=>field(relation,k)),['$sample','$peak','3']);
+    const different=await reader.propose(text.replace('the peak','the count'));
+    assert.ok(different.candidates.some(c=>c.source==='owner-property' && c.unread));
+    assert.ok(different.candidates.every(c=>c.source!=='scaled-property'));
+  } finally { await reader.close(); }
+});
+
 test('compiles owner inventories and backing slot types from an unrelated overlay', async t=>{
   const dir=mkdtempSync(fileURLToPath(new URL('../.cache/owner-inventory-overlay-',import.meta.url)));
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
