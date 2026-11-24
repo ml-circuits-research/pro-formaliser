@@ -255,6 +255,24 @@ introduce another clause or an adjunct, the existing reader can still offer
 partial alternatives. Tests cover whole labels, composed section requests
 and an independently installed family. [Creation role tests](../test/creation-roles.test.mjs)
 
+A role with a declared sort or sort bank can opt into `preposed=true`,
+letting a proper written title precede its kind within an explicit creation
+request. A grounded kind followed by an overt naming cue can also license
+a creation fragment with no explicit verb. For a named operand backed by
+an inventory, `value_type` names the native fact type that supplies known
+names and aliases.
+
+## Preservation adjuncts
+
+A `pro.reader.retention` frame selects a native keep reaction cue and a full
+trailing pattern. Each `lead` pairs a native cue phrase with its adjunct
+form, as in `keep:keeping`. Each `tail` licenses the frame's canonical
+preservation `value`. A `remainder` names a written residual scope such as
+“the rest of the scene.” A separate existing-target lookup carries that scope
+or a written name. A compatible `pro.reader.preservation` binding and
+closed catalog value are required for the preceding target family.
+[Retention declarations](pro.reader/retention.sop) · [Preservation tests](../test/preservation-adjunct.test.mjs)
+
 ## Transformations
 
 Declare `pro.reader.transformation` for an existing owner and a result

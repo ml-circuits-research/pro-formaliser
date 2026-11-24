@@ -5,6 +5,7 @@
 :- use_module(library(readutil)).
 :- use_module(library(pcre)).
 :- use_module(properties).
+:- use_module(native_property_frames).
 :- use_module(property_commands).
 :- use_module(argument_sequences).
 :- use_module(member_actions).
@@ -23,7 +24,8 @@ main :- repeat,
       nl, flush_output, fail ).
 
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,proofs:Proofs,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects}) :-
+answer(Q, _{candidates:Answers,proofs:Proofs,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
+    native_property_frames(Q,NativeProperties),
     verb_effects(Q,VerbEffects),
     coordinated_effects(Q,Effects),
     member_actions(Q,Members),

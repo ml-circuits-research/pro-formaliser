@@ -178,7 +178,7 @@ export function createNominalPhraseLearner(worlds) {
   };
 }
 
-function spatialPair(wires, constraints, family, surface, worlds) {
+function spatialPair(wires, constraints, family, surface, worlds, region) {
   const pairs = [];
   for (const {relationKey, anchorKey} of worlds.spatialBindings.filter(binding => binding.family === family)) {
     for (const relation of constraints.filter(w => field(w, 'attribute') === relationKey &&
@@ -187,17 +187,40 @@ function spatialPair(wires, constraints, family, surface, worlds) {
       for (const anchor of constraints.filter(w => field(w, 'attribute') === anchorKey &&
         field(w, 'on') === 'place' && field(w, 'operator') === 'relation' && field(w, 'phase') === 'selector' &&
         w.attrs.value?.length === 1 && !w.attrs.words)) {
-        if (marker + ' ' + normalize(field(anchor, 'value')) !== surface) continue;
+        const name=normalize(field(anchor,'value'));
+        const phrase=marker.endsWith(' '+name) ? marker : marker+' '+name;
+        // A declared region may include a leading emphasis word absent from
+        // the lexical relation. Its anchor and marker still have to coincide.
+        if (phrase!==surface && (!region || !surface.endsWith(' '+phrase))) continue;
         const lookups = wires.filter(w => w.type === lookupType && field(w, 'constraint') === '$' + anchor.id);
         pairs.push([relation, anchor, ...lookups]);
       }
     }
   }
   if (pairs.length !== 1) return [];
-  const drop = new Set(pairs[0]);
-  const refs = new Set([...drop].map(w => '$' + w.id));
-  return wires.some(w => !drop.has(w) && Object.values(w.attrs).flat().some(value => refs.has(value)))
-    ? [] : pairs[0];
+  return detached(wires,pairs[0]);
+}
+
+function detached(wires, removable) {
+  const drop=new Set(removable);
+  const refs=new Set(removable.map(w=>'$'+w.id));
+  return wires.some(w=>!drop.has(w) && Object.values(w.attrs).flat().some(value=>refs.has(value))) ? [] : removable;
+}
+
+function coarseRegion(wires,owned,family,key,text,from,to,worlds) {
+  const relations=new Set(worlds.spatialBindings.filter(binding=>binding.family===family).map(binding=>binding.relationKey));
+  const pieces=owned.filter(wire=>{
+    const attribute=field(wire,'attribute');
+    if (attribute!==key && !relations.has(attribute) || field(wire,'on')!=='attribute' ||
+        field(wire,'operator')!=='eq' || field(wire,'phase')!=='result' || wire.attrs.value?.length!==1 ||
+        wire.attrs.key_words || Object.keys(wire.attrs).some(slot=>!allowedFields.has(slot))) return false;
+    const surface=field(wire,'words') ?? field(wire,'value');
+    const spans=normalSpans(text,surface);
+    return spans.length===1 && (attribute===key ? from<spans[0][0] && spans[0][1]===to :
+      spans[0][0]===from && spans[0][1]<to);
+  });
+  if (pieces.length!==2 || pieces.filter(wire=>field(wire,'attribute')===key).length!==1) return [];
+  return detached(wires,pieces);
 }
 
 function normalSpans(text, value) {
@@ -215,8 +238,51 @@ function separatesPhrase(ts, next, worlds) {
   return false;
 }
 
+function regionSurfaces(facts) {
+  const attributes=(wire,key)=>(wire.attrs[key] ?? []).map(decode);
+  const layouts=new Map(), aliases=new Map();
+  for (const slot of facts('k.layouts.slot')) {
+    const layout=field(slot,'layout'), value=field(slot,'name');
+    if (!layout || !value) continue;
+    const names=layouts.get(layout) ?? new Set();
+    names.add(value);
+    layouts.set(layout,names);
+  }
+  for (const cue of facts('w.lang.en.cue')) {
+    const value=field(cue,'value'), relation=field(cue,'relation');
+    if (!value || field(cue,'on')!=='place' || field(cue,'takes')!=='none' ||
+        !['in','at'].includes(relation) || cue.attrs.attribute) continue;
+    const width=normalize(value.replaceAll('_',' ')).split(' ').length;
+    const forms=aliases.get(value) ?? new Set();
+    // Only bare, same-width aliases can serve as the region name itself.
+    // Multiword cue leads with a preposition remain full phrases.
+    for (const lead of attributes(cue,'lead').map(normalize)) {
+      if (lead.split(' ').length===width && lead.split(' ').every(token=>word.test(token)))
+        forms.add(lead);
+    }
+    aliases.set(value,forms);
+  }
+  const phrases=[];
+  for (const rule of facts('pro.reader.region_form')) {
+    const layout=field(rule,'layout'), values=attributes(rule,'value');
+    const heads=attributes(rule,'head'), extra=attributes(rule,'alias');
+    const prefixes=attributes(rule,'prefix').map(normalize).filter(Boolean);
+    const names=layout ? [...(layouts.get(layout) ?? [])].filter(name=>!values.length || values.includes(name)) : values;
+    for (const value of names) {
+      const spellings=[value.replaceAll('_',' '),...(aliases.get(value) ?? []),
+        ...(values.length===1 ? extra : [])];
+      const forms=new Set(spellings.flatMap(name=>layout && name.split(' ').length===2 ?
+        [name,name.replace(' ','-')] : [name]));
+      for (const prefix of prefixes) for (const name of forms) for (const head of heads.length ? heads : ['']) {
+        phrases.push(['region',prefix+' '+name+(head ? ' '+head : ''),[value]]);
+      }
+    }
+  }
+  return phrases;
+}
+
 export function nominalPositionForms(facts, requestKeys) {
-  const cues = [];
+  const cues = regionSurfaces(facts);
   for (const wire of facts('w.lang.en.cue')) {
     const on=field(wire,'on'), value=field(wire,'value'), relation=field(wire,'relation');
     if (field(wire,'takes')!=='none' || !value) continue;
@@ -306,14 +372,14 @@ function attachPhrase(text, ts, quotes, wires, request, target, start, at, entry
   if (!followed && !separatesPhrase(ts, at + keys.length, worlds)) return;
   const fromChar = ts[at][2], toChar = ts[at + keys.length - 1][3];
   const headChar = ts[start][2];
-  if (quotes.some(q => q.start < toChar && q.end > headChar)) return;
+  if (quotes.some(q => q.start < Math.max(toChar,headChar) && q.end > Math.min(fromChar,headChar))) return;
 
   const chars = Array.from(text);
   const from = chars.slice(0, fromChar).join('').length;
   const to = chars.slice(0, toChar).join('').length;
   const namedScope = field(request, 'words');
   const scopes = namedScope ? literalRanges(text, namedScope) : [[0, text.length]];
-  if (scopes.length !== 1 || chars.slice(0, headChar).join('').length < scopes[0][0] || to > scopes[0][1]) return;
+  if (scopes.length !== 1 || Math.min(from,chars.slice(0,headChar).join('').length) < scopes[0][0] || to > scopes[0][1]) return;
   const scopeTokens = tokens(text.slice(...scopes[0])).map(token => token[0]);
   if (scopeTokens.some((token, i) => {
     for (let end = i + 1; end <= Math.min(i + 4, scopeTokens.length); end++) {
@@ -327,18 +393,20 @@ function attachPhrase(text, ts, quotes, wires, request, target, start, at, entry
   if (!catalogAllows(worlds,family,key,value)) return;
 
   const constraints = wires.filter(w => w.type === constraintType);
-  if (constraints.some(w => field(w, 'attribute') === key) ||
-      constraints.some(w => ['no', 'not_all'].includes(field(w, 'want')))) return;
+  if (constraints.some(w => ['no', 'not_all'].includes(field(w, 'want')))) return;
   const owned = constraints.filter(w => field(w, 'request') === ref);
-  const spatial=spatialPair(wires, owned, family, keys.join(' '), worlds);
+  const spatial=spatialPair(wires, owned, family, keys.join(' '), worlds, operator==='region');
+  const fragments=operator==='region' && field(target,'mode')==='new' && !spatial.length
+    ? coarseRegion(wires,owned,family,key,text,from,to,worlds) : [];
+  if (constraints.some(w=>field(w,'attribute')===key && !fragments.includes(w))) return;
   const phase=requestedPhase ?? (spatial.length ? field(spatial[0],'phase') ?? 'result'
     : field(target,'mode')==='new' || field(request,'act')==='place' ? 'result' : undefined);
   if (!phase) return;
-  const drop = new Set(spatial);
+  const drop = new Set([...spatial,...fragments]);
   const overlap = (wire, fields) => fields.some(name => wire.attrs[name].some(item =>
     normalSpans(text, decode(item)).some(([a,b]) => a < to && b > from)));
   const observed = wires.filter(w => w.type === unreadType && field(w, 'request') === ref);
-  if (!drop.size && !observed.some(w => overlap(w, ['text']))) return;
+  if (!spatial.length && !observed.some(w => overlap(w, ['text']))) return;
   for (const w of wires) {
     if (drop.has(w) || w.type === unreadType || w.id === request.id) continue;
     const evidence = Object.keys(w.attrs).filter(literalField);
@@ -375,6 +443,14 @@ export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, 
   const placement=at=>groundedPlacementEnd(owned(),ts,at,worlds,family);
   const options=at=>(byLead.get(ts[at]?.[0]) ?? []).filter(([words])=>matchesAt(ts,at,words));
   let revised;
+  // A sentence-initial region before a comma can modify the one target in
+  // this local packet. Its phrase must end before the target nominal starts.
+  const preposed=options(0).filter(entry=>entry[4]==='region' &&
+    entry[0].length<start && ts[entry[0].length][0]===',');
+  if (preposed.length===1) {
+    revised=attachPhrase(text,ts,quotes,wires,request,target,start,0,preposed[0],worlds);
+    if (revised) wires=parse(revised.sop);
+  }
   for (let at=after;at<ts.length;) {
     const entries=options(at), existing=grounded(at);
     const length=Math.max(0,...entries.map(([words])=>words.length));
@@ -382,10 +458,13 @@ export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, 
     if (existing.length>1 || best.length>1) break;
     const [entry]=best, [covered]=existing;
     if (covered) {
-      if (!covered.meaning || entry && (covered.words.join(' ')!==entry[0].join(' ') ||
-        JSON.stringify(JSON.parse(covered.meaning).slice(0,4))!==JSON.stringify(entry.slice(1)))) break;
-      at+=covered.words.length;
-      continue;
+      const agrees=covered.meaning && (!entry || covered.words.join(' ')===entry[0].join(' ') &&
+        JSON.stringify(JSON.parse(covered.meaning).slice(0,4))===JSON.stringify(entry.slice(1)));
+      if (agrees) {
+        at+=covered.words.length;
+        continue;
+      }
+      if (entry?.[4]!=='region') break;
     }
     if (!entry) break;
     const next=at+length;

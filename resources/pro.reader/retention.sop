@@ -1,0 +1,10 @@
+# The native keep reaction licenses these complete, boundary-delimited adjuncts.
+@pro.reader.retention core.type of=pro.reader.retention closed=true
+@pro.reader.retention.cue core.slot of=pro.reader.retention key=cue kind=atom required=true
+@pro.reader.retention.lead core.slot of=pro.reader.retention key=lead kind=string kind=atom many=true
+@pro.reader.retention.tail core.slot of=pro.reader.retention key=tail kind=string kind=atom many=true
+@pro.reader.retention.value core.slot of=pro.reader.retention key=value kind=atom required=true
+@pro.reader.retention.remainder core.slot of=pro.reader.retention key=remainder kind=string many=true
+
+@reader.retention.place pro.reader.retention cue=reaction.keep lead="keep:keeping" lead="leave:leaving" tail="where it is" tail="where they are" value=place remainder="everything else" remainder="the rest" remainder="the rest of the scene" remainder="all other objects"
+@reader.retention.all pro.reader.retention cue=reaction.keep lead="keep:keeping" lead="leave:leaving" tail="as it is" tail="as they are" tail="exactly as it is" tail="exactly as they are" tail=unchanged value=all remainder="everything else" remainder="the rest" remainder="the rest of the scene" remainder="all other objects"

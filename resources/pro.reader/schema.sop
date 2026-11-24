@@ -167,9 +167,11 @@
 @pro.reader.creation_role.tab core.slot of=pro.reader.creation_role key=tab kind=atom required=true
 @pro.reader.creation_role.family core.slot of=pro.reader.creation_role key=family kind=atom required=true
 @pro.reader.creation_role.attribute core.slot of=pro.reader.creation_role key=attribute kind=atom required=true
-@pro.reader.creation_role.sort_key core.slot of=pro.reader.creation_role key=sort_key kind=atom
+@pro.reader.creation_role.sort_key core.slot of=pro.reader.creation_role key=sort_key kind=atom many=true
 @pro.reader.creation_role.sort core.slot of=pro.reader.creation_role key=sort kind=string many=true
-@pro.reader.creation_role.text core.slot of=pro.reader.creation_role key=text kind=string many=true required=true
+@pro.reader.creation_role.text core.slot of=pro.reader.creation_role key=text kind=string many=true
+@pro.reader.creation_role.preposed core.slot of=pro.reader.creation_role key=preposed kind=boolean
+@pro.reader.creation_role.value_type core.slot of=pro.reader.creation_role key=value_type kind=atom
 
 @pro.reader.spatial_surface core.type of=pro.reader.spatial_surface closed=true
 @pro.reader.spatial_surface.base core.slot of=pro.reader.spatial_surface key=base kind=string required=true

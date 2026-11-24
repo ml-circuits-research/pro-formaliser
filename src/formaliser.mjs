@@ -1,3 +1,5 @@
+import {nativePropertyPacket,nativePropertyReadings} from './native-property-frames.mjs';
+import {preservationAdjunct,preservationAdjunctReading} from './preservation-adjunct.mjs';
 import { directionalResultCandidates } from './directional-result.mjs';
 import { verbEffectIndex,verbEffectReading } from './verb-effects.mjs';
 import { transformationReadings } from './transformation.mjs';
@@ -219,7 +221,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const memberActions=scope.restricted ? [] : memberActionPackets(text,ts,quotes,worlds);
     const coordinatedEffects=scope.restricted || quotes.length ? undefined : coordinatedPacket(ts,worlds,model.lexicon);
     const verbEffects=scope.restricted || quotes.length ? [] : [...new Set(ts.map(t=>t[0]))].flatMap(head=>verbIndex.get(head) ?? []);
-    const request = {text,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const nativeProperties=scope.restricted ? undefined : nativePropertyPacket(text,ts,quotes,worlds);
+    const request = {text,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -258,6 +261,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
     }
     if (!scope.restricted) {
+      for (const reading of nativePropertyReadings(text,response.nativeProperties ?? [])) retain(reading);
       for (const candidate of compounds(text,ts,quotes)) retain(candidate);
       for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) retain(reading);
@@ -586,6 +590,17 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
           if (key && !seen.has(key)) {
             seen.add(key);candidates.push({sop,status:candidate.status,source:'trailing-discourse'});
           }
+        }
+      }
+      const retained=preservationAdjunct(text,worlds);
+      if (retained && !requestScope(text,maskQuoted(text,quotedSpans(text)),worlds,[]).restricted) {
+        const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
+        const steps=sequenceParts(retained.body,tokens(retained.body),worlds.joiners,sequenceOptions);
+        for (const base of await wrapped(retained.body)) {
+          if (steps.length && parse(base.sop).filter(w=>w.type==='w.request.request').length<steps.length) continue;
+          const reading=preservationAdjunctReading(text,retained,base,worlds);
+          const key=reading && admissibleKey(text,reading.sop);
+          if (key && !seen.has(key)) {seen.add(key);candidates.push(reading);}
         }
       }
       const qualify=clauseQualifiers(text,worlds,model,(words,quotes)=>

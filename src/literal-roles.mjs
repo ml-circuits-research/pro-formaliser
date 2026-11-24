@@ -1,3 +1,4 @@
+import {nativeInventory} from './native-inventory.mjs';
 import { tokens } from './lexicon.mjs';
 
 const definite = new Set(['definite', 'demonstrative', 'possessive']);
@@ -85,8 +86,8 @@ function circuit({span, head, end, target, constraints}) {
   const tail = span(end).replace(/^\s*[.,!?]+\s*/u,'').trim();
   const hasUnread = unquotedRemainder.test(tail);
   const statement = span(head.start,hasUnread ? undefined : end);
-  const request = '@r1 w.request.request act=' + encode(head.act) + ' mood=do predicate=' +
-    encode(span(head.start,head.end)) + (statement === span(0) ? '' : ' words=' + quote(statement));
+  const request = '@r1 w.request.request act=' + encode(head.act) + ' mood=do' +
+    (head.implicit ? '' : ' predicate='+encode(span(head.start,head.end))) + (statement === span(0) ? '' : ' words=' + quote(statement));
   const fields = [
     'family=' + encode(target.family), 'mode=' + target.mode,
     target.det && 'determiner=' + target.det,
@@ -218,25 +219,30 @@ function creation(span, ts, quotes, head, worlds) {
   return readings;
 }
 
-export function compileCreationRoles(facts,requestKeys) {
+export function compileCreationRoles(facts,requestKeys,words) {
   const get = (wire,key) => (wire.attrs[key] ?? []).map(raw => raw.startsWith('"') ? JSON.parse(raw) : raw);
-  const index = new Map();
+  const byCue=new Map(), preposed=[], named=[];
   for (const wire of facts('pro.reader.creation_role')) {
     const [family]=get(wire,'family'), [tab]=get(wire,'tab'), [attribute]=get(wire,'attribute');
-    const [sortKey]=get(wire,'sort_key'), sorts=get(wire,'sort');
+    const sortKeys=get(wire,'sort_key'), sorts=get(wire,'sort');
     const keys=requestKeys.filter(key=>key.family===family && key.tab===tab);
     if (!keys.some(key=>key.name===attribute && key.head.split('+').includes('span') && !key.values.length)) continue;
-    const bank=sortKey && keys.find(key=>key.name===sortKey)?.values;
-    if (sortKey && !bank?.length) continue;
+    const banks=sortKeys.map(name=>keys.find(key=>key.name===name)?.values);
+    if (banks.some(bank=>!bank?.length)) continue;
+    const bank=banks.flat();
     const cues=get(wire,'text').map(normalized).filter(Boolean);
+    const rule={family,attribute,sorts:new Map(sorts.map(sort=>[normalized(sort.replaceAll('_',' ')),sort])),
+      bank:new Map(bank.map(sort=>[normalized(sort.replaceAll('_',' ')),sort]))};
     for (const cue of cues) {
-      const list=index.get(cue) ?? [];
-      list.push({family,attribute,sorts:new Map(sorts.map(sort=>[normalized(sort.replaceAll('_',' ')),sort])),
-        bank:new Map((bank ?? []).map(sort=>[normalized(sort.replaceAll('_',' ')),sort]))});
-      index.set(cue,list);
+      const list=byCue.get(cue) ?? [];
+      list.push(rule);
+      byCue.set(cue,list);
     }
+    if (get(wire,'preposed')[0]==='true' && (bank.length || sorts.length)) preposed.push(rule);
+    const [type]=get(wire,'value_type');
+    if (type) named.push({...rule,values:nativeInventory(facts,type,words)});
   }
-  return index;
+  return {byCue,preposed,named};
 }
 
 function plainCreationTail(ts,start,end,worlds) {
@@ -255,17 +261,24 @@ function plainCreationTail(ts,start,end,worlds) {
 
 function declaredCreation(span,ts,quotes,head,worlds) {
   const roles=worlds.literalGrammar.creationRoles;
-  if (!roles?.size || ts.at(-1)?.[0]==='?' && head.start===0) return [];
+  if (!roles || ts.at(-1)?.[0]==='?' && head.start===0) return [];
   const stop=ts.length-Number(['.','!','?'].includes(ts.at(-1)?.[0]));
   const det=phrases(ts,head.next,stop).find(choice=>Object.hasOwn(worlds.determiners,choice.surface));
   if (definite.has(worlds.determiners[det?.surface])) return [];
   const noun=det?.next ?? head.next;
   if (noun>=stop) return [];
   const readings=new Map();
+  function addLiteral(rule,value,sort,kind,cue) {
+    const target={family:rule.family,mode:'new',sort,surface:kind,det:worlds.determiners[det?.surface]};
+    const candidate=circuit({span,head,end:ts[stop-1][3],target,constraints:[constraint(rule.attribute,value,cue)]});
+    const choices=readings.get(rule.family) ?? new Map();
+    choices.set(candidate.sop,{...candidate,source:'literal-creation',status:'matched'});
+    readings.set(rule.family,choices);
+  }
   for (const nominal of phrases(ts,noun,stop)) {
     for (const cue of phrases(ts,nominal.next,stop)) {
       if (cue.next>=stop || quotes.some(q=>q.start<cue.end && q.end>nominal.start)) continue;
-      const pending=roles.get(cue.surface);
+      const pending=roles.byCue.get(cue.surface);
       if (!pending?.length) continue;
       const literal=quotes.find(q=>q.start===ts[cue.next][2] && q.end===ts[stop-1][3]);
       if (!literal && (quotes.length || !plainCreationTail(ts,cue.next,stop,worlds))) continue;
@@ -273,17 +286,36 @@ function declaredCreation(span,ts,quotes,head,worlds) {
       if (!value.trim() || (!literal && worlds.isReference(value))) continue;
       const matches=worlds.lookup(nominal.surface)
         .filter(([role,act,,mode])=>role==='target' && act===head.act && mode==='new');
-      for (const {family,attribute,sorts,bank} of pending) {
+      for (const rule of pending) {
+        const {family,sorts,bank}=rule;
         const sense=matches.find(([, ,owner])=>owner===family);
         const sort=bank.get(nominal.surface) ?? (sense && sorts.get(nominal.surface));
         if (!sort && (sorts.size || bank.size || !sense)) continue;
-        const target={family,mode:'new',sort:sort || sense?.[4],det:worlds.determiners[det?.surface],
-          surface:span(nominal.start,nominal.end)};
-        const candidate=circuit({span,head,end:ts[stop-1][3],target,
-          constraints:[constraint(attribute,value,span(cue.start,cue.end))]});
-        const choices=readings.get(family) ?? new Map();
-        choices.set(candidate.sop,{...candidate,source:'literal-creation',status:'matched'});
-        readings.set(family,choices);
+        addLiteral(rule,value,sort || sense?.[4],span(nominal.start,nominal.end),span(cue.start,cue.end));
+      }
+    }
+  }
+  if (!head.implicit) {
+    const properToken=([,raw])=>/^\p{Lu}[\p{L}\p{N}\p{M}_-]*$/u.test(raw);
+    if (!det && !quotes.length && ts.slice(noun,stop).every(properToken)) {
+      const value=span(ts[noun][2],ts[stop-1][3]);
+      for (const rule of roles.named) {
+        if (rule.values.get(normalized(value))?.size===1 && worlds.literalGrammar.licenses(rule.family,head.act))
+          addLiteral(rule,value);
+      }
+    }
+    for (let at=noun+1;at<stop && at<=noun+8;at++) {
+      const kind=span(ts[at][2],ts[stop-1][3]);
+      const quoted=quotes.find(q=>q.start===ts[noun][2] && q.end===ts[at-1][3]);
+      if (!quoted && (!det || !ts.slice(noun,at).every(properToken))) continue;
+      const value=quoted?.value ?? span(ts[noun][2],ts[at-1][3]);
+      if (!value || worlds.isReference(value)) continue;
+      for (const rule of roles.preposed) {
+        const sort=rule.bank.get(normalized(kind)) ?? rule.sorts.get(normalized(kind));
+        if (!sort || !worlds.literalGrammar.licenses(rule.family,head.act)) continue;
+        if (!quoted && ts.slice(noun,at).some(([key])=>worlds.lookup(key).some(([role,,family])=>
+          role==='constraint' && family===rule.family))) continue;
+        addLiteral(rule,value,sort,kind);
       }
     }
   }
@@ -291,16 +323,20 @@ function declaredCreation(span,ts,quotes,head,worlds) {
 }
 
 export function literalRoleCandidates(text, ts, quotes, worlds) {
-  if (!worlds.literalGrammar || (!quotes.length && !worlds.literalGrammar.creationRoles?.size)) return [];
+  if (!worlds.literalGrammar || !ts.length) return [];
   const chars = Array.from(text);
   const span = (start,end) => chars.slice(start,end).join('');
   const scope = maskQuoted(text,quotes);
   if (/\b(?:not|never|without|except|instead|but)\b|n['’]t\b/iu.test(scope)) return [];
-  return requestHeads(ts,worlds).flatMap(head => {
+  const heads=requestHeads(ts,worlds);
+  // An overt naming cue and a typed nominal can license a creation fragment
+  // even when the speaker supplies no verb. Keep the predicate unwritten.
+  const fragment={act:'make',next:0,start:0,end:0,implicit:true};
+  return [...declaredCreation(span,ts,quotes,fragment,worlds),...heads.flatMap(head => {
     if (head.act==='make') return [
       ...declaredCreation(span,ts,quotes,head,worlds),
       ...(quotes.length ? creation(span,ts,quotes,head,worlds) : [])
     ];
     return quotes.length ? replacement(span,ts,quotes,head,worlds) : [];
-  });
+  })];
 }

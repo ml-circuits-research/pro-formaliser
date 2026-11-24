@@ -87,3 +87,7 @@
 ## Nominal requests, direction and typed arguments
 - Added fully grounded indefinite noun phrases, native property owners and directional results. SWI-Prolog binds ordered arguments around their declared owner.
 - Full test gate passed. 46.5% reasonable on the same 1,000 requests, previously 45.9%. See eval/THOUSAND-AUDIT.md.
+
+## Regions, retention and native property frames
+- Bound spatial regions, explicit preservation and names in creation requests. SWI-Prolog matches native property frames against catalog-backed roles.
+- Full test gate passed. 47.5% reasonable on the same 1,000 requests, previously 46.5%. See eval/THOUSAND-AUDIT.md.

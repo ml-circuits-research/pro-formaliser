@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Regions, retention and native property frames
+
+On the paired 1,000 requests, at least one proposal was reasonable on 47.5% (previously 46.5%). On the full holdout, 664 proposal sets contained the reference semantic wire set, previously 663. The first-choice WebMeet checker rejected 278 of 1,889 nonempty circuits using the reference tab, previously 277. [Grades and reproduction](THOUSAND-AUDIT.md)
+
 ## Nominal requests, direction and typed arguments
 
 On the paired 1,000 requests, at least one proposal was reasonable on 46.5% (previously 45.9%). On the full holdout, 663 proposal sets contained the reference semantic wire set, previously 663. The first-choice WebMeet checker rejected 277 of 1,889 nonempty circuits using the reference tab, previously 272. The six newly reasonable requests all moved from L2c to L4. [Grades and reproduction](THOUSAND-AUDIT.md)
