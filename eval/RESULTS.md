@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Written subjects, selectors and property changes
+
+Reader `f3233ae` reached **49.5%** reasonable on the primary 1,000 and **42.0%** on the second 1,000. Four primary sets changed and three gained a reasonable proposal. Two replica sets changed and one gained a reasonable proposal. No observed loss occurred on either sample. The 13 prior spelling recoveries bring the primary result to **50.8%** with spelling enabled. All 48 spelling unions were unchanged. The same frozen bucket 73 comparison used below showed no changed proposal sets against the preceding reader on its 1,000 requests. [Primary audit](THOUSAND-AUDIT.md) · [Replica audit](REPLICATION-37.md) · [Paired judgments](ROLE-BINDING-REPLAY.tsv)
+
 ## Source roles and subordinate clauses
 
 Reader `03f237f` reached **49.2%** reasonable on the primary 1,000 and **41.9%** on the second 1,000. With the independent spelling path enabled, the primary reached **50.5%**. All 48 corrected-input unions were replayed and matched their earlier reviewed sets. The three new complete readings occurred outside those 48. [Primary audit](THOUSAND-AUDIT.md) · [All changes](SCOPED-REPLAY.tsv) · [Training overlap and generalization limits](TRAINING-OVERLAP.md)

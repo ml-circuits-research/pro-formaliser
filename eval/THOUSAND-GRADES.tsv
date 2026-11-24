@@ -294,7 +294,7 @@ sample	source	row	grade	reference_issue	review_note
 293	drawing/scenes-03.csv	3998	L1c	1	Applies accessories' colors and relative locations to the cat itself
 294	diagram/charts-02.csv	864	L4	1	Sets exact chart title Q2sales
 295	drawing/placement-06.csv	612	L3	0	Adds casino left of indicated lake
-296	drawing/placement-06.csv	4759	L2b	0	Creates iris but loses house anchor and left placement
+296	drawing/placement-06.csv	4759	L4	0	New alternative creates one iris to the left of the house and defers the written house landmark through its own lookup. Only courtesy remains unread.
 297	diagram/charts-03.csv	3758	L3	0	Creates mindmap about desserts
 298	diagram/nodes-12.csv	2831	L2b	0	Recognizes the request to separate the group, but leaves the name “data layer” unread instead of binding the specific target.
 299	drawing/placement-06.csv	4184	L3	0	Places new tanker in lake
@@ -383,7 +383,7 @@ sample	source	row	grade	reference_issue	review_note
 382	drawing/placement-02.csv	3273	L2c	1	Retains a boat edit but omits adding the rightward shadow; reference misses direction.
 383	drawing/scenes-05.csv	2162	L4	0	A check binds the existing dog and the under-bench relation through its anchor.
 384	diagram/nodes-06.csv	4094	L4	0	Creates and labels the hexagon Design, then connects Design to Platform in one proposal.
-385	drawing/scenes-20.csv	1783	L2a	0	A generic change survives but no proposal expresses slanting the full selection by 15.
+385	drawing/scenes-20.csv	1783	L4	1	New alternative applies a positive 15-unit skew delta to every member of the referenced set. It defers resolving the set without inventing context. The reference instead uses equality for the explicitly relative amount.
 386	diagram/charts-03.csv	887	L1b	1	Changes a generic node-label axis, not the named chart; reference changes the measure.
 387	drawing/people-08.csv	27	L2c	0	Recognizes the avatar change but loses the robot preset.
 388	diagram/charts-01.csv	1044	L3	0	Exact pie chart of books by category.
@@ -513,7 +513,7 @@ sample	source	row	grade	reference_issue	review_note
 512	diagram/nodes-04.csv	2671	L2c	0	References the prior diagram but loses the five-box revision.
 513	diagram/diagrams-04.csv	958	L3	0	Exact orange edit of Sales bar with an additional target-family hypothesis.
 514	drawing/scenes-16.csv	2158	L4	0	Creates a square named pelican and places it below dock in the same circuit.
-515	drawing/placement-06.csv	4670	L3	0	Exact tree frog to the left of the mountain.
+515	drawing/placement-06.csv	4670	L3	0	The exact reasonable tree-frog placement is retained. One added alternative also keeps the compound animal and resolves the same mountain. The other splits tree frog and remains incomplete.
 516	document/text-07.csv	52	L2b	0	Selects a paragraph or uses its ordinal, but never binds Hello as the text to select within the first paragraph.
 517	drawing/objects-02.csv	1532	L3	0	Exact lake labeled Goal with size 400.
 518	diagram/nodes-12.csv	2916	L4	0	Asks for the count of existing text boxes.
@@ -921,7 +921,7 @@ sample	source	row	grade	reference_issue	review_note
 920	diagram/charts-03.csv	2367	L2c	1	Thin pie border missing.
 921	drawing/scenes-11.csv	770	L2c	1	The small blue bird and film-poster layout are grounded, but the common flat plane and unchanged picture membership are missing.
 922	drawing/scenes-10.csv	1400	L1c	0	Blue interpreted as location instead of check color.
-923	drawing/scenes-07.csv	539	L1c	1	Reads the red hat as an effect or spatial landmark instead of clothing that identifies the boy.
+923	drawing/scenes-07.csv	539	L4	1	The added reading uses the red hat to identify the tall boy and makes facing left the only effect. The unchanged exact reference instead makes wearing the hat an effect.
 924	drawing/scenes-06.csv	454	L2c	1	Creates the small cat at left and identifies the woman near the tent, but the open facing value cannot bind the house as a native orientation landmark.
 925	drawing/scenes-17.csv	3471	L3	0	Yellow balloon.
 926	drawing/scenes-13.csv	3925	L1c	0	Clothing becomes containment and paint.

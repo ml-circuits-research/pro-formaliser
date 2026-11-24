@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Replay with f3233ae
+
+Reasonable coverage reached **42.0%**, previously 41.9%. Two of 1,000 proposal sets changed. The bear gains a complete alternative that selects it by size and turns it right. Its first proposal remains partial. The hyacinth retains its complete placement and gains a landmark lookup. No request lost its reasonable reading. The separate 1,000-request bucket 73 comparison had no changed proposal sets. [Paired judgments](ROLE-BINDING-REPLAY.tsv) · [Comparison setup](RESULTS.md)
+
 ## Replay with 03f237f
 
 Reasonable coverage remained **41.9%**. Seven sets changed. The complete airport scene remained available, and additional alternatives separated the suitcases’ size from their colour. The other six sets lost incomplete alternatives. [One judgment per changed set](SCOPED-REPLAY.tsv)

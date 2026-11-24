@@ -48,8 +48,12 @@ function nearest(training) {
 const corpus=loadCorpus();
 const primary=table('THOUSAND-GRADES.tsv');
 const replica=table('REPLICATION-37-GRADES.tsv');
-for (const file of ['REPLICATION-37-REPLAY.tsv','REPLICATION-37-ANALYTICAL.tsv']) {
-  for (const row of table(file)) replica[Number(row.sample)-1].current_reasonable=row.current;
+for (const file of ['REPLICATION-37-REPLAY.tsv','REPLICATION-37-ANALYTICAL.tsv',
+  'SCOPED-REPLAY.tsv','ROLE-BINDING-REPLAY.tsv']) {
+  for (const row of table(file)) {
+    if (row.sample_group && row.sample_group!=='replica') continue;
+    replica[Number(row.sample)-1].current_reasonable=row.current;
+  }
 }
 for (const [bucket,graded] of [[0,primary],[37,replica]]) {
   const {heldOut,training}=splitCorpus(corpus.rows,bucket);

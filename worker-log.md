@@ -164,3 +164,6 @@
 
 ## Scoped subject, amount and landmark bindings
 - Trained on 187,106 rows outside primary bucket 0. Added learned and installed topic roles, scoped appositive selectors, relative numeric amounts and typed side landmarks. All 312 tests passed, including newly installed unrelated worlds and competing roles within one family.
+
+## Paired semantic review for f3233ae
+- Both established samples gained complete proposals. The third sample had zero changed sets. All 48 edited-input spelling unions and all 201 colon-bearing requests matched their checked replays. See eval/ROLE-BINDING-REPLAY.tsv and eval/RESULTS.md.
