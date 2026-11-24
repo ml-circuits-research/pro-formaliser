@@ -23,6 +23,9 @@
   </nav>
   <main>
     <h1>Design decisions and unresolved issues</h1>
+    <h2>Keep domain choice downstream</h2>
+    <p>The generator formerly scored target families from utterance-wide training associations. The twelve-candidate limit could then hide a less frequent SOP-declared meaning before discussion context was available. Training now retains action associations only. For a shared target phrase, search preserves a representative for each directly grounded action, span and declared family alongside the ordinary shortlist. Clause composition still has a finite search budget.</p>
+    <p>Literal payloads, names, spatial keys and shared preservation concepts have explicit SOP bindings. A domain can choose unrelated property names. The default CLI returns the proposed circuits. The separate pipeline can use an active tab to rank that set. <a href="../test/ambiguity.test.mjs">Regression with fourteen new families</a> · <a href="../eval/CANDIDATE-AUDIT.md">Meaning review on the held-out sample</a></p>
     <h2>First release</h2>
     <p>Commit <code>9596a53</code> introduced repo-local SWI-Prolog and Node tooling, a one-edit spelling checker and a learned English-to-SOP reader. It established a normalized-text holdout before measuring, so the exact same normalized utterance could never appear in both training and test. The first text-only run matched all semantic wires for 93 of 1,915 rows. <a href="../worker-log.md">Worker log</a> · <a href="../eval/RESULTS.md">Measured baseline</a></p>
     <h2>Runtime knowledge and scoped grounding</h2>

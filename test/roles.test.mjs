@@ -126,7 +126,9 @@ test('resolves relation and anchor keys from matching family declarations', () =
     '@c w.request.constraint request=$r on=place operator=relation phase=result relation="near" value="Base 3" words="close beside Base 3"',
     '@l w.request.lookup request=$r constraint=$c key=thing from=page',
   ].join('\n');
-  const resolved = createRelationKeyResolver({ requestKeys: keys })(input);
+  const placement = {tab:'demo',family:'beacon',relationKey:'beacon.position',anchorKey:'beacon.anchor'};
+  assert.deepEqual(fields(createRelationKeyResolver({requestKeys:keys})(input),'constraint'),[]);
+  const resolved = createRelationKeyResolver({ requestKeys: keys, spatialBindings:[placement] })(input);
   assert.deepEqual(fields(resolved, 'constraint').map(row =>
     [row.attribute, row.value, row.words]), [
     ['beacon.position', 'near', 'close beside'],
@@ -135,7 +137,8 @@ test('resolves relation and anchor keys from matching family declarations', () =
   assert.equal(fields(resolved, 'lookup')[0].constraint, '$c.anchor');
 
   const conflicting = { ...keys[1], head: 'class', values: ['near'] };
-  const ambiguous = createRelationKeyResolver({ requestKeys: [...keys, conflicting] })(input);
+  const ambiguous = createRelationKeyResolver({ requestKeys: [...keys, conflicting],
+    spatialBindings:[placement,{...placement,relationKey:'beacon.relation'}] })(input);
   assert.deepEqual(fields(ambiguous, 'constraint'), []);
   assert.deepEqual(fields(ambiguous, 'lookup'), []);
   assert.equal(fields(ambiguous, 'unread')[0].text, 'close beside Base 3');

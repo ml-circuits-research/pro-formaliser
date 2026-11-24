@@ -31,6 +31,10 @@ const worlds = {
     {name:'node.keep',family:'node',head:'class',values:['place','all']},
     {name:'drawn.keep',family:'drawn',head:'class',values:['all']},
   ],
+  preservationBindings:[
+    {family:'node',attribute:'node.keep',concept:'retain'},
+    {family:'drawn',attribute:'drawn.keep',concept:'retain'},
+  ],
   determiners:{the:'definite'},
   joiners,
   lookup(term) {
@@ -141,6 +145,10 @@ test('a declared custom preservation key requires matching family, value bank an
   assert.deepEqual(policy.readings('keep the fluxometer stable'),[]);
   assert.deepEqual(createPreservation([],world).readings(request),[]);
   assert.deepEqual(createPreservation(training,{...world,preservationBindings:[]}).readings(request),[]);
+  const shared = {...world,preservationBindings:world.preservationBindings.map(binding =>
+    ['instrument','fixture'].includes(binding.family) ? {...binding,concept:'registration'} : binding)};
+  const [other] = createPreservation(training,shared).readings('keep the bracket in registration');
+  assert.equal(parse(other.sop).find(wire=>wire.type==='w.request.constraint').attrs.attribute[0],'fixture.baseline');
 });
 
 test('weak connectors require independent positive predicates, even with noisy learned hits', () => {

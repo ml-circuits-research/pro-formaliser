@@ -1,4 +1,5 @@
 :- use_module(library(lists)).
+:- use_module(library(pairs)).
 :- use_module(library(apply)).
 :- use_module(library(http/json)).
 :- use_module(library(readutil)).
@@ -24,7 +25,14 @@ answer(Q, _{candidates:Answers,proofs:Proofs}) :-
     reset_role_cache, index_roles(Q.put(roleScopes,Bounds), Hits, WithProperties),
     findall(S-C, candidate(WithProperties, S, C), Pairs),
     keysort(Pairs, Ascending), reverse(Ascending, Ordered),
-    unique_sops(Ordered, [], 12, Answers).
+    unique_sops(Ordered, [], 12, Head),
+    findall(Key-C, (member(_-C,Ordered),get_dict(binding,C,Key)), Tagged),
+    keysort(Tagged, ByBinding), group_pairs_by_key(ByBinding, Groups),
+    findall(C, member(_-[C|_],Groups), Reps),
+    append(Head,Reps,Combined), maplist(clean_candidate,Combined,Clean),
+    list_to_set(Clean, Answers).
+
+clean_candidate(C, Clean) :- (del_dict(binding,C,_,Clean) -> true ; Clean=C).
 
 % A separated object span can guide search before the bounded candidate list
 % is formed. A one-argument frame spanning the entire tail adds no preference.
@@ -54,12 +62,12 @@ candidate(Q, score(3, Specificity, N), _{sop:Sop, source:template, support:N}) :
     include(string, T.pattern, Anchors), length(Anchors, Specificity), N = T.count.
 candidate(Q, score(2, Rank, Support), _{sop:Sop, source:alignment, support:Support, unread:Unread}) :-
     nth0(I, Q.transfers, T), Rank is -I, Support = T.support, Sop = T.sop, Unread = T.unread.
-candidate(Q, score(1, Score, 0), _{sop:Sop, source:lexicon, support:N}) :-
+candidate(Q, score(1, Score, 0), Candidate) :-
     member([Start,End,["act",Act,Mood,N],ActPrior], Q.actHits),
     span(Q.text, Start, End, Predicate), encode(Act, A), encode(Predicate, P),
     ( Mood == "" -> M = "" ; format(string(M), ' mood=~s', [Mood]) ),
     format(string(Req), '@r1 w.request.request act=~s~s predicate=~s', [A,M,P]),
-    ( member([S,E,["target",Licence,Family,Declared,Sort,K],FamilyPrior], Q.targetHits),
+    ( member([S,E,["target",Licence,Family,Declared,Sort,K],_], Q.targetHits),
       (Licence == "*" -> true ; Licence == Act),
       target_mode(Declared,Act,Mode),
       span(Q.text, S, E, Surface),
@@ -75,7 +83,7 @@ candidate(Q, score(1, Score, 0), _{sop:Sop, source:lexicon, support:N}) :-
       append([Req,T|Attached], More, Wires),
       length(More, Evidence), Gap is max(0,max(S-End,Start-E)),
       scope_fit(Q.roleScopes,Act,Start,End,S,E,ScopeFit),
-      Extra is 5 + Evidence + FamilyPrior + RoleFit + AttachmentFit + ScopeFit + log(1+K)/2 - log(1+Gap)/2
+      Extra is 5 + Evidence + RoleFit + AttachmentFit + ScopeFit + log(1+K)/2 - log(1+Gap)/2
     ; direct_reference(Q,Act,End,RS-RE),
       format(string(ReferenceRequest),'~s refers=thing',[Req]),
       attached_roles(Q,Act,"existing",RE,Attached,Used,_,Fit,_),
@@ -86,6 +94,9 @@ candidate(Q, score(1, Score, 0), _{sop:Sop, source:lexicon, support:N}) :-
     append(Wires, Unread, All), atomics_to_string(All, "\n", Sop),
     findall(1,(member([_,_,B,F],Q.tokens), once((member(L-R,Sorted),B>=L,F=<R))),CoveredTokens),
     length(CoveredTokens,Grounded), length(Q.tokens,Total), Coverage is Grounded / max(1,Total),
+    Base=_{sop:Sop,source:lexicon,support:N},
+    ( nonvar(Family), memberchk([S,E,Families],Q.ambiguousTargets), memberchk(Family,Families)
+    -> Candidate=Base.put(binding,[Start,End,Act,S,E,Family]) ; Candidate=Base ),
     Score is 12*Coverage + Extra + ActPrior + log(1+N) + min(12,End-Start)/4 - Start/3.
 
 constraint_wires(Q, Act, Family, Mode, PS-PE, TS-TE, Blocked, First, Wires, Bounds) :-

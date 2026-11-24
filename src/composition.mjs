@@ -209,7 +209,7 @@ function preservationPatterns(examples, families, determiners) {
       const family = one(targets[0],'family');
       const property = families.get(family)?.get(attribute);
       if (!property?.values.has(value)) continue;
-      const binding = property.conventional ? undefined : {family,attribute};
+      const binding = property.binding;
       const ts = tokens(clause);
       while (ts.length && boundary.test(ts.at(-1)[0])) ts.pop();
       const predicateKeys = keyOf(predicate).split(' ');
@@ -259,14 +259,14 @@ function encodeTarget(family, text, determiner) {
 // from grounded preservation annotations, with just the scoped target varying.
 export function createPreservation(examples, worlds, learned = {}) {
   const families = new Map();
-  const declared = new Set((worlds.preservationBindings ?? []).map(({family,attribute}) =>
-    JSON.stringify([family,attribute])));
+  const declared = new Map((worlds.preservationBindings ?? []).map(({family,attribute,concept}) =>
+    [JSON.stringify([family,attribute]), concept ? {concept} : {family,attribute}]));
   for (const key of worlds.requestKeys) {
     if (key.head !== 'class' || !key.values.length) continue;
-    const conventional = key.name === key.family + '.keep';
-    if (!conventional && !declared.has(JSON.stringify([key.family,key.name]))) continue;
+    const binding = declared.get(JSON.stringify([key.family,key.name]));
+    if (!binding) continue;
     const group = families.get(key.family) ?? new Map();
-    const property = group.get(key.name) ?? {conventional,values:new Set()};
+    const property = group.get(key.name) ?? {binding,values:new Set()};
     for (const value of key.values) property.values.add(value);
     group.set(key.name,property);
     families.set(key.family,group);
@@ -359,7 +359,8 @@ export function createPreservation(examples, worlds, learned = {}) {
         }
         for (const [family, attrs] of targetCandidates) {
           const keys = [...families.get(family)].filter(([attribute,property]) => property.values.has(value) &&
-            (binding ? binding.family === family && binding.attribute === attribute : property.conventional));
+            (binding.concept ? binding.concept === property.binding.concept :
+              binding.family === family && binding.attribute === attribute));
           if (keys.length !== 1) continue;
           const [[key]] = keys;
           const signature = JSON.stringify([act,family,key,value,target]);

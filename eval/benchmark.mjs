@@ -103,7 +103,7 @@ const query = row => JSON.stringify(context === 'tab' ? {text:row.text,tab:row.f
 const inputs = [...new Set(heldOut.map(query))];
 const inferAt = performance.now();
 const batch = execFileSync(process.execPath, [
-  join(root, 'bin/formalise.mjs'), '--model', modelPath, '--batch', ...(language==='off' ? ['--no-language-frames'] : []),
+  join(root, 'bin/formalise.mjs'), '--model', modelPath, '--pipeline', '--batch', ...(language==='off' ? ['--no-language-frames'] : []),
 ], {
   cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
   input: inputs.join('\n') + '\n',

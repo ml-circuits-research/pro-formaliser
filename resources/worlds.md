@@ -118,12 +118,10 @@ declared family in the same tab.
 
 The relation constraint carries the canonical value and retains the words
 that express it. A separate selector constraint carries the original
-anchor phrase and is linked to a page lookup. A family with explicit
-bindings for a tab uses those bindings. The pinned worlds also support
-the conventional `<family>.anchor` key paired with a class bank at
-`<family>.relation` or `<family>.position`. If the reader cannot ground
-a target family or find a unique declared pair for a relation, it retains
-the spatial phrase as unread. When a pronoun refers to an existing
+anchor phrase and is linked to a page lookup. The supported example worlds
+supply their own bindings in [linguistic-roles.sop](pro.reader/linguistic-roles.sop).
+If the reader cannot ground a target family or find a unique declared pair
+for a relation, it retains the spatial phrase as unread. When a pronoun refers to an existing
 thing, additional hypotheses can each propose a family with uniquely
 licensed spatial keys. Those targets have `fill=context` and retain
 an unresolved thing lookup. The text-only reader keeps the unresolved
@@ -145,5 +143,24 @@ grounded preservation request before the reader can apply the pattern to a
 new target. For instance, a result constraint with `attribute=instrument.baseline
 value=registration` can teach the reader how “keep the spectrometer in
 registration” expresses that policy. Adding another value to the bank
-only makes it eligible for training. The conventional `<family>.keep`
-keys continue to work without a binding.
+only makes it eligible for training. Two declarations can share that
+construction by setting the same `concept`. The destination key must
+also accept the learned value.
+
+## Literal roles
+
+A `pro.reader.literal` declaration maps the literal payload or name of
+a request to an open span key in its target family. Optional repeated
+`text` fields supply exact cue phrases for that binding. Explicitly
+named property keys also work through the ordinary property lexicon.
+
+```sop
+@workbench.impression w.request.key tab=workbench family=stamp name=stamp.impression head=span
+@workbench.serial w.request.key tab=workbench family=stamp name=stamp.serial head=span
+@workbench.impression.role pro.reader.literal family=stamp attribute=stamp.impression role=payload
+@workbench.serial.role pro.reader.literal family=stamp attribute=stamp.serial role=name text=marked
+```
+
+Given a target-kind binding for “stamp”, the reader can interpret “Create
+a stamp marked Aurora containing ‘Copper, not brass.’” and keep the
+name and quoted payload in their respective keys.

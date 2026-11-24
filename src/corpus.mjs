@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 export const DATASET = fileURLToPath(new URL('../../webmeet-dataset/', import.meta.url));
 export const DATASET_REVISION = 'a85de79de826f983855aa2dafc6de7548978fbff';
-const TABS = /^(avatar|calendar|diagram|document|drawing)\/[^/]+\.csv$/;
+const TABS = /^[^/]+\/[^/]+\.csv$/;
 
 function* csvRows(text) {
   let row = [], start = 0, quoted = false;

@@ -57,6 +57,12 @@ function openKeys(worlds, surface, family) {
     .map(key => key.attribute);
 }
 
+function roleKeys(worlds, family, role, surface) {
+  return worlds.literalGrammar.bindings.filter(binding => binding.family === family &&
+    (!role || binding.role === role) && (!surface || binding.surfaces.includes(surface)))
+    .map(binding => binding.attribute);
+}
+
 function clauseEnds(ts, next, end) {
   return ts.slice(next).findIndex(token => token[2] >= end);
 }
@@ -127,7 +133,7 @@ function replacement(span, ts, quotes, head, worlds) {
       const named = backwards ? rightQuote?.value : firstQuote?.value;
       const explicit = selected.targets?.filter(([, ,family]) => worlds.literalGrammar.licenses(family,head.act));
       const families = explicit?.map(([, ,family]) => family) ??
-        worlds.properties('content').filter(({kind,family}) => kind === 'quoted' &&
+        worlds.literalGrammar.bindings.filter(({role,family}) => role === 'payload' &&
           worlds.literalGrammar.licenses(family,head.act)).map(({family}) => family);
       for (const family of new Set(families)) {
         const kindHit = explicit?.find(target => target[2] === family);
@@ -135,7 +141,7 @@ function replacement(span, ts, quotes, head, worlds) {
         const selectedQuote = extra && quotes.find(item => item.start === selected.phrase.end +
           Array.from(span(selected.phrase.end).match(/^\s*/u)[0]).length);
         const attribute = extra && openKeys(worlds,normalized(extra),family);
-        const keys = attribute?.length ? attribute : openKeys(worlds,'content',family);
+        const keys = attribute?.length ? attribute : roleKeys(worlds,family,'payload');
         for (const key of new Set(keys)) {
           const target = {family,mode:'existing',det:selected.det,sort:kindHit?.[4],surface};
           const constraints = [constraint(key,value,span(marker.start,marker.end))];
@@ -156,13 +162,10 @@ function replacement(span, ts, quotes, head, worlds) {
 }
 
 function keysForCue(worlds, surface, family) {
-  const chars = surface.endsWith('d') ? surface.slice(0,-1) : surface;
-  const direct = [...openKeys(worlds,surface,family), ...openKeys(worlds,chars,family)];
+  const direct = [...openKeys(worlds,surface,family), ...roleKeys(worlds,family,undefined,surface)];
   if (direct.length) return [...new Set(direct)];
-  if (worlds.literalGrammar.namingLeads.has(surface)) {
-    return [...new Set(['name','title','label'].flatMap(key => openKeys(worlds,key,family)))];
-  }
-  if (worlds.literalGrammar.contentLeads.has(surface)) return openKeys(worlds,'content',family);
+  if (worlds.literalGrammar.namingLeads.has(surface)) return roleKeys(worlds,family,'name');
+  if (worlds.literalGrammar.contentLeads.has(surface)) return roleKeys(worlds,family,'payload');
   return [];
 }
 

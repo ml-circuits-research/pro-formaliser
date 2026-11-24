@@ -1,5 +1,17 @@
 # WebMeet held-out benchmark
 
+[Latest L0–L4 review and domain-neutral generator benchmark](CANDIDATE-AUDIT.md)
+
+## Domain-neutral proposals
+
+On pinned primary bucket 0 (1,915 rows), every utterance produced the same set of circuits with and without the reference tab. The estimator changed the first choice on 277 rows. Raw first-choice equality with the reference was 378/1,915 for text alone and 412/1,915 with the tab. Equality of the complete normalized semantic wire set was 542 and 582 respectively. In both runs 626 rows had a semantic match somewhere in their proposals, the same coverage as before this change. First-choice checker errors were 247 and 14 respectively (216 and 17 previously). The checker sees the reference tab even for text-only generation. These automatic comparisons do not judge whether the annotation is reasonable.
+
+```sh
+node eval/benchmark.mjs --bucket 0 --context text --report .cache/domain-primary.json --details .cache/domain-primary.jsonl
+node eval/benchmark.mjs --bucket 0 --context tab --report .cache/domain-tab.json --details .cache/domain-tab.jsonl
+```
+
+
 Run `npm run setup` and `npm run benchmark` from the repository root. The benchmark reads WebMeet data directly from Git revision `a85de79de826f983855aa2dafc6de7548978fbff`. The default WebMeet dataset checkout is a sibling of this repository. Setup installs the knowledge snapshot used for evaluation. The command writes the trained model to `.cache/model.json` and the counts and violation categories to `.cache/benchmark.json`.
 
 The split groups input globally by Unicode NFKC, lowercase, and whitespace collapsed to single spaces after trimming. It sends a group to the holdout when the first 32 bits of its SHA-256 digest, interpreted as an unsigned big-endian integer, are divisible by 100. The holdout contains 1,915 of 189,021 rows (1.01%) and 1,867 of 182,664 normalized groups (1.02%). No normalized group crosses the split. The CLI sees only the raw text and runs once per distinct exact string. Counts are row-weighted and can include several annotations for one input. Similar templates and paraphrases can occur in both partitions.

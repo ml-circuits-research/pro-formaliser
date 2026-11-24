@@ -41,30 +41,14 @@ export function createRelationKeyResolver(worlds) {
       pairs.set(value, families);
     }
   }
-  const explicitGroups = new Set();
   for (const binding of worlds.spatialBindings ?? []) {
     const signature = group(binding);
-    explicitGroups.add(signature);
     const keys = keysByFamilyTab.get(signature) ?? [];
     const relations = keys.filter(key => key.name === binding.relationKey && key.head === 'class');
     const anchors = keys.filter(key => key.name === binding.anchorKey &&
       key.head === 'fill+span' && !key.values.length);
     if (relations.length === 1 && anchors.length === 1) addPair(relations[0], anchors[0]);
   }
-  // Pinned worlds predate explicit bindings. Their class bank is distinct
-  // from candidate keys such as node.relation, which can mean a semantic association.
-  for (const [signature, keys] of keysByFamilyTab) {
-    if (explicitGroups.has(signature)) continue;
-    const anchors = keys.filter(key =>
-      key.name === key.family + '.anchor' && key.head === 'fill+span' && !key.values.length);
-    if (anchors.length !== 1) continue;
-    for (const key of keys) {
-      if (key.head === 'class' && [key.family + '.relation', key.family + '.position'].includes(key.name)) {
-        addPair(key, anchors[0]);
-      }
-    }
-  }
-
   function resolveWires(wires, intermediates) {
     const usedIds = new Set(wires.map(wire => wire.id));
     const replacements = new Map(), lookupTargets = new Map();

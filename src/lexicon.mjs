@@ -38,7 +38,7 @@ export function learnLexicon(rows, context, forms) {
       const act = one(req, 'act'), mood = one(req, 'mood');
       add(one(req, 'predicate'), ['act', act, mood ?? '']);
       const targets = wires.filter(w => w.type === 'w.request.target' && one(w,'request') === '$' + req.id);
-      const labels = new Set(['act:' + act + '/' + (mood ?? ''), ...targets.map(w => 'family:' + one(w,'family'))]);
+      const labels = new Set(['act:' + act + '/' + (mood ?? '')]);
       context?.observe(one(req,'words') ?? text, labels);
       for (const w of targets) {
         const sort = one(w,'sort'), family = one(w,'family'), mode = one(w,'mode');

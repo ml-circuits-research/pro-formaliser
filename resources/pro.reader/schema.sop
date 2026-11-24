@@ -1,5 +1,5 @@
 # Optional bindings between an application's declared kinds and w.request targets.
-@pro.reader core.module name=pro.reader version=1 exports=target exports=spatial exports=evidence_role exports=preservation
+@pro.reader core.module name=pro.reader version=1 exports=target exports=spatial exports=evidence_role exports=preservation exports=literal
 @pro.reader.target core.type of=pro.reader.target closed=true
 @pro.reader.target.of core.slot of=pro.reader.target key=of kind=atom
 @pro.reader.target.family core.slot of=pro.reader.target key=family kind=atom required=true
@@ -27,3 +27,13 @@
 @pro.reader.preservation core.type of=pro.reader.preservation closed=true
 @pro.reader.preservation.family core.slot of=pro.reader.preservation key=family kind=atom required=true
 @pro.reader.preservation.attribute core.slot of=pro.reader.preservation key=attribute kind=atom required=true
+
+# An optional concept shares a learned preservation construction across declared keys.
+@pro.reader.preservation.concept core.slot of=pro.reader.preservation key=concept kind=atom
+
+# An open span key that fills a literal role in the family's request.
+@pro.reader.literal core.type of=pro.reader.literal closed=true
+@pro.reader.literal.family core.slot of=pro.reader.literal key=family kind=atom required=true
+@pro.reader.literal.attribute core.slot of=pro.reader.literal key=attribute kind=atom required=true
+@pro.reader.literal.role core.slot of=pro.reader.literal key=role enum=payload enum=name required=true
+@pro.reader.literal.text core.slot of=pro.reader.literal key=text kind=string many=true

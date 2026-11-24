@@ -61,8 +61,12 @@ test('uses an explicitly named span key from a novel schema family', async t => 
   const file = join(dir,'overlay.sop');
   writeFileSync(file,`
 @smithwork std.schema.world name=w.smithwork
-@stamp std.schema.kind of=w.smithwork.stamp world=w.smithwork acts=change
+@stamp std.schema.kind of=w.smithwork.stamp world=w.smithwork acts=change acts=make
 @inscription w.request.key tab=diagram family=stamp name=stamp.inscription head=span
+@impression w.request.key tab=diagram family=stamp name=stamp.impression head=span
+@serial w.request.key tab=diagram family=stamp name=stamp.serial head=span
+@impression.role pro.reader.literal family=stamp attribute=stamp.impression role=payload
+@serial.role pro.reader.literal family=stamp attribute=stamp.serial role=name text=marked
 `);
   const reader = createReader(undefined,loadWorlds({paths:[file]}));
   t.after(() => reader.close());
@@ -72,4 +76,15 @@ test('uses an explicitly named span key from a novel schema family', async t => 
   assert.equal(rows(answer,'constraint')[0].attribute,'stamp.inscription');
   assert.equal(rows(answer,'constraint')[0].value,'Copper; not brass.');
   assert.ok(evidenceInText(input,answer.sop));
+
+  const creation = 'Create a stamp marked Aurora containing “Copper; not brass.”';
+  const created = await reader.formalise(creation);
+  assert.equal(rows(created,'target')[0].family,'stamp');
+  assert.deepEqual(rows(created,'constraint').map(({attribute,value})=>[attribute,value]), [
+    ['stamp.serial','Aurora'],['stamp.impression','Copper; not brass.'],
+  ]);
+  assert.ok(evidenceInText(creation,created.sop));
+  const replacement = 'Replace the stamp with “Tin.”';
+  const replaced = await reader.formalise(replacement);
+  assert.equal(rows(replaced,'constraint')[0].attribute,'stamp.impression');
 });

@@ -11,8 +11,8 @@ const types = new Set([
   'w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
-  'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial',
-  'w.lang.en.cue', 'w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
+  'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation',
+  'w.lang.en.cue',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
   'w.reader.en.binding', 'w.reader.en.feature', 'w.reader.en.filter',
 ]);
@@ -163,6 +163,11 @@ function compile(facts) {
     tab: one(wire, 'tab'), family: one(wire, 'family'), name: one(wire, 'name'),
     head: one(wire, 'head'), values: values(wire, 'value'), means: one(wire, 'means'),
   })).filter(key => key.tab && key.family && key.name && key.head);
+  const literalBindings = facts('pro.reader.literal').map(wire => ({
+    family: one(wire,'family'), attribute: one(wire,'attribute'), role: one(wire,'role'),
+    surfaces: values(wire,'text').map(phrase),
+  })).filter(binding => requestKeys.some(key => key.family === binding.family && key.name === binding.attribute &&
+    key.head.split('+').includes('span') && !key.values.length));
   const keysByOwner = new Map();
   const slotOwners = new Map(), slotNames = new Map();
   for (const wire of facts('core.slot')) {
@@ -430,12 +435,12 @@ function compile(facts) {
     stativeVerbAliases:stativeVerbAliases(facts),
     languageFrames:languageFrames(facts),
     literalGrammar: {
-      leads, contentLeads, namingLeads,
+      leads, contentLeads, namingLeads, bindings:literalBindings,
       verbs: surface => literalVerbs.get(surface) ?? [],
       licenses: (family, act) => familyActs.get(family)?.includes(act),
     }, evidenceVocabulary:evidenceVocabulary(facts),
     preservationBindings: facts('pro.reader.preservation').map(wire => ({
-      family:one(wire,'family'), attribute:one(wire,'attribute'),
+      family:one(wire,'family'), attribute:one(wire,'attribute'), concept:one(wire,'concept'),
     })),
     spatialBindings: facts('pro.reader.spatial').map(wire => ({
       tab: one(wire, 'tab'), family: one(wire, 'family'),

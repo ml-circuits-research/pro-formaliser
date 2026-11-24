@@ -58,7 +58,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   async function read(text) {
     if (typeof text !== 'string') throw Error('Expected a text string');
     const ts = tokens(text), chars = Array.from(text);
-    const templates = [], hits = [], determiners = [], properties = [];
+    const ambiguousTargets = [], templates = [], hits = [], determiners = [], properties = [];
     // A quoted label may itself contain punctuation, negation or a sequence word.
     // Its span remains available to property binding in Prolog.
     const quotes = quotedSpans(text);
@@ -81,7 +81,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (worlds.negatives.has(words) || ['contrast','sequence','clause'].includes(worlds.joiners[words])) blocksResult = true;
         const learned = Object.hasOwn(model.lexicon ?? {},words) ? model.lexicon[words] : [];
         const local = new Set(learned.map(e => JSON.stringify(e.slice(0,-1))));
-        const bindings = worlds.lookup(words).filter(e => !local.has(JSON.stringify(e.slice(0,-1))));
+        const declared = worlds.lookup(words);
+        const families = new Set(declared.filter(e=>e[0]==='target').map(e=>e[2]));
+        if (families.size>1) ambiguousTargets.push([ts[i][2],ts[j][3], [...families]]);
+        const bindings = declared.filter(e => !local.has(JSON.stringify(e.slice(0,-1))));
         for (let entry of [...learned,...bindings]) {
           const [role,a,b] = entry;
           if (role === 'act' && Object.hasOwn(worlds.determiners,words) && !Object.hasOwn(worlds.lexicon,words)) continue;
@@ -90,8 +93,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
             entry = ground(entry,chars.slice(ts[i][2],ts[j][3]).join(''));
             if (!entry) continue;
           }
-          const key = role === 'act' ? 'act:' + a + '/' + b : 'family:' + b;
-          hits.push([ts[i][2],ts[j][3],entry,scores[key] ?? 0]);
+          const prior = role === 'act' ? scores['act:' + a + '/' + b] ?? 0 : 0;
+          hits.push([ts[i][2],ts[j][3],entry,prior]);
         }
       }
     }
@@ -101,7 +104,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const exact = examples.get(text) ?? [];
     const transfers = exact.length ? [] : transfer(text);
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
-    const request = {text,language,targetRoles,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -190,8 +193,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   return {
     async formalise(text) {
       const result = await formalise(text);
-      const candidateCount = (result.sop ? 1 : 0) + result.alternatives.length;
-      return {...result,candidateCount,multipleInterpretations:candidateCount>1};
+      const {alternatives,...first} = result;
+      const candidates = result.sop ? [first,...alternatives] : [];
+      return {candidates,candidateCount:candidates.length,multipleInterpretations:candidates.length>1,
+        ...(!candidates.length ? {unread:text} : {})};
     },
     close:worker.close
   };

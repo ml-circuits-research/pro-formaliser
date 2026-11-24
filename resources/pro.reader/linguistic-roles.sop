@@ -2,3 +2,22 @@
 @reader.thing.name pro.reader.evidence_role role=thing type=w.request.target slot=name
 @reader.thing.sort_words pro.reader.evidence_role role=thing type=w.request.target slot=sort_words
 @reader.value.result pro.reader.evidence_role role=value type=w.request.constraint slot=value phase=result
+
+# Role assignments for the supported example worlds.
+@reader.drawing.spatial pro.reader.spatial tab=drawing family=drawn relation_key=drawn.relation anchor_key=drawn.anchor
+@reader.diagram.spatial pro.reader.spatial tab=diagram family=node relation_key=node.position anchor_key=node.anchor
+@reader.drawing.preservation pro.reader.preservation family=drawn attribute=drawn.keep concept=retain
+@reader.diagram.preservation pro.reader.preservation family=node attribute=node.keep concept=retain
+@reader.document.section.payload pro.reader.literal family=section attribute=section.content role=payload
+@reader.document.text.payload pro.reader.literal family=text attribute=text.content role=payload
+@reader.document.text.name pro.reader.literal family=text attribute=text.title role=name text=titled
+@reader.drawing.drawn.name pro.reader.literal family=drawn attribute=drawn.name role=name
+@reader.drawing.group.name pro.reader.literal family=group attribute=group.name role=name
+@reader.diagram.chart.label pro.reader.literal family=chart attribute=chart.label role=name
+@reader.diagram.chart.title pro.reader.literal family=chart attribute=chart.title role=name text=titled
+@reader.diagram.node.label pro.reader.literal family=node attribute=node.label role=name
+@reader.diagram.page.title pro.reader.literal family=page attribute=page.title role=name text=titled
+@reader.calendar.calendar.name pro.reader.literal family=calendar attribute=calendar.name role=name
+@reader.calendar.meeting.title pro.reader.literal family=meeting attribute=meeting.title role=name text=titled
+@reader.calendar.person.name pro.reader.literal family=person attribute=person.name role=name
+@reader.calendar.room.name pro.reader.literal family=room attribute=room.name role=name

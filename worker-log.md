@@ -24,3 +24,8 @@
 
 ## Shared evaluation legend
 - Published WebMeet LEGEND.md v1 for future reports and linked it from the historical reasonableness audit. Checked the documentation diff and grade partition. The previous percentages retain their original definitions.
+
+## 2026-11-24 — domain-neutral generator and L0–L4 audit
+- Removed learned family preferences and key-name conventions. The standalone generator returns proposals and preserves competing SOP family bindings. A new 14-family regression checks downstream selection.
+- Primary 1% run preserved the same candidate sets on all 1,915 rows across both tab conditions. First semantic agreement was 542 text-only and 582 with tab; 626 matched somewhere. All 79 tests passed.
+- LLM review of 100 sampled rows found 23% reasonable first and 28% reasonable somewhere, unchanged from the previous build on this scale. See eval/CANDIDATE-AUDIT.md for grades and annotation defects.
