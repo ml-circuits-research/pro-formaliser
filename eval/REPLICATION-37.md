@@ -1,6 +1,12 @@
 # Independent bucket 37 replication
 
-The current reader had at least one reasonable circuit for **411 of 1,000 requests (41.1%)** on the new sample. The baseline had one for **368 of 1,000 (36.8%)**. The paired review found 43 gains and no losses, a difference of 4.3 percentage points on this sample. [One verdict and rationale per request](REPLICATION-37-GRADES.tsv)
+## Replay with d093cf3
+
+On the same 1,000 requests, 41.6% had a reasonable circuit, up from 41.1%. Review covered all 29 changed sets. Five previously incomplete or wrong results gained a faithful alternative, with no observed losses. These cases included a named landmark and the quoted sign text SALE. Some failures informed development after the original independent test. Unchanged sets inherit their previous verdict. [Changed sets and reasons](REPLICATION-37-REPLAY.tsv)
+
+## Original independent comparison
+
+Reader `03b29bc` had at least one reasonable circuit for **411 of 1,000 requests (41.1%)** on the new sample. The baseline had one for **368 of 1,000 (36.8%)**. The paired review found 43 gains and no losses, a difference of 4.3 percentage points on this sample. [One verdict and rationale per request](REPLICATION-37-GRADES.tsv)
 
 | Paired outcome | Requests |
 | --- | ---: |

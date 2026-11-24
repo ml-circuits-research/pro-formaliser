@@ -143,3 +143,6 @@
 
 ## Pair selection, ratio ranking and literal boundaries
 - Verified reciprocal ownership across multiple commands, measured-unit evidence in the estimator and quoted payload cleanup on learned candidates. All 284 tests passed. The integration response records independent replay and the proposed imports.
+
+## Paired review for d093cf3
+- Replayed both 1,000-request samples. Reasonable proposals rose to 48.8% and 41.6%, with no observed losses. See eval/THOUSAND-AUDIT.md and eval/REPLICATION-37.md for judgments.

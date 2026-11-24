@@ -1,0 +1,30 @@
+sample	previous	current	review_note
+15	0	0	Creates a banner on the house but drops the requested team-banner designation. The reference also leaves it unresolved.
+96	0	1	Changes the described garden gate's material to clear glass without treating it as a spatial landmark.
+123	0	0	Every describes the houses. The candidate applies the count to the bird and misses one bird per house.
+142	0	0	Retention and the dog's bottom position appear, but no circuit removes the yellow-jacketed boy and places the replacement in the vacated spot. The reference also omits that position binding and types preservation as filler.
+146	0	0	No circuit gives the girl round glasses and points her right on the bench while preserving the scene. The reference also omits the glasses' shape and treats preservation as filler.
+174	0	0	The dog and shirt recolor are captured, but the strict inside-the-lines constraint remains unread, including in the reference.
+205	0	0	Creates a start event, but thin circular styling remains unread in both the proposal and the reference.
+254	0	0	The exact-reference candidate makes the woman the hat's owner as a result. The possessive should select her existing hat before changing its color.
+373	1	1	Creates an ocelot below the tree, with a grounded tree anchor.
+454	1	1	A retained candidate places existing named Boat to the left of Waves. The closing phrase is courtesy.
+468	1	1	A retained candidate sets the existing cat's expression to a frown.
+475	0	1	Creates a box above the named Monitor. The node position key supports the requested spatial relation.
+478	1	1	Sets the hidden value to 0.25 on the existing set explicitly described as all the trees.
+539	1	1	Selects the section identified by the written name Chapter.
+544	0	0	No single circuit creates the sandcastle and hat and places all four described items, including the kneeling girl. The reference also omits the hat's small size.
+552	0	0	The only facing-plus-retention circuit folds the discourse aside into the pond's name. The reference does not assert preservation.
+639	0	0	The new circuit treats skew as a mirror setting, although skew and reflection are distinct. The reference has the correct whole-sign target but no typed skew effect.
+723	1	1	Uses the little woman near the house as the existing selector and changes her facing to left.
+751	0	1	Applies the complete open fill value pink stripes to the curtains. The reference separately types the color and pattern but also retains a redundant unread span.
+765	0	0	No circuit creates the tiny bird near the top and independently turns the existing tiny bird on the fence left while preserving the rest. The reference treats preservation as filler.
+772	0	1	Selects the left-side duck on the lake and turns it toward the bench.
+779	1	1	Sets the existing house's hidden value to 0.25.
+805	0	0	The stronger circuit adds two red blocks on the yellow tower but types the second act as ordinary copy, with mirroring only in the written predicate. The reference has the same gap.
+820	0	0	The line chart, monthly revenue, grid and point values are typed, but the peak marking and label remain unread and the callout box is omitted, including in the reference.
+834	1	1	A retained circuit creates a battleship in the lake.
+877	1	1	A retained circuit sketches a sardine into the lake and retains please as courtesy.
+961	0	1	Writes SALE in the bottom-left corner. The reference includes the introductory words in the displayed text.
+993	0	0	The pie chart's measure and grouping are captured, but no circuit applies the quoted title to that chart.
+994	1	1	Adds the thick styling to an existing eyebrow, a plausible reading of the short update request.

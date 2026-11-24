@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Quoted text, landmarks and preservation
+
+At revision `d093cf3`, the primary sample reached 48.8% reasonable (previously 48.6%) and the second sample reached 41.6% (previously 41.1%). Each sample contains 1,000 requests. Both use text alone and count a request when at least one complete proposal is faithful. [Primary grades](THOUSAND-AUDIT.md) · [Second sample review](REPLICATION-37.md)
+
 ## Scaled property readings and transfer shortlist
 
 On the paired 1,000 text-only inputs, `9011c80` reached 48.6% reasonable, previously 48.5%, with no observed loss. The newly recovered proposal selects the existing Plan block and applies a numbered style. A separate probe with the optional relation module produces the height-from-width circuit in the integration pilot. The sample replay reused the preceding bucket's training model. [Grades](THOUSAND-AUDIT.md) · [Integration review responses](../integration-review.responses.md)

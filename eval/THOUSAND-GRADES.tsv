@@ -499,7 +499,7 @@ sample	source	row	grade	reference_issue	review_note
 498	calendar/meetings-08.csv	81	L2b	0	Recognizes a meeting edit and some notes, but misses the review meeting identity and schedule.
 499	diagram/nodes-03.csv	1014	L2b	0	Recognizes undo, re-add and check, but loses the removed box identity and row.
 500	drawing/people-05.csv	3658	L4	0	The terse request supports dot variant, pink color and default eye size.
-501	drawing/scenes-06.csv	3536	L2c	1	One proposal puts the bird on the fence facing the sun. Another preserves the rest in place. No single proposal binds all three requirements.
+501	drawing/scenes-06.csv	3536	L4	1	One proposal places the bird on the fence facing the sun and preserves the rest. The reference omits preservation.
 502	diagram/diagrams-04.csv	935	L3	0	Exact Login box recolor alongside a drawn-object hypothesis.
 503	diagram/nodes-04.csv	3879	L2c	1	Recognizes a question but does not capture which condition ends the process; reference omits that feature.
 504	drawing/scenes-08.csv	1670	L2c	0	Recovers the setting, all four object groups and the surprised expression, but treats the bottom as a landmark instead of a page region.
@@ -569,7 +569,7 @@ sample	source	row	grade	reference_issue	review_note
 568	drawing/objects-04.csv	917	L4	0	A retained proposal creates a wharf without another action.
 569	drawing/placement-04.csv	819	L1d	0	Invents an action from an affirmation without the preceding prompt.
 570	drawing/placement-01.csv	3750	L1d	0	Reads “far” as a size or placement grade while omitting the requested clipped lower edge.
-571	drawing/scenes-06.csv	1050	L2c	0	Recognizes adding a word above the gate but omits the literal BAKERY.
+571	drawing/scenes-06.csv	1050	L4	1	One proposal writes BAKERY above the gate. The exact reference would include the introductory words on the sign.
 572	diagram/charts-06.csv	2808	L2c	1	An inquiry about a chart survives but loses highest sales; annotation makes a change instead of checking.
 573	diagram/charts-04.csv	3954	L1c	1	Changes a large gap instead of the title’s font size; reference also omits font size.
 574	drawing/scenes-21.csv	645	L4	0	A sequence moves the existing house to 260,180 and colors that house blue.
