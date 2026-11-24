@@ -1,0 +1,58 @@
+# Proposed additive module for relationships explicitly stated in a request.
+@w.relational core.module name=w.relational version=1 imports=w.request exports=predicate exports=reciprocal exports=shared exports=scaled
+@w.relational.world std.schema.world name=w.relational doc="Explicit relationships among selected things and their properties"
+
+# A directed binary predicate with a known meaning. Both directions must hold
+# for the pair in a reciprocal request. Surface aliases belong in core.word.
+@w.relational.predicate core.type of=w.relational.predicate closed=true
+@w.relational.predicate.name core.slot of=w.relational.predicate key=name kind=atom required=true present=true
+@w.relational.predicate.about core.slot of=w.relational.predicate key=about kind=string required=true present=true
+
+# members is a selected pair. Resolution is deferred when the two identities
+# are unknown. No left/right value is chosen while reading the utterance.
+@w.relational.reciprocal core.type of=w.relational.reciprocal closed=true
+@w.relational.reciprocal.request core.slot of=w.relational.reciprocal key=request type=w.request.request required=true present=true
+@w.relational.reciprocal.members core.slot of=w.relational.reciprocal key=members type=w.request.target required=true present=true
+@w.relational.reciprocal.predicate core.slot of=w.relational.reciprocal key=predicate type=w.relational.predicate required=true present=true
+@w.relational.reciprocal.words core.slot of=w.relational.reciprocal key=words kind=string required=true present=true
+
+# At the result, every member of this set must agree on the designated
+# property. The common value can remain unknown.
+@w.relational.shared core.type of=w.relational.shared closed=true
+@w.relational.shared.request core.slot of=w.relational.shared key=request type=w.request.request required=true present=true
+@w.relational.shared.members core.slot of=w.relational.shared key=members type=w.request.target required=true present=true
+@w.relational.shared.property core.slot of=w.relational.shared key=property type=w.request.key required=true present=true
+@w.relational.shared.words core.slot of=w.relational.shared key=words kind=string required=true present=true
+
+# result[result_key] = factor * source[source_key] at the stated source phase.
+# A single target may serve as both source and result on different properties.
+@w.relational.scaled core.type of=w.relational.scaled closed=true
+@w.relational.scaled.request core.slot of=w.relational.scaled key=request type=w.request.request required=true present=true
+@w.relational.scaled.result core.slot of=w.relational.scaled key=result type=w.request.target required=true present=true
+@w.relational.scaled.result_key core.slot of=w.relational.scaled key=result_key type=w.request.key required=true present=true
+@w.relational.scaled.source core.slot of=w.relational.scaled key=source type=w.request.target required=true present=true
+@w.relational.scaled.source_key core.slot of=w.relational.scaled key=source_key type=w.request.key required=true present=true
+@w.relational.scaled.source_phase core.slot of=w.relational.scaled key=source_phase enum=initial enum=result required=true present=true
+@w.relational.scaled.factor core.slot of=w.relational.scaled key=factor kind=number required=true present=true
+@w.relational.scaled.words core.slot of=w.relational.scaled key=words kind=string required=true present=true
+
+# Explicitly stated counts must agree with the requested relation.
+@w.relational.check.members w.request.target count=?count
+@w.relational.check.pair w.relational.reciprocal members=$w.relational.check.members
+@w.relational.check.group w.relational.shared members=$w.relational.check.members
+@w.relational.check.not_two core.check fn=neq args=?count args=2
+@w.relational.check.too_few core.check fn=lt args=?count args=2
+@w.relational.check.pair_count core.deny when=$w.relational.check.members when=$w.relational.check.pair if=$w.relational.check.not_two why="A reciprocal pair requires two selected members."
+@w.relational.check.shared_count core.deny when=$w.relational.check.members when=$w.relational.check.group if=$w.relational.check.too_few why="A shared property requires at least two selected members."
+
+# All referenced endpoints belong to this request.
+@w.relational.check.target w.request.target request=?target_request family=?target_family
+@w.relational.check.different_request core.check fn=neq args=?target_request args=?relation_request
+@w.relational.check.shared_members w.relational.shared request=?relation_request members=$w.relational.check.target
+@w.relational.check.shared_members.owner core.deny when=$w.relational.check.shared_members when=$w.relational.check.target if=$w.relational.check.different_request why="The relation and target belong to different requests."
+@w.relational.check.reciprocal_members w.relational.reciprocal request=?relation_request members=$w.relational.check.target
+@w.relational.check.reciprocal_members.owner core.deny when=$w.relational.check.reciprocal_members when=$w.relational.check.target if=$w.relational.check.different_request why="The relation and target belong to different requests."
+@w.relational.check.scaled_source w.relational.scaled request=?relation_request source=$w.relational.check.target
+@w.relational.check.scaled_source.owner core.deny when=$w.relational.check.scaled_source when=$w.relational.check.target if=$w.relational.check.different_request why="The relation and target belong to different requests."
+@w.relational.check.scaled_result w.relational.scaled request=?relation_request result=$w.relational.check.target
+@w.relational.check.scaled_result.owner core.deny when=$w.relational.check.scaled_result when=$w.relational.check.target if=$w.relational.check.different_request why="The relation and target belong to different requests."

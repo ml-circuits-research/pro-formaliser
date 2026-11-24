@@ -1,0 +1,19 @@
+# English property questions with the owner between the auxiliary and "have".
+@proposal.en.ask.have w.lang.en.frame name=proposal.ask.have act=ask mode=what set=acts priority=12 needs=attrs role=attribute role=thing example="What width does the node have?"
+@proposal.en.ask.have.1 w.lang.en.part frame=proposal.ask.have at=1 is=word word=what word=which
+@proposal.en.ask.have.2 w.lang.en.part frame=proposal.ask.have at=2 is=role role=attribute takes=lexicon lexicon=attribute
+@proposal.en.ask.have.3 w.lang.en.part frame=proposal.ask.have at=3 is=word word=does word=do
+@proposal.en.ask.have.4 w.lang.en.part frame=proposal.ask.have at=4 is=det optional=yes
+@proposal.en.ask.have.5 w.lang.en.part frame=proposal.ask.have at=5 is=role role=thing takes=words
+@proposal.en.ask.have.6 w.lang.en.part frame=proposal.ask.have at=6 is=word word=have
+
+# Assignment of a property on an explicitly named owner.
+@proposal.en.set.on w.lang.en.frame name=proposal.set.on act=change mode=set set=acts priority=12 needs=attrs role=attribute role=thing role=value example="Set the width on the node to 15"
+@proposal.en.set.on.1 w.lang.en.part frame=proposal.set.on at=1 is=verb act=change
+@proposal.en.set.on.2 w.lang.en.part frame=proposal.set.on at=2 is=det optional=yes
+@proposal.en.set.on.3 w.lang.en.part frame=proposal.set.on at=3 is=role role=attribute takes=lexicon lexicon=attribute
+@proposal.en.set.on.4 w.lang.en.part frame=proposal.set.on at=4 is=word word=on
+@proposal.en.set.on.5 w.lang.en.part frame=proposal.set.on at=5 is=det optional=yes
+@proposal.en.set.on.6 w.lang.en.part frame=proposal.set.on at=6 is=role role=thing takes=words
+@proposal.en.set.on.7 w.lang.en.part frame=proposal.set.on at=7 is=word word=to
+@proposal.en.set.on.8 w.lang.en.part frame=proposal.set.on at=8 is=role role=value takes=words

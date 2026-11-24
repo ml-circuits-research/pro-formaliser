@@ -30,3 +30,9 @@ The sample includes missed bindings for declared effects, mismatched catalog fam
 An explicit label can be preserved on creation and reused as the written selector of the following request. In the pinned schema an earlier request or target is not a valid value for the consumer’s target identity. The executor resolves the previous result from dialogue state. Binding a particular producer within one circuit needs a typed source for the consumer and corresponding execution semantics.
 
 In the bucket-0 training partition, 877 annotated new drawing objects across 39 kinds used “in a row” for an arrangement. Four rows used the same phrase as an open direction value. The previous requirement of unanimous annotations discarded the arrangement reading. This is a reader training failure even though the catalog also contains a family mismatch. The annotation counts refer only to training rows.
+
+A controlled vocabulary check used the public reader with the pinned worlds and no trained examples. “Set the route of the link to curved” produced a link route with value `curved`. “Set the route of the link to curvy” did so only after loading this single additional SOP declaration. The object, request key, value and parser were already available.
+
+```sop
+@route.curvy core.word text=curvy means=curved of=w.diagram.edge.route
+```

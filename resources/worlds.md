@@ -561,3 +561,5 @@ the same state, declare the two values explicitly.
 The catalog's `means` identifies the backing slot. An explicit `slot`
 can supply that link when the catalog omits it. If both appear, they must
 identify the same slot. A later interpreter can resolve a contextual owner.
+
+The [staged SOP worlds](../sop-worlds/README.md) contain optional vocabulary, two property frames and a proposed relational request module. The benchmark uses the pinned worlds and bundled reader declarations. It measures the staged vocabulary and grammar only if explicitly loaded.

@@ -99,3 +99,7 @@
 ## Scoped commands and catalog operands
 - Grounded definite spatial anchors, typed substitutions and independent commands following negative motivations.
 - Full test gate passed. 48.2% reasonable on the same 1,000 requests, previously 48.0%. See eval/THOUSAND-AUDIT.md.
+
+## Optional worlds for upstream integration
+- Staged scoped vocabulary, English property frames and the additive w.relational module in sop-worlds/.
+- Verified public-reader behavior and native relational schema acceptance/rejection. Full gate passed (257 tests). The standard benchmark excludes this staging folder.

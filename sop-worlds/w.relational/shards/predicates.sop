@@ -1,0 +1,3 @@
+@w.relational.faces w.relational.predicate name=faces about="the first participant is oriented toward the second"
+@w.relational.faces.face core.word text=face means=w.relational.faces
+@w.relational.faces.facing core.word text=facing means=w.relational.faces
