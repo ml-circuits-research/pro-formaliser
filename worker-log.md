@@ -221,3 +221,6 @@
 
 ## Set restrictions and explicit sources
 - The public reader now grounds an all-tree selection, its spatial exception, and the current scene together on primary #428. It also grounds a chart comparison in #493 and the immediate directional placement in #876. The explicit block list on #119 keeps its remaining adjunct unread. All 359 tests passed, including contrast cases for separate effects, named containers and quoted operands.
+
+## Scope words belong to the matched argument
+- The optional chart world records “only” on the filter operand itself. The threshold circuit retains complete source coverage, and the entire previous set of 135 interpretations for an unrelated numbered-list request is available again. All 359 tests passed.

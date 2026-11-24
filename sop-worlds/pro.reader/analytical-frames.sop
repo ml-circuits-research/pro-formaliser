@@ -47,3 +47,9 @@
 @pro.reader.analytical_owner_property.value core.slot of=pro.reader.analytical_owner_property key=value kind=atom required=true
 @pro.reader.analytical_owner_property.text core.slot of=pro.reader.analytical_owner_property key=text kind=string many=true required=true
 @reader.chart.analytic.column.vertical pro.reader.analytical_owner_property tab=diagram family=chart owner_key=chart.type owner_value=bar text="a column chart" key=chart.orientation value=vertical
+
+
+# A written connector can explicitly identify the immediately following argument.
+@pro.reader.argument_label core.type of=pro.reader.argument_label closed=true
+@pro.reader.argument_label.key core.slot of=pro.reader.argument_label key=key kind=atom required=true
+@pro.reader.argument_label.text core.slot of=pro.reader.argument_label key=text kind=string many=true required=true

@@ -411,7 +411,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     for (const proof of response.sequences ?? []) {
       if (proof.owned) {
-        const reading=sequenceFrameReading(text,proof,analyticalOwnerBindings(text,proof,worlds));
+        const reading=sequenceFrameReading(text,proof,analyticalOwnerBindings(text,proof,worlds),worlds.argumentLabels);
         if (reading) retain(reading);
         continue;
       }

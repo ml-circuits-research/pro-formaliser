@@ -183,7 +183,7 @@ export function sequenceReading(text,candidate,proof) {
   return {sop:serialize([...consumeUnread(wires,text,start,end),...additions]),source:'argument-sequence',status:candidate.status};
 }
 
-export function sequenceFrameReading(text,proof,extraBindings=[]) {
+export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
   if (!proof.owned) return;
   const chars=Array.from(text), span=(start,end)=>chars.slice(start,end).join('');
   const {ownerKey,ownerValue,predicateStart,predicateEnd,utteranceEnd}=proof.owned;
@@ -201,9 +201,21 @@ export function sequenceFrameReading(text,proof,extraBindings=[]) {
     (ownerKey ? [[ownerKey,ownerValue,start,end]] : []) : binding[0]===unreadPart ? [] : [binding]);
   for (const [i,[key,canonical,a,b]] of [...bindings,...extraBindings].entries()) {
     const words=span(a,b),value=canonical || words;
+    let keyWords='';
+    if (labels?.has(key)) {
+      // Only the connector between bound arguments can name this role.
+      const previous=Math.max(proof.start,...proof.bindings.map(binding=>binding[3]).filter(end=>end<=a));
+      const connector=tokens(span(previous,a));
+      for (const label of labels.get(key)) {
+        const suffix=connector.slice(-label.words.length);
+        if (suffix.length!==label.words.length || !label.words.every((word,i)=>word===suffix[i][0])) continue;
+        const written=span(previous+suffix[0][2],previous+suffix.at(-1)[3]);
+        if (written.length>keyWords.length) keyWords=written;
+      }
+    }
     lines.push('@r1.arg'+i+' w.request.constraint request=$r1 on=attribute attribute='+encode(key)+
       ' value='+(canonical && atom.test(canonical) ? canonical : encode(value))+
-      (words===value ? '' : ' words='+encode(words))+' operator=eq phase=result');
+      (words===value ? '' : ' words='+encode(words))+(keyWords ? ' key_words='+encode(keyWords) : '')+' operator=eq phase=result');
   }
   const lead=span(proof.owned.courtesyStart ?? 0,predicateStart).trim();
   if (lead) lines.push('@f1 w.request.filler text='+encode(lead.replace(/,\s*$/u,'')));

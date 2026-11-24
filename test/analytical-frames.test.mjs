@@ -186,6 +186,9 @@ test('keeps chart threshold predicates separate from fields and literal categori
   });
   const wires = parse(bar.sop);
   assert.equal(properties(wires)['chart.only'], undefined);
+  const scoped=wires.find(wire=>decode(wire.attrs.attribute?.[0])==='chart.filterScope');
+  assert.deepEqual(scoped.attrs.key_words.map(decode),['only']);
+  assert.equal(bar.evidence.tokens.find(token=>token.text==='only').status,'grounded');
   assert.equal(decode(wires.find(wire => decode(wire.attrs.attribute?.[0]) === 'chart.filterOperator').attrs.words[0]), 'above');
   await proves(reader, 'Draw a line chart of costs by department, only departments at most 500', {
     'chart.type':'line', 'chart.measure':'costs', 'chart.dimension':'department',

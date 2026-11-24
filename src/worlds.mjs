@@ -51,7 +51,7 @@ const types = new Set([
   'pro.reader.owned_effect','pro.reader.effect_sense','pro.reader.effect_owner','pro.reader.landmark_surface','pro.reader.appositive_selector','pro.reader.quantified_verb','pro.reader.quantified_marker','pro.reader.quantified_reference','pro.reader.topic_command','pro.reader.postposed_clause','pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
   nativeTargetInventoryType, 'core.type', 'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
-  'k.layouts.slot','pro.reader.region_form','pro.reader.retention','k.values.direction','pro.reader.motion','pro.reader.owner_inventory','k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.spatial_modifier','pro.reader.source_container','pro.reader.set_exclusion','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
+  'k.layouts.slot','pro.reader.region_form','pro.reader.retention','k.values.direction','pro.reader.motion','pro.reader.owner_inventory','k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.spatial_modifier','pro.reader.argument_label','pro.reader.source_container','pro.reader.set_exclusion','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue', 'w.lang.en.number',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
@@ -643,6 +643,8 @@ function compile(facts) {
     affectedTargetSources:facts('pro.reader.affected_source').map(w=>Object.fromEntries(
       ['act','family','marker','keyword','attribute'].map(k=>[k,one(w,k)]))),
     nativeVerbEffects:nativeVerbEffects(facts,requestKeys,propertyLabels),
+    argumentLabels:Map.groupBy(facts('pro.reader.argument_label').flatMap(w=>
+      values(w,'text').map(text=>({key:one(w,'key'),words:tokens(text).map(t=>t[0])}))).filter(entry=>entry.key && entry.words.length),entry=>entry.key),
     ownerPropertyLabels:propertyLabels,
     ownerPropertyValues:compatibleValues,
     compoundReferences:facts('pro.reader.compound_reference').map(w=>({family:one(w,'family'),firstKey:one(w,'first_key'),secondKey:one(w,'second_key'),delimiter:one(w,'delimiter')})),
