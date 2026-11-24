@@ -1,3 +1,4 @@
+import {compilePostposedClauses} from './postposed-clause.mjs';
 import {analyticalArgumentFacts,compileAnalyticalOwnerProperties} from './analytical-frames.mjs';
 import {compileOrientationLandmarks} from './orientation-landmark.mjs';
 import {compileValidationModules} from './schema.mjs';
@@ -36,7 +37,7 @@ const types = new Set([
   ...nominalInflectionTypes,...nominalScaleTypes,...affectedMorphologyTypes,
   'w.lang.en.alternation','w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
-  'pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
+  'pro.reader.postposed_clause','pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
   'k.layouts.slot','pro.reader.region_form','pro.reader.retention','k.values.direction','pro.reader.motion','pro.reader.owner_inventory','k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
@@ -195,7 +196,7 @@ function compile(facts) {
   })).filter(key => key.tab && key.family && key.name && key.head);
   const literalBindings = facts('pro.reader.literal').map(wire => ({
     family: one(wire,'family'), attribute: one(wire,'attribute'), role: one(wire,'role'),
-    containerKey: one(wire,'container_key'), surfaces: values(wire,'text').map(phrase),
+    containerSort: one(wire,'container_sort')==='true', surfaces: values(wire,'text').map(phrase),
   })).filter(binding => requestKeys.some(key => key.family === binding.family && key.name === binding.attribute &&
     key.head.split('+').includes('span') && !key.values.length));
   const tuples = new Map();
@@ -597,6 +598,7 @@ function compile(facts) {
     })),
     fixedProperties:compileFixedProperties(facts,requestKeys),
     analyticalOwnerProperties:compileAnalyticalOwnerProperties(facts,requestKeys),
+    postposedClauses:compilePostposedClauses(facts,requestKeys,words),
     orientationLandmarks:compileOrientationLandmarks(facts,requestKeys),
     argumentSequences:argumentSequences(type=>type==='pro.reader.argument_sequence' ?
       [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys),
@@ -666,6 +668,7 @@ function providerTypes(facts) {
     sources.push(one(frame,'owner_type'),one(frame,'value_type'));
   }
   for (const role of facts.get('pro.reader.creation_role')?.values() ?? []) sources.push(one(role,'value_type'));
+  for (const frame of facts.get('pro.reader.postposed_clause')?.values() ?? []) sources.push(one(frame,'value_type'));
   for (const frame of facts.get('pro.reader.orientation')?.values() ?? []) sources.push(one(frame,'landmark_type'));
   for (const frame of facts.get('pro.reader.motion')?.values() ?? []) sources.push(one(frame,'target_type'));
   for (const binding of facts.get('pro.reader.owner_inventory')?.values() ?? []) sources.push(one(binding,'provider'));

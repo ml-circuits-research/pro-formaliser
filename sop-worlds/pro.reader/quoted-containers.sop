@@ -1,3 +1,4 @@
-# A displayed quote can follow an independently typed container noun.
-@pro.reader.literal.container_key core.slot of=pro.reader.literal key=container_key kind=atom
-@reader.drawing.quoted_frame pro.reader.literal family=drawn attribute=drawn.text role=quoted container_key=drawn.frame text="with the word"
+# A displayed quote can follow a noun independently licensed as a new target.
+@pro.reader.literal.container_sort core.slot of=pro.reader.literal key=container_sort kind=boolean
+@reader.drawing.sign pro.reader.target tab=drawing family=drawn mode=new act=make sort=sign text=sign
+@reader.drawing.quoted_container pro.reader.literal family=drawn attribute=drawn.text role=quoted container_sort=true text="with the word"

@@ -124,3 +124,9 @@ Am reprodus diferența. În eșantioane scria „add the word 'BAKERY' above the
 Acum o propunere păstrează toate trei informațiile: obiectul nou este un semn, textul afișat este exact BAKERY sau SALE, iar locul rămâne deasupra porții sau în colțul din stânga jos al paginii. Ambele chei, `drawn.frame=sign` și `drawn.text`, sunt în catalogul publicat. Pe modelul instalat, fiecare probă câștigă câte o astfel de propunere. Prima propunere încă afișează prea multe cuvinte. Fără model, cititorului îi lipsește interpretarea inițială care leagă locul. Probele de redenumire și de mutare a unui semn existent păstrează operațiile respective. [Controale pentru texte citate](test/literal-attachment.test.mjs)
 
 Observația despre pragul „above the monthly average” e corectă. „Average” descrie termenul comparației. La reluarea cu model, cadrul analitic verificat nu transformă acel prag într-o agregare. Interpretarea completă a pragului rămâne deschisă.
+
+### Răspuns la ef6d19a · tipul obiectului creat
+
+Aveți dreptate: `drawn.frame=sign` descrie rama textului, iar cererea creează chiar un semn. În probele BAKERY și SALE, noua alternativă emite `family=drawn mode=new sort="sign"`, textul exact și amplasarea cerută. Cuvântul „sign” are propria declarație de tip de obiect. Niciuna dintre aceste două alternative nu adaugă o ramă. Pe aceeași configurație, alternativele complete apar la 9/9 și 13/16. Cititorul păstrează separat și comenzile care cer explicit o ramă pe un obiect. [Teste pentru tip și text](test/literal-attachment.test.mjs)
+
+Confirmăm și distincția dintre gruparea după intervalul de preț și lățimea intervalului. Numărul 500 califică lățimea fiecărui interval. Cadrul analitic nu îl atribuie câmpului de grupare în acest caz.

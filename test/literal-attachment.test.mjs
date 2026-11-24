@@ -13,6 +13,11 @@ const hasField = (proposal, key, value) => parse(proposal.sop).some(wire =>
   wire.type === 'w.request.constraint' && wire.attrs.attribute?.[0] === key &&
   wire.attrs.value?.[0] === JSON.stringify(value));
 
+const hasSort = (proposal, sort) => parse(proposal.sop).some(wire =>
+  wire.type === 'w.request.target' && [sort,JSON.stringify(sort)].includes(wire.attrs.sort?.[0]));
+const hasAttribute = (proposal,key) => parse(proposal.sop).some(wire =>
+  [key,JSON.stringify(key)].includes(wire.attrs.attribute?.[0]));
+
 async function propose(reader, text) {
   const {candidates} = await reader.formalise(text);
   return candidates.filter(candidate => candidate.source === 'literal-attachment');
@@ -92,6 +97,8 @@ test('cleans a quoted display payload and keeps grounded placement', async t => 
   const cleaned=result.candidates.find(c=>c.source==='quoted-literal-cleanup');
   assert.ok(cleaned);
   assert.ok(hasField(cleaned,'drawn.text','BAKERY'));
+  assert.ok(!hasSort(cleaned,'sign'));
+  assert.ok(!hasAttribute(cleaned,'drawn.frame'));
   for (const id of ['p','a']) assert.deepEqual(parse(cleaned.sop).find(w=>w.id===id).attrs,
     parse(candidate.sop).find(w=>w.id===id).attrs);
   assert.ok(evidenceInText(text,cleaned.sop,worlds));
@@ -156,7 +163,8 @@ test('recovers independently typed quoted sign text while retaining the exact lo
     const reading=candidates.find(candidate=>candidate.source==='quoted-literal-cleanup');
     assert.ok(reading,example.text);
     assert.ok(hasField(reading,'drawn.text',example.literal));
-    assert.ok(hasField(reading,'drawn.frame','sign'));
+    assert.ok(hasSort(reading,'sign'));
+    assert.ok(!hasAttribute(reading,'drawn.frame'));
     assert.ok(!parse(reading.sop).some(wire=>wire.attrs.name));
     assert.ok(evidenceInText(example.text,reading.sop,worlds));
     assert.ok(validate(reading.sop,worlds));
@@ -176,7 +184,8 @@ test('keeps quoted negation as displayed content while rejecting selector and re
   const displayed="a sign with the word 'no'";
   const reading=quotedLiteralCleanup('add '+displayed,candidate('add',displayed),worlds);
   assert.ok(hasField(reading,'drawn.text','no'));
-  assert.ok(hasField(reading,'drawn.frame','sign'));
+  assert.ok(hasSort(reading,'sign'));
+  assert.ok(!hasAttribute(reading,'drawn.frame'));
   for (const [text,predicate,descriptor,mode,act] of [
     ['move the sign saying no','move','the sign saying no','existing','place'],
     ["move the sign with the word 'no'","move","the sign with the word 'no'","existing","place"],
@@ -190,7 +199,7 @@ test('keeps quoted negation as displayed content while rejecting selector and re
   ]) assert.equal(quotedLiteralCleanup(text,candidate(predicate,descriptor,mode,act),worlds),undefined,text);
 });
 
-test('uses a container class and quote cue declared by an unrelated world', t=>{
+test('uses an independent target inventory and preserves a separately requested frame', t=>{
   const dir=mkdtempSync(fileURLToPath(new URL('../.cache/quoted-container-test-',import.meta.url)));
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
   const overlay=join(dir,'press.sop');
@@ -198,14 +207,23 @@ test('uses a container class and quote cue declared by an unrelated world', t=>{
 @press std.schema.world name=w.press
 @poster std.schema.kind of=w.press.poster world=w.press acts=make
 @title w.request.key tab=press family=poster name=poster.heading head=span
-@format w.request.key tab=press family=poster name=poster.format head=class value=standee
-@binding pro.reader.literal family=poster attribute=poster.heading role=quoted container_key=poster.format text="displaying the caption"
+@format w.request.key tab=press family=poster name=poster.format head=class value=standee value=boxed
+@standee pro.reader.target tab=press family=poster mode=new act=make sort=standee text="display board"
+@binding pro.reader.literal family=poster attribute=poster.heading role=quoted container_sort=true text="displaying the caption"
 `);
   const worlds=loadWorlds({paths:[overlay]});
-  const descriptor='a standee displaying the caption “Keep clear”';
-  const reading=quotedLiteralCleanup('add '+descriptor,copiedLiteral('poster','poster.heading',descriptor),worlds);
+  const descriptor='a display board displaying the caption “Keep clear”';
+  const frame='@frame w.request.constraint request=$r on=attribute attribute=poster.format value=boxed words="in a box" operator=eq phase=result';
+  const text='add '+descriptor+' in a box';
+  const reading=quotedLiteralCleanup(text,copiedLiteral('poster','poster.heading',descriptor,frame),worlds);
   assert.ok(hasField(reading,'poster.heading','Keep clear'));
-  assert.ok(hasField(reading,'poster.format','standee'));
+  assert.ok(hasSort(reading,'standee'));
+  assert.deepEqual(parse(reading.sop).find(w=>w.id==='frame'),parse(frame)[0]);
   assert.ok(validate(reading.sop,worlds));
-  assert.ok(evidenceInText('add '+descriptor,reading.sop,worlds));
+  assert.ok(evidenceInText(text,reading.sop,worlds));
+  const frameOnly='a boxed displaying the caption “Keep clear”';
+  assert.equal(quotedLiteralCleanup('add '+frameOnly,copiedLiteral('poster','poster.heading',frameOnly),worlds),undefined);
+  const conflicting=copiedLiteral('poster','poster.heading',descriptor);
+  conflicting.sop=conflicting.sop.replace('mode=new','mode=new sort=lantern');
+  assert.equal(quotedLiteralCleanup(text,conflicting,worlds),undefined);
 });

@@ -1,3 +1,4 @@
+import {postposedClauseReadings} from './postposed-clause.mjs';
 import {analyticalOwnerBindings} from './analytical-frames.mjs';
 import {orientationLandmarkReadings} from './orientation-landmark.mjs';
 import {reciprocalReading} from './reciprocal-reading.mjs';
@@ -678,6 +679,14 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         for (const reading of spatialAnchorReadings(text,candidate,worlds,permit)) {
           const key=admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
+        }
+      }
+      if (worlds.postposedClauses.bindings.length) {
+        for (const candidate of [...candidates,...additional.values()]) {
+          for (const reading of postposedClauseReadings(text,candidate,worlds,permit)) {
+            const key=admissibleKey(text,reading.sop);
+            if (key) additional.set(key,reading);
+          }
         }
       }
       if (worlds.orientationLandmarks.bindings.length) {

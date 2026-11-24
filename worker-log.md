@@ -155,3 +155,6 @@
 
 ## Evidence ownership and generalization checks
 - Added alternative scale/value attachment, scoped sign payloads and analytical boundary checks. Removed the extra coverage-only sequence choice after a controlled replay retained the only plausible sequence gain without it. Integrated gate passed (298 tests). Independent diagnostics and measured overlap are in eval/TRAINING-OVERLAP.md.
+
+## Conditional spans, reported words and sign identity
+- Added typed causal and report-clause alternatives and corrected new-sign target identity after independent review. Dropped the prototype for whole-program labelled-operand transfer after a three-sample replay found no semantic gains. See eval/TRAINING-OVERLAP.md.
