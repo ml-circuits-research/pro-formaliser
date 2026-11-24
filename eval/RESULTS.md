@@ -1,6 +1,10 @@
 # WebMeet held-out benchmark
 
-[1,000-request L0–L4 audit after scope, named-target and composition changes](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
+[1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
+
+## Nominal qualifiers, literal roles and clause scope
+
+On the full 1,915-row holdout, 632 proposal sets contained the reference semantic wire set (previously 624). The checker rejected 252 of 1889 nonempty first proposals using the reference tab. On the paired 1,000 requests the reviewed reasonable rate was 40.0%. [Paired grades](THOUSAND-AUDIT.md) · [Twenty failures examined against the schemas](EXPRESSIVITY.md)
 
 ## Scope, named targets and composition
 

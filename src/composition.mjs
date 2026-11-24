@@ -147,7 +147,7 @@ export function sequenceParts(text, ts, joiners, { isAct, isPreservation, prefix
       while (next<ts.length && !connector(words[next])) next++;
       const left = phrase(start,first);
       const preservation = kind==='contrast' && hasPreservationLead(end,ts.length);
-      const weak = ['coordination','addition','list-or-clause'].includes(kind) &&
+      const weak = ['coordination','addition','list-or-clause','contrast'].includes(kind) &&
         (hasActLead(end,next) || hasPreservationLead(end,ts.length));
       if (word.test(left) && (strong || (weak || preservation) && (!requireLeftAct || hasLead(start,first)))) {
         parts.push(left);

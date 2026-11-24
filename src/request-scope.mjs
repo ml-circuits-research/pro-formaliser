@@ -21,6 +21,8 @@ function hasMutatingHead(ts, start, worlds) {
   return false;
 }
 
+const asideBoundary = token => token===undefined || token===',' || terminal.has(token);
+
 function firstContent(ts, worlds, polite = false) {
   let first=0;
   while (first<ts.length) {
@@ -28,7 +30,8 @@ function firstContent(ts, worlds, polite = false) {
     let skip = first;
     for (let end=first+1; end <= Math.min(first+12,ts.length); end++) {
       const phrase=joined(ts,first,end);
-      if (worlds.fillerPhrases.has(phrase) || (polite && (worlds.scopeGrammar.courtesy.has(phrase) ||
+      if (worlds.fillerPhrases.has(phrase) || (polite && ((worlds.scopeGrammar.courtesy.has(phrase) &&
+          asideBoundary(ts[end]?.[0])) ||
           (worlds.scopeGrammar.conditionals.has(ts[first][0]) && worlds.literalGrammar?.leads.has(phrase))))) skip=end;
     }
     if (skip===first) break;
@@ -37,11 +40,20 @@ function firstContent(ts, worlds, polite = false) {
   return first;
 }
 
-function speech(ts, start, worlds) {
+function speech(ts, start, worlds, hits) {
   const head=ts[start]?.[0], second=ts[start+1]?.[0];
   const {questions,subjects,auxiliary,modals,addressees,plainImperatives,copulas,existentialSubjects,proposals,removals}=worlds.scopeGrammar;
   const proposalEnd=leadEnd(ts,start,proposals);
   if (proposalEnd>start) return {intent:'proposal',lead:ts.slice(start,proposalEnd),after:proposalEnd};
+  const courtesyEnd=leadEnd(ts,start,worlds.scopeGrammar.courtesyLeads);
+  if (courtesyEnd>start) {
+    const action=firstContent(ts.slice(courtesyEnd),worlds)+courtesyEnd;
+    const actionStart=ts[action]?.[2];
+    if (hits.some(([a,b,[role,act,mood]])=>a===actionStart && b<=ts.at(-1)[3] && role==='act' &&
+        act!=='ask' && !['ask','check'].includes(mood))) {
+      return {intent:'proposal',lead:ts.slice(start,courtesyEnd),after:action,actionStart};
+    }
+  }
   const removalEnd=leadEnd(ts,start,removals);
   if (removalEnd>start) return {intent:'removal',lead:ts.slice(start,removalEnd),after:removalEnd};
   for (let end=Math.min(ts.length,start+4); end>start; end--) {
@@ -78,12 +90,16 @@ function shotRanges(ts, chars, worlds) {
       }
       continue;
     }
-    let delimiter=i;
+    let delimiter=i, kind;
     for (let j=i+1; j<=Math.min(i+5,ts.length); j++) {
-      if (['sequence','contrast','clause'].includes(worlds.joiners[joined(ts,i,j)])) delimiter=j;
+      const joiner=worlds.joiners[joined(ts,i,j)];
+      if (['sequence','contrast','clause'].includes(joiner)) {
+        delimiter=j;
+        kind=joiner;
+      }
     }
     if (delimiter===i && term!==';') continue;
-    if (begin<i) ranges.push({ts:ts.slice(begin,i),start:ts[begin][2],end:start});
+    if (begin<i) ranges.push({ts:ts.slice(begin,i),start:ts[begin][2],end:start,nextJoiner:kind});
     begin=Math.max(i+1,delimiter);
     i=begin-1;
   }
@@ -95,19 +111,24 @@ export function requestScope(text, masked, worlds, hits) {
   const chars=Array.from(text);
   const grammar=worlds.scopeGrammar;
   let dependent=false, hasCondition=false, interrogative=false, extendsQuestion=false;
-  const regions=shotRanges(tokens(masked),chars,worlds).map(region=>{
+  const regions=shotRanges(tokens(masked),chars,worlds).map((region,index,shots)=>{
     const {ts,start,end}=region;
     let content=firstContent(ts,worlds,true);
     for (let end=leadEnd(ts,content,grammar.rejections,token=>token===','); end>content;
       end=leadEnd(ts,content,grammar.rejections,token=>token===',')) {
       content=firstContent(ts.slice(end+1),worlds,true)+end+1;
     }
-    const reading=speech(ts,content,worlds);
+    const reading=speech(ts,content,worlds,hits);
     const questionScope=interrogative || reading.intent==='question';
     if (interrogative) extendsQuestion=true;
     interrogative=questionScope && !region.sentenceEnd;
     let negative, condition, guarded=dependent;
     for (let i=reading.after ?? content; i<ts.length; i++) {
+      const courtesyEnd=leadEnd(ts,i,grammar.courtesy,asideBoundary);
+      if (courtesyEnd>i) {
+        i=courtesyEnd-1;
+        continue;
+      }
       for (let j=i+1; j<=Math.min(i+4,ts.length); j++) {
         const phrase=joined(ts,i,j);
         const polarity=grammar.conditionals.get(phrase);
@@ -129,12 +150,16 @@ export function requestScope(text, masked, worlds, hits) {
     const targetBeforeNegation=negative!==undefined && hits.some(([a,b,[role]])=>
       a>=start && b<=negative && ['target','reference'].includes(role));
     if (guarded || (negative!==undefined && !targetBeforeNegation)) {
-      return {...region,intent:'guarded',limit:start,negative,condition};
+      const negativeClause=negative!==undefined && hits.some(([a,b,[role,act]])=>
+        a>=start && b<=end && role==='act' && act!=='ask');
+      const localExclusion=shots[index-1]?.nextJoiner==='contrast' && !negativeClause;
+      return {...region,intent:'guarded',limit:start,negative,condition,localExclusion};
     }
     return {...region,intent:reading.intent ?? 'action',limit:negative ?? end,negative,reading};
   });
   const restricted=regions.some(r=>!['action','proposal'].includes(r.intent) || r.limit<r.end);
-  const preventsSplitting=hasCondition || extendsQuestion || regions.some(r=>r.intent==='guarded' && r.negative!==undefined);
+  const preventsSplitting=hasCondition || extendsQuestion ||
+    regions.some(r=>r.intent==='guarded' && r.negative!==undefined && !r.localExclusion);
   const regionText=(a,b)=>chars.slice(a,b).join('');
   const present=(candidate,value)=>value && literalRanges(candidate,value).length;
   const negativeZones=regions.filter(r=>r.negative!==undefined)
@@ -161,7 +186,7 @@ export function requestScope(text, masked, worlds, hits) {
   return {
     preventsSplitting, restricted,
     windows:regions.filter(region=>region.limit>region.start)
-      .map(({start,limit,intent,reading})=>[start,limit,intent,reading?.type ?? '']),
+      .map(({start,limit,intent,reading})=>[reading?.actionStart ?? start,limit,intent,reading?.type ?? '']),
     intentHits:regions.flatMap(({reading,intent})=>{
       const head=intent==='removal' ? reading.lead : reading?.head;
       if (!head?.length) return [];

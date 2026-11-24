@@ -4,7 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { createFormaliser } from '../src/formaliser.mjs';
-import { parse } from '../src/schema.mjs';
+import { evidenceInText } from '../src/grounding.mjs';
+import { tokens } from '../src/lexicon.mjs';
+import { quotedSpans } from '../src/literal-roles.mjs';
+import { namedArgumentCandidates } from '../src/named-arguments.mjs';
+import { parse, validate } from '../src/schema.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
 
 const decode = value => value.startsWith('"') ? JSON.parse(value) : value;
@@ -107,4 +111,30 @@ test('keeps a named target and anchor in each spatial family and respects reques
   const coded = await reader.formalise('Move n17 to the left of Upper Terminal');
   assert.ok(coded.candidates.some(c => c.source === 'named-arguments' &&
     decode(target(c.sop).name[0]) === 'n17'));
+});
+
+test('uses a licensed lower-case name only in its spatial family', () => {
+  const worlds = loadWorlds();
+  for (const [input, name, anchor] of [
+    ['put dog below bench','dog','bench'],
+    ['put lamp 2 below street','lamp 2','street'],
+  ]) {
+    const read = names => namedArgumentCandidates(input,tokens(input),quotedSpans(input),worlds,undefined,names);
+    assert.deepEqual(read(),[]);
+    assert.deepEqual(read(new Map([['drawn',new Set([name.toUpperCase()])]])),[]);
+    const candidates = read(new Map([['drawn',new Set([name])]]));
+    assert.ok(candidates.length,input);
+    for (const {sop} of candidates) {
+      const attrs = target(sop);
+      assert.equal(attrs.family[0],'drawn');
+      assert.equal(attrs.mode[0],'existing');
+      assert.equal(attrs.fill[0],'written');
+      assert.equal(decode(attrs.name[0]),name);
+      assert.deepEqual(constraints(sop),[
+        ['drawn.relation','below','result'],['drawn.anchor',anchor,'selector'],
+      ]);
+      assert.ok(validate(sop,worlds));
+      assert.ok(evidenceInText(input,sop,worlds));
+    }
+  }
 });

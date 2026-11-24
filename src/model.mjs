@@ -1,3 +1,5 @@
+import { createNominalPhraseLearner } from './nominal-phrases.mjs';
+import { modifierLearner } from './nominal-modifiers.mjs';
 import { slotForms } from './slot-forms.mjs';
 import { loadWorlds } from './worlds.mjs';
 import { learnConstraints } from './constraints.mjs';
@@ -307,10 +309,12 @@ export function train(rows) {
   const { examples, templates } = learnTemplates(rows, openKeys);
   const context = contextLearner();
   const forms = slotForms();
-  const lexicon = learnLexicon(rows, context, forms);
+  const modifiers=modifierLearner(loadWorlds());
+  const nominalPhrases=createNominalPhraseLearner();
+  const lexicon = learnLexicon(rows, context, forms, modifiers, nominalPhrases);
   for (const [phrase, records] of Object.entries(learnConstraints(rows))) {
     if (!Object.hasOwn(lexicon, phrase)) Object.defineProperty(lexicon, phrase, {value:[],enumerable:true});
     lexicon[phrase].push(...records);
   }
-  return { version: 1, examples, templates, lexicon, forms:forms.finish(), context: context.finish() };
+  return { version: 1, examples, templates, lexicon, modifiers:modifiers.finish(), nominalPhrases:nominalPhrases.finish(), forms:forms.finish(), context: context.finish() };
 }

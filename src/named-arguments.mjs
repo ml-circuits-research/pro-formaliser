@@ -51,7 +51,7 @@ function proposal(predicate, act, pattern, [left,right], marker) {
   return {sop:lines.join('\n'),source:'named-arguments',support:0};
 }
 
-export function namedArgumentCandidates(text, ts, quotes, worlds, sequenceOptions) {
+export function namedArgumentCandidates(text, ts, quotes, worlds, sequenceOptions, licensedNames) {
   if (ts.length < 4 || !worlds.argumentPatterns) return [];
   const visible = ts.map(([surface,,start]) =>
     quotes.some(quote => quote.start <= start && start < quote.end) ? '' : surface);
@@ -85,10 +85,11 @@ export function namedArgumentCandidates(text, ts, quotes, worlds, sequenceOption
           const separatorLength = pattern.separator.split(' ').length;
           for (let boundary=first+1; boundary+separatorLength<stop; boundary++) {
             if (!matches(visible,boundary,pattern.separator)) continue;
-            if (pattern.relation && !hasNameEvidence(ts,quotes,first,boundary,worlds)) continue;
             const left = namedSpan(ts,visible,quotes,first,boundary,span,worlds);
+            if (!left || (pattern.relation && !licensedNames?.get(pattern.family)?.has(left) &&
+                !hasNameEvidence(ts,quotes,first,boundary,worlds))) continue;
             const right = namedSpan(ts,visible,quotes,boundary+separatorLength,stop,span,worlds);
-            if (left && right) {
+            if (right) {
               const marker = span(ts[boundary][2],ts[boundary+separatorLength-1][3]);
               const candidate=proposal(predicate,act,pattern,[left,right],marker);
               if (courtesy) candidate.sop+='\n@f1 w.request.filler text='+JSON.stringify(courtesy);

@@ -1,3 +1,10 @@
+import { nominalPhraseReadings } from './nominal-phrases.mjs';
+import { sequenceNameReadings } from './sequence-names.mjs';
+import { postfixSetQuestions, universalTargetReading } from './set-query.mjs';
+import { modifierReading } from './nominal-modifiers.mjs';
+import { literalAttachments } from './literal-attachment.mjs';
+import { createNearExample } from './near-example.mjs';
+import { nominalNumberReading } from './nominal-number.mjs';
 import { namedTargetReading } from './target-names.mjs';
 import { catalogIssues } from './catalog.mjs';
 import { frameSupport } from './language-frames.mjs';
@@ -27,6 +34,9 @@ function add(map, key, item) {
 // binds the raw input spans and orders the resulting circuits.
 export function createFormaliser(model = {version:1,examples:[],templates:[]}, worlds = loadWorlds(), {languageFrames=true} = {}) {
   if (model.version !== 1) throw Error('Unsupported model version');
+  const phraseHeads=new Set(Object.keys(model.nominalPhrases ?? {}).map(k=>JSON.parse(k)[3]));
+  const knownModifiers=new Set(Object.keys(model.modifiers ?? {}).map(k=>JSON.parse(k)[1]));
+  const nearExample = createNearExample(model.examples,{discourse:worlds.discourse});
   const transfer = createTransfer(model.examples, {
     resolveValue:valueResolver(worlds,model.lexicon,model.forms), fillerPhrases:worlds.discourse
   });
@@ -126,6 +136,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (answer.source !== 'lexicon') { retain(answer); continue; }
       const lexical = {...answer,sop:resolveRelationKeys(answer.sop)};
       retain(lexical);
+      for (const attachment of literalAttachments(text,lexical,worlds)) retain(attachment);
       const named = namedTargetReading(text,lexical,worlds);
       if (named) retain(named);
       for (const sop of resolveRelationKeys.targetlessAlternatives(answer.sop)) {
@@ -135,6 +146,33 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     // Family hypotheses for pronouns follow the text's own readings. The
     // independent estimator can promote one when there is supporting context.
     for (const candidate of contextualTargets) retain(candidate);
+    // Add independent constructions after the ranked Prolog proposals so that
+    // a new surface form cannot evict an older reading from its bounded search.
+    if (!exact.length) for (const candidate of nearExample(text)) retain({...candidate,source:'near-example'});
+    for (const candidate of postfixSetQuestions(text,ts,worlds,hits,quotes)) retain(candidate);
+    if (!scope.restricted && ts.some(t=>worlds.scopeGrammar.universalHeads.has(t[0]))) {
+      for (const candidate of [...candidates]) {
+        const universal=universalTargetReading(text,ts,worlds,candidate,quotes);
+        if (universal) retain(universal);
+      }
+    }
+    if (!scope.restricted && ts.some(t=>knownModifiers.has(t[0]))) {
+      for (const candidate of [...candidates]) {
+        const modified=modifierReading(text,ts,quotes,candidate,model.modifiers);
+        if (modified) retain(modified);
+      }
+    }
+    if (ts.some(t=>worlds.nominalNumbers.has(t[0]) || /^\d+$/u.test(t[0]))) {
+      for (const candidate of [...candidates]) {
+        const qualified=nominalNumberReading(text,candidate,worlds.nominalNumbers,quotes,model.modifiers);
+        if (qualified) retain(qualified);
+      }
+    }
+    if (!scope.restricted && ts.some(t=>phraseHeads.has(t[0]))) {
+      for (const candidate of [...candidates]) {
+        for (const reading of nominalPhraseReadings(text,ts,quotes,candidate,model.nominalPhrases,worlds)) retain(reading);
+      }
+    }
     if (!candidates.some(candidate => candidate.source !== 'lexicon' && !candidate.unread)) {
       const offset = candidates.length;
       for (const candidate of preservation.readings(text,candidates)) retain(candidate);
@@ -243,6 +281,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       results.push(result);
     }
     const readings = combine(text,parts,results);
+    if (!results.some(r=>r[conditionalScope])) {
+      for (const reading of sequenceNameReadings(parts,results,worlds,sequenceOptions)) {
+        if (admissibleKey(text,reading.sop)) readings.push(reading);
+      }
+    }
     if (results.some((result,index)=>result!==plain[index])) readings.push(...combine(text,parts,plain));
     return mergeReadings(base,readings,
       complete || base.status==='matched' && results.some(r=>r.status!=='matched'));

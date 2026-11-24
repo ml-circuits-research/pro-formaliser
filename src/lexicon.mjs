@@ -20,7 +20,7 @@ function one(wire, key) {
 }
 
 // Only learn meanings paired with an explicit surface in the same training request.
-export function learnLexicon(rows, context, forms) {
+export function learnLexicon(rows, context, forms, modifiers, nominalPhrases) {
   const counts = new Map();
   function add(phrase, data) {
     if (!phrase || data.some(x => x === undefined)) return;
@@ -49,6 +49,8 @@ export function learnLexicon(rows, context, forms) {
         forms.observe(family,'sort',one(w,'sort_words') ?? sort,sort,scope);
         for (const c of wires) {
           if (c.type !== 'w.request.constraint' || one(c,'request') !== '$' + req.id || c.attrs.value?.length !== 1) continue;
+          modifiers?.observe(scope,w,c);
+          nominalPhrases?.observe(scope,w,c,req);
           const value = one(c,'value');
           forms.observe(family,one(c,'attribute'),one(c,'words') ?? value,value,scope);
         }

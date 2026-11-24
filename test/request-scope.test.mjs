@@ -53,6 +53,17 @@ test('negative contrast leaves earlier positive evidence available',async t=>{
   assert.equal((await reader.propose('Do not paint the object blue.')).candidateCount,0);
 });
 
+test('local exclusions stay unread while both positive clauses remain available',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const exclusion of ['but not blue','instead of blue','rather than blue']) {
+    const result=await reader.formalise('Paint the object red, '+exclusion+', then paint the object green.',{tab:'drawing'});
+    assert.deepEqual(rows(result,'request').map(row=>row.act),['change','change']);
+    assert.deepEqual(rows(result,'constraint').map(({value})=>value),['red','green']);
+    assert.ok(rows(result,'unread').some(row=>row.text.includes(exclusion)),exclusion);
+  }
+});
+
 test('unbound conditions are not promoted while typed negative and condition survive',async t=>{
   const typedNegation='do not paint the object blue';
   const typedCondition='if the object is blue, then paint it red';
@@ -85,6 +96,23 @@ test('a declared conditional courtesy lead does not block an independent request
   const result=await reader.formalise('If it is not too much trouble, paint the object blue.',{tab:'drawing'});
   assert.equal(rows(result,'request')[0].act,'change');
   assert.equal(rows(result,'constraint')[0].value,'blue');
+});
+
+test('courtesy conditionals preserve their requested effect while substantive guards remain scoped',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const input of [
+    'If you can, paint the object red.',
+    'Paint the object red, if possible.',
+    'I was wondering if you could paint the object red.',
+  ]) {
+    const result=await reader.formalise(input,{tab:'drawing'});
+    assert.equal(rows(result,'request')[0]?.act,'change',input);
+    assert.equal(rows(result,'constraint')[0]?.value,'red',input);
+  }
+  for (const input of ['If you can verify it, paint the object red.','Paint the object red if you can verify it.']) {
+    assert.equal((await reader.propose(input)).candidateCount,0,input);
+  }
 });
 
 test('declared suggestion, correction and removal leads keep the intended action available',async t=>{

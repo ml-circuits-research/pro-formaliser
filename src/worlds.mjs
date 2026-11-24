@@ -15,7 +15,7 @@ const types = new Set([
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
   'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
-  'w.lang.en.cue',
+  'w.lang.en.cue', 'w.lang.en.number',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
   'w.reader.en.binding', 'w.reader.en.feature', 'w.reader.en.filter',
 ]);
@@ -396,6 +396,14 @@ function compile(facts) {
     const candidate = heads.has('candidate');
     if (!heads.has('class') && !candidate) continue;
     const forms = key.values.map(value => ({ text: label(value), value }));
+    if (heads.has('class') && !key.values.length && !candidate) {
+      // With no declared bank, only a binding to this exact key or its
+      // backing slot can establish membership. Labels can be homonyms.
+      forms.push(...(boundAttributes.get(key.name) ?? []));
+      for (const identity of new Set([key.name, key.means].filter(Boolean))) {
+        forms.push(...(valuesBySlot.get(identity) ?? []), ...(boundValues.get(identity) ?? []));
+      }
+    }
     for (const alias of valuesBySlot.get(key.means) ?? []) {
       if (key.values.includes(alias.value)) forms.push(alias);
     }
@@ -495,6 +503,9 @@ function compile(facts) {
   }
   return {
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
+    nominalNumbers:new Map(facts('w.lang.en.number').filter(w =>
+      ['cardinal','ordinal','group'].includes(one(w,'kind')) && /^\d+$/u.test(one(w,'value')))
+      .map(w=>[phrase(one(w,'text')),{kind:one(w,'kind'),value:one(w,'value')}])),
     stativeVerbAliases:stativeVerbAliases(facts),
     languageFrames:languageFrames(facts),
     scopeGrammar:scopeGrammar(facts),

@@ -8,14 +8,14 @@
 @reader.diagram.spatial pro.reader.spatial tab=diagram family=node relation_key=node.position anchor_key=node.anchor named_act=place
 @reader.drawing.preservation pro.reader.preservation family=drawn attribute=drawn.keep concept=retain
 @reader.diagram.preservation pro.reader.preservation family=node attribute=node.keep concept=retain
-@reader.document.section.payload pro.reader.literal family=section attribute=section.content role=payload
-@reader.document.text.payload pro.reader.literal family=text attribute=text.content role=payload
+@reader.document.section.payload pro.reader.literal family=section attribute=section.content role=payload text=saying
+@reader.document.text.payload pro.reader.literal family=text attribute=text.content role=payload text=saying
 @reader.document.text.name pro.reader.literal family=text attribute=text.title role=name text=titled
 @reader.drawing.drawn.name pro.reader.literal family=drawn attribute=drawn.name role=name
 @reader.drawing.group.name pro.reader.literal family=group attribute=group.name role=name
-@reader.diagram.chart.label pro.reader.literal family=chart attribute=chart.label role=name
+@reader.diagram.chart.label pro.reader.literal family=chart attribute=chart.label role=name text=labeled text=labelled
 @reader.diagram.chart.title pro.reader.literal family=chart attribute=chart.title role=name text=titled
-@reader.diagram.node.label pro.reader.literal family=node attribute=node.label role=name
+@reader.diagram.node.label pro.reader.literal family=node attribute=node.label role=name text=labeled text=labelled text=marked
 @reader.diagram.page.title pro.reader.literal family=page attribute=page.title role=name text=titled
 @reader.calendar.calendar.name pro.reader.literal family=calendar attribute=calendar.name role=name
 @reader.calendar.meeting.title pro.reader.literal family=meeting attribute=meeting.title role=name text=titled
@@ -50,6 +50,7 @@
 @reader.question.count pro.reader.question_kind asks=count question=count
 @reader.question.amount pro.reader.question_kind asks=amount question=how_much
 @reader.scope.count pro.reader.scope_cue kind=question text=count question=count
+@reader.scope.universal pro.reader.scope_cue kind=universals text="every one of the" text="all of the" text="all the" text="each of the" text=every text=each text=all
 @reader.scope.auxiliary pro.reader.scope_cue kind=auxiliary text=had text=may text=might
 @reader.scope.modal pro.reader.scope_cue kind=modals text=shall
 @reader.scope.shall pro.reader.scope_cue kind=auxiliary text=shall
@@ -60,6 +61,9 @@
 @reader.scope.condition.positive pro.reader.scope_cue kind=condition polarity=positive text="provided that" text="as long as" text="only when"
 @reader.scope.condition.negative pro.reader.scope_cue kind=condition polarity=negative text=unless
 @reader.scope.courtesy pro.reader.scope_cue kind=courtesy text="if it is not too much trouble" text="if it's not too much trouble"
+@reader.scope.courtesy.optional pro.reader.scope_cue kind=courtesy text="if possible" text="if feasible" text="if you can" text="if you could"
+@reader.scope.courtesy.request pro.reader.scope_cue kind=courtesyLeads text="i wonder if you can" text="i wonder if you could" text="i was wondering if you can" text="i was wondering if you could"
+@reader.scope.alternative.exclusion pro.reader.scope_cue kind=negatives text="instead of" text="rather than"
 
 @reader.discussion.thanks w.lang.en.skip class=politeness text="I appreciate it" text="that would help"
 

@@ -43,3 +43,7 @@
 ## Text-only scope, names and composition
 - Added SOP-guided question and condition scope, named arguments, postfix measures, shared predicates and clause composition.
 - All 100 tests passed. On the same 1,000 random held-out requests, 36.9% had a reasonable proposal (previously 35.5%). See eval/THOUSAND-AUDIT.md for subgrades and losses.
+
+## Nominal qualifiers and scope recovery
+- Added target quantities, ordinals, universal/count readings, explicit names and learned adjective bindings. Scoped contrasts and courtesy preserve supported clauses.
+- Full tests passed. Paired 1,000-request L3 + L4 40.0% (previous 36.9%). See eval/THOUSAND-AUDIT.md and eval/EXPRESSIVITY.md.
