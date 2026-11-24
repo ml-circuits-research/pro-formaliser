@@ -91,6 +91,27 @@ test('uses local word pair evidence without crossing phrase boundaries', () => {
   assert.deepEqual(result.corrections[0].candidates, ['colleague', 'college']);
 });
 
+test('corrects dictionary words only when the phrase supports the replacement', () => {
+  const source = 'Please move the block too the left. The dog wants to play too.\n' +
+    'Please dray the red rectangle. The dray carried sacks of potatoes. Please dray, the red rectangle.';
+  const result = spellcheck(source);
+  assert.equal(result.text, 'Please move the block to the left. The dog wants to play too.\n' +
+    'Please draw the red rectangle. The dray carried sacks of potatoes. Please dray, the red rectangle.');
+  assert.deepEqual(result.corrections.map(change => [
+    source.slice(change.start, change.end), change.replacement, change.candidates[0],
+  ]), [['too', 'to', 'to'], ['dray', 'draw', 'draw']]);
+  assert.equal(spellcheck(source, { context: null }).text, source);
+  assert.equal(spellcheck(source, { knownWords: ['too', 'dray'] }).text, source);
+});
+
+test('keeps attested words outside the dictionary, including names and informal usage', () => {
+  const source = 'Reposition the hatless woman. Set Calibri at 36 points. ' +
+    'That is enough thx. Actually nvm.';
+  const result = spellcheck(source);
+  assert.equal(result.text, source);
+  assert.deepEqual(result.corrections, []);
+});
+
 test('protects a name only with matching canonical evidence in distinct utterances', () => {
   const target = name => `@t w.request.target request=$r family=page mode=existing name="${name}"`;
   const rows = [

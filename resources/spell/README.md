@@ -17,15 +17,23 @@ times the weight of an arbitrary one-letter edit. A candidate must score at
 least three times its runner-up to be applied. The model does not use
 WebMeet examples when only these two resources are installed.
 
-To add WebMeet-specific context, run `node tools/train-spelling.mjs` with
-the pinned WebMeet dataset checkout available. This optional command
-uses only the training partition to count adjacent dictionary words
-and writes `.cache/spell/context.json`. Spelling then uses the cached
-counts to re-rank candidates from their immediate neighbors. The
-cache also protects out-of-dictionary forms that match an entire
-grounded target name, sort, ID, or constraint value in at least
-three distinct training utterances and in a majority of the distinct
-utterances containing the word. Repeated erroneous annotations can
-still protect a misspelling. Compare both
-ranking modes with `node eval/spelling.mjs` and
-`node eval/spelling.mjs --no-context`.
+To add WebMeet context, run `node tools/train-spelling.mjs` with the pinned
+WebMeet dataset checkout available. Training counts words, pairs, and
+three-word phrases in the training partition and writes
+`.cache/spell/context.json`. Spelling uses local phrase evidence to re-rank
+misspellings and preserve attested forms missing from the dictionary. It
+changes a dictionary word only when both neighboring words supply strong
+evidence for a one-edit alternative. A title-case word in that position
+is preserved as a possible name.
+
+The cache also protects out-of-dictionary forms that match an entire
+grounded target name, sort, ID, or constraint value in at least three
+distinct training utterances and in a majority of the distinct utterances
+containing the word. Repeated erroneous annotations can still protect a
+misspelling.
+
+Run `node eval/spelling.mjs` for the original mixed single-edit benchmark,
+a separate dictionary-valid edit benchmark, and changes to the original
+held-out text. Use `--all-changes` to list every change and
+`--legacy-context` to compare the previous pair-only ranking on the same
+held-out sample.

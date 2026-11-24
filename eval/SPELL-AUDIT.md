@@ -35,3 +35,16 @@ I reviewed 24 sampled changes from the final spelling run against their original
 | 22 | `difffer` → `differ` | `correct_repair` | “Differ” is the verb for comparing the rebuilt row with the saved row. |
 | 23 | `widde` → `wide` | `correct_repair` | “Wide” describes the head, and removing the repeated letter fits that phrase. |
 | 24 | `rightt` → `right` | `correct_repair` | “To the right” gives the requested direction of the arrow. |
+
+## Phrase model follow-up
+
+Replaying these same 24 cases with the phrase model yielded 18 correct repairs
+and six unchanged tokens. The unchanged tokens include all five cases judged
+harmful above and one previously correct repair, `grup` → `group`. The repair
+`colur` → `colour` also fits the request.
+
+The matched sample only covers changes made by the earlier model. Reviewing
+the 11 new or different replacements on the original held-out rows found
+nine plausible repairs, one ambiguous replacement (`rof` → `row` in “add a
+rof”), and one harmful replacement (`ink` → `in` in “bodl the Pack label
+and ink the words navy”).

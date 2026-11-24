@@ -41,12 +41,55 @@ function contextualRank(matches, neighbors, context) {
     const observed = pairs[first + ' ' + second] ?? 0;
     return (observed + 5) / (expected + 5);
   }
-  return matches.map(({ word, score }) => {
+  return matches.map(match => {
+    const { word, score } = match;
     const [left, right] = neighbors;
     const leftWeight = left ? association(left, word) : 1;
     const rightWeight = right ? association(word, right) : 1;
-    return { word, score: score * Math.sqrt(leftWeight * rightWeight) };
+    const evidence = context.allPairs && context.triples ? phraseEvidence(word, neighbors, context) : 0;
+    return { ...match, score: score * Math.sqrt(leftWeight * rightWeight) * (1 + evidence) ** 1.3 };
   }).sort((a, b) => b.score - a.score);
+}
+
+function phraseEvidence(word, neighbors, context) {
+  const [left, right] = neighbors;
+  const before = left ? context.allPairs[left + ' ' + word] ?? 0 : 0;
+  const after = right ? context.allPairs[word + ' ' + right] ?? 0 : 0;
+  const exact = left && right ? context.triples[left + ' ' + word + ' ' + right] ?? 0 : 0;
+  return left && right ? exact + Math.min(before, after) / 4 : before + after;
+}
+
+function observedCount(counts, word) {
+  return Object.hasOwn(counts, word) ? counts[word] : 0;
+}
+
+function realWordRank(matches, original, neighbors, context) {
+  const evidence = phraseEvidence(original, neighbors, context);
+  const prevalence = observedCount(context.wordCounts, original);
+  const ranked = matches.map(match => ({
+    word: match.word,
+    score: phraseEvidence(match.word, neighbors, context) * Math.sqrt(match.weight),
+  })).filter(match => match.score > 0).sort((a, b) => b.score - a.score);
+  // A dictionary entry carries a strong prior that it was typed as intended.
+  if (ranked[0]?.score >= 15 * (evidence + 1) * (1 + Math.sqrt(prevalence / 12))) return ranked;
+  return [];
+}
+
+function preservesUnknown(original, observed, matches, neighbors, context) {
+  const lower = original.toLowerCase();
+  const evidence = neighbors ? phraseEvidence(lower, neighbors, context) : 0;
+  const alternative = neighbors ? phraseEvidence(matches[0].word, neighbors, context) : 0;
+  // Corpus and general usage both supply evidence for forms that the
+  // dictionary omits. Let a well-supported replacement overcome that prior.
+  const prevalence = observedCount(context.wordCounts, lower);
+  const candidatePrevalence = observedCount(context.wordCounts, matches[0].word);
+  if (observed < 50 && matches[0].weight > 1 && candidatePrevalence > 15 * prevalence) return false;
+  if (evidence >= 3 && alternative < 6 * evidence) return true;
+  if (prevalence >= 8 && candidatePrevalence < 200 * prevalence && alternative < 12) return true;
+  if (observed >= 50 && alternative < 12) return true;
+  if (prevalence >= 8 && !neighbors?.[1] && candidatePrevalence < 4000 * prevalence) return true;
+  if (prevalence >= 2 && candidatePrevalence < 20 && alternative < 2) return true;
+  return false;
 }
 
 export function spellcheckTokens(text) {
@@ -55,11 +98,14 @@ export function spellcheckTokens(text) {
 }
 
 /**
- * Correct unknown words when the leading one-edit candidate clears the
- * runner-up margin. Offsets refer to the original text and use UTF-16 indexing.
+ * Correct a word when the leading one-edit candidate clears the
+ * runner-up margin and has sufficient evidence. Offsets into the original
+ * text use UTF-16 indexing.
  */
 export function spellcheck(text, { knownWords = [], context = loadSpellingContext() } = {}) {
-  const protectedWords = new Set(context?.protectedWords);
+  const supplied = [...knownWords].map(word => word.toLowerCase());
+  const protectedWords = new Set([...(context?.protectedWords ?? []), ...supplied]);
+  const contextual = Boolean(context?.allPairs && context?.triples && context?.wordCounts);
   const tokens = spellcheckTokens(text).filter(([word]) => !protectedWords.has(word.toLowerCase()));
   const words = [...new Set(tokens.map(([token]) => token.toLowerCase()))];
   const corrections = [];
@@ -69,12 +115,12 @@ export function spellcheck(text, { knownWords = [], context = loadSpellingContex
   if (!existsSync(SPELL_DICTIONARY) || !existsSync(frequencies)) {
     throw new Error('English spelling resources missing. Run tools/setup.');
   }
-  const extras = [...new Set([...loadWorlds().knownWords, ...knownWords]
+  const extras = [...new Set([...loadWorlds().knownWords, ...supplied]
     .map(word => word.toLowerCase())
     .filter(word => /^[a-z]+$/.test(word)))];
   const result = spawnSync(swipl, ['-q', '-f', program, '--', SPELL_DICTIONARY, frequencies], {
     encoding: 'utf8',
-    input: JSON.stringify({ words, knownWords: extras }),
+    input: JSON.stringify({ words, knownWords: extras, contextual }),
     maxBuffer: 16 * 1024 * 1024,
   });
   if (result.error) throw result.error;
@@ -97,9 +143,20 @@ export function spellcheck(text, { knownWords = [], context = loadSpellingContex
   let cursor = 0;
   for (const { 0: original, index: start } of tokens) {
     const lower = original.toLowerCase();
-    const matches = context
-      ? contextualRank(suggestions.get(lower), neighbors.get(start), context)
-      : suggestions.get(lower);
+    const { known, count, matches: candidatesForWord } = suggestions.get(lower);
+    if (!candidatesForWord.length) continue;
+
+    const adjacent = neighbors.get(start);
+    let matches;
+    if (known) {
+      // Require both sides of the phrase and protect title-case words in
+      // that position, where the user may be referring to a specific name.
+      if (!contextual || !adjacent?.[0] || !adjacent?.[1] || original !== lower) continue;
+      matches = realWordRank(candidatesForWord, lower, adjacent, context);
+    } else {
+      matches = context ? contextualRank(candidatesForWord, adjacent, context) : candidatesForWord;
+      if (contextual && preservesUnknown(original, count, matches, adjacent, context)) continue;
+    }
     if (!matches.length) continue;
 
     const candidates = matches.map(({ word }) =>

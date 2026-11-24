@@ -3,7 +3,7 @@
 :- use_module(library(readutil)).
 :- use_module(library(apply)).
 :- use_module(library(lists)).
-:- dynamic known/1, candidate/1, frequency/2.
+:- dynamic known/1, candidate/1, extra/1, frequency/2.
 
 main :-
     set_stream(user_input, encoding(utf8)),
@@ -21,7 +21,7 @@ main :-
         load_frequencies(FrequencyStream),
         close(FrequencyStream)
     ),
-    maplist(suggestions, Request.words, Suggestions),
+    maplist(suggestions(Request.contextual), Request.words, Suggestions),
     json_write_dict(user_output, Suggestions).
 
 load_dictionary(Stream) :-
@@ -36,7 +36,7 @@ load_dictionary(Stream) :-
 
 load_extra(Word) :-
     atom_string(Atom, Word),
-    (known(Atom) -> true ; assertz(known(Atom))),
+    (known(Atom) -> true ; assertz(extra(Atom))),
     (candidate(Atom) -> true ; assertz(candidate(Atom))).
 
 load_frequencies(Stream) :-
@@ -45,32 +45,40 @@ load_frequencies(Stream) :-
     ->  true
     ;   split_string(Line, " ", "", [Word, Count]),
         atom_string(Atom, Word),
-        (   candidate(Atom)
-        ->  number_string(Frequency, Count),
-            assertz(frequency(Atom, Frequency))
-        ;   true
-        ),
+        number_string(Frequency, Count),
+        assertz(frequency(Atom, Frequency)),
         load_frequencies(Stream)
     ).
 
-suggestions(Word, Matches) :-
+suggestions(_, Word, _{known: true, count: 0, matches: []}) :-
     atom_string(Atom, Word),
-    (   known(Atom)
-    ->  Matches = []
-    ;   atom_codes(Atom, Codes),
-        findall(Key-Match, one_edit_match(Codes, Key, Match), Candidates),
-        sort(Candidates, Ranked),
-        maplist(scored_word, Ranked, Matches)
-    ).
+    extra(Atom),
+    !.
+suggestions(Contextual, Word, _{known: Known, count: Count, matches: Matches}) :-
+    atom_string(Atom, Word),
+    (known(Atom) -> Known = true ; Known = false),
+    word_count(Atom, Count),
+    (   Known == false
+    ;   Contextual == true
+    ),
+    !,
+    atom_codes(Atom, Codes),
+    findall(Key-Match, one_edit_match(Codes, Key, Match), Candidates),
+    sort(Candidates, Ranked),
+    maplist(scored_word, Ranked, Matches).
+suggestions(_, _, _{known: true, count: 0, matches: []}).
 
-scored_word(Key-Word, _{score: Score, word: Word}) :-
+word_count(Word, Count) :-
+    (frequency(Word, Count) -> true ; Count = 0).
+
+scored_word(Key-data(Word, Weight), _{score: Score, word: Word, weight: Weight}) :-
     Score is -Key.
 
-one_edit_match(Codes, Key, Match) :-
+one_edit_match(Codes, Key, data(Match, EditWeight)) :-
     one_edit(Codes, Edited, EditWeight),
     atom_codes(Match, Edited),
     candidate(Match),
-    (frequency(Match, Count) -> true ; Count = 0),
+    word_count(Match, Count),
     Key is -(Count + 1) * EditWeight.
 
 ascii_letter(Code) :-
