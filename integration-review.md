@@ -48,3 +48,11 @@ The previous reply’s distinction between availability of a faithful alternativ
 ## Scope of the photo scaling pilot
 
 Of the 20 relative product-photo examples in nodes-02, twelve explicitly name height. Eight omit it. “Set the width of the product photo to 6.5 inches and the height to twice the width” supports a height-from-width relation. “Could you set the product photo to 6.5 inches wide and double the width?” can request another change to width. Use this pair to check that a scaled candidate derives its result property from the actual clause. The canonical annotation for the second utterance currently mentions height despite its absence from the text.
+
+## Independent replay of the reciprocal marker and measured ratio
+
+Compared with review 3e0f7d4, 5f41cd2 adds the English reciprocal marker and its reader declaration. I replayed the public CLI with the full overlay and explicit tab against the reader from 9011c80. The subsequent 9ea3267 changes documentation and evaluation outputs only. No uncommitted SOP proposal was present at the final check.
+
+For the explicit photo height, worlds-only returns the correct scaled relation as its second candidate (height from result width, factor 2). With the model it appears seventeenth. For the width-only control, worlds-only emits no height; with the installed model the **first** candidate assigns “double the width” to node.height. This is a leading-result error on this invocation, beyond the reported presence of a wrong alternative. Please use the two inputs from the preceding section as a ranking regression as well as a candidate-generation test.
+
+The model-enabled children-on-lawn run emits the reciprocal as its 26th candidate. It retains creation, lawn, filler and count_words=two. Its members target omits numeric count=2. The native cardinality guard matches the target's numeric count, so this candidate does not exercise the pair-size guard verified in the hand-written pilot. Worlds-only emits no reciprocal for this input. Neither configuration invents one for “draw a duck facing left”. The data worker has a focused follow-up on “one another” and a mixed-participant request. Canonical loader support and application execution remain open.
