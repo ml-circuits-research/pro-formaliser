@@ -64,18 +64,22 @@ candidate(Q, score(2, Rank, Support), _{sop:Sop, source:alignment, support:Suppo
     nth0(I, Q.transfers, T), Rank is -I, Support = T.support, Sop = T.sop, Unread = T.unread.
 candidate(Q, score(Tier, Score, 0), Candidate) :-
     member([Start,End,["act",Act,Mood,N],ActPrior], Q.actHits),
+    request_window(Q,Start-End,Act,WindowStart-WindowEnd,Intent,Question),
+    Scoped = Q.put(scopeEnd,WindowEnd),
     span(Q.text, Start, End, Predicate), encode(Act, A), encode(Predicate, P),
     ( Mood == "" -> M = "" ; format(string(M), ' mood=~s', [Mood]) ),
-    format(string(Req), '@r1 w.request.request act=~s~s predicate=~s', [A,M,P]),
+    ( Question == "" -> Query = "" ; format(string(Query),' question=~s',[Question]) ),
+    format(string(Req), '@r1 w.request.request act=~s~s predicate=~s~s', [A,M,P,Query]),
     ( member([S,E,["target",Licence,Family,Declared,Sort,K],_], Q.targetHits),
       (Licence == "*" -> true ; Licence == Act),
+      S >= WindowStart, E =< WindowEnd,
       target_mode(Declared,Act,Mode),
       span(Q.text, S, E, Surface),
       target_determiner(Q,Act,Family,S,Start-End,DetStart-Det),
       direct_target(Q, Act, Start-End, S-E, DetStart),
       target(Family, Mode, Sort, Surface, Det, T),
-      attached_roles(Q, Act, Family, Mode, E, Attached, AttachmentBounds, Blocked, AttachmentFit, FirstConstraint),
-      constraint_wires(Q, Act, Family, Mode, Start-End, S-E, Blocked, FirstConstraint, More, Covered, Tier),
+      attached_roles(Scoped, Act, Family, Mode, E, Attached, AttachmentBounds, Blocked, AttachmentFit, FirstConstraint),
+      constraint_wires(Q, Act, Family, Mode, Intent, WindowStart-WindowEnd, Start-End, S-E, Blocked, FirstConstraint, More, Covered, Tier),
       role_fit(Q, Act, Start-End, Mode, Det, E, Covered, RoleFit),
       determiner_bounds(Q, DetStart, S, Det, DetBounds),
       append([Start-End,S-E|AttachmentBounds], Covered, BoundEvidence),
@@ -84,9 +88,9 @@ candidate(Q, score(Tier, Score, 0), Candidate) :-
       length(More, Evidence), Gap is max(0,max(S-End,Start-E)),
       scope_fit(Q.roleScopes,Act,Start,End,S,E,ScopeFit),
       Extra is 5 + Evidence + RoleFit + AttachmentFit + ScopeFit + log(1+K)/2 - log(1+Gap)/2
-    ; direct_reference(Q,Act,End,RS-RE),
+    ; direct_reference(Q,Act,End,RS-RE), RE =< WindowEnd,
       format(string(ReferenceRequest),'~s refers=thing',[Req]),
-      attached_roles(Q,Act,none,"existing",RE,Attached,Used,_,Fit,_),
+      attached_roles(Scoped,Act,none,"existing",RE,Attached,Used,_,Fit,_),
       Bounds = [Start-End,RS-RE|Used], Wires = [ReferenceRequest|Attached], Extra is 4 + Fit, Tier=1
     ; Bounds = [Start-End], Wires = [Req], Extra = 0, Tier=1 ),
     sort(Bounds, Sorted), string_length(Q.text, Length),
@@ -99,14 +103,22 @@ candidate(Q, score(Tier, Score, 0), Candidate) :-
     -> Candidate=Base.put(binding,[Start,End,Act,S,E,Family]) ; Candidate=Base ),
     Score is 12*Coverage + Extra + ActPrior + log(1+N) + min(12,End-Start)/4 - Start/3.
 
-constraint_wires(Q, Act, Family, Mode, PS-PE, TS-TE, Blocked, First, Wires, Bounds, Tier) :-
+request_window(Q,S-E,Act,A-B,Intent,Question) :-
+    ( get_dict(scopes,Q,Scopes) ->
+        member([A,B,Intent,Question],Scopes), S >= A, E =< B,
+        ( Intent == "question" -> Act == "ask" ; Intent == "removal" -> Act == "remove" ; true )
+    ; A=0, string_length(Q.text,B), Intent="action", Question="" ).
+
+constraint_wires(Q, Act, Family, Mode, Intent, A-B, PS-PE, TS-TE, Blocked, First, Wires, Bounds, Tier) :-
     ( Q.allowConstraints == true ->
       findall(priority(Len,N)-hit(S,E,PhaseBody),
               ( member([S,E,["constraint",Licence,Family,Body,N],_], Q.constraintHits),
                 (Licence == "*" -> true ; Licence == Act),
+                S >= A, E =< B,
                 (S >= PE ; E =< PS), (S >= TE ; E =< TS),
-                \+ (member(A-B,Blocked), S < B, E > A),
-                ( is_list(Body) -> S >= TE, PhaseBody=Body
+                \+ (member(L-R,Blocked), S < R, E > L),
+                ( is_list(Body) -> (Intent == "action" ; Intent == "proposal"), S >= TE, PhaseBody=Body
+                ; (Intent == "question" ; Intent == "removal") -> set_phase(Body,"selector",Phased), PhaseBody=[Phased]
                 ; constraint_phase(Q, Act, Family, Mode, TS-TE, S-E, Body, Phased), PhaseBody=[Phased] ),
                 Len is E-S ), Records),
       sort(Records, Sorted), reverse(Sorted, Ranked),

@@ -7,6 +7,7 @@ import { clausePrefixes, composeParts, coordinationActs, createPreservation, seq
 import { tokens } from '../src/lexicon.mjs';
 import { parse, validate } from '../src/schema.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
+import { createReader } from '../src/runtime.mjs';
 
 const joiners = {and:'coordination',then:'sequence',also:'addition',but:'contrast',',':'list-or-clause',';':'clause'};
 const acts = new Set(['move','remove','paint','create','leave','switch off']);
@@ -178,4 +179,55 @@ test('weak connectors require independent positive predicates, even with noisy l
     'Please, move the house','could you erase the circle',
   ]);
   assert.deepEqual(split('save and undo',options),['save','undo']);
+});
+
+test('shares only the written creation predicate across explicit list items', async t => {
+  const cache = fileURLToPath(new URL('../.cache/',import.meta.url));
+  const directory = mkdtempSync(join(cache,'enumeration-test-'));
+  t.after(()=>rmSync(directory,{recursive:true,force:true}));
+  const file = join(directory,'overlay.sop');
+  writeFileSync(file,`
+@fixture.sprocket pro.reader.target family=fixture tab=workbench sort=sprocket text=sprocket act=make act=remove
+@fixture.valve pro.reader.target family=fixture tab=workbench sort=valve text=valve act=make act=remove
+@fixture.housing pro.reader.target family=fixture tab=workbench sort=housing text=housing act=make act=remove
+@fixture.finish w.request.key tab=workbench family=fixture name=fixture.finish head=class value=frosted value=polished value=bare
+`);
+  const reader = createReader(undefined,loadWorlds({paths:[file]}));
+  t.after(()=>reader.close());
+  const forms = [
+    'next, create a frosted sprocket, a polished valve, and a bare housing',
+    'create a frosted sprocket and a polished valve, then delete the housing',
+  ];
+  const expected = [
+    [['make','sprocket','frosted'],['make','valve','polished'],['make','housing','bare']],
+    [['make','sprocket','frosted'],['make','valve','polished'],['remove','housing',undefined]],
+  ];
+  function semanticReadings(sop) {
+    const wires = parse(sop);
+    return wires.filter(w=>w.type==='w.request.request').map(r=>{
+      const owned=wires.filter(w=>w.attrs.request?.[0]==='$'+r.id);
+      const target=owned.find(w=>w.type==='w.request.target');
+      const value=owned.find(w=>w.attrs.attribute?.[0]==='fixture.finish' ||
+        w.attrs.attribute?.[0]==='"fixture.finish"')?.attrs.value?.[0];
+      return [r.attrs.act[0],target?.attrs.sort?.[0],value?.replace(/^"|"$/g,'')];
+    });
+  }
+  for (const [index,text] of forms.entries()) {
+    const proposal = await reader.propose(text);
+    const matching = proposal.candidates.find(c=>JSON.stringify(semanticReadings(c.sop))===JSON.stringify(expected[index]));
+    assert.ok(matching, text);
+    const requests = parse(matching.sop).filter(w=>w.type==='w.request.request');
+    assert.deepEqual(requests[0].attrs.predicate,['create']);
+    assert.equal(requests[1].attrs.predicate,undefined);
+    assert.equal(JSON.parse(requests[1].attrs.words[0]),'a polished valve');
+  }
+  for (const text of [
+    'create a frosted sprocket near a valve and a bare housing',
+    'create a frosted and polished sprocket',
+    'create a sprocket called "a valve and a housing"',
+    'create a frosted sprocket, a polished valve, and near the valve, a bare housing',
+  ]) {
+    const proposal = await reader.propose(text);
+    assert.ok(proposal.candidates.every(candidate=>candidate.source!=='enumeration'),text);
+  }
 });

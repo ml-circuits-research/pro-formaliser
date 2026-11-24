@@ -1,6 +1,12 @@
 # WebMeet held-out benchmark
 
-[1,000-request L0–L4 audit after numeric-pair and punctuation changes](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
+[1,000-request L0–L4 audit after scope, named-target and composition changes](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
+
+## Scope, named targets and composition
+
+The [paired 1,000-request audit](THOUSAND-AUDIT.md) scores every request across its proposals. For the full 1,915-row text-only holdout, 624 proposal sets contained the reference semantic wire set (previously 626). The first-choice checker rejected 253 of 1,881 nonempty first proposals, compared with 247 of 1,912 previously. This checker uses the reference tab. The upstream check and semantic review measure different outcomes.
+
+Failures include a negation suppressing the actionable clause that follows it, a named entity surviving in one clause but losing its binding in the next, and a value attaching to a selector instead of a requested result. The same-target guard handles declared scalar values. Statements about another object's state and coordinated conditions need further work.
 
 ## Domain-neutral proposals
 

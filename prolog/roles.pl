@@ -1,4 +1,4 @@
-:- module(roles, [index_roles/3, reset_role_cache/0, direct_target/5, direct_reference/4, target_determiner/6, attached_roles/10, constraint_phase/8, role_fit/8]).
+:- module(roles, [index_roles/3, reset_role_cache/0, direct_target/5, direct_reference/4, target_determiner/6, attached_roles/10, constraint_phase/8, set_phase/3, role_fit/8]).
 :- use_module(library(http/json)).
 :- use_module(library(ordsets)).
 :- use_module(library(pcre)).
@@ -75,6 +75,7 @@ attached_roles(Q, Act, Family, Mode, End, Wires, Bounds, Blocked, Bonus, FirstCo
 candidate_attachment(Q,Act,Family,Mode,End,attachment(Wires,Bounds,Blocked,Bonus,FirstConstraint)) :-
     ( Q.allowConstraints == true ->
       findall(M-N, (marker(Q,Act,M-N,_,_,_), M >= End,
+                     scope_limit(Q,Limit), N =< Limit,
                      \+ tuple_marker(Q,Act,Family,M-N)), Raw),
       sort(Raw, Markers),
       % Keep the preferred reading and one alternate per genuinely
@@ -86,13 +87,16 @@ candidate_attachment(Q,Act,Family,Mode,End,attachment(Wires,Bounds,Blocked,Bonus
       attachments(Markers,Q,Act,Mode,Override,Wires,Bounds,Blocked,Bonus,1,FirstConstraint)
     ; Wires=[], Bounds=[], Blocked=[], Bonus=0, FirstConstraint=1 ).
 
+scope_limit(Q,Limit) :-
+    ( get_dict(scopeEnd,Q,Limit) -> true ; string_length(Q.text,Limit) ).
+
 tuple_marker(Q, Act, Family, M-N) :-
     member([S,E,["constraint",Act,Family,Bodies,_],_], Q.constraintHits),
     is_list(Bodies), S =< M, E >= N.
 
 attachments([], _, _, _, _, [], [], [], 0, I, I).
 attachments([M-N|Rest], Q, Act, Mode, Override, Wires, Bounds, Blocked, Bonus, I, Count) :-
-    ( Rest = [Limit-_|_] -> true ; string_length(Q.text, Limit) ),
+    ( Rest = [Limit-_|_] -> true ; scope_limit(Q,Limit) ),
     attachment(Q,Act,Mode,M-N,Limit,Override,Here,Used,Block,Fit,I,Next),
     append(Here,Later,Wires), append(Used,LaterBounds,Bounds), append(Block,LaterBlocked,Blocked),
     attachments(Rest,Q,Act,Mode,Override,Later,LaterBounds,LaterBlocked,TailFit,Next,Count),
@@ -101,7 +105,8 @@ attachments([M-N|Rest], Q, Act, Mode, Override, Wires, Bounds, Blocked, Bonus, I
 attachment(Q, Act, Mode, M-N, Limit, Override, Wires, Used, Blocked, Fit, I, Next) :-
     ( once((marker(Q,Act,M-N,_,Relation,Specific), Relation \== "")),
       nominal_anchor(Q,N,Limit,Start,End) ->
-      spatial_phase(Mode,Specific,M-N,Override,Phase,Fit),
+      ( Act == "ask" -> Override == none, Phase = "selector", Fit = 2
+      ; spatial_phase(Mode,Specific,M-N,Override,Phase,Fit) ),
       text_span(Q.text,Start,End,Anchor), text_span(Q.text,M,End,Words),
       atom_json_term(EncodedAnchor,Anchor,[as(string)]), atom_json_term(EncodedWords,Words,[as(string)]),
       atom_json_term(EncodedRelation,Relation,[as(string)]),
@@ -167,6 +172,9 @@ constraint_phase(Q, Act, Family, Mode, TS-TE, S-E, Body, PhaseBody) :-
       next_token(Q,E,TS,Next), once(modifier_scope(Q,Act,Family,Next,TS)),
       ( Mode == "new" -> Phase = "result" ; Phase = "selector" )
     ; S >= TE, Phase = "result" ),
+    set_phase(Body,Phase,PhaseBody).
+
+set_phase(Body,Phase,PhaseBody) :-
     % Ignore any appearance of phase= within a quoted attribute value.
     Pattern = "^(?<prefix>(?:[^\" ]|\"(?:[^\"\\\\]|\\\\.)*\"| (?!phase=))*) phase=(?:selector|result)(?<suffix>.*)$",
     ( re_matchsub(Pattern,Body,Parts,[]) ->

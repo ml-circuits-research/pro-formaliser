@@ -1,16 +1,22 @@
+import { namedTargetReading } from './target-names.mjs';
 import { catalogIssues } from './catalog.mjs';
 import { frameSupport } from './language-frames.mjs';
 import { contextScores } from './context.mjs';
 import { prologWorker } from './prolog-worker.mjs';
+import { requestScope } from './request-scope.mjs';
+import { guardedPropertyReadings } from './guarded-properties.mjs';
 import { createRelationKeyResolver } from './relation-keys.mjs';
 import { signatures } from './signatures.mjs';
 import { tokens } from './lexicon.mjs';
 import { literalRoleCandidates, maskQuoted, quotedSpans } from './literal-roles.mjs';
-import { clausePrefixes, composeParts, coordinationActs, createPreservation, sequenceParts } from './composition.mjs';
+import { namedArgumentCandidates } from './named-arguments.mjs';
+import { clausePrefixes, composableWires, composeParts, coordinationActs, createPreservation, enumeratedParts, sequenceParts } from './composition.mjs';
 import { constraintGrounder, evidenceInText, valueResolver } from './grounding.mjs';
 import { createTransfer } from './transfer.mjs';
 import { loadWorlds } from './worlds.mjs';
 import { parse, validate } from './schema.mjs';
+
+const conditionalScope = Symbol('conditional scope');
 
 function add(map, key, item) {
   if (!map.has(key)) map.set(key, []);
@@ -64,7 +70,6 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const quotes = quotedSpans(text);
     const scopeText = maskQuoted(text,quotes);
     const outside = scopeText === text ? null : new Set(tokens(scopeText).map(t => t[2]));
-    let blocksResult = false;
     const scores = contextScores(text, model.context ?? {});
     for (const anchor of new Set([undefined,...ts.map(t => t[0])])) {
       for (const {min,max,template} of buckets.get(anchor) ?? []) {
@@ -81,7 +86,6 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
           for (const tuple of worlds.tuples(words)) properties.push([ts[i][2],ts[j][3],tuple]);
         }
         if (Object.hasOwn(worlds.determiners,words)) determiners.push([ts[i][2],ts[j][3],worlds.determiners[words]]);
-        if (worlds.negatives.has(words) || ['contrast','sequence','clause'].includes(worlds.joiners[words])) blocksResult = true;
         const learned = Object.hasOwn(model.lexicon ?? {},words) ? model.lexicon[words] : [];
         const local = new Set(learned.map(e => JSON.stringify(e.slice(0,-1))));
         const declared = worlds.lookup(words);
@@ -101,24 +105,29 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
       }
     }
-    // A positive result learned on a single request has no scope across
-    // negation or a clause boundary. Keep unmatched expressions as unread.
-    const allowConstraints = !blocksResult && !/\b(?:not|never|no|without|except|avoid|neither|nor|then|instead|but)\b|n['’]t\b|[;!?]|\.\s/iu.test(scopeText);
+    const scope = requestScope(text,scopeText,worlds,hits);
+    hits.push(...scope.intentHits);
+    const allowConstraints = scope.windows.length > 0;
     const exact = examples.get(text) ?? [];
     const transfers = exact.length ? [] : transfer(text);
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
-    const request = {text,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
+      if (key && scope.restricted && !scope.permits(parse(answer.sop))) return;
       if (key && !seen.has(key)) { seen.add(key); candidates.push(answer); }
     }
+    for (const candidate of namedArgumentCandidates(text,ts,quotes,worlds,sequenceOptions)) retain(candidate);
     for (const candidate of literalRoleCandidates(text,ts,quotes,worlds)) retain(candidate);
     const contextualTargets = [];
     const response = await worker.request(request);
     for (const answer of response.candidates) {
       if (answer.source !== 'lexicon') { retain(answer); continue; }
-      retain({...answer,sop:resolveRelationKeys(answer.sop)});
+      const lexical = {...answer,sop:resolveRelationKeys(answer.sop)};
+      retain(lexical);
+      const named = namedTargetReading(text,lexical,worlds);
+      if (named) retain(named);
       for (const sop of resolveRelationKeys.targetlessAlternatives(answer.sop)) {
         contextualTargets.push({...answer,sop});
       }
@@ -131,7 +140,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const candidate of preservation.readings(text,candidates)) retain(candidate);
       candidates.unshift(...candidates.splice(offset));
     }
-    if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[]};
+    if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
     if (response.proofs.length) {
       for (const c of candidates) {
         const proof=frameSupport(parse(c.sop),response.proofs,ts,text,worlds);
@@ -146,57 +155,102 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (let j=0;j<candidates.length;j++) if (candidates[j].source==='lexicon') candidates[j]=lexical[i++];
     }
     const [best,...alternatives] = candidates;
-    return {...best,status:best.status ?? (best.source === 'lexicon' || best.unread ? 'partial' : 'matched'),alternatives};
+    return {...best,status:best.status ?? (best.source === 'lexicon' || best.unread ? 'partial' : 'matched'),alternatives,[conditionalScope]:scope.preventsSplitting};
   }
-  async function formalise(text) {
-    const base = await read(text);
-    const parts = sequenceParts(text,tokens(text),worlds.joiners,sequenceOptions);
-    if (!parts.length) return base;
-    // A learned single-request template can silently swallow a second
-    // imperative. Keep a complete existing multi-request graph intact.
-    if (base.status==='matched' && parse(base.sop).filter(w=>w.type==='w.request.request').length>=parts.length) return base;
-    const results = [];
-    for (const part of parts) {
-      const result = await read(part);
-      if (!result.sop) return base;
-      results.push(result);
-    }
-    // Keep alternative clause interpretations without enumerating the full
-    // Cartesian product. Original clause order breaks equal-cost ties.
+  function combine(text, parts, results, enumeration) {
     let beam = [{cost:0,clauses:[]}];
-    for (const {alternatives,...first} of results) {
-      const next = beam.flatMap(prefix => [first,...alternatives].map((clause,rank) =>
+    const coverageChoice = [];
+    for (const [index,result] of results.entries()) {
+      const {alternatives,[conditionalScope]:_conditional,...first} = result;
+      const item = enumeration && {
+        act:enumeration.act,predicate:enumeration.predicate,targets:enumeration.items[index],
+      };
+      // Discard non-composable readings before they can occupy the beam.
+      // Original rank and clause order still break ties between usable readings.
+      const options = [first,...alternatives].flatMap((clause,rank)=>{
+        const wires = composableWires(clause,item);
+        if (!wires) return [];
+        const unread = wires.filter(w=>w.type==='w.request.unread')
+          .flatMap(w=>w.attrs.text ?? [])
+          .reduce((sum,raw)=>sum+tokens(raw.startsWith('"') ? JSON.parse(raw) : raw).length,0);
+        return [{clause,rank,unread}];
+      });
+      if (!options.length) return [];
+      coverageChoice.push(options.reduce((a,b)=>b.unread<a.unread ? b : a).clause);
+      const next = beam.flatMap(prefix => options.map(({clause,rank}) =>
         ({cost:prefix.cost+rank,clauses:[...prefix.clauses,clause]})));
       beam = next.sort((a,b)=>a.cost-b.cost).slice(0,12);
     }
     const readings = [];
     const seen = new Set();
-    function retain(candidate) {
-      const key = admissibleKey(text,candidate.sop);
-      if (key && !seen.has(key)) { seen.add(key); readings.push(candidate); }
-    }
-    for (const {clauses} of beam) {
-      const sop = composeParts(parts,clauses);
-      if (sop) retain({sop,source:'sequence',
+    // An independently complete reading of each clause can fall outside the
+    // rank-sum beam. Keep that combination too; validation and deduplication follow.
+    for (const {clauses} of [...beam,{clauses:coverageChoice}]) {
+      const sop = composeParts(parts,clauses,enumeration);
+      const key = admissibleKey(text,sop);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      readings.push({sop,source:enumeration?'enumeration':'sequence',
         status:clauses.some(c=>c.status==='partial' || c.source==='lexicon' || c.unread) ? 'partial' : 'matched',
         parts:parts.map((text,i)=>({text,source:clauses[i].source}))});
     }
+    return readings;
+  }
+  function mergeReadings(base, readings, preferBase) {
     if (!readings.length) return base;
     const {alternatives,...single} = base;
-    for (const candidate of [single,...alternatives]) retain(candidate);
-    if (base.status==='matched' && results.some(r=>r.status!=='matched')) {
-      // Partial clause evidence licenses an alternative but is weaker than
-      // the original complete construction.
-      const pos=readings.findIndex(r=>r.sop===base.sop);
-      if (pos>0) readings.unshift(...readings.splice(pos,1));
+    const ordered = preferBase ? [single,...readings,...alternatives] : [...readings,single,...alternatives];
+    const seen = new Set();
+    const [best,...rest] = ordered.filter(candidate => {
+      if (!candidate.sop) return false;
+      const key = JSON.stringify(signatures(parse(candidate.sop),true));
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return {...best,alternatives:rest};
+  }
+  const enumerationPlan = (text,ts = tokens(text)) =>
+    enumeratedParts(text,ts,worlds,{prefixes:sequenceOptions.prefixes,learned:model.lexicon});
+  async function readEnumeration(text, base, plan) {
+    if (!plan || base[conditionalScope]) return base;
+    const results = [];
+    for (const input of plan.inputs) results.push(await read(input));
+    const readings = combine(text,plan.parts,results,plan);
+    return mergeReadings(base,readings,base.status==='matched');
+  }
+  async function formalise(text) {
+    const base = await read(text);
+    if (base[conditionalScope]) {
+      const guarded = await guardedPropertyReadings(text,worlds,read);
+      return mergeReadings(base,guarded.filter(candidate=>admissibleKey(text,candidate.sop)),base.status==='matched');
     }
-    const [first,...rest] = readings;
-    return {...first,alternatives:rest};
+    const ts = tokens(text);
+    const parts = sequenceParts(text,ts,worlds.joiners,sequenceOptions);
+    if (!parts.length) return readEnumeration(text,base,enumerationPlan(text,ts));
+    const plans = parts.map(part=>enumerationPlan(part));
+    // A complete existing sequence can preserve dependencies that separate
+    // lexical reads do not currently resolve.
+    const complete = base.status==='matched' &&
+      parse(base.sop).filter(w=>w.type==='w.request.request').length>=parts.length;
+    // A matching request count does not establish that all arguments were bound.
+    const plain = [], results = [];
+    for (const [index,part] of parts.entries()) {
+      const ordinary = await read(part);
+      const result = await readEnumeration(part,ordinary,plans[index]);
+      if (!result.sop) return base;
+      plain.push(ordinary);
+      results.push(result);
+    }
+    const readings = combine(text,parts,results);
+    if (results.some((result,index)=>result!==plain[index])) readings.push(...combine(text,parts,plain));
+    return mergeReadings(base,readings,
+      complete || base.status==='matched' && results.some(r=>r.status!=='matched'));
   }
   return {
     async formalise(text) {
       const result = await formalise(text);
-      const {alternatives,...first} = result;
+      const {alternatives,[conditionalScope]:_conditional,...first} = result;
       const candidates = result.sop ? [first,...alternatives] : [];
       return {candidates,candidateCount:candidates.length,multipleInterpretations:candidates.length>1,
         ...(!candidates.length ? {unread:text} : {})};

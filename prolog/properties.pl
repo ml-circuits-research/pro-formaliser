@@ -20,7 +20,23 @@ property_hit(Text, [Start, KeyEnd, Property],
     End is KeyEnd + PrefixLength + Length,
     KeyLength is KeyEnd - Start,
     sub_string(Text, Start, KeyLength, _, KeyWords),
-    maplist(tuple_body(KeyWords), Property.keys, [First,Second], Bodies).
+    maplist(numeric_body(KeyWords), Property.keys, [First,Second], Bodies).
+
+property_hit(Text, [CueStart, End, Property],
+             [Start, End, ["constraint", "*", Family, Body, 0], 0]) :-
+    Property.kind == "postfix_number", !,
+    Family = Property.family,
+    property_outside_quotes(Text, CueStart),
+    sub_string(Text, 0, CueStart, _, Prefix),
+    % Anchor the complete number. Never take a suffix of a date, ID or decimal.
+    re_matchsub("(?:^|[ \\t(])(?<whole>(?<value>[+-]?[0-9]+(?:\\.[0-9]+)?)[ \\t]+)$", Prefix, Groups, []),
+    string_length(Groups.whole, Length), Start is CueStart - Length,
+    CueLength is End - CueStart, sub_string(Text,CueStart,CueLength,_,Cue),
+    numeric_body(Cue,Property.attribute,Groups.value,Base),
+    ( get_dict(unit,Property,Unit) ->
+        maplist(property_quote,[Unit,Groups.value],[EncodedUnit,Amount]),
+        format(string(Body),'~s unit=~s measure_words=~s',[Base,EncodedUnit,Amount])
+    ; Body=Base ).
 
 property_hit(Text, [Start, KeyEnd, Property],
              [Start, End, ["constraint", "*", Family, Body, 0], 0]) :-
@@ -49,7 +65,7 @@ tuple_values(Tail, Length, First, Second) :-
     re_matchsub(Pattern,Tail,Groups,[]),
     string_length(Groups.whole,Length), First=Groups.first, Second=Groups.second.
 
-tuple_body(KeyWords, Key, Value, Body) :-
+numeric_body(KeyWords, Key, Value, Body) :-
     maplist(property_quote, [Key, Value, KeyWords], [Attribute, Encoded, Cue]),
     format(string(Body), 'on=attribute attribute=~s value=~s operator=eq phase=result key_words=~s',
            [Attribute,Encoded,Cue]).

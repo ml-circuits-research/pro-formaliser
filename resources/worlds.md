@@ -165,6 +165,39 @@ Given a target-kind binding for “stamp”, the reader can interpret “Create
 a stamp marked Aurora containing ‘Copper, not brass.’” and keep the
 name and quoted payload in their respective keys.
 
+## Named arguments
+
+A `pro.reader.arguments` declaration binds two open span keys in one
+request family. Set the act, target mode, and separating phrase. Optional
+`prefix` phrases appear before the first name. Each argument defaults to
+the result phase, with `first_phase` and `second_phase` available for selectors.
+
+```sop
+@workbench.origin w.request.key tab=workbench family=shuttle name=shuttle.origin head=span
+@workbench.terminus w.request.key tab=workbench family=shuttle name=shuttle.terminus head=span
+@workbench.routing pro.reader.arguments tab=workbench family=shuttle act=route mode=existing first_key=shuttle.origin first_phase=selector second_key=shuttle.terminus prefix=from separator="in favor of"
+```
+
+With a declared `route` act and the verb “reroute”, this overlay reads
+“Reroute from West Annex in favor of Upper Terminal”. Quoting either
+name makes its boundary explicit even when that name contains the
+separator. Unquoted separator ambiguity can yield multiple proposals.
+
+A `pro.reader.spatial` binding may opt into named-target placement by
+specifying `named_act`. The family must license the act, which must
+provide a place-role marker resolving to a class value in the spatial
+relation key. The first name selects the existing target. The second
+name binds the anchor through the declared open `fill+span` anchor key.
+
+```sop
+@workbench.bearing w.request.key tab=workbench family=shuttle name=shuttle.bearing head=class value=left_of
+@workbench.landmark w.request.key tab=workbench family=shuttle name=shuttle.landmark head="fill+span"
+@workbench.spatial pro.reader.spatial tab=workbench family=shuttle relation_key=shuttle.bearing anchor_key=shuttle.landmark named_act=place
+```
+
+If `shuttle` licenses `place`, “Move West Annex to the left of Upper
+Terminal” produces a proposal with that named shuttle and anchor.
+
 ## Numeric pairs
 
 A `pro.reader.tuple` declaration assigns two ordered numeric result keys
@@ -182,3 +215,10 @@ With a grounded instrument target, “put the fluxometer at fixed offsets
 (-9.5, +10)” assigns the two values in declaration order. The reader
 accepts optional parentheses and leaves quoted numbers and numeric lists
 without a pair interpretation.
+
+Numeric measurement phrases can also use a native English cue with
+`on=attribute`, `takes=number`, an `attribute` property label and a
+`trail` after the number. An optional `unit` is copied only when that cue
+matches. For example, “17 pixels wide” binds the written number and unit to
+each independently licensed numeric width key. A world can use the same
+construction with its own property label and units.

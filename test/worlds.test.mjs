@@ -57,6 +57,7 @@ test('formalises new domain and key declarations from an overlay without retrain
 @finish_key w.request.key tab=workbench family=sample name=sample.finish head=class value=frosted means=sample_finish
 @width_key w.request.key tab=workbench family=sample name=sample.aperture head=number means=sample_aperture
 @width_slot core.slot of=w.workbench.sample key=aperture kind=number
+@aperture_cue w.lang.en.cue name=specimen.aperture on=attribute attribute=aperture takes=number trail="ticks open" unit=tick
 @width_word core.word text="lens opening" means=sample_aperture
 @title_key w.request.key tab=workbench family=sample name=sample.inscription head=span
 @calibrate k.actions.act name=calibrate about="check against a reference" role=thing
@@ -126,6 +127,10 @@ test('formalises new domain and key declarations from an overlay without retrain
     const typed = await reader.formalise('trim the scale on the fluxometer lens opening -19.36 inscription "Aurora Pair"');
     assert.match(typed.sop, /attribute="sample.aperture" value="-19.36"/);
     assert.match(typed.sop, /attribute="sample.inscription" value="Aurora Pair"/);
+    const measured = await reader.propose('trim the scale on the fluxometer 8.25 ticks open');
+    assert.ok(measured.candidates.some(c=>/attribute="sample.aperture" value="8.25".*unit="tick"/.test(c.sop)));
+    const id = await reader.propose('trim the scale on the fluxometer X8 ticks open');
+    assert.ok(id.candidates.every(c=>!c.sop.includes('sample.aperture')));
     const quoted = await reader.formalise('trim the scale on the fluxometer inscription "not now!"');
     assert.match(quoted.sop, /attribute="sample.inscription" value="not now!"/);
   } finally {

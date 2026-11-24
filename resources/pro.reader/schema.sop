@@ -1,5 +1,5 @@
 # Optional bindings between an application's declared kinds and w.request targets.
-@pro.reader core.module name=pro.reader version=1 exports=target exports=spatial exports=evidence_role exports=preservation exports=literal exports=tuple
+@pro.reader core.module name=pro.reader version=1 exports=target exports=spatial exports=evidence_role exports=preservation exports=literal exports=tuple exports=arguments exports=scope_cue exports=question_kind
 @pro.reader.target core.type of=pro.reader.target closed=true
 @pro.reader.target.of core.slot of=pro.reader.target key=of kind=atom
 @pro.reader.target.family core.slot of=pro.reader.target key=family kind=atom required=true
@@ -15,6 +15,7 @@
 @pro.reader.spatial.family core.slot of=pro.reader.spatial key=family kind=atom required=true
 @pro.reader.spatial.relation_key core.slot of=pro.reader.spatial key=relation_key kind=atom required=true
 @pro.reader.spatial.anchor_key core.slot of=pro.reader.spatial key=anchor_key kind=atom required=true
+@pro.reader.spatial.named_act core.slot of=pro.reader.spatial key=named_act kind=atom many=true
 
 @pro.reader.evidence_role core.type of=pro.reader.evidence_role closed=true
 @pro.reader.evidence_role.role core.slot of=pro.reader.evidence_role key=role kind=atom required=true
@@ -46,3 +47,28 @@
 @pro.reader.tuple.second_key core.slot of=pro.reader.tuple key=second_key kind=atom required=true
 @pro.reader.tuple.act core.slot of=pro.reader.tuple key=act kind=atom many=true required=true
 @pro.reader.tuple.text core.slot of=pro.reader.tuple key=text kind=string many=true required=true
+
+# Two named arguments with a declared separating phrase.
+@pro.reader.arguments core.type of=pro.reader.arguments closed=true
+@pro.reader.arguments.tab core.slot of=pro.reader.arguments key=tab kind=atom required=true
+@pro.reader.arguments.family core.slot of=pro.reader.arguments key=family kind=atom required=true
+@pro.reader.arguments.act core.slot of=pro.reader.arguments key=act kind=atom required=true
+@pro.reader.arguments.mode core.slot of=pro.reader.arguments key=mode enum=new enum=existing required=true
+@pro.reader.arguments.first_key core.slot of=pro.reader.arguments key=first_key kind=atom required=true
+@pro.reader.arguments.second_key core.slot of=pro.reader.arguments key=second_key kind=atom required=true
+@pro.reader.arguments.first_phase core.slot of=pro.reader.arguments key=first_phase enum=selector enum=result
+@pro.reader.arguments.second_phase core.slot of=pro.reader.arguments key=second_phase enum=selector enum=result
+@pro.reader.arguments.prefix core.slot of=pro.reader.arguments key=prefix kind=atom kind=string many=true
+@pro.reader.arguments.separator core.slot of=pro.reader.arguments key=separator kind=atom kind=string many=true required=true
+
+# Bridge the native interrogative semantics to a w.request question type.
+@pro.reader.question_kind core.type of=pro.reader.question_kind closed=true
+@pro.reader.question_kind.asks core.slot of=pro.reader.question_kind key=asks kind=atom required=true
+@pro.reader.question_kind.question core.slot of=pro.reader.question_kind key=question kind=atom required=true
+
+# English lexical cues that supplement the native interrogative grammar.
+@pro.reader.scope_cue core.type of=pro.reader.scope_cue closed=true
+@pro.reader.scope_cue.kind core.slot of=pro.reader.scope_cue key=kind enum=condition enum=question enum=auxiliary enum=modals enum=copulas enum=subjects enum=addressees enum=courtesy enum=negatives enum=proposals enum=rejections enum=removals enum=predicateNegators required=true
+@pro.reader.scope_cue.text core.slot of=pro.reader.scope_cue key=text kind=string many=true required=true
+@pro.reader.scope_cue.polarity core.slot of=pro.reader.scope_cue key=polarity enum=positive enum=negative
+@pro.reader.scope_cue.question core.slot of=pro.reader.scope_cue key=question kind=atom

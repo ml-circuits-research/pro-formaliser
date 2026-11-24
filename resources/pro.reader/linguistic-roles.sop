@@ -4,8 +4,8 @@
 @reader.value.result pro.reader.evidence_role role=value type=w.request.constraint slot=value phase=result
 
 # Role assignments for the supported example worlds.
-@reader.drawing.spatial pro.reader.spatial tab=drawing family=drawn relation_key=drawn.relation anchor_key=drawn.anchor
-@reader.diagram.spatial pro.reader.spatial tab=diagram family=node relation_key=node.position anchor_key=node.anchor
+@reader.drawing.spatial pro.reader.spatial tab=drawing family=drawn relation_key=drawn.relation anchor_key=drawn.anchor named_act=place
+@reader.diagram.spatial pro.reader.spatial tab=diagram family=node relation_key=node.position anchor_key=node.anchor named_act=place
 @reader.drawing.preservation pro.reader.preservation family=drawn attribute=drawn.keep concept=retain
 @reader.diagram.preservation pro.reader.preservation family=node attribute=node.keep concept=retain
 @reader.document.section.payload pro.reader.literal family=section attribute=section.content role=payload
@@ -22,9 +22,48 @@
 @reader.calendar.person.name pro.reader.literal family=person attribute=person.name role=name
 @reader.calendar.room.name pro.reader.literal family=room attribute=room.name role=name
 
+# Named arguments of a new connection. Either endpoint may be a quoted span.
+@reader.diagram.link.endpoints pro.reader.arguments tab=diagram family=link act=connect mode=new first_key=link.from second_key=link.to prefix=from separator=to
+
 # Ordered page coordinates.
 @reader.drawing.drawn.coordinates pro.reader.tuple tab=drawing family=drawn first_key=drawn.x second_key=drawn.y act=place act=make act=copy text=at text=to text="at coordinates"
 @reader.drawing.part.coordinates pro.reader.tuple tab=drawing family=part first_key=part.x second_key=part.y act=place act=make act=copy text=at text=to text="at coordinates"
 @reader.diagram.node.coordinates pro.reader.tuple tab=diagram family=node first_key=node.x second_key=node.y act=place act=make act=copy text=at text=to text="at coordinates"
 @reader.diagram.chart.coordinates pro.reader.tuple tab=diagram family=chart first_key=chart.x second_key=chart.y act=place act=make act=copy text=at text=to text="at coordinates"
 @reader.diagram.group.coordinates pro.reader.tuple tab=diagram family=group first_key=group.x second_key=group.y act=place act=make act=copy text=at text=to text="at coordinates"
+
+# Measured adjectives attach to compatible numeric properties in any loaded family.
+@reader.measure.width w.lang.en.cue name=reader.measure.width on=attribute attribute=width trail=wide takes=number priority=2
+@reader.measure.height w.lang.en.cue name=reader.measure.height on=attribute attribute=height trail=tall trail=high takes=number priority=2
+@reader.measure.width.pixel w.lang.en.cue name=reader.measure.width.pixel on=attribute attribute=width trail="pixel wide" trail="pixels wide" takes=number unit=pixel priority=2
+@reader.measure.height.pixel w.lang.en.cue name=reader.measure.height.pixel on=attribute attribute=height trail="pixel tall" trail="pixels tall" trail="pixel high" trail="pixels high" takes=number unit=pixel priority=2
+
+# w.lang.en interrogatives project their semantic class into w.request.
+@reader.question.thing pro.reader.question_kind asks=thing question=what
+@reader.question.member pro.reader.question_kind asks=thing-of-a-set question=which
+@reader.question.person pro.reader.question_kind asks=person question=who
+@reader.question.owner pro.reader.question_kind asks=owner question=who
+@reader.question.place pro.reader.question_kind asks=place question=where
+@reader.question.time pro.reader.question_kind asks=time question=when
+@reader.question.reason pro.reader.question_kind asks=reason question=why
+@reader.question.manner pro.reader.question_kind asks=manner-or-degree question=how
+@reader.question.count pro.reader.question_kind asks=count question=count
+@reader.question.amount pro.reader.question_kind asks=amount question=how_much
+@reader.scope.count pro.reader.scope_cue kind=question text=count question=count
+@reader.scope.auxiliary pro.reader.scope_cue kind=auxiliary text=had text=may text=might
+@reader.scope.modal pro.reader.scope_cue kind=modals text=shall
+@reader.scope.shall pro.reader.scope_cue kind=auxiliary text=shall
+@reader.scope.copula pro.reader.scope_cue kind=copulas text=am
+@reader.scope.subject pro.reader.scope_cue kind=subjects text=u
+@reader.scope.addressee pro.reader.scope_cue kind=addressees text=u
+@reader.scope.negative pro.reader.scope_cue kind=negatives text=except text=avoid
+@reader.scope.condition.positive pro.reader.scope_cue kind=condition polarity=positive text="provided that" text="as long as" text="only when"
+@reader.scope.condition.negative pro.reader.scope_cue kind=condition polarity=negative text=unless
+@reader.scope.courtesy pro.reader.scope_cue kind=courtesy text="if it is not too much trouble" text="if it's not too much trouble"
+
+@reader.discussion.thanks w.lang.en.skip class=politeness text="I appreciate it" text="that would help"
+
+@reader.scope.proposals pro.reader.scope_cue kind=proposals text="how about" text="what about" text="what if"
+@reader.scope.rejections pro.reader.scope_cue kind=rejections text=no text="not that" text="not this" text="not that one" text="not this one"
+@reader.scope.removals pro.reader.scope_cue kind=removals text="no more"
+@reader.scope.predicate.negation pro.reader.scope_cue kind=predicateNegators text=not

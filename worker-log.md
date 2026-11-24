@@ -39,3 +39,7 @@
 ## Declared numeric pairs and bracketed lists
 - SWI binds signed written pairs to both declared result keys. Clause composition keeps square-bracket lists intact. The trained CLI recovered both coordinates in the original house example. 83 tests passed.
 - Reviewed 1,000 fresh random rows from pinned bucket 0. At least one reasonable proposal rose from 35.4% to 35.5% on the same requests. See eval/THOUSAND-AUDIT.md for reproduction and all grades.
+
+## Text-only scope, names and composition
+- Added SOP-guided question and condition scope, named arguments, postfix measures, shared predicates and clause composition.
+- All 100 tests passed. On the same 1,000 random held-out requests, 36.9% had a reasonable proposal (previously 35.5%). See eval/THOUSAND-AUDIT.md for subgrades and losses.

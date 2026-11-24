@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parse, quote, str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { languageFrames } from './language-frames.mjs';
 import { evidenceVocabulary } from './evidence.mjs';
+import { scopeGrammar } from './scope-grammar.mjs';
 import { tokens } from './lexicon.mjs';
 
 const pinned = fileURLToPath(new URL('../.cache/knowledge/docs/worlds/', import.meta.url));
@@ -12,6 +13,8 @@ const types = new Set([
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
+  'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue',
+  'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
   'w.reader.en.binding', 'w.reader.en.feature', 'w.reader.en.filter',
@@ -179,6 +182,21 @@ function compile(facts) {
       for (const cue of values(wire,'text')) {
         index(tuples,phrase(cue),{kind:'tuple',family,act,keys});
       }
+    }
+  }
+  const argumentPatterns = new Map();
+  for (const wire of facts('pro.reader.arguments')) {
+    const family = one(wire,'family'), tab = one(wire,'tab');
+    const act = one(wire,'act'), mode = one(wire,'mode');
+    const keys = [one(wire,'first_key'),one(wire,'second_key')];
+    const phases = [one(wire,'first_phase') ?? 'result',one(wire,'second_phase') ?? 'result'];
+    if (!actNames.has(act) || !['new','existing'].includes(mode) ||
+        keys[0] === keys[1] || !phases.every(phase => ['selector','result'].includes(phase)) ||
+        !keys.every(name => requestKeys.some(key => key.family === family && key.tab === tab &&
+          key.name === name && key.head.split('+').includes('span') && !key.values.length))) continue;
+    const prefixes = values(wire,'prefix').map(phrase).filter(Boolean);
+    for (const separator of values(wire,'separator').map(phrase).filter(Boolean)) {
+      index(argumentPatterns,act,{family,mode,keys,phases,prefixes,separator});
     }
   }
   const keysByOwner = new Map();
@@ -409,6 +427,18 @@ function compile(facts) {
       index(propertiesBySurface, surface, { family, attribute, kind });
     }
   }
+  // A language cue such as "degrees" or "pixels wide" can follow a number.
+  // Resolve its property through the same per-family catalog as prefix labels.
+  for (const cue of facts('w.lang.en.cue')) {
+    const attribute = one(cue,'attribute');
+    if (!attribute || one(cue,'on') !== 'attribute' || one(cue,'takes') !== 'number') continue;
+    const keys = (propertiesBySurface.get(phrase(attribute)) ?? []).filter(k=>k.kind==='number');
+    const unit = one(cue,'unit');
+    for (const trail of values(cue,'trail')) {
+      for (const key of keys) index(propertiesBySurface,phrase(trail),
+        {...key,kind:'postfix_number',...(unit ? {unit} : {})});
+    }
+  }
   for (const [id, forms] of compatibleValues) {
     const bodies = new Map(forms);
     if (bodies.size !== 1) continue;
@@ -443,22 +473,41 @@ function compile(facts) {
     }
   }
 
+  const spatialBindings = facts('pro.reader.spatial').map(wire => ({
+    tab: one(wire, 'tab'), family: one(wire, 'family'),
+    relationKey: one(wire, 'relation_key'), anchorKey: one(wire, 'anchor_key'),
+    namedActs: values(wire,'named_act'),
+  }));
+  for (const {tab,family,relationKey,anchorKey,namedActs} of spatialBindings) {
+    const keys = requestKeys.filter(key => key.tab === tab && key.family === family);
+    const relation = keys.find(key => key.name === relationKey && key.head === 'class');
+    const anchor = keys.find(key => key.name === anchorKey && key.head === 'fill+span' && !key.values.length);
+    if (!relation || !anchor) continue;
+    for (const act of namedActs.filter(act => familyActs.get(family)?.includes(act))) {
+      for (const [separator,entries] of markers) {
+        for (const [,licensed,role,rel] of entries) {
+          if (licensed === act && role === 'place' && relation.values.includes(rel)) {
+            index(argumentPatterns,act,{family,mode:'existing',prefixes:[],separator,relation:rel,relationKey,anchorKey});
+          }
+        }
+      }
+    }
+  }
   return {
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
     stativeVerbAliases:stativeVerbAliases(facts),
     languageFrames:languageFrames(facts),
+    scopeGrammar:scopeGrammar(facts),
     literalGrammar: {
       leads, contentLeads, namingLeads, bindings:literalBindings,
       verbs: surface => literalVerbs.get(surface) ?? [],
       licenses: (family, act) => familyActs.get(family)?.includes(act),
     }, evidenceVocabulary:evidenceVocabulary(facts),
+    argumentPatterns: act => argumentPatterns.get(act) ?? [],
     preservationBindings: facts('pro.reader.preservation').map(wire => ({
       family:one(wire,'family'), attribute:one(wire,'attribute'), concept:one(wire,'concept'),
     })),
-    spatialBindings: facts('pro.reader.spatial').map(wire => ({
-      tab: one(wire, 'tab'), family: one(wire, 'family'),
-      relationKey: one(wire, 'relation_key'), anchorKey: one(wire, 'anchor_key'),
-    })),
+    spatialBindings,
     determiners: Object.fromEntries(determiners),
     joiners: Object.fromEntries(joiners),
     familyTabs: Object.fromEntries([...familyTabs].map(([family, tabs]) => [family, [...new Set(tabs)]])),
