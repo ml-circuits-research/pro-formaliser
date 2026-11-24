@@ -71,13 +71,14 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
   }
 
   const parts=[],inputs=[],items=[];
-  let begin=start, chunk=start, punctuated=false;
+  let begin=start, chunk=start, punctuated=false, firstObject;
   const synthesize=!predicate || !!prefix;
   predicate ??= 'make';
   function add(end) {
     const targets=nouns(chunk,end);
     if (!targets.length) return false;
     const part=span(begin,end);
+    firstObject ??= part;
     parts.push(!parts.length && (prefix || !synthesize) ? span(0,end) : part);
     inputs.push(predicate+' '+(begin===chunk ? part : span(chunk,end)+' '+span(begin,chunk-1)));
     items.push(targets);
@@ -126,5 +127,5 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
   }
   if (chunk<ts.length && !add(ts.length)) return null;
   if (!punctuated || items.filter(Boolean).length<2 || parts.length>8) return null;
-  return {act:'make',predicate,parts,inputs,items,prefix,syntheticPredicate:synthesize};
+  return {act:'make',predicate,parts,inputs,items,prefix,firstObject,syntheticPredicate:synthesize};
 }

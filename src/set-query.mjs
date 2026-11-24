@@ -52,8 +52,13 @@ export function universalTargetReading(text, ts, worlds, candidate, quotes) {
   const [index]=starts;
   for (const form of worlds.scopeGrammar.universals) {
     const before=form.split(' ').length;
-    const start=index-before;
-    if (start<0 || keyOf(ts.slice(start,index))!==form || worlds.negatives.has(ts[start-1]?.[0])) continue;
+    const preceding=ts[index-1]?.[0];
+    const numeric=worlds.nominalNumbers.get(preceding) ??
+      (/^\d{1,8}$/u.test(preceding ?? '') ? {kind:'cardinal',value:preceding} : undefined);
+    const counted=numeric?.kind==='cardinal' && worlds.scopeGrammar.countedUniversals.has(form);
+    const end=counted ? index-1 : index;
+    const start=end-before;
+    if (start<0 || keyOf(ts.slice(start,end))!==form || worlds.negatives.has(ts[start-1]?.[0])) continue;
     const from=ts[start][2], to=ts[index+length-1][3];
     if (quotes.some(q=>q.start<to && q.end>from)) continue;
     const chars=Array.from(text);
@@ -71,7 +76,7 @@ export function universalTargetReading(text, ts, worlds, candidate, quotes) {
       return positions.length!==1 || positions[0]<start || positions[0]+terms.length>index;
     });
     const revised=consumeUnread(scoped,text,chars.slice(0,from).join('').length,chars.slice(0,ts[index][2]).join('').length);
-    target.attrs={...target.attrs,fill:['all'],quantifier:['all'],count_words:[quotation(surface)]};
+    target.attrs={...target.attrs,fill:['all'],quantifier:['all'],count_words:[quotation(surface)],...(counted ? {count:[String(numeric.value)]} : {})};
     delete target.attrs.determiner;
     return {sop:serialize(revised).trimEnd(),source:'universal-target',status:candidate.status};
   }

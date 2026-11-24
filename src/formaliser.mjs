@@ -1,3 +1,4 @@
+import { openPairReadings } from './open-pairs.mjs';
 import { clauseQualifiers } from './clause-qualifiers.mjs';
 import { nominalPhraseReadings } from './nominal-phrases.mjs';
 import { sequenceNameReadings } from './sequence-names.mjs';
@@ -42,11 +43,15 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const [surface,act,family]=JSON.parse(key);
     add(modes,surface,[act,family,mode]);
   }
+  const pairGrammars=[worlds.openPairs,model.openPairs].filter(Boolean);
+  const openPairHeads=new Set(pairGrammars.flatMap(grammar=>
+    Object.values(grammar).flatMap(frames=>frames.map(f=>f.prefix[0]))));
   const phraseHeads=new Set(Object.keys(model.nominalPhrases ?? {}).map(k=>JSON.parse(k)[3]));
   const knownModifiers=new Set(Object.keys(model.modifiers ?? {}).map(k=>JSON.parse(k)[1]));
   const nearExample = createNearExample(model.examples,{discourse:worlds.discourse});
   const transfer = createTransfer(model.examples, {
-    resolveValue:valueResolver(worlds,model.lexicon,model.forms), fillerPhrases:worlds.discourse
+    resolveValue:valueResolver(worlds,model.lexicon,model.forms), fillerPhrases:worlds.discourse,
+    determiners:worlds.determiners,
   });
   const targetRoles=[...new Set(worlds.languageFrames.bindings.filter(b=>b.type==='w.request.target').map(b=>b.role))];
   const ground = constraintGrounder();
@@ -195,6 +200,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         for (const reading of nominalPhraseReadings(text,ts,quotes,candidate,model.nominalPhrases,worlds)) retain(reading);
       }
     }
+    if (!scope.restricted && ts.some(t=>openPairHeads.has(t[0]))) {
+      for (const candidate of [...candidates]) {
+        for (const grammar of pairGrammars) {
+          for (const reading of openPairReadings(text,ts,quotes,candidate,grammar,worlds)) retain(reading);
+        }
+      }
+    }
     if (!candidates.some(candidate => candidate.source !== 'lexicon' && !candidate.unread)) {
       const offset = candidates.length;
       for (const candidate of preservation.readings(text,candidates)) retain(candidate);
@@ -306,6 +318,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const input of plan.inputs) {
         if (!inputs.has(input)) inputs.set(input,await read(input));
         results.push(inputs.get(input));
+      }
+      const headings=plan.prefix ? transfer.sceneHeadings(plan.prefix) : [];
+      if (headings.length) {
+        const [first,...alternatives]=headings;
+        const parts=[plan.prefix,plan.firstObject,...plan.parts.slice(1)];
+        const grounded={...plan,prefix:undefined,items:[null,...plan.items]};
+        readings.push(...combine(text,parts,[{...first,alternatives},...results],grounded));
       }
       readings.push(...combine(text,plan.parts,results,plan));
     }

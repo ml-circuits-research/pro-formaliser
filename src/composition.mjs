@@ -275,7 +275,7 @@ export function composableWires(result, item) {
     if (targets.length!==1 || one(targets[0],'mode')!=='new' ||
         !item.targets.some(({family,sort})=>one(targets[0],'family')===family && one(targets[0],'sort')===sort)) return null;
   } else if (requests.length===1) {
-    if (!requests[0].attrs.predicate) return null;
+    if (!requests[0].attrs.predicate && result.source!=='scene-heading') return null;
   } else if (result.source!=='enumeration' || requests.length<2 ||
              requests.some(w=>!w.attrs.words)) return null;
   return wires;

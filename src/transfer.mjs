@@ -1,5 +1,6 @@
 import { tokenize } from './model.mjs';
 import { parse } from './schema.mjs';
+import { signatures } from './signatures.mjs';
 
 const terminal = new Set(['.', '!', '。', '！']);
 const separators = new Set([',', '.', '!', ':', '–', '—', '，', '。', '！']);
@@ -333,7 +334,7 @@ const requestsType = 'w.request.request';
 const localRefs = wire => [...new Set(Object.values(wire.attrs).flat()
   .filter(value => value.startsWith('$')).map(value => value.slice(1)))];
 
-function* excerpts(example) {
+function* excerpts(example, observeHeading) {
   const marker = ' ' + requestsType + ' ';
   const offset = example.sop.indexOf(marker);
   if (offset < 0 || example.sop.indexOf(marker, offset + marker.length) < 0) return;
@@ -362,10 +363,10 @@ function* excerpts(example) {
     const start = text ? example.text.indexOf(text) : -1;
     if (start < previousEnd || example.text.indexOf(text, start + 1) !== -1) return;
     previousEnd = start + text.length;
-    segments.push({ text, request });
+    segments.push({ text, request, start });
   }
 
-  for (const {text, request} of segments) {
+  for (const {text, request, start} of segments) {
     const selected = new Set([request.id]);
     let complete = true;
     for (const id of selected) {
@@ -377,8 +378,10 @@ function* excerpts(example) {
       }
       for (const ref of [...localRefs(wire), ...(incoming.get(id) ?? [])]) selected.add(ref);
     }
-    if (!complete || !first(request, 'predicate')) continue;
+    if (!complete) continue;
     const fragment = wires.filter(wire => selected.has(wire.id));
+    observeHeading(text,request,fragment,example.text,start);
+    if (!first(request, 'predicate')) continue;
     const ts = tokens(text);
     const says = value => spans(ts, decode(value)).length > 0;
     const targets = fragment.filter(wire => wire.type === 'w.request.target');
@@ -403,8 +406,100 @@ function* excerpts(example) {
   }
 }
 
-export function createTransfer(examples, { resolveValue, fillerPhrases = [] } = {}) {
+function headingIndex(envelope, determiners) {
+  const proposals=new Map();
+  const bareForms=new Set();
+  const signature=text=>tokens(text).map(token=>token.key).join(' ');
+  function formOf(bodyTokens,wires,constraints) {
+    const slots=new Map();
+    const occupied=new Set();
+    for (const wire of constraints) {
+      const attribute=first(wire,'attribute');
+      if (!attribute) return;
+      for (const [i,value] of wire.attrs.value.entries()) {
+        const matches=spans(bodyTokens,decode(value));
+        if (matches.length!==1) return;
+        const [[start,end]]=matches;
+        for (let j=start;j<end;j++) {
+          if (occupied.has(j)) return;
+          occupied.add(j);
+        }
+        slots.set(start,{end,role:attribute+':'+i});
+      }
+    }
+    const pattern=[];
+    for (let i=0;i<bodyTokens.length;i++) {
+      const slot=slots.get(i);
+      if (slot) {
+        pattern.push(['slot',slot.role]);
+        i=slot.end-1;
+        continue;
+      }
+      const key=bodyTokens[i].key;
+      pattern.push(Object.hasOwn(determiners,key) ? ['determiner',determiners[key]] : key);
+    }
+    const shape=wires.map(w=>w.type==='w.request.constraint'
+      ? {...w,attrs:{...w.attrs,value:w.attrs.value.map((_,i)=>String(i))}}
+      : w);
+    return JSON.stringify([pattern,signatures(shape,true)]);
+  }
+  function observe(text,request,wires,input,start) {
+    const targets=wires.filter(w=>w.type==='w.request.target');
+    const constraints=wires.filter(w=>w.type==='w.request.constraint');
+    if (targets.length!==1 || !constraints.length || first(targets[0],'mode')!=='existing' ||
+        first(targets[0],'fill')!=='context' || ['last','world'].includes(first(request,'refers')) ||
+        ['ask','check','propose'].includes(first(request,'mood'))) return;
+    const target=targets[0];
+    if (wires.some(w=>w!==request && w!==target && w.type!=='w.request.constraint' &&
+        !(w.type==='w.request.lookup' && first(w,'from')==='page' && first(w,'target')==='$'+target.id))) return;
+    if (constraints.some(w=>!w.attrs.value?.length || ![undefined,'eq'].includes(first(w,'operator')) ||
+        ![undefined,'result'].includes(first(w,'phase')) || ![undefined,'yes'].includes(first(w,'want')))) return;
+
+    const ts=tokens(text), predicate=first(request,'predicate');
+    const occurrences=predicate ? spans(ts,predicate) : [];
+    if (predicate && (occurrences.length!==1 || ts[occurrences[0][0]].start!==envelope(text).core[0]?.start)) return;
+    const index=predicate ? occurrences[0][1] : 0;
+    if (!ts[index]) return;
+    const offset=ts[index].start;
+    const body=text.slice(offset);
+    const bodyTokens=ts.slice(index);
+    const says=value=>spans(bodyTokens,decode(value)).length>0;
+    if (wires.some(w=>Object.entries(w.attrs).some(([key,values])=>
+      !(w===request && ['words','predicate'].includes(key)) &&
+      (evidence(w.type,key) || literalFields.has(key) || numericFields.has(key) ||
+        ['sort','amount','quantity','ordinal','quantifier','unit','step'].includes(key)) &&
+      values.some(value=>!says(value))))) return;
+    const bodyKey=signature(body);
+    if (!bodyKey) return;
+    const form=formOf(bodyTokens,wires,constraints);
+    if (!predicate && form) bareForms.add(form);
+    const meaning=JSON.stringify(signatures(wires,true));
+    const byMeaning=proposals.get(bodyKey) ?? new Map();
+    if (!proposals.has(bodyKey)) proposals.set(bodyKey,byMeaning);
+    const record=byMeaning.get(meaning) ?? {sources:new Set(),form};
+    if (!byMeaning.has(meaning)) byMeaning.set(meaning,record);
+    record.sources.add(signature(input.slice(start+offset).replace(/[.!?]+$/u,'')));
+    if (!predicate) record.bare=true;
+    if (!record.wires || !predicate) {
+      const names=new Map(wires.map((w,i)=>[w.id,'heading.'+(i+1)]));
+      record.wires=wires.map(w=>({...w,id:names.get(w.id),attrs:Object.fromEntries(Object.entries(w.attrs)
+        .filter(([key])=>w!==request || key!=='predicate')
+        .map(([key,values])=>[key,values.map(value=>value.startsWith('$') ? '$'+names.get(value.slice(1)) : value)]))}));
+    }
+  }
+  function find(text) {
+    return [...(proposals.get(signature(text))?.values() ?? [])].flatMap(({sources,wires,bare,form})=>{
+      if (sources.size<2 || !bare && !bareForms.has(form)) return [];
+      const scoped=wires.map(w=>w.type===requestsType ? {...w,attrs:{...w.attrs,words:[JSON.stringify(text)]}} : w);
+      return [{sop:serialize(scoped),source:'scene-heading',support:sources.size,status:'matched'}];
+    });
+  }
+  return {observe,find};
+}
+
+export function createTransfer(examples, { resolveValue, fillerPhrases = [], determiners = {} } = {}) {
   const envelope = makeEnvelope(fillerPhrases);
+  const headings=headingIndex(envelope,determiners);
   const postings = new Map();
   const indexed = [];
   function index(example) {
@@ -419,9 +514,9 @@ export function createTransfer(examples, { resolveValue, fillerPhrases = [] } = 
   }
   for (const example of examples) index(example);
   for (const example of examples) {
-    for (const excerpt of excerpts(example)) index(excerpt);
+    for (const excerpt of excerpts(example,headings.observe)) index(excerpt);
   }
-  return text => {
+  function transfer(text) {
     const input = envelope(text);
     if (!input.core.length || input.core.length > 128) return [];
     const weights = new Map();
@@ -460,5 +555,6 @@ export function createTransfer(examples, { resolveValue, fillerPhrases = [] } = 
       }
     }
     return [...candidates.values()].sort((a, b) => b.similarity - a.similarity || b.support - a.support);
-  };
+  }
+  return Object.assign(transfer,{sceneHeadings:headings.find});
 }

@@ -51,3 +51,7 @@
 ## Scene and identity readings
 - Implemented scoped scene lists, written IDs, narrow modes and noun inflection; re-grounded nominal qualifiers inside multi-request circuits.
 - Full test gate passed. 40.3% reasonable on the same 1,000 requests, previously 40.0%. See eval/THOUSAND-AUDIT.md.
+
+## Headings, quantities and argument pairs
+- Read grounded scene settings, counted universals, stacked modifiers and two source-bound text arguments using training or SOP declarations.
+- Full test gate passed. 40.8% reasonable on the same 1,000 requests, previously 40.3%. See eval/THOUSAND-AUDIT.md.

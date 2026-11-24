@@ -187,7 +187,7 @@ function compile(facts) {
       }
     }
   }
-  const argumentPatterns = new Map();
+  const argumentPatterns = new Map(), openPairs=new Map();
   for (const wire of facts('pro.reader.arguments')) {
     const family = one(wire,'family'), tab = one(wire,'tab');
     const act = one(wire,'act'), mode = one(wire,'mode');
@@ -199,7 +199,11 @@ function compile(facts) {
           key.name === name && key.head.split('+').includes('span') && !key.values.length))) continue;
     const prefixes = values(wire,'prefix').map(phrase).filter(Boolean);
     for (const separator of values(wire,'separator').map(phrase).filter(Boolean)) {
-      index(argumentPatterns,act,{family,mode,keys,phases,prefixes,separator});
+      if (one(wire,'anchor')==='nominal') {
+        for (const prefix of prefixes) index(openPairs,JSON.stringify([family,act,mode]),{
+          prefix:prefix.split(' '),connector:separator.split(' '),slots:keys.map((key,i)=>[key,phases[i]]),support:0
+        });
+      } else index(argumentPatterns,act,{family,mode,keys,phases,prefixes,separator});
     }
   }
   const keysByOwner = new Map();
@@ -517,6 +521,7 @@ function compile(facts) {
       verbs: surface => literalVerbs.get(surface) ?? [],
       licenses: (family, act) => familyActs.get(family)?.includes(act),
     }, evidenceVocabulary:evidenceVocabulary(facts),
+    openPairs:Object.fromEntries(openPairs),
     argumentPatterns: act => argumentPatterns.get(act) ?? [],
     preservationBindings: facts('pro.reader.preservation').map(wire => ({
       family:one(wire,'family'), attribute:one(wire,'attribute'), concept:one(wire,'concept'),

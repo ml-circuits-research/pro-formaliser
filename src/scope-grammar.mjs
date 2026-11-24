@@ -12,7 +12,7 @@ export function scopeGrammar(facts) {
   const subjects=new Set(), addressees=new Set(), existentialSubjects=new Set(), singularReferents=new Set();
   const presentSingularCopulas=new Set(), predicateNegators=new Set();
   const courtesy=new Set(), negatives=new Set(), proposals=new Set(), rejections=new Set(), removals=new Set();
-  const courtesyLeads=new Set(), universals=new Set();
+  const courtesyLeads=new Set(), universals=new Set(), countedUniversals=new Set();
   for (const wire of facts('w.lang.en.joiner')) {
     if (one(wire,'kind')==='condition') for (const text of all(wire,'text')) conditionals.set(phrase(text),'positive');
   }
@@ -49,7 +49,7 @@ export function scopeGrammar(facts) {
     const type=questionKinds.get(one(wire,'asks'));
     if (type) for (const text of all(wire,'text')) questions.set(phrase(text),{type});
   }
-  const vocabulary={auxiliary,modals,copulas,subjects,addressees,courtesy,courtesyLeads,universals,negatives,proposals,rejections,removals,predicateNegators};
+  const vocabulary={auxiliary,modals,copulas,subjects,addressees,courtesy,courtesyLeads,universals,countedUniversals,negatives,proposals,rejections,removals,predicateNegators};
   for (const wire of facts('pro.reader.scope_cue')) {
     const kind=one(wire,'kind'), type=one(wire,'question');
     for (const text of all(wire,'text')) {
@@ -63,7 +63,7 @@ export function scopeGrammar(facts) {
   const endings=new Set(facts('w.lang.en.neg').flatMap(wire=>all(wire,'ending')).map(text=>text.toLowerCase().replaceAll('’',"'")));
   return {
     conditionals, questions, auxiliary, modals, copulas, plainImperatives, subjects,
-    addressees, existentialSubjects, singularReferents, courtesy, courtesyLeads, universals,
+    addressees, existentialSubjects, singularReferents, courtesy, courtesyLeads, universals, countedUniversals,
     universalHeads:new Set([...universals].map(form=>form.split(" ")[0])), negatives, proposals, rejections, removals, presentSingularCopulas, predicateNegators, endings,
   };
 }

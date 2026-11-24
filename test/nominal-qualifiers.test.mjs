@@ -29,3 +29,28 @@ test('independent training phrases license a property on a new noun with the sam
   assert.match(reading.sop,/attribute=sample.finish value=rough operator=eq phase=result/u);
   assert.doesNotMatch(reading.sop,/unread/u);
 });
+
+test('crosses an already grounded adjacent modifier only when its evidence and role agree',()=>{
+  const forms={
+    '["sample","medium"]':['sample.size','medium'],
+    '["sample","brown"]':['sample.colour','brown'],
+  };
+  const head='@r w.request.request act=make\n@t w.request.target request=$r family=sample mode=new sort=baskets';
+  const read=(text,binding)=>modifierReading(text,tokens(text),quotedSpans(text),
+    {sop:head+'\n'+binding+'\n@u w.request.unread request=$r text=medium'},forms);
+  const binding='@c w.request.constraint request=$r on=attribute attribute=sample.colour value=brown operator=eq phase=result';
+  const text='make three medium brown baskets';
+  const result=read(text,binding);
+  assert.match(result.sop,/attribute=sample.size value=medium operator=eq phase=result/u);
+  assert.equal(result.sop.match(/attribute=sample\.colour/gu).length,1);
+  assert.doesNotMatch(result.sop,/w\.request\.unread/u);
+  for (const conflict of [
+    binding.replace('value=brown','value=red'),
+    binding.replace('phase=result','phase=selector'),
+    binding+' words="medium brown"',
+    binding+' want=no',
+    binding+'\n'+binding.replace('@c ','@other '),
+  ]) assert.equal(read(text,conflict),undefined,conflict);
+  assert.equal(read('make the brown, then three medium brown baskets',binding),undefined);
+  assert.equal(read('make three medium, brown baskets',binding),undefined);
+});

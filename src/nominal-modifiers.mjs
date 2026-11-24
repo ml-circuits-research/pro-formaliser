@@ -51,21 +51,40 @@ export function modifierReading(text,ts,quotes,candidate,forms) {
   if (positions.length!==1) return;
   const used=new Set(wires.map(w=>w.id));
   const added=[];
-  const taken=new Set(wires.filter(w=>w.type==='w.request.constraint').map(w=>field(w,'attribute')));
   const request=field(target,'request'),mode=field(target,'mode');
   if (!['new','existing'].includes(mode) || request!=='$'+requests[0].id) return;
+  const phase=mode==='new' ? 'result' : 'selector';
+  const existing=new Map();
+  for (const wire of wires.filter(w=>w.type==='w.request.constraint')) {
+    const key=field(wire,'attribute');
+    const bindings=existing.get(key) ?? [];
+    bindings.push(wire);
+    existing.set(key,bindings);
+  }
+  const taken=new Set(existing.keys());
   let start=positions[0];
   for (;start>0;start--) {
     const [lower,surface,from,to]=ts[start-1];
     const form=forms[JSON.stringify([family,lower])];
     if (!form || quotes.some(q=>from>=q.start && to<=q.end)) break;
     const [key,value]=form;
-    if (taken.has(key)) break;
+    if (taken.has(key)) {
+      // An unambiguous binding to this exact adjective can occupy the
+      // intervening position. Any competing reading ends the traversal.
+      const bindings=existing.get(key);
+      if (bindings?.length!==1) break;
+      const [wire]=bindings;
+      if (field(wire,'request')!==request || (field(wire,'phase') ?? 'result')!==phase ||
+          (field(wire,'operator') ?? 'eq')!=='eq' || wire.attrs.value?.length!==1 ||
+          field(wire,'value')!==value || wire.attrs.want || wire.attrs.key_words || wire.attrs.of ||
+          field(wire,'open_value')==='true' || (wire.attrs.words?.length ?? 0)>1 ||
+          (field(wire,'words') ?? value)!==surface || literalRanges(text,surface).length!==1) break;
+      continue;
+    }
     const idBase=target.id+'.adj';
     let id=idBase;
     for (let i=2;used.has(id);i++) id=idBase+i;
     used.add(id);taken.add(key);
-    const phase=mode==='new' ? 'result' : 'selector';
     added.push({id,type:'w.request.constraint',attrs:{
       request:[request],on:['attribute'],attribute:[key],value:[/^[a-z][a-z_]*$/u.test(value) ? value : JSON.stringify(value)],
       ...(surface!==value ? {words:[JSON.stringify(surface)]} : {}),operator:['eq'],phase:[phase]

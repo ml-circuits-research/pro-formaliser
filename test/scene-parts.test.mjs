@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { createReader } from '../src/runtime.mjs';
 import { parse } from '../src/schema.mjs';
+import { loadWorlds } from '../src/worlds.mjs';
 
 const decode=value=>value?.startsWith('"') ? JSON.parse(value) : value;
 const first=(wire,key)=>decode(wire.attrs[key]?.[0]);
@@ -48,4 +52,62 @@ test('a grounded first object keeps its owned complements and quoted lists stay 
     const result=await reader.propose(text);
     assert.ok(result.candidates.every(candidate=>candidate.source!=='enumeration'),text);
   }
+});
+
+test('a context-only scene header requires corroborated local training evidence',async t=>{
+  const dir=mkdtempSync(join(fileURLToPath(new URL('../.cache/',import.meta.url)),'scene-header-'));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  const overlay=join(dir,'gallery.sop');
+  writeFileSync(overlay,`
+@gallery.location w.request.key tab=gallery family=gallery name=gallery.location head=span
+@gallery.light w.request.key tab=gallery family=gallery name=gallery.light head=class value=dusk value=noon
+@gallery.plaque pro.reader.target tab=gallery family=artifact sort=plaque text=plaque act=make
+@gallery.lantern pro.reader.target tab=gallery family=artifact sort=lantern text=lantern act=make
+`);
+  const worlds=loadWorlds({paths:[overlay]});
+  const header='An atrium at dusk';
+  function example(prefix,object,light='dusk',place='atrium') {
+    const subject=place==='atrium' ? header : 'A '+place+' at dusk';
+    const written=(prefix ? prefix+' ' : '')+subject;
+    return {text:written+' with a '+object,sop:[
+      '@r w.request.request act=change mood=do words='+JSON.stringify(written)+(prefix ? ' predicate='+prefix : ''),
+      '@t w.request.target request=$r family=gallery mode=existing fill=context',
+      '@l w.request.lookup request=$r target=$t key=thing from=page',
+      '@g w.request.constraint request=$r on=attribute attribute=gallery.location value='+place,
+      '@h w.request.constraint request=$r on=attribute attribute=gallery.light value='+light,
+      '@r2 w.request.request act=make mood=do words="a '+object+'"',
+      '@t2 w.request.target request=$r2 family=artifact mode=new sort='+object,
+    ].join('\n')};
+  }
+  const text=header+' with a plaque, and a lantern.';
+  const run=async examples=>{
+    const reader=createReader({...model,examples},worlds);
+    try { return (await reader.propose(text)).candidates; }
+    finally { await reader.close(); }
+  };
+  const standalone=example('', 'plaque');
+  for (const training of [
+    [standalone],
+    [standalone,example('Draw','plaque')],
+    [standalone,example('Draw','lantern','noon')],
+    [example('Draw','plaque'),example('Make','lantern')],
+  ]) {
+    assert.ok((await run(training)).every(c=>!c.sop.includes('attribute=gallery.light')));
+  }
+  const candidates=await run([standalone,example('Draw','lantern')]);
+  const complete=candidates.find(c=>c.sop.includes('attribute=gallery.light'));
+  assert.ok(complete);
+  const wires=parse(complete.sop);
+  const requests=wires.filter(w=>w.type==='w.request.request');
+  assert.deepEqual(requests.map(w=>first(w,'act')),['change','make','make']);
+  assert.equal(first(requests[0],'words'),header);
+  assert.equal(first(requests[0],'predicate'),undefined);
+  assert.deepEqual(wires.filter(w=>first(w,'request')==='$'+requests[0].id).filter(w=>w.type==='w.request.constraint')
+    .map(w=>first(w,'value')),['atrium','dusk']);
+  assert.ok(candidates.some(c=>c.sop.includes('@scene.setting')));
+  const corroborated=await run([
+    example('Draw','plaque'),example('Make','lantern'),example('', 'plaque','dusk','courtyard'),
+  ]);
+  assert.ok(corroborated.some(c=>c.sop.includes('attribute=gallery.location value=atrium')));
+  assert.ok(corroborated.every(c=>!c.sop.includes('value=courtyard')));
 });

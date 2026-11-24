@@ -63,6 +63,7 @@
 @pro.reader.arguments.second_key core.slot of=pro.reader.arguments key=second_key kind=atom required=true
 @pro.reader.arguments.first_phase core.slot of=pro.reader.arguments key=first_phase enum=selector enum=result
 @pro.reader.arguments.second_phase core.slot of=pro.reader.arguments key=second_phase enum=selector enum=result
+@pro.reader.arguments.anchor core.slot of=pro.reader.arguments key=anchor enum=predicate enum=nominal
 @pro.reader.arguments.prefix core.slot of=pro.reader.arguments key=prefix kind=atom kind=string many=true
 @pro.reader.arguments.separator core.slot of=pro.reader.arguments key=separator kind=atom kind=string many=true required=true
 
@@ -73,7 +74,7 @@
 
 # English lexical cues that supplement the native interrogative grammar.
 @pro.reader.scope_cue core.type of=pro.reader.scope_cue closed=true
-@pro.reader.scope_cue.kind core.slot of=pro.reader.scope_cue key=kind enum=condition enum=question enum=auxiliary enum=modals enum=copulas enum=subjects enum=addressees enum=courtesy enum=negatives enum=proposals enum=rejections enum=removals enum=predicateNegators required=true
+@pro.reader.scope_cue.kind core.slot of=pro.reader.scope_cue key=kind enum=condition enum=question enum=auxiliary enum=modals enum=copulas enum=subjects enum=addressees enum=courtesy enum=courtesyLeads enum=universals enum=countedUniversals enum=negatives enum=proposals enum=rejections enum=removals enum=predicateNegators required=true
 @pro.reader.scope_cue.text core.slot of=pro.reader.scope_cue key=text kind=string many=true required=true
 @pro.reader.scope_cue.polarity core.slot of=pro.reader.scope_cue key=polarity enum=positive enum=negative
 @pro.reader.scope_cue.question core.slot of=pro.reader.scope_cue key=question kind=atom

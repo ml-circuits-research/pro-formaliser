@@ -22,6 +22,8 @@ test('a universal set cue changes only an adjacent existing target',()=>{
   const read=text=>universalTargetReading(text,tokens(text),worlds,{sop},[]);
   assert.match(read('Put every one of the clouds in a grid.').sop,
     /fill=all quantifier=all count_words="every one of the clouds"/u);
+  assert.match(read('Put all three clouds in a grid.').sop,/fill=all quantifier=all count_words="all three clouds" count=3/u);
+  assert.equal(read('Put every three clouds in a grid.'),undefined);
   assert.equal(read('Put all nearby clouds in a grid.'),undefined);
   assert.equal(read('Put not all the clouds in a grid.'),undefined);
 });

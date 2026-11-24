@@ -29,6 +29,8 @@
 
 # Named arguments of a new connection. Either endpoint may be a quoted span.
 @reader.diagram.link.endpoints pro.reader.arguments tab=diagram family=link act=connect mode=new first_key=link.from second_key=link.to prefix=from separator=to
+# A chart noun anchors the measure before the grouping connector and the dimension after it.
+@reader.diagram.chart.measure_dimension pro.reader.arguments tab=diagram family=chart act=make mode=new anchor=nominal first_key=chart.measure second_key=chart.dimension prefix="chart of" prefix="chart showing" separator=by separator=per separator="grouped by" separator="for each" separator="split by"
 
 # Ordered page coordinates.
 @reader.drawing.drawn.coordinates pro.reader.tuple tab=drawing family=drawn first_key=drawn.x second_key=drawn.y act=place act=make act=copy text=at text=to text="at coordinates"
@@ -76,3 +78,5 @@
 @reader.scope.rejections pro.reader.scope_cue kind=rejections text=no text="not that" text="not this" text="not that one" text="not this one"
 @reader.scope.removals pro.reader.scope_cue kind=removals text="no more"
 @reader.scope.predicate.negation pro.reader.scope_cue kind=predicateNegators text=not
+
+@reader.scope.counted_set pro.reader.scope_cue kind=countedUniversals text=all text="all the" text="all of the"

@@ -198,6 +198,29 @@ name binds the anchor through the declared open `fill+span` anchor key.
 If `shuttle` licenses `place`, “Move West Annex to the left of Upper
 Terminal” produces a proposal with that named shuttle and anchor.
 
+## Nominal open text pairs
+
+Set `anchor=nominal` in `pro.reader.arguments` and declare a `prefix`
+when the two operands attach to an independently grounded target through a
+nominal cue. Both keys must be distinct open span keys in the stated family
+and tab. Each operand defaults to the result phase. Repeat `prefix` or
+`separator` to provide aliases.
+
+```sop
+@workbench std.schema.world name=w.workbench
+@workbench.device std.schema.kind of=w.workbench.device world=w.workbench acts=make
+@workbench.word core.word text=quilloscope means=w.workbench.device
+@workbench.specimen w.request.key tab=workbench family=device name=device.specimen head=span
+@workbench.reference w.request.key tab=workbench family=device name=device.reference head=span
+@workbench.pair pro.reader.arguments tab=workbench family=device act=make mode=new anchor=nominal first_key=device.specimen second_key=device.reference prefix="quilloscope for" separator="calibrated against"
+```
+
+“Make a quilloscope for ‘Quartz calibrated against Basalt’ calibrated against
+Slate Alloy” reads the quoted material as the specimen and `Slate Alloy` as
+the reference. The separator inside the quote stays part of the operand. The
+reader checks the selected clause and the existing wires before accepting the
+pair. Ambiguous operand boundaries can leave text unread.
+
 ## Numeric pairs
 
 A `pro.reader.tuple` declaration assigns two ordered numeric result keys
