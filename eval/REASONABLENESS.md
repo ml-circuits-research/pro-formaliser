@@ -2,13 +2,13 @@
 
 100 rows sampled without replacement from the primary 1% text-only holdout in benchmark order (Python random.Random(905184).sample). Four LLM reviewers each assessed a separate batch of 25 with randomized system/annotation sides. All rows were eligible, including matches. G means the main intent is reasonable, W indicates a material error or omission, and U indicates uncertainty. The application area was visible to reviewers, who were asked to assess each circuit both ignoring and considering it. All system predictions were generated from text alone. These are sample estimates for the pinned corpus, not human adjudications.
 
-Reader levels: L0 – Fail (no reading or refusal), L1 – Wrong (a material action, target or value is incorrect), L1 – Incomplete (direction is right but a material part is missing), L2+ – Reasonable (main intent preserved, including fully correct readings). When both error types apply, Wrong takes precedence. Unclear records uncertainty separately. The original text-only W cases were reexamined on anonymized sides to distinguish Wrong from Incomplete.
+Reader levels: L0 – Fail (no reading or refusal), L1 – Wrong (a material action, target or value is incorrect), L1 – Incomplete (direction is right but a material part is missing), L2+ – Reasonable (main intent preserved, including fully correct readings). When both error types apply, Wrong takes precedence. An ambiguous request earns L2+ when the output preserves the clear intent and identifies what remains open through meaningful alternatives. Choosing an unsupported material detail counts as Wrong. Leaving the ambiguity unresolved without exposing it adequately counts as Incomplete. U in the historical columns denotes reviewer uncertainty only. The original text-only W cases were reexamined on anonymized sides to distinguish Wrong from Incomplete.
 
 
 | Source row | Reader, text criterion | Annotation, intended area | Reader, intended area | Reader level (text) |
 | --- | --- | --- | --- | --- |
 | drawing/scenes-10.csv #212 | W | G | W | L1 – Wrong |
-| diagram/nodes-12.csv #3313 | U | G | G | Unclear |
+| diagram/nodes-12.csv #3313 | U | G | G | L1 – Incomplete |
 | diagram/nodes-12.csv #3839 | W | G | W | L1 – Incomplete |
 | document/text-01.csv #2181 | G | G | G | L2+ – Reasonable |
 | drawing/scenes-05.csv #2522 | W | G | W | L1 – Wrong |
@@ -28,7 +28,7 @@ Reader levels: L0 – Fail (no reading or refusal), L1 – Wrong (a material act
 | diagram/nodes-13.csv #1080 | W | G | W | L1 – Incomplete |
 | drawing/people-05.csv #876 | W | G | W | L1 – Wrong |
 | diagram/nodes-04.csv #124 | W | W | W | L1 – Wrong |
-| drawing/people-04.csv #1113 | U | U | U | Unclear |
+| drawing/people-04.csv #1113 | U | U | U | L1 – Wrong |
 | diagram/charts-02.csv #636 | W | G | W | L1 – Wrong |
 | drawing/scenes-13.csv #3856 | W | G | W | L1 – Wrong |
 | diagram/nodes-06.csv #703 | G | G | G | L2+ – Reasonable |
@@ -54,7 +54,7 @@ Reader levels: L0 – Fail (no reading or refusal), L1 – Wrong (a material act
 | diagram/nodes-07.csv #2132 | W | G | W | L1 – Wrong |
 | drawing/scenes-10.csv #1196 | W | G | W | L1 – Wrong |
 | diagram/charts-07.csv #272 | W | G | W | L1 – Wrong |
-| diagram/diagrams-04.csv #372 | U | G | W | Unclear |
+| diagram/diagrams-04.csv #372 | U | G | W | L2+ – Reasonable |
 | drawing/objects-03.csv #2289 | G | G | G | L2+ – Reasonable |
 | diagram/charts-02.csv #3029 | W | W | W | L1 – Wrong |
 | diagram/nodes-02.csv #2414 | W | W | W | L1 – Incomplete |
@@ -107,3 +107,5 @@ Reader levels: L0 – Fail (no reading or refusal), L1 – Wrong (a material act
 | diagram/charts-02.csv #358 | W | G | W | L1 – Incomplete |
 | diagram/diagrams-01.csv #197 | W | G | W | L1 – Wrong |
 | drawing/placement-02.csv #3081 | G | G | G | L2+ – Reasonable |
+
+Ambiguity review of the three former U rows, using the stored candidate sets. The square/n2 question preserved both entities under one plausible link hypothesis but failed to expose the uncertain relation adequately. The pirate-hat/moustache reading asserted an unsupported moustache variant. The Tickets per day reading retained the named target and requested purple change in two explicit family alternatives. Final text-only distribution: Fail 0%, Wrong 51%, Incomplete 25%, Reasonable or better 24%. This is a regrade of existing outputs.
