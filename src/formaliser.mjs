@@ -1,3 +1,4 @@
+import {ownedEffectReadings} from './owned-effects.mjs';
 import {createAppositiveSelectorReader} from './appositive-selector.mjs';
 import {quantifiedVerbReadings} from './quantified-verb.mjs';
 import {createTopicCommands,topicCommandPacket,topicCommandReading} from './topic-commands.mjs';
@@ -183,6 +184,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     add(buckets, anchor, {min,max,template});
   }
   const classHeads = new Set([...(worlds.nominalClasses?.values() ?? [])].flatMap(forms => [...forms.keys()]));
+  const numberHeads = new Set([...worlds.nominalNumbers.keys()].map(term=>term.split(' ')[0]));
   const positionHeads = new Set([...(worlds.nominalPositions?.values() ?? [])].flatMap(forms => [...forms.keys()]));
   const worker = prologWorker(new URL('../prolog/formalise.pl',import.meta.url));
   async function read(text) {
@@ -297,6 +299,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of transformationReadings(text,ts,quotes,worlds)) retain(reading);
+      for (const reading of ownedEffectReadings(text,worlds)) retain(reading);
       for (const reading of quantifiedVerbReadings(text,worlds)) retain(reading);
       for (const reading of ownerPropertyReadings(text,ts,quotes,worlds)) retain(reading);
     }
@@ -327,7 +330,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (reading) retain(reading);
       }
     }
-    if (ts.some(t=>worlds.nominalNumbers.has(t[0]) || /^\d+$/u.test(t[0]))) {
+    if (ts.some(t=>numberHeads.has(t[0]) || /^\d+$/u.test(t[0]))) {
       for (const candidate of [...candidates]) {
         const qualified=nominalNumberReading(text,candidate,worlds.nominalNumbers,quotes,model.modifiers);
         if (qualified) retain(qualified);
@@ -514,15 +517,39 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const item={act:plan.act,predicate:plan.predicate,targets:plan.items[0]};
         const [article,articleText]=tokens(text)[0];
         const determiner=worlds.determiners[article];
-        for (const choice of [first,...alternatives]) {
-          const wires=composableWires(choice,item);
+        const projected=(choice,predicate)=>composableWires(choice,{...item,predicate});
+        const options=[first,...alternatives].map(choice=>projected(choice,item.predicate));
+        // A bare quantity has no written verb. The nominal plan supplies the
+        // kind and action; every word still needs independent evidence below.
+        if (plan.quantity) {
+          const ts=tokens(text), length=tokens(plan.quantity).length, chars=Array.from(text);
+          for (const target of item.targets) {
+            if (target.start!==length || ts.slice(target.end).some(([key])=>key!=='.' && key!=='!')) continue;
+            const noun=chars.slice(ts[target.start][2],ts[target.end-1][3]).join('');
+            const semanticHead=target.sort ? 'sort='+JSON.stringify(target.sort)+' sort_words=' : 'family_words=';
+            options.push(parse('@r w.request.request act=make mood=do\n@t w.request.target request=$r mode=new family='+
+              JSON.stringify(target.family)+' '+semanticHead+JSON.stringify(noun)+' quantity='+JSON.stringify(plan.quantity)+
+              ' count_words='+JSON.stringify(plan.quantity)));
+          }
+          for (const choice of [base,...base.alternatives]) {
+            if (!choice.sop || !choice.sop.includes('quantity=')) continue;
+            const root=parse(choice.sop).find(w=>w.type==='w.request.request');
+            if (root) options.push(projected(choice,valueOf(root,'predicate')));
+          }
+        }
+        for (const wires of options) {
           if (!wires || wires.some(w=>['w.request.previous','w.request.clock','w.request.context'].includes(w.type))) continue;
           const req=wires.find(w=>w.type==='w.request.request');
           delete req.attrs.predicate;
           delete req.attrs.words;
           const target=wires.find(w=>w.type==='w.request.target');
-          if (valueOf(target,'determiner') && valueOf(target,'determiner')!==determiner) continue;
-          target.attrs.determiner=[determiner];
+          if (plan.quantity) {
+            if (valueOf(target,'quantity')!==plan.quantity || target.attrs.count) continue;
+            target.attrs.determiner=['quantified'];
+          } else {
+            if (valueOf(target,'determiner') && valueOf(target,'determiner')!==determiner) continue;
+            target.attrs.determiner=[determiner];
+          }
           const retained=wires.filter(w=>w.type!=='w.request.unread' ||
             valueOf(w,'text')!==articleText);
           const proof=evidenceReport(text,retained,worlds.evidenceVocabulary);
@@ -532,7 +559,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
         continue;
       }
-      const headings=plan.prefix ? transfer.sceneHeadings(plan.prefix) : [];
+      const headings=plan.prefix ? transfer.sceneHeadings(plan.prefix,plan.headingRole) : [];
       if (headings.length) {
         const [first,...alternatives]=headings;
         const parts=[plan.prefix,plan.firstObject,...plan.parts.slice(1)];

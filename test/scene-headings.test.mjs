@@ -80,6 +80,11 @@ test('a setting before the first object can corroborate a local facet only in it
   const input='a beach before sunrise';
   assert.deepEqual(createTransfer([...samples.slice(2),...observations]).sceneHeadings(input),[]);
   assert.deepEqual(createTransfer([...samples,observations[0]]).sceneHeadings(input),[]);
+  const withEmbedded=createTransfer([...samples,...observations]);
+  assert.deepEqual(withEmbedded.sceneHeadings('a beach'),[]);
+  assert.deepEqual(withEmbedded.sceneHeadings('a beach','gallery.light'),[]);
+  const [single]=withEmbedded.sceneHeadings('a beach','gallery.location');
+  assert.match(single.sop,/attribute=gallery\.location value=beach/);
   const [proposal]=createTransfer([...samples,...observations]).sceneHeadings(input);
   assert.match(proposal.sop,/family=gallery mode=existing/);
   assert.match(proposal.sop,/attribute=gallery\.location value=beach/);

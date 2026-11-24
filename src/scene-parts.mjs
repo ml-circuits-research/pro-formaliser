@@ -5,6 +5,22 @@ const word = /^[\p{L}\p{M}\p{N}_]+$/u;
 const terminal = new Set(['.','!','?']);
 const separators = new Set(['list-or-clause','coordination']);
 
+const quantityStarts=new WeakMap();
+function quantityWidth(terms,start,numbers) {
+  if (!numbers) return 0;
+  if (!quantityStarts.has(numbers)) {
+    const heads=new Map();
+    for (const [form,{kind}] of numbers) if (kind==='qualitative') {
+      const words=form.split(' ');
+      heads.set(words[0],Math.max(words.length,heads.get(words[0]) ?? 0));
+    }
+    quantityStarts.set(numbers,heads);
+  }
+  for (let size=Math.min(quantityStarts.get(numbers).get(terms[start]) ?? 0,terms.length-start);size>0;size--)
+    if (numbers.get(terms.slice(start,start+size).join(' '))?.kind==='qualitative') return size;
+  return 0;
+}
+
 export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, isAct, constructs} = {}) {
   const head = visible ?? ts.map(([key])=>key);
   const chars = Array.from(text);
@@ -14,7 +30,8 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
     if (!memo.has(surface)) memo.set(surface,[...worlds.lookup(surface),...(Object.hasOwn(learned,surface) ? learned[surface] : [])]);
     return memo.get(surface);
   };
-  const nominal = i=>nounStart.has(worlds.determiners[head[i]]) || /^\d+$/u.test(head[i] ?? '');
+  const quantityAt=i=>quantityWidth(head,i,worlds.nominalNumbers);
+  const nominal = i=>quantityAt(i)>0 || nounStart.has(worlds.determiners[head[i]]) || /^\d+$/u.test(head[i] ?? '');
   const separator = i=>separators.has(worlds.joiners[head[i]]);
   const spatial = i=>worlds.lookup(head[i] ?? '').some(([role,act,arg])=>
     role==='marker' && (act==='*' && arg==='spatial' || act==='make' && arg==='place'));
@@ -26,7 +43,7 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
   function nouns(start,end) {
     if (!nominal(start)) return [];
     let ambiguous=[];
-    for (let i=start+1;i<Math.min(end,start+8);i++) {
+    for (let i=start+Math.max(1,quantityAt(start));i<Math.min(end,start+8);i++) {
       if (!word.test(head[i]) || spatial(i) || nominal(i)) break;
       for (let j=Math.min(end,i+6);j>i;j--) {
         if (!head.slice(i,j).every(key=>word.test(key))) continue;
@@ -34,7 +51,7 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
         const hasProperty=hits.some(([role])=>role==='constraint');
         const targets=hits.flatMap(([role,act,family,mode,sort])=>role==='target' && act==='make' && mode==='new' &&
           (!hasProperty || sort===phrase)
-          ? [{family,sort:sort || undefined,end:j}] : []);
+          ? [{family,sort:sort || undefined,start:i,end:j}] : []);
         if (targets.length && !hasProperty) return targets;
         if (targets.length && (!ambiguous.length || j>ambiguous[0].end)) ambiguous=targets;
       }
@@ -42,14 +59,15 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
     return ambiguous;
   }
 
-  let start=0, predicate, prefix;
+  let start=0, predicate, prefix, headingRole;
   while (worlds.fillerPhrases.has(head[start]) || start &&
     ([',','-','—','–'].includes(head[start]) || worlds.joiners[head[start]]==='addition')) start++;
   if (constructs) {
     const cut=learnedSceneBoundary(head,worlds,constructs,nominal);
     if (!cut) return null;
-    prefix=span(0,cut);
-    start=cut+1;
+    prefix=span(0,cut.end);
+    start=cut.end+1;
+    headingRole=cut.role;
   }
   if (!prefix) {
     for (const lead of prefixes?.get(head[start]) ?? []) {
@@ -140,12 +158,12 @@ export function sceneParts(text, ts, worlds, {visible, prefixes, learned = {}, i
   // A standalone indefinite noun phrase can share the creation reading of
   // an item in a list. Its projected circuit must ground the whole phrase.
   if (!prefix && synthesize && start===0 && parts.length===1 &&
-      worlds.determiners[head[0]]==='indefinite' && ts.every(([key])=>
+      (worlds.determiners[head[0]]==='indefinite' || quantityAt(0)) && ts.every(([key])=>
         !worlds.negatives.has(key) && !worlds.scopeGrammar.conditionals.has(key) &&
         !worlds.scopeGrammar.auxiliary.has(key) && !worlds.scopeGrammar.copulas.has(key) &&
         !worlds.joiners[key] && (word.test(key) || key==='-' || key==='.' || key==='!'))) {
-    return {act:'make',predicate,parts,inputs,items,singleNominal:true};
+    return {act:'make',predicate,parts,inputs,items,singleNominal:true,quantity:quantityAt(0) ? span(0,quantityAt(0)) : undefined};
   }
   if (!punctuated || items.filter(Boolean).length<2 || parts.length>8) return null;
-  return {act:'make',predicate,parts,inputs,items,prefix,firstObject,syntheticPredicate:synthesize};
+  return {act:'make',predicate,parts,inputs,items,prefix,headingRole,firstObject,syntheticPredicate:synthesize};
 }

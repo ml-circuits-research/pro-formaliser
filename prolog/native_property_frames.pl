@@ -11,15 +11,22 @@ native_property_frames(Q,Proofs) :-
 property_frame(Packet,Proof) :-
     member(Frame,Packet.frames),
     length(Packet.words,End),
-    walk(Frame.pattern,Packet,0,End,Frame.act,_Family,_Key,Roles),
-    memberchk("thing"-Owner,Roles),
+    walk(Frame.pattern,Packet,0,End,Frame.act,Family,_Key,Roles),
+    ( Frame.implicitOwner == true ->
+      Owner=_{family:Family,fill:"context",implicit:true}
+    ; memberchk("thing"-Owner,Roles) ),
     memberchk("predicate"-Predicate,Roles),
     Base=_{act:Frame.act,frame:Frame.name,owner:Owner,predicate:Predicate},
     ( get_dict(questions,Frame,Questions) ->
       memberchk("attribute"-Attribute,Roles),
       ( Frame.numberOnly == false ; Attribute.numeric == true ),
       Proof=Base.put(_{attribute:Attribute,questionKinds:Questions})
-    ; ( memberchk("qualitative"-Value,Roles) -> Assign=Base
+    ; ( Frame.implicitOwner == true ->
+        memberchk("context_attribute"-Attribute,Roles), memberchk("context_value"-Value,Roles),
+        ( Frame.numberOnly == false ; Value.numeric == true ),
+        ( Frame.finiteOnly == false ; Value.closed == true ),
+        Assign=Base.put(attribute,Attribute)
+      ; memberchk("qualitative"-Value,Roles) -> Assign=Base
       ; memberchk("attribute"-Attribute,Roles), memberchk("value"-Value,Roles),
         ( Frame.numberOnly == false ; Value.numeric == true ),
         Assign=Base.put(attribute,Attribute) ),
@@ -43,6 +50,10 @@ event("value",Packet,At,_,Family,Key,Event) :-
     member(Event,Packet.values), Event.a=:=At, Family=Event.family, Key=Event.key.
 event("qualitative",Packet,At,_,Family,Key,Event) :-
     member(Event,Packet.qualitative), Event.a=:=At, Family=Event.family, Key=Event.key.
+event("context_attribute",Packet,At,_,Family,Key,Event) :-
+    member(Event,Packet.contextAttrs), Event.a=:=At, Family=Event.family, Key=Event.key.
+event("context_value",Packet,At,_,Family,Key,Event) :-
+    member(Event,Packet.contextValues), Event.a=:=At, Family=Event.family, Key=Event.key.
 
 eat([],_,At,At).
 eat([Word|Rest],Input,At,End) :-

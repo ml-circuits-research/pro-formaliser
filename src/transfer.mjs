@@ -607,7 +607,7 @@ function composedHeadingIndex(determiners, fillerPhrases) {
       for (const stop of ends) rememberPiece(record.pieces,ts,start,stop,w,key,source);
     }
   }
-  function find(text) {
+  function find(text,headingRole) {
     if (unsafe(text)) return [];
     const ts=tokens(text);
     if (!ts.length || ts.length>36) return [];
@@ -625,7 +625,7 @@ function composedHeadingIndex(determiners, fillerPhrases) {
       let steps=0;
       function cover(position,parts,predicate) {
         if (++steps>256 || analyses.size>1) return;
-        if (position===ts.length && parts.length>=2) {
+        if (position===ts.length && (parts.length>=2 || parts.length===1 && parts[0].key===headingRole)) {
           const key=JSON.stringify([predicate,[...parts].sort((a,b)=>a.key.localeCompare(b.key)).map(part=>part.attrs)]);
           analyses.set(key,{parts,predicate});
           return;
@@ -758,13 +758,13 @@ function headingIndex(envelope, determiners, fillerPhrases) {
         .map(([key,values])=>[key,values.map(value=>value.startsWith('$') ? '$'+names.get(value.slice(1)) : value)]))}));
     }
   }
-  function find(text) {
+  function find(text,headingRole) {
     const exact=[...(proposals.get(signature(text))?.values() ?? [])].flatMap(({sources,wires,bare,form})=>{
       if (sources.size<2 || !bare && !bareForms.has(form)) return [];
       const scoped=wires.map(w=>w.type===requestsType ? {...w,attrs:{...w.attrs,words:[JSON.stringify(text)]}} : w);
       return [{sop:serialize(scoped),source:'scene-heading',support:sources.size,status:'matched'}];
     });
-    return [...exact,...composed.find(text)];
+    return [...exact,...composed.find(text,headingRole)];
   }
   return {observe,find};
 }

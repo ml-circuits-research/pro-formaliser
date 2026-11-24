@@ -24,10 +24,17 @@ test('retains exact additive amounts and ignores approximations, comparisons and
     assert.equal(field(node,'count'),String(count));
     assert.equal(field(node,'count_words'),amount);
   }
-  for (const text of ['make a couple of boxes','make more boxes','make some more boxes','make two more boxes than last time',
+  for (const text of ['make more boxes','make some more boxes','make two more boxes than last time',
     'make zero more boxes','make -2 more boxes','make 3.5 more boxes','make a label called "two more boxes"']) {
     assert.equal(read(text),undefined,text);
   }
+  for (const words of ['loads of','a couple of','a few','plenty of']) {
+    const proposal=read('make '+words+' boxes');
+    const selected=parse(proposal.sop)[1];
+    assert.equal(field(selected,'quantity'),words);
+    assert.equal(field(selected,'count'),undefined);
+  }
+  assert.equal(read('make too many boxes'),undefined);
   assert.equal(read('select two more boxes',target.replace('mode=new','mode=existing')),undefined);
 });
 
@@ -55,4 +62,28 @@ test('grounds an installed family and native additive marker through the public 
       field(w,'family')==='prop' && field(w,'mode')==='new' &&
       field(w,'count')===String(count) && field(w,'count_words')===amount)),input);
   }
+});
+
+test('retains an installed qualitative quantity and its noun without generating an integer',async t=>{
+  const directory=mkdtempSync(join(tmpdir(),'sop-qualitative-'));
+  t.after(()=>rmSync(directory,{recursive:true,force:true}));
+  const file=join(directory,'test.sop');
+  writeFileSync(file,`
+@bench std.schema.world name=w.bench
+@tiles std.schema.kind of=w.bench.tile world=w.bench acts=make
+@tile pro.reader.target family=tile sort=tile text=tile text=tiles act=make tab=bench mode=new
+@abundance w.lang.en.cue name=count.abundance on=count amount=many lead="a heap of" takes=none
+`);
+  const reader=createReader(undefined,loadWorlds({paths:[file]}));
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose('a heap of tiles');
+  const proposals=candidates.filter(c=>c.source==='nominal-creation').map(c=>parse(c.sop));
+  assert.ok(proposals.some(wires=>{
+    const owner=wires.find(w=>w.type==='w.request.target');
+    return field(owner,'family')==='tile' && field(owner,'sort')==='tile' &&
+      field(owner,'quantity')==='a heap of' && !owner.attrs.count &&
+      !wires.find(w=>w.type==='w.request.request').attrs.predicate;
+  }));
+  for (const text of ['How many tiles?', 'If a heap of tiles breaks', 'A heap of tiles is missing'])
+    assert.ok(!(await reader.propose(text)).candidates.some(c=>c.source==='nominal-creation'),text);
 });

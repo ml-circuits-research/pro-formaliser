@@ -167,3 +167,6 @@
 
 ## Paired semantic review for f3233ae
 - Both established samples gained complete proposals. The third sample had zero changed sets. All 48 edited-input spelling unions and all 201 colon-bearing requests matched their checked replays. See eval/ROLE-BINDING-REPLAY.tsv and eval/RESULTS.md.
+
+## Written property labels, owners, quantities and setting roles
+- Installed catalogs supply spoken compound labels. New property frames retain implicit or shared owners, and independent worlds can add senses for the same key. Qualitative quantities preserve written words. A supported setting can precede its object list. All 318 tests passed; per-property sentence patterns were discarded.

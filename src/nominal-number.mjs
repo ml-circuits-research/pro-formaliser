@@ -44,6 +44,14 @@ export function compileNominalNumbers(facts) {
       if (text && !numbers.has(text)) numbers.set(text,{kind:'additive',value:'1'});
     }
   }
+  // These give a quantity without fixing the number of members.
+  for (const cue of facts('w.lang.en.cue')) {
+    if (first(cue,'on')!=='count' || first(cue,'takes')!=='none' || !first(cue,'amount')) continue;
+    for (const raw of fields(cue,'lead')) {
+      const term=phrase(raw);
+      if (!numbers.has(term)) numbers.set(term,{kind:'qualitative'});
+    }
+  }
   return numbers;
 }
 
@@ -55,7 +63,7 @@ function endingAt(input,after,numbers,numberOf,kinds) {
   }
 }
 
-const amounts=new Set([...standardKinds,'additive']);
+const amounts=new Set([...standardKinds,'additive','qualitative']);
 const increment=new Set(['increment']);
 const cardinal=new Set(['cardinal']);
 const comparison=new Set(['comparison']);
@@ -148,6 +156,14 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
   // plausible head or another qualified occurrence leaves the binding open.
   if (qualified.length!==1 || qualified[0].position!==positions[0]) return;
   const [{start,end,surface,number}]=qualified;
+  if (number.kind==='qualitative') {
+    if (first(target,'mode')!=='new' || first(holder,'act')!=='make' ||
+        ![undefined,'do'].includes(first(holder,'mood')) || holder.attrs.polarity) return;
+    const prefix=text.slice(left,start).trim();
+    const predicate=first(holder,'predicate');
+    // A prefixed quantity must be the direct argument of the command.
+    if (prefix && (!predicate || !(' '+phrase(prefix)).endsWith(' '+phrase(predicate)))) return;
+  }
   if (number.kind==='additive') {
     if (first(target,'mode')!=='new') return;
     const afterNoun=input.slice(positions[0]+keys.length).filter(token=>token.end<=right);
@@ -159,7 +175,7 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
   if (wires.some(w=>w.type==='w.request.constraint' && ['on','words','value'].some(k=>
     (k==='on' && first(w,k)==='count') || first(w,k)===surface))) return;
   const additions=number.kind==='ordinal' ? {ordinal:[JSON.stringify(surface)]}
-    : {count:[String(number.value)],quantity:[JSON.stringify(surface)],count_words:[JSON.stringify(surface)]};
+    : {...(number.kind==='qualitative' ? {} : {count:[String(number.value)]}),quantity:[JSON.stringify(surface)],count_words:[JSON.stringify(surface)]};
   const lines=[];
   for (const wire of consumeUnread(wires,text,start,end)) {
     const attrs=wire===target ? {...wire.attrs,...additions} : wire.attrs;

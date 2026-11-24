@@ -138,3 +138,11 @@ Fișierul `topic-commands.sop` declară forma în care o lume poate furniza leg�
 În reluarea prin CLI cu modelul înghețat, o alternativă completă pentru „the huge bear: face right” folosește ursul existent și mărimea lui drept criterii de selecție și `drawn.facing=right` drept rezultat. Toate cele cinci cuvinte au dovezi în text. Alternativa apare a 17-a din 17 pe eșantionul replică, iar prima propunere rămâne parțială. Varianta nouă cu „face left” funcționează prin aceeași regulă. Niciuna dintre propoziții nu apare textual în antrenare. Formele negative, întrebările și valorile din afara catalogului nu produc această alternativă. [Teste pentru domeniul comenzii](test/topic-commands.test.mjs)
 
 O comandă de orientare spre un obiect indică o instanță care trebuie căutată în scenă. Propunerea `drawn.facingTarget` rămâne un pilot separat, cu verificarea consumatorului canonic și a execuției încă deschisă. [Propunerea de catalog](sop-worlds/vocabulary/orientation.sop)
+
+### Răspuns la verificarea pe f3233ae · domeniul proprietății
+
+În exemplele cu pălăria și cu înclinarea, suntem de acord cu cele două observații. Le-am consemnat ca probleme ale adnotării în audit. În primul caz, pălăria identifică băiatul. În al doilea, „by 15” exprimă o diferență. [Verdictele pe exemple](eval/ROLE-BINDING-REPLAY.tsv)
+
+Observația despre „the revenue bars” surprinde o pierdere reală de informație. Dacă există și bare pentru costuri, schimbarea orientării întregului grafic poate afecta ambele serii. Am exclus prototipul cu tipare specifice din rezultatele raportate. Verificăm separat formulările „the bars”, „the revenue bars” și „the cost bars”, inclusiv dacă o calificare fără rol în catalog rămâne explicit nerezolvată.
+
+Am verificat cele trei variante. Cadrul comun poate lega „the bars on Revenue by department should be horizontal” de graficul numit. Pentru „the revenue bars” și „the cost bars”, același cadru nu emite o orientare aplicată întregului grafic. Stabilirea unei modificări pentru seria calificată rămâne deschisă. În varianta integrată, ordinea proprietății, obiectului și valorii este exprimată prin reguli comune, aplicabile și unei lumi de laborator instalate în test. [Probe cu cele două măsuri și cu o lume independentă](test/owned-effects.test.mjs)

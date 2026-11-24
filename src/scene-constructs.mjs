@@ -104,7 +104,7 @@ export function learnedSceneBoundary(head, worlds, constructs, nominal) {
     if (!nominal(end+1)) continue;
     const kind=boundary(head[end],worlds);
     if (!kind) continue;
-    for (const {connector,leads,settings} of constructs) {
+    for (const {role,connector,leads,settings} of constructs) {
       if (connector!==kind) continue;
       for (const setting of settings) {
         const words=setting.split(' ');
@@ -114,7 +114,7 @@ export function learnedSceneBoundary(head, worlds, constructs, nominal) {
           if (left.some((word,i)=>worlds.negatives.has(word) || worlds.scopeGrammar.negatives.has(word) ||
               worlds.scopeGrammar.conditionals.has(word) || [...worlds.scopeGrammar.endings].some(ending=>
                 left.slice(i,i+4).join('').endsWith(ending)))) continue;
-          if (leads.includes(keyOf(normalizedLead(left,worlds)))) return end;
+          if (leads.includes(keyOf(normalizedLead(left,worlds)))) return {end,role};
         }
       }
     }

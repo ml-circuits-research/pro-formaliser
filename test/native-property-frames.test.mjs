@@ -162,3 +162,75 @@ test('reads fresh native frame and catalog roles in an overlay',async t=>{
   assert.deepEqual(new Set(native(qualitative.candidates).map(wires=>field(typed(wires,'constraint'),'attribute'))),
     new Set(['module.response','module.feed']));
 });
+
+const implicit = candidates => native(candidates).filter(wires=>{
+  const target=typed(wires,'target');
+  return field(target,'fill')==='context' && !['description','sort','ids','name','family_words']
+    .some(key=>field(target,key) !== undefined);
+});
+
+test('binds a named property and finite value while deferring the compatible owner',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  const text='make the colour bar length medium';
+  const {candidates}=await reader.propose(text);
+  const wires=implicit(candidates).find(wires=>field(typed(wires,'constraint'),'attribute')==='chart.colourBarLength');
+  assert.ok(wires);
+  const target=typed(wires,'target'), constraint=typed(wires,'constraint'), lookup=typed(wires,'lookup');
+  assert.equal(field(target,'family'),'chart');
+  assert.equal(field(target,'mode'),'existing');
+  assert.equal(field(constraint,'key_words'),'colour bar length');
+  assert.equal(field(constraint,'value'),'medium');
+  assert.equal(field(lookup,'target'),'$'+target.id);
+  assert.equal(field(lookup,'from'),'page');
+});
+
+test('keeps competing context families and never mistakes owners, conditions, or negative clauses for omitted owners',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  const results=implicit((await reader.propose('Set the width to 15')).candidates);
+  const families=new Set(results.map(wires=>field(typed(wires,'target'),'family')));
+  assert.ok(families.has('chart') && families.has('node'));
+  for (const wires of results) assert.equal(field(typed(wires,'constraint'),'value'),'15');
+  for (const query of [
+    'Do not make the colour bar length medium',
+    'Make the colour bar length medium if approved',
+    'Make the colour bar length medium and delete it',
+    'Make the colour bar length moderate',
+    'Make the chart title medium',
+    'Make the chart orange',
+    'Could you set the markers to small circles?',
+    'Could you set the markers to sized by the order value?',
+    'Change the time to the next morning',
+    'Set the width of the chart to 15',
+    'Set every width to 15',
+    'The colour bar length is medium',
+    'Is the colour bar length medium?',
+  ]) assert.deepEqual(implicit((await reader.propose(query)).candidates),[],query);
+});
+
+test('keeps compatible property aliases in an unrelated world and accepts a bounded quoted operand',async t=>{
+  const root=fileURLToPath(new URL('../.cache/',import.meta.url));
+  const dir=mkdtempSync(join(root,'implicit-property-frame-'));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  writeFileSync(join(dir,'sensors.sop'),[
+    '@lab std.schema.world name=w.lab',
+    '@sense std.schema.kind of=w.lab.receiver world=w.lab acts=change',
+    '@mode w.request.key tab=lab family=receiver name=receiver.displayMode head=class value=dim value=bright',
+    '@filter w.request.key tab=lab family=receiver name=receiver.filterMode head=class value=dim value=clear',
+    '@memo w.request.key tab=lab family=receiver name=receiver.sideNote head=span',
+    '@alias core.word text="operating mode" means=receiver.displayMode means=receiver.filterMode',
+  ].join('\n'));
+  const worlds=loadWorlds({paths:[dir]});
+  const reader=createReader(undefined,worlds);
+  t.after(()=>reader.close());
+  const phrase='Make the operating mode dim';
+  const found=implicit((await reader.propose(phrase)).candidates).filter(wires=>field(typed(wires,'target'),'family')==='receiver');
+  assert.deepEqual(found.map(wires=>field(typed(wires,'constraint'),'attribute')).sort(),['receiver.displayMode','receiver.filterMode']);
+  const quote='Set the side note to "No reset if busy"';
+  const [open]=implicit((await reader.propose(quote)).candidates).filter(wires=>field(typed(wires,'target'),'family')==='receiver');
+  assert.ok(open);
+  assert.equal(field(typed(open,'constraint'),'value'),'No reset if busy');
+  assert.equal(field(typed(open,'constraint'),'key_words'),'side note');
+  assert.equal(implicit((await reader.propose('Set the side note to No reset')).candidates).length,0);
+});

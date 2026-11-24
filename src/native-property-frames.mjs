@@ -45,11 +45,14 @@ export function compileNativePropertyFrames(facts) {
   for (const wire of facts('w.lang.en.frame')) {
     const [name,act,mode,needs]=['name','act','mode','needs'].map(key=>field(wire,key));
     const asking=act==='ask' && mode==='what';
-    const qualitative=act==='change' && needs==='values';
-    if ((!asking && (act!=='change' || mode!=='set')) || !['attrs','number'].includes(needs) && !qualitative ||
-        fixed.has(name) || wire.attrs.mood || wire.attrs.polarity) continue;
     const roles=fields(wire,'role');
-    const required=asking ? ['thing','attribute'] : qualitative ? ['thing','value'] : ['thing','attribute','value'];
+    const implicitOwner=act==='change' && mode==='set' && roles.length===2 && roles.includes('attribute') && roles.includes('value');
+    const finiteOnly=implicitOwner && needs==='values';
+    const qualitative=act==='change' && needs==='values' && !implicitOwner;
+    if ((!asking && (act!=='change' || mode!=='set')) || !['attrs','number'].includes(needs) && !qualitative && !finiteOnly ||
+        fixed.has(name) || wire.attrs.mood || wire.attrs.polarity) continue;
+    const required=asking ? ['thing','attribute'] : qualitative ? ['thing','value'] :
+      implicitOwner ? ['attribute','value'] : ['thing','attribute','value'];
     if (roles.length!==required.length || !required.every(role=>roles.includes(role))) continue;
     const ordered=(parts.get(name) ?? []).slice().sort((a,b)=>Number(field(a,'at'))-Number(field(b,'at')));
     const pattern=[];
@@ -62,7 +65,7 @@ export function compileNativePropertyFrames(facts) {
         if (optional || !roles.includes(role) || (role==='attribute' ? takes!=='lexicon' ||
               field(part,'lexicon')!=='attribute' : role==='thing' ? takes!=='words' :
                 qualitative ? takes!=='lexicon' || field(part,'lexicon')!=='value' : !['words','number'].includes(takes))) break;
-        pattern.push({role:qualitative && role==='value' ? 'qualitative' : role});
+        pattern.push({role:implicitOwner ? 'context_'+role : qualitative && role==='value' ? 'qualitative' : role});
         consumed++;
         continue;
       }
@@ -72,6 +75,11 @@ export function compileNativePropertyFrames(facts) {
       if (kind==='verb') { forms=verbs.get(field(part,'act')); mark='predicate'; }
       if (kind==='word') {
         forms=fields(part,'word').map(words);
+        if (implicitOwner && !optional && pattern.every(part=>part.mark==='lead')) {
+          const written=new Set((verbs.get(act) ?? []).map(form=>form.join(' ')));
+          forms=forms.filter(form=>written.has(form.join(' ')));
+          mark='predicate';
+        }
         if (asking && !optional && pattern.every(part=>part.mark==='lead')) {
           forms=forms.filter(form=>interrogatives.has(form.join(' ')));
           questions=Object.fromEntries(forms.map(form=>[form.join(' '),interrogatives.get(form.join(' '))]));
@@ -90,21 +98,43 @@ export function compileNativePropertyFrames(facts) {
     const compiledRoles=pattern.filter(part=>part.role);
     if (consumed!==ordered.length || compiledRoles.length!==required.length ||
         pattern.filter(part=>part.mark==='predicate').length!==1 || asking && !questions) continue;
-    frames.push({name,act,numberOnly:needs==='number',pattern,...(questions ? {questions} : {})});
+    if (implicitOwner && (compiledRoles[0]?.role!=='context_attribute' || compiledRoles[1]?.role!=='context_value' ||
+        pattern.at(-1)?.role!=='context_value' || pattern.findIndex(part=>part.mark==='predicate')>pattern.indexOf(compiledRoles[0]))) continue;
+    frames.push({name,act,numberOnly:needs==='number',implicitOwner,finiteOnly,pattern,...(questions ? {questions} : {})});
   }
   return frames;
 }
 
-function keyFor(worlds,family,surface) {
-  const labels=worlds.ownerPropertyLabels.get(identity(surface,family)) ?? [];
-  const names=new Set(labels.map(({attribute})=>attribute));
-  if (names.size!==1) return;
-  const [name]=names;
+function catalogKey(worlds,family,name) {
   const keys=worlds.requestKeys.filter(key=>key.family===family && key.name===name);
   const [first]=keys;
   if (!first || keys.some(key=>key.head!==first.head || key.values.length!==first.values.length ||
       key.values.some(value=>!first.values.includes(value)))) return;
   return first;
+}
+
+function keyFor(worlds,family,surface) {
+  const names=new Set((worlds.ownerPropertyLabels.get(identity(surface,family)) ?? []).map(({attribute})=>attribute));
+  if (names.size===1) return catalogKey(worlds,family,names.values().next().value);
+}
+
+const contextualLabels=new WeakMap();
+function contextKeys(worlds,surface) {
+  if (!contextualLabels.has(worlds)) {
+    const labels=new Map();
+    for (const [id,entries] of worlds.ownerPropertyLabels) {
+      const [surface,family]=JSON.parse(id);
+      if (!worlds.literalGrammar.licenses(family,'change')) continue;
+      const keys=labels.get(surface) ?? new Map();
+      for (const {attribute} of entries) {
+        const key=catalogKey(worlds,family,attribute);
+        if (key) keys.set(identity(family,attribute),key);
+      }
+      if (keys.size) labels.set(surface,keys);
+    }
+    contextualLabels.set(worlds,labels);
+  }
+  return contextualLabels.get(worlds).get(surface)?.values() ?? [];
 }
 
 function ownerBindings(worlds,act,words,span,plain,det,start,end) {
@@ -200,21 +230,25 @@ function qualitativeValues(worlds,family,surface) {
   return choices.length<2 ? choices : choices.filter(choice=>choice.alias);
 }
 
+function prefixStops(parts,input) {
+  let starts=[0];
+  for (const part of parts) {
+    starts=[...new Set(starts.flatMap(start=>[
+      ...(part.optional ? [start] : []),
+      ...part.forms.filter(form=>hasWords(input,start,form)).map(form=>start+form.length),
+    ]))];
+    if (!starts.length) break;
+  }
+  return starts;
+}
+
 function admitsPrefix(frame,input) {
   const index=frame.pattern.findIndex(part=>part.mark==='predicate');
   const predicate=frame.pattern[index];
   if (frame.pattern.slice(0,index).some(part=>part.role)) {
     return input.some((_,start)=>predicate.forms.some(form=>hasWords(input,start,form)));
   }
-  let starts=[0];
-  for (const part of frame.pattern.slice(0,index+1)) {
-    starts=[...new Set(starts.flatMap(start=>[
-      ...(part.optional ? [start] : []),
-      ...part.forms.filter(form=>hasWords(input,start,form)).map(form=>start+form.length),
-    ]))];
-    if (!starts.length) return false;
-  }
-  return true;
+  return prefixStops(frame.pattern.slice(0,index+1),input).length>0;
 }
 
 export function nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly=false}={}) {
@@ -226,9 +260,9 @@ export function nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly=false}
   let end=ts.length;
   const question=input[end-1]==='?';
   if (['.','!','?'].includes(input[end-1]) && !hidden(end-1,end)) end--;
-  if (end<4) return;
+  if (end<3) return;
   const frames=worlds.nativePropertyFrames.filter(frame=>
-    (!questionsOnly || frame.act==='ask') && admitsPrefix(frame,input)).map(frame=>({
+    (end>=4 || frame.implicitOwner) && (!questionsOnly || frame.act==='ask') && admitsPrefix(frame,input)).map(frame=>({
     ...frame,pattern:frame.pattern.map(part=>part.forms ? {
       ...part,forms:part.forms.filter(form=>input.some((_,i)=>hasWords(input,i,form))),
     } : part),
@@ -257,18 +291,32 @@ export function nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly=false}
     return {next:a};
   };
   const owners=[], attrs=[], values=[], qualitative=[], families=new Set(), properties=new Map();
-  const acts=[...new Set(frames.map(frame=>frame.act))];
-  for (let a=0;a<end;a++) for (let b=a+1;b<=Math.min(a+10,end);b++) {
-    for (const act of acts) {
-      for (const item of ownerBindings(worlds,act,words,span,plain,det,a,b).values()) {
-        owners.push({a,b,...item});
-        families.add(item.family);
+  const contextAttrs=[], contextValues=[], contextProperties=new Map();
+  const contextConnectors=new Map();
+  for (const frame of frames.filter(frame=>frame.implicitOwner)) {
+    const slot=frame.pattern.findIndex(part=>part.role==='context_attribute');
+    const connector=frame.pattern.slice(slot+1,-1);
+    for (const position of prefixStops(frame.pattern.slice(0,slot),input)) {
+      const choices=contextConnectors.get(position) ?? [];
+      choices.push(connector);
+      contextConnectors.set(position,choices);
+    }
+  }
+  const acts=[...new Set(frames.filter(frame=>!frame.implicitOwner).map(frame=>frame.act))];
+  if (acts.length) {
+    for (let a=0;a<end;a++) for (let b=a+1;b<=Math.min(a+10,end);b++) {
+      for (const act of acts) {
+        for (const item of ownerBindings(worlds,act,words,span,plain,det,a,b).values()) {
+          owners.push({a,b,...item});
+          families.add(item.family);
+        }
       }
     }
   }
-  if (!owners.length) return;
+  if (!owners.length && !contextConnectors.size) return;
   for (let a=1;a<end;a++) for (let b=a+1;b<=Math.min(a+8,end);b++) {
-    const {next}=det(a,b);
+    if (!families.size && !contextConnectors.has(a)) continue;
+    const {next,mode}=det(a,b);
     if (!plain(next,b)) continue;
     for (const family of families) {
       const key=keyFor(worlds,family,words(next,b));
@@ -276,13 +324,25 @@ export function nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly=false}
       attrs.push({a,b,family,key:key.name,words:span(next,b),numeric:key.head.split('+').includes('number')});
       properties.set(identity(family,key.name),key);
     }
+    if (contextConnectors.has(a) && (!mode || mode==='definite')) {
+      const starts=contextConnectors.get(a).flatMap(connector=>prefixStops(connector,input.slice(b)).map(start=>b+start))
+        .filter(start=>start<end);
+      if (!starts.length) continue;
+      for (const key of contextKeys(worlds,words(next,b))) {
+        contextAttrs.push({a,b,family:key.family,key:key.name,words:span(next,b),numeric:key.head.split('+').includes('number')});
+        const id=identity(key.family,key.name), entry=contextProperties.get(id) ?? {key,starts:new Set()};
+        for (const start of starts) entry.starts.add(start);
+        contextProperties.set(id,entry);
+      }
+    }
   }
-  if (!acts.includes('change')) {
-    if (attrs.length) return {frames,words:input.slice(0,end),owners,attrs,values,qualitative,question};
+  if (!acts.includes('change') && !contextProperties.size) {
+    if (attrs.length) return {frames,words:input.slice(0,end),owners,attrs,values,qualitative,contextAttrs,contextValues,question};
     return;
   }
   const canQualify=frames.some(frame=>frame.pattern.some(part=>part.role==='qualitative'));
   for (let a=1;a<end;a++) for (let b=a+1;b<=Math.min(a+15,end);b++) {
+    if (!canQualify && !properties.size && b!==end) continue;
     const quoted=quotes.find(q=>q.start===ts[a][2] && q.end===ts[b-1][3]);
     const source=quoted?.value ?? span(a,b);
     if (!source.trim() || !quoted && ((!plain(a,b) && !decimal.test(source)) ||
@@ -297,9 +357,17 @@ export function nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly=false}
       if (!value) continue;
       values.push({a,b,family:key.family,key:key.name,words:source,...value});
     }
+    if (b===end) for (const {key,starts} of contextProperties.values()) {
+      if (!starts.has(a)) continue;
+      const value=parseValue(key,source,norm(source),worlds);
+      // This construction has no explicit owner to constrain an open span.
+      // Require independent value evidence, or an authored quotation.
+      if (!value || (!quoted && !value.canonical && !value.numeric)) continue;
+      contextValues.push({a,b,family:key.family,key:key.name,words:source,closed:key.values.includes(value.value),...value});
+    }
   }
-  if (!values.length && !qualitative.length && !acts.includes('ask')) return;
-  return {frames,words:input.slice(0,end),owners,attrs,values,qualitative,question};
+  if (!values.length && !qualitative.length && !contextValues.length && !acts.includes('ask')) return;
+  return {frames,words:input.slice(0,end),owners,attrs,values,qualitative,contextAttrs,contextValues,question};
 }
 
 export function nativePropertyReadings(text,proofs) {
@@ -307,8 +375,8 @@ export function nativePropertyReadings(text,proofs) {
   const alternatives=new Map();
   for (const {act,frame,owner,attribute,value,predicate,questionKinds} of proofs) {
     const key=identity(owner.family,frame), meanings=alternatives.get(key) ?? new Map();
-    const binding=JSON.stringify([owner.a,owner.b,attribute?.a,attribute?.b,attribute?.key,
-      value?.a,value?.b,attribute ? value?.value : undefined]);
+    const binding=JSON.stringify([owner.a,owner.b,attribute?.a,attribute?.b,owner.implicit ? undefined : attribute?.key,
+      value?.a,value?.b,attribute && !owner.implicit ? value?.value : undefined]);
     const entries=meanings.get(binding) ?? new Map();
     const writtenPredicate=span(...predicate);
     const asking=act==='ask', question=questionKinds?.[norm(writtenPredicate)];
@@ -331,7 +399,7 @@ export function nativePropertyReadings(text,proofs) {
         ' value='+props+(value.words!==value.value ? ' words='+quote(value.words) : '')+
         ' operator='+(value.operator ?? 'eq')+' phase=result');
     }
-    if (owner.fill==='description') lines.push('@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page');
+    if (owner.fill==='description' || owner.implicit) lines.push('@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page');
     const sop=lines.join('\n');
     entries.set(sop,{sop,source:'native-property-frame'});
     meanings.set(binding,entries);
