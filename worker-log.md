@@ -173,3 +173,6 @@
 
 ## Three-sample review at 1a7dffa
 - Checked all changed proposal sets on three lots of 1,000. Primary coverage reached 50.4% (51.7% with spelling), replication 42.7%. The third lot gained two faithful readings, with no losses across the three lots. See eval/COMPOSITION-REPLAY.tsv.
+
+## Full reproduction from training at 1a7dffa
+- Bucket 0 retrained outside its 1,915 held-out rows. The model was byte-identical and all 1,000 audited proposal sets matched the previous public run. Full-check results and limitations are in eval/RESULTS.md.
