@@ -190,3 +190,14 @@
 @pro.reader.transformation.value_head core.slot of=pro.reader.transformation key=value_head kind=string many=true
 @pro.reader.transformation.predicate core.slot of=pro.reader.transformation key=predicate kind=string many=true required=true
 @pro.reader.transformation.marker core.slot of=pro.reader.transformation key=marker kind=string many=true required=true
+
+@pro.reader.owner_sort core.type of=pro.reader.owner_sort closed=true
+@pro.reader.owner_sort.tab core.slot of=pro.reader.owner_sort key=tab kind=atom required=true
+@pro.reader.owner_sort.family core.slot of=pro.reader.owner_sort key=family kind=atom required=true
+@pro.reader.owner_sort.act core.slot of=pro.reader.owner_sort key=act kind=atom required=true
+@pro.reader.owner_sort.slot core.slot of=pro.reader.owner_sort key=slot kind=atom required=true
+
+@pro.reader.property_quantity core.type of=pro.reader.property_quantity closed=true
+@pro.reader.property_quantity.family core.slot of=pro.reader.property_quantity key=family kind=atom required=true
+@pro.reader.property_quantity.key core.slot of=pro.reader.property_quantity key=key kind=atom required=true
+@pro.reader.property_quantity.quantity core.slot of=pro.reader.property_quantity key=quantity kind=atom required=true

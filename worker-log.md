@@ -113,3 +113,6 @@
 
 ## Handover audit
 - Compared all 369 staged declarations with the 1,357 official SOP files at d94ae52e. No identifier or exact-content match required pruning. Documented the comparison and retirement procedure.
+
+## Integration session second opinion
+- Published the two native declarations for owner sorts and measurement dimensions. The native SOP engine loaded the schema and facts. Reader implementation and review remain open.

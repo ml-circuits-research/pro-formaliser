@@ -32,6 +32,7 @@ const types = new Set([
   ...nominalInflectionTypes,...nominalScaleTypes,...affectedMorphologyTypes,
   'w.lang.en.alternation','w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
+  'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
   'k.layouts.slot','pro.reader.region_form','pro.reader.retention','k.values.direction','pro.reader.motion','pro.reader.owner_inventory','k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
