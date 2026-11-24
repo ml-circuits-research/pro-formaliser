@@ -6,6 +6,11 @@
 # Role assignments for the supported example worlds.
 @reader.drawing.spatial pro.reader.spatial tab=drawing family=drawn relation_key=drawn.relation anchor_key=drawn.anchor named_act=place
 @reader.diagram.spatial pro.reader.spatial tab=diagram family=node relation_key=node.position anchor_key=node.anchor named_act=place
+@reader.drawing.object.code pro.reader.instance_code family=drawn prefix=o core.source="w.drawing/schema.sop: object.code"
+@reader.diagram.node.code pro.reader.instance_code family=node prefix=n core.source="w.diagram/schema.sop: node.code"
+@reader.diagram.edge.code pro.reader.instance_code family=link prefix=e core.source="w.diagram/schema.sop: edge.code"
+@reader.diagram.link.code pro.reader.instance_code family=link prefix=l core.source="w.request/shards/keys.sop: diagram.link.ids"
+@reader.document.block.code pro.reader.instance_code family=block prefix=b core.source="w.request/shards/keys.sop: document.block.ids"
 @reader.drawing.preservation pro.reader.preservation family=drawn attribute=drawn.keep concept=retain
 @reader.diagram.preservation pro.reader.preservation family=node attribute=node.keep concept=retain
 @reader.document.section.payload pro.reader.literal family=section attribute=section.content role=payload text=saying

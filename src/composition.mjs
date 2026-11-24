@@ -10,7 +10,7 @@ const one = (wire, key) => decode(wire.attrs[key]?.[0]);
 const word = /[\p{L}\p{N}]/u;
 const keyOf = text => tokens(text).map(([key]) => key).join(' ');
 
-function visibleTokens(chars, ts) {
+export function visibleTokens(chars, ts) {
   let quote = '';
   const visible = ts.map(([word, raw, start, end]) => {
     if ((raw === "'" || raw === '’') &&
@@ -285,7 +285,8 @@ export function composeParts(parts, results, enumeration) {
   const combined = [];
   if (parts.length !== results.length || parts.length < 2) return null;
   for (const [i, result] of results.entries()) {
-    const item = enumeration && {act:enumeration.act,predicate:enumeration.predicate,targets:enumeration.items[i]};
+    const targets = enumeration?.items[i];
+    const item = targets && {act:enumeration.act,predicate:enumeration.predicate,targets};
     const wires = composableWires(result,item);
     if (!wires) return null;
     const ids = new Map(wires.map(w => [w.id,'s' + (i+1) + '.' + w.id]));
@@ -295,11 +296,16 @@ export function composeParts(parts, results, enumeration) {
       const attrs = Object.fromEntries(Object.entries(wire.attrs).map(([key,values]) => [key,values.map(value =>
         value.startsWith('$') ? '$'+ids.get(value.slice(1)) : value)]));
       if (wire.type===requestType) {
-        if (enumeration || !attrs.words) attrs.words = [JSON.stringify(parts[i])];
-        if (enumeration && i>0) delete attrs.predicate;
+        if (item || !attrs.words) attrs.words = [JSON.stringify(parts[i])];
+        if (item && (i>0 || enumeration.syntheticPredicate)) delete attrs.predicate;
       }
       combined.push({...wire,id:ids.get(wire.id),attrs});
     }
+  }
+  if (enumeration?.prefix) {
+    const request=combined.find(w=>w.type===requestType);
+    combined.push({id:'scene.setting',type:'w.request.unread',
+      attrs:{request:['$'+request.id],text:[JSON.stringify(enumeration.prefix)]}});
   }
   return serialize(combined);
 }

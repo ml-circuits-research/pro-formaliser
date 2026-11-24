@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Multi-object scenes, written IDs and clause qualifiers
+
+On the paired 1,000 requests, at least one proposal was reasonable on 40.3% (previously 40.0%). On the full holdout, 634 proposal sets contained the reference semantic wire set, previously 632. The first-choice WebMeet checker rejected 253 of 1889 nonempty circuits using the reference tab. [Grades and reproduction](THOUSAND-AUDIT.md)
+
 ## Nominal qualifiers, literal roles and clause scope
 
 On the full 1,915-row holdout, 632 proposal sets contained the reference semantic wire set (previously 624). The checker rejected 252 of 1889 nonempty first proposals using the reference tab. On the paired 1,000 requests the reviewed reasonable rate was 40.0%. [Paired grades](THOUSAND-AUDIT.md) · [Twenty failures examined against the schemas](EXPRESSIVITY.md)

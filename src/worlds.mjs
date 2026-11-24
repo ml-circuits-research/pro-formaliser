@@ -6,14 +6,16 @@ import { languageFrames } from './language-frames.mjs';
 import { evidenceVocabulary } from './evidence.mjs';
 import { scopeGrammar } from './scope-grammar.mjs';
 import { tokens } from './lexicon.mjs';
+import { createNominalInflection, nominalInflectionTypes } from './nominal-inflection.mjs';
 
 const pinned = fileURLToPath(new URL('../.cache/knowledge/docs/worlds/', import.meta.url));
 const types = new Set([
+  ...nominalInflectionTypes,
   'w.lang.en.frame', 'w.lang.en.fixed', 'w.lang.en.part', 'w.lang.en.phrase',
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
-  'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue',
+  'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue', 'w.lang.en.number',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.skip',
@@ -155,6 +157,7 @@ function stativeVerbAliases(facts) {
 }
 
 function compile(facts) {
+  const nominalInflection = createNominalInflection(facts);
   const knownWords = new Set();
   const acts = new Map(), targets = new Map(), constraints = new Map(), markers = new Map();
   const familyTabs = new Map(), familyActs = new Map();
@@ -519,12 +522,16 @@ function compile(facts) {
       family:one(wire,'family'), attribute:one(wire,'attribute'), concept:one(wire,'concept'),
     })),
     spatialBindings,
+    instanceBindings: facts('pro.reader.instance_code').map(wire => ({
+      family:one(wire,'family'), prefix:one(wire,'prefix')?.toLowerCase(),
+    })).filter(({family,prefix}) => familyActs.has(family) && /^\p{L}+$/u.test(prefix ?? '')),
     determiners: Object.fromEntries(determiners),
     joiners: Object.fromEntries(joiners),
     familyTabs: Object.fromEntries([...familyTabs].map(([family, tabs]) => [family, [...new Set(tabs)]])),
     lexicon: Object.fromEntries(acts),
     properties: surface => propertiesBySurface.get(surface) ?? [],
     tuples: surface => tuples.get(surface) ?? [],
+    nominalInflection,
     isReference: text => references.has(phrase(text)),
     lookup(surface, activeActs = actNames) {
       const entries = [...(acts.get(surface) ?? []), ...(constraints.get(surface) ?? []), ...(markers.get(surface) ?? [])];

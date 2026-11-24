@@ -1,3 +1,4 @@
+import { predicateModeLearner } from './predicate-modes.mjs';
 import { createNominalPhraseLearner } from './nominal-phrases.mjs';
 import { modifierLearner } from './nominal-modifiers.mjs';
 import { slotForms } from './slot-forms.mjs';
@@ -311,10 +312,11 @@ export function train(rows) {
   const forms = slotForms();
   const modifiers=modifierLearner(loadWorlds());
   const nominalPhrases=createNominalPhraseLearner();
-  const lexicon = learnLexicon(rows, context, forms, modifiers, nominalPhrases);
+  const modes=predicateModeLearner();
+  const lexicon = learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes);
   for (const [phrase, records] of Object.entries(learnConstraints(rows))) {
     if (!Object.hasOwn(lexicon, phrase)) Object.defineProperty(lexicon, phrase, {value:[],enumerable:true});
     lexicon[phrase].push(...records);
   }
-  return { version: 1, examples, templates, lexicon, modifiers:modifiers.finish(), nominalPhrases:nominalPhrases.finish(), forms:forms.finish(), context: context.finish() };
+  return { version: 1, examples, templates, lexicon, predicateModes:modes.finish(), modifiers:modifiers.finish(), nominalPhrases:nominalPhrases.finish(), forms:forms.finish(), context: context.finish() };
 }

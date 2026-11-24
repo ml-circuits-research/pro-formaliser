@@ -47,3 +47,7 @@
 ## Nominal qualifiers and scope recovery
 - Added target quantities, ordinals, universal/count readings, explicit names and learned adjective bindings. Scoped contrasts and courtesy preserve supported clauses.
 - Full tests passed. Paired 1,000-request L3 + L4 40.0% (previous 36.9%). See eval/THOUSAND-AUDIT.md and eval/EXPRESSIVITY.md.
+
+## Scene and identity readings
+- Implemented scoped scene lists, written IDs, narrow modes and noun inflection; re-grounded nominal qualifiers inside multi-request circuits.
+- Full test gate passed. 40.3% reasonable on the same 1,000 requests, previously 40.0%. See eval/THOUSAND-AUDIT.md.

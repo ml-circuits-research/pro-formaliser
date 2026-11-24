@@ -1,3 +1,4 @@
+import { clauseQualifiers } from './clause-qualifiers.mjs';
 import { nominalPhraseReadings } from './nominal-phrases.mjs';
 import { sequenceNameReadings } from './sequence-names.mjs';
 import { postfixSetQuestions, universalTargetReading } from './set-query.mjs';
@@ -11,13 +12,15 @@ import { frameSupport } from './language-frames.mjs';
 import { contextScores } from './context.mjs';
 import { prologWorker } from './prolog-worker.mjs';
 import { requestScope } from './request-scope.mjs';
+import { sceneParts } from './scene-parts.mjs';
 import { guardedPropertyReadings } from './guarded-properties.mjs';
 import { createRelationKeyResolver } from './relation-keys.mjs';
+import { createInstanceReferenceReader } from './instance-references.mjs';
 import { signatures } from './signatures.mjs';
 import { tokens } from './lexicon.mjs';
 import { literalRoleCandidates, maskQuoted, quotedSpans } from './literal-roles.mjs';
 import { namedArgumentCandidates } from './named-arguments.mjs';
-import { clausePrefixes, composableWires, composeParts, coordinationActs, createPreservation, enumeratedParts, sequenceParts } from './composition.mjs';
+import { clausePrefixes, composableWires, composeParts, coordinationActs, createPreservation, enumeratedParts, sequenceParts, visibleTokens } from './composition.mjs';
 import { constraintGrounder, evidenceInText, valueResolver } from './grounding.mjs';
 import { createTransfer } from './transfer.mjs';
 import { loadWorlds } from './worlds.mjs';
@@ -34,6 +37,11 @@ function add(map, key, item) {
 // binds the raw input spans and orders the resulting circuits.
 export function createFormaliser(model = {version:1,examples:[],templates:[]}, worlds = loadWorlds(), {languageFrames=true} = {}) {
   if (model.version !== 1) throw Error('Unsupported model version');
+  const modes=new Map();
+  for (const [key,mode] of Object.entries(model.predicateModes ?? {})) {
+    const [surface,act,family]=JSON.parse(key);
+    add(modes,surface,[act,family,mode]);
+  }
   const phraseHeads=new Set(Object.keys(model.nominalPhrases ?? {}).map(k=>JSON.parse(k)[3]));
   const knownModifiers=new Set(Object.keys(model.modifiers ?? {}).map(k=>JSON.parse(k)[1]));
   const nearExample = createNearExample(model.examples,{discourse:worlds.discourse});
@@ -43,6 +51,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   const targetRoles=[...new Set(worlds.languageFrames.bindings.filter(b=>b.type==='w.request.target').map(b=>b.role))];
   const ground = constraintGrounder();
   const resolveRelationKeys = createRelationKeyResolver(worlds);
+  const instanceReferences = createInstanceReferenceReader(worlds);
   const preservation = createPreservation(model.examples,worlds,model.lexicon);
   const sequenceOptions = {
     isAct:coordinationActs(worlds,model.lexicon),
@@ -74,7 +83,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   async function read(text) {
     if (typeof text !== 'string') throw Error('Expected a text string');
     const ts = tokens(text), chars = Array.from(text);
-    const ambiguousTargets = [], templates = [], hits = [], determiners = [], properties = [];
+    const ambiguousTargets = [], templates = [], hits = [], determiners = [], properties = [], predicateModes=[];
+    const inflectionHits = [], inflectionTargets = [];
     // A quoted label may itself contain punctuation, negation or a sequence word.
     // Its span remains available to property binding in Prolog.
     const quotes = quotedSpans(text);
@@ -96,10 +106,18 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
           for (const tuple of worlds.tuples(words)) properties.push([ts[i][2],ts[j][3],tuple]);
         }
         if (Object.hasOwn(worlds.determiners,words)) determiners.push([ts[i][2],ts[j][3],worlds.determiners[words]]);
+        for (const mode of modes.get(words) ?? []) predicateModes.push([ts[i][2],ts[j][3],...mode]);
         const learned = Object.hasOwn(model.lexicon ?? {},words) ? model.lexicon[words] : [];
         const local = new Set(learned.map(e => JSON.stringify(e.slice(0,-1))));
         const declared = worlds.lookup(words);
         const families = new Set(declared.filter(e=>e[0]==='target').map(e=>e[2]));
+        if (!families.size && !learned.some(([role]) => role === 'target')) {
+          const senses = worlds.nominalInflection(words, worlds.lookup);
+          for (const entry of senses) {
+            inflectionHits.push([ts[i][2],ts[j][3],entry,0]);
+            inflectionTargets.push([entry[2],entry[4],chars.slice(ts[i][2],ts[j][3]).join('')]);
+          }
+        }
         if (families.size>1) ambiguousTargets.push([ts[i][2],ts[j][3], [...families]]);
         const bindings = declared.filter(e => !local.has(JSON.stringify(e.slice(0,-1))));
         for (let entry of [...learned,...bindings]) {
@@ -121,7 +139,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const exact = examples.get(text) ?? [];
     const transfers = exact.length ? [] : transfer(text);
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
-    const request = {text,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer) {
       const key = admissibleKey(text,answer.sop);
@@ -134,15 +152,19 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const response = await worker.request(request);
     for (const answer of response.candidates) {
       if (answer.source !== 'lexicon') { retain(answer); continue; }
-      const lexical = {...answer,sop:resolveRelationKeys(answer.sop)};
+      const {operationMode,...plain}=answer;
+      const lexical = {...plain,sop:resolveRelationKeys(answer.sop)};
       retain(lexical);
+      if (operationMode) retain({...lexical,sop:lexical.sop.replace(/^(.*w\.request\.request[^\n]*)/u,
+        line=>line+' mode='+operationMode)});
       for (const attachment of literalAttachments(text,lexical,worlds)) retain(attachment);
       const named = namedTargetReading(text,lexical,worlds);
       if (named) retain(named);
       for (const sop of resolveRelationKeys.targetlessAlternatives(answer.sop)) {
-        contextualTargets.push({...answer,sop});
+        contextualTargets.push({...plain,sop});
       }
     }
+    for (const candidate of instanceReferences(text,ts,quotes,hits)) retain(candidate);
     // Family hypotheses for pronouns follow the text's own readings. The
     // independent estimator can promote one when there is supporting context.
     for (const candidate of contextualTargets) retain(candidate);
@@ -178,6 +200,29 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const candidate of preservation.readings(text,candidates)) retain(candidate);
       candidates.unshift(...candidates.splice(offset));
     }
+    if (inflectionHits.length && !exact.length) {
+      // Resolve morphology on the original text in a separate search so a
+      // fallback sense cannot replace an existing proposal in the beam.
+      const extended = await worker.request({...request, hits:[...hits,...inflectionHits],
+        templates:[], transfers:[], examples:[]});
+      for (const answer of extended.candidates) {
+        const sop = resolveRelationKeys(answer.sop);
+        const used = parse(sop).some(wire => {
+          if (wire.type !== 'w.request.target') return false;
+          const value = key => {
+            const raw = wire.attrs[key]?.[0];
+            return raw?.startsWith('"') ? JSON.parse(raw) : raw;
+          };
+          return inflectionTargets.some(([family,sort,surface]) => value('family') === family &&
+            (sort ? value('sort') === sort && value('sort_words') === surface : value('family_words') === surface));
+        });
+        if (!used) continue;
+        const candidate = {...answer,sop,source:'nominal-inflection',status:'partial'};
+        retain(candidate);
+        const qualified = nominalNumberReading(text,candidate,worlds.nominalNumbers,quotes,model.modifiers);
+        if (qualified) retain(qualified);
+      }
+    }
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
     if (response.proofs.length) {
       for (const c of candidates) {
@@ -200,9 +245,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const coverageChoice = [];
     for (const [index,result] of results.entries()) {
       const {alternatives,[conditionalScope]:_conditional,...first} = result;
-      const item = enumeration && {
-        act:enumeration.act,predicate:enumeration.predicate,targets:enumeration.items[index],
-      };
+      const targets = enumeration?.items[index];
+      const item = targets && {act:enumeration.act,predicate:enumeration.predicate,targets};
       // Discard non-composable readings before they can occupy the beam.
       // Original rank and clause order still break ties between usable readings.
       const options = [first,...alternatives].flatMap((clause,rank)=>{
@@ -229,7 +273,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (!key || seen.has(key)) continue;
       seen.add(key);
       readings.push({sop,source:enumeration?'enumeration':'sequence',
-        status:clauses.some(c=>c.status==='partial' || c.source==='lexicon' || c.unread) ? 'partial' : 'matched',
+        status:enumeration?.prefix || clauses.some(c=>c.status==='partial' || c.source==='lexicon' || c.unread) ? 'partial' : 'matched',
         parts:parts.map((text,i)=>({text,source:clauses[i].source}))});
     }
     return readings;
@@ -248,13 +292,23 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     });
     return {...best,alternatives:rest};
   }
-  const enumerationPlan = (text,ts = tokens(text)) =>
-    enumeratedParts(text,ts,worlds,{prefixes:sequenceOptions.prefixes,learned:model.lexicon});
-  async function readEnumeration(text, base, plan) {
-    if (!plan || base[conditionalScope]) return base;
-    const results = [];
-    for (const input of plan.inputs) results.push(await read(input));
-    const readings = combine(text,plan.parts,results,plan);
+  const enumerationPlans = (text,ts = tokens(text)) => {
+    const scene=sceneParts(text,ts,worlds,{...sequenceOptions,learned:model.lexicon,visible:visibleTokens(Array.from(text),ts)});
+    const enumeration=enumeratedParts(text,ts,worlds,{prefixes:sequenceOptions.prefixes,learned:model.lexicon});
+    if (!enumeration) return scene ? [scene] : [];
+    return scene?.prefix ? [enumeration,scene] : [enumeration];
+  };
+  async function readEnumeration(text, base, plans) {
+    if (!plans.length || base[conditionalScope]) return base;
+    const readings = [], inputs = new Map();
+    for (const plan of plans) {
+      const results = [];
+      for (const input of plan.inputs) {
+        if (!inputs.has(input)) inputs.set(input,await read(input));
+        results.push(inputs.get(input));
+      }
+      readings.push(...combine(text,plan.parts,results,plan));
+    }
     return mergeReadings(base,readings,base.status==='matched');
   }
   async function formalise(text) {
@@ -265,8 +319,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     const ts = tokens(text);
     const parts = sequenceParts(text,ts,worlds.joiners,sequenceOptions);
-    if (!parts.length) return readEnumeration(text,base,enumerationPlan(text,ts));
-    const plans = parts.map(part=>enumerationPlan(part));
+    if (!parts.length) return readEnumeration(text,base,enumerationPlans(text,ts));
+    const plans = parts.map(part=>enumerationPlans(part));
     // A complete existing sequence can preserve dependencies that separate
     // lexical reads do not currently resolve.
     const complete = base.status==='matched' &&
@@ -295,6 +349,22 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       const result = await formalise(text);
       const {alternatives,[conditionalScope]:_conditional,...first} = result;
       const candidates = result.sop ? [first,...alternatives] : [];
+      const qualify=clauseQualifiers(text,worlds,model,(words,quotes)=>
+        !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted);
+      const additional=new Map();
+      for (const candidate of candidates) {
+        if (!candidate.sop.includes(' words=') || candidate.sop.indexOf(' w.request.request')===
+            candidate.sop.lastIndexOf(' w.request.request')) continue;
+        const enriched=qualify(candidate);
+        if (enriched) {
+          const key=admissibleKey(text,enriched.sop);
+          if (key) additional.set(key,enriched);
+        }
+      }
+      if (additional.size) {
+        for (const candidate of candidates) additional.delete(JSON.stringify(signatures(parse(candidate.sop),true)));
+        candidates.push(...additional.values());
+      }
       return {candidates,candidateCount:candidates.length,multipleInterpretations:candidates.length>1,
         ...(!candidates.length ? {unread:text} : {})};
     },

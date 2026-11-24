@@ -98,7 +98,9 @@ candidate(Q, score(Tier, Score, 0), Candidate) :-
     append(Wires, Unread, All), atomics_to_string(All, "\n", Sop),
     findall(1,(member([_,_,B,F],Q.tokens), once((member(L-R,Sorted),B>=L,F=<R))),CoveredTokens),
     length(CoveredTokens,Grounded), length(Q.tokens,Total), Coverage is Grounded / max(1,Total),
-    Base=_{sop:Sop,source:lexicon,support:N},
+    Plain=_{sop:Sop,source:lexicon,support:N},
+    ( nonvar(Family), get_dict(predicateModes,Q,Modes), memberchk([Start,End,Act,Family,ModeName],Modes),
+      re_match("^[a-z][a-z_]*$",ModeName) -> Base=Plain.put(operationMode,ModeName) ; Base=Plain ),
     ( nonvar(Family), memberchk([S,E,Families],Q.ambiguousTargets), memberchk(Family,Families)
     -> Candidate=Base.put(binding,[Start,End,Act,S,E,Family]) ; Candidate=Base ),
     Score is 12*Coverage + Extra + ActPrior + log(1+N) + min(12,End-Start)/4 - Start/3.
