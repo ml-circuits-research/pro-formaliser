@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { loadCorpus, splitCorpus } from '../src/corpus.mjs';
 import { SPELL_CONTEXT, SPELL_DICTIONARY, spellcheckTokens, spellingNeighbors } from '../src/spell.mjs';
-import { learnSpellingProtection } from '../src/spelling-training.mjs';
+import { learnPredicatePairs, learnSpellingProtection } from '../src/spelling-training.mjs';
 
 const dictionary = new Set(readFileSync(SPELL_DICTIONARY, 'utf8').toLowerCase().trim().split('\n'));
 const corpus = loadCorpus();
@@ -34,9 +34,10 @@ for (const counter of [pairs, allPairs, triples]) {
   }
 }
 const protectedWords = learnSpellingProtection(training, dictionary);
+const predicatePairs = learnPredicatePairs(training,dictionary);
 const staging = SPELL_CONTEXT + '.' + process.pid;
 writeFileSync(staging, JSON.stringify({
-  revision: corpus.revision, rows: training.length, total, counts, pairs, wordCounts, allPairs, triples, protectedWords,
+  revision: corpus.revision, rows: training.length, total, counts, pairs, wordCounts, allPairs, triples, protectedWords, predicatePairs,
 }) + '\n');
 renameSync(staging, SPELL_CONTEXT);
 console.log(`Learned ${Object.keys(pairs).length} spelling bigrams from ${training.length} training rows at ${corpus.revision}`);

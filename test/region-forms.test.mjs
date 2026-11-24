@@ -36,6 +36,8 @@ test('reads qualified corners and centred regions without an orphan object looku
     ['Draw a seal into the lower right corner','bottom_right','into the lower right corner'],
     ['Draw a seal in the upper-left corner','top_left','in the upper-left corner'],
     ['Draw a seal toward the right edge','right','toward the right edge'],
+    ['Draw a seal on the far left','left','on the far left'],
+    ['Draw a seal in the bottom part','bottom','in the bottom part'],
     ['Draw a seal right in the middle','middle','right in the middle']
   ]) {
     const {candidates}=await reader.propose(text);

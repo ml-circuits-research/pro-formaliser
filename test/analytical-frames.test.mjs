@@ -155,3 +155,23 @@ test('opt-in scatter field mappings preserve axis semantics without creating axi
   }));
 
 });
+
+test('a fronted location survives an addressed request as a separate source span',async t=>{
+  const path=fileURLToPath(new URL('../sop-worlds/scatter-fields-pilot/',import.meta.url));
+  const reader=createReader(undefined,loadWorlds({paths:[path]}));
+  t.after(()=>reader.close());
+  const body='make a scatter plot of salary against tenure, coloured by department';
+  const {candidates}=await reader.propose('On the regional slide, could you '+body+'?',{evidence:true});
+  const result=candidates.find(c=>properties(parse(c.sop))['chart.xField']==='tenure');
+  assert.ok(result);
+  assert.equal(result.status,'partial');
+  assert.deepEqual(result.evidence.missing,[]);
+  assert.deepEqual(result.catalog.issues,[]);
+  const wires=parse(result.sop);
+  assert.equal(properties(wires)['chart.yField'],'salary');
+  assert.ok(wires.some(w=>w.type==='w.request.unread' && decode(w.attrs.text[0])==='On the regional slide'));
+  for (const lead of ['If the summary changes, could you','Did you','On the regional slide, did you']) {
+    const {candidates}=await reader.propose(lead+' '+body+'?');
+    assert.ok(candidates.every(c=>!properties(parse(c.sop))['chart.xField']),lead);
+  }
+});

@@ -2,10 +2,10 @@ import { literalRanges } from './evidence.mjs';
 
 // Remove only the span that has just acquired a typed meaning. Repeated
 // unread snippets have no unique position and keep their original evidence.
-export function consumeUnread(wires,text,from,to) {
+export function consumeUnread(wires,text,from,to,owns=()=>true) {
   const ids=new Set(wires.map(w=>w.id));
   return wires.flatMap(w=>{
-    if (w.type!=='w.request.unread') return [w];
+    if (w.type!=='w.request.unread' || !owns(w)) return [w];
     const raw=w.attrs.text?.[0];
     const value=raw?.startsWith('"') ? JSON.parse(raw) : raw;
     if (!value) return [w];

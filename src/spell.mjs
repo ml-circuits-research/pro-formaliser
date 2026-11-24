@@ -115,7 +115,8 @@ export function spellcheck(text, { knownWords = [], context = loadSpellingContex
   if (!existsSync(SPELL_DICTIONARY) || !existsSync(frequencies)) {
     throw new Error('English spelling resources missing. Run tools/setup.');
   }
-  const extras = [...new Set([...loadWorlds().knownWords, ...supplied]
+  const worlds = loadWorlds();
+  const extras = [...new Set([...worlds.knownWords, ...supplied]
     .map(word => word.toLowerCase())
     .filter(word => /^[a-z]+$/.test(word)))];
   const result = spawnSync(swipl, ['-q', '-f', program, '--', SPELL_DICTIONARY, frequencies], {
@@ -152,6 +153,7 @@ export function spellcheck(text, { knownWords = [], context = loadSpellingContex
       // Require both sides of the phrase and protect title-case words in
       // that position, where the user may be referring to a specific name.
       if (!contextual || !adjacent?.[0] || !adjacent?.[1] || original !== lower) continue;
+      if (worlds.joiners[adjacent[0]] && context.predicatePairs?.[lower + ' ' + adjacent[1]]) continue;
       matches = realWordRank(candidatesForWord, lower, adjacent, context);
     } else {
       matches = context ? contextualRank(candidatesForWord, adjacent, context) : candidatesForWord;

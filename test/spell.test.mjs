@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { spellcheck } from '../src/spell.mjs';
-import { learnSpellingProtection } from '../src/spelling-training.mjs';
+import { learnPredicatePairs, learnSpellingProtection } from '../src/spelling-training.mjs';
 
 test('English misspellings ranked without adding evaluation words to the dictionary', t => {
   const examples = [
@@ -137,6 +137,22 @@ test('protects a name only with matching canonical evidence in distinct utteranc
   assert.equal(spellcheck('Open Stormm now', { context: {
     counts: {}, pairs: {}, total: 1, protectedWords,
   } }).text, 'Open Stormm now');
+});
+
+test('keeps a corroborated verb after a conjunction and still fixes a nearby typo',()=>{
+  const source='Bodl the field and ink the words silver';
+  const context={
+    counts:{},pairs:{},total:1,wordCounts:{},allPairs:{'bold the':2000},triples:{'and in the':1000}
+  };
+  const rows=['Ink the headline','Ink the caption'].map(text=>({
+    text,sop:'@r w.request.request act=change mood=do predicate=ink'
+  }));
+  const dictionary=new Set(['ink']);
+  assert.deepEqual(learnPredicatePairs([rows[0],rows[0]],dictionary),{});
+  assert.match(spellcheck(source,{context}).text,/and in the/u);
+  const predicatePairs=learnPredicatePairs(rows,dictionary);
+  assert.deepEqual(predicatePairs,{'ink the':true});
+  assert.equal(spellcheck(source,{context:{...context,predicatePairs}}).text,'Bold the field and ink the words silver');
 });
 
 test('standalone CLI accepts stdin and returns JSON with ranked alternatives', () => {

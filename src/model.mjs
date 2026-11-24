@@ -2,6 +2,7 @@ import {topicCommandLearner} from './topic-commands.mjs';
 import { verbEffectLearner } from './verb-effects.mjs';
 import { propertyCommandLearner } from './property-commands.mjs';
 import { createSceneConstructLearner } from './scene-constructs.mjs';
+import { createSpatialAnchorLearner } from './spatial-anchor.mjs';
 import { createOpenPairLearner } from './open-pairs.mjs';
 import { predicateModeLearner } from './predicate-modes.mjs';
 import { createNominalPhraseLearner } from './nominal-phrases.mjs';
@@ -335,13 +336,18 @@ export function train(rows) {
   const modes=predicateModeLearner();
   const openPairs=createOpenPairLearner(loadWorlds());
   const sceneConstructs=createSceneConstructLearner(loadWorlds());
+  const spatialAnchors=createSpatialAnchorLearner(loadWorlds());
   const commands=propertyCommandLearner(loadWorlds());
   const verbs=verbEffectLearner(loadWorlds());
   const topics=topicCommandLearner(loadWorlds());
-  const lexicon = learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes, openPairs, sceneConstructs, commands, verbs, topics);
+  const scenes={observe(text,wires) {
+    sceneConstructs.observe(text,wires);
+    spatialAnchors.observe(text,wires);
+  }};
+  const lexicon = learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes, openPairs, scenes, commands, verbs, topics);
   for (const [phrase, records] of Object.entries(learnConstraints(rows))) {
     if (!Object.hasOwn(lexicon, phrase)) Object.defineProperty(lexicon, phrase, {value:[],enumerable:true});
     lexicon[phrase].push(...records);
   }
-  return { version: 1, examples, templates, lexicon, topicCommands:topics.finish(), verbEffects:verbs.finish(), sceneConstructs:sceneConstructs.finish(), propertyCommands:commands.finish(), openPairs:openPairs.finish(), predicateModes:modes.finish(), modifiers:modifiers.finish(), nominalPhrases:nominalPhrases.finish(), forms:forms.finish(), context: context.finish() };
+  return { version: 1, examples, templates, lexicon, topicCommands:topics.finish(), verbEffects:verbs.finish(), sceneConstructs:sceneConstructs.finish(), spatialAnchorHeads:spatialAnchors.finish(), propertyCommands:commands.finish(), openPairs:openPairs.finish(), predicateModes:modes.finish(), modifiers:modifiers.finish(), nominalPhrases:nominalPhrases.finish(), forms:forms.finish(), context: context.finish() };
 }

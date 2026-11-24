@@ -18,7 +18,7 @@ function nominal(phrase,target,family,worlds) {
   }) || worlds.lookup(phrase).some(([role,,declared]) => role === 'target' && declared === family);
 }
 
-function localSelector(before, after, quoted, target, family, worlds) {
+function localSelector(before, after, quoted, target, family, act, worlds) {
   let definite = false, beforeNoun = false, afterNoun = false;
   const prior = lexemes(before);
   for (let i=prior.length; i>0; i--) {
@@ -38,7 +38,8 @@ function localSelector(before, after, quoted, target, family, worlds) {
   if (Object.hasOwn(worlds.determiners,later.at(-1))) later.pop();
   for (let i=0;i<later.length;i++) {
     const tail = later.slice(i).join(' ');
-    if (!worlds.lookup(tail).some(([role,,kind]) => role === 'marker' && ['tool','means'].includes(kind))) continue;
+    if (!worlds.lookup(tail).some(([role,licensed,kind]) => role === 'marker' &&
+        (['tool','means'].includes(kind) || kind === 'value' && [act,'*'].includes(licensed)))) continue;
     later.splice(i);
     break;
   }
@@ -98,9 +99,9 @@ export function identitySelectorReadings(text,candidate,worlds) {
   if (requests.length!==1 || targets.length!==1) return [];
   const [request] = requests, [target] = targets;
   const family = field(target,'family'), keys = worlds.selectorKeys.get(family);
-  const ref = '$'+request.id, predicate = field(request,'predicate');
+  const ref = '$'+request.id, predicate = field(request,'predicate'), act = field(request,'act');
   if (!keys?.size || field(target,'mode')!=='existing' || field(target,'request')!==ref ||
-      field(request,'act')!=='change' || !predicate ||
+      act!=='change' || !predicate ||
       worlds.identityAssignmentVerbs?.has(normalize(predicate))) return [];
   const scoped = field(request,'words') ?? text;
   if (literalRanges(text,scoped).length !== 1) return [];
@@ -136,7 +137,7 @@ export function identitySelectorReadings(text,candidate,worlds) {
       !['name','ids'].some(key=>(target.attrs[key] ?? []).some(item=>decode(item)===value)) &&
       !/^(?=.*\p{L})(?=.*\p{N})[\p{L}\p{N}_-]+$/u.test(value)) return [];
   if (!localSelector(scoped.slice(verb[1],head.span[0]),scoped.slice(head.span[1],payload),
-    head.quoted,target,family,worlds)) return [];
+    head.quoted,target,family,act,worlds)) return [];
 
   const copy = wires.map(wire=>wire===identity ? {...wire,attrs:{...wire.attrs,phase:['selector']}} : wire);
   return [{...candidate,sop:serialize(copy),source:'identity-selector'}];

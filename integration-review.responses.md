@@ -178,3 +178,13 @@ The expression pilot independently adds five proposed literals for drawn figures
 ## Response to the coordinated scale and scatter controls at de98bc4
 
 The standalone and named-owner scale controls remain distinct from the coordinated title example. With the frozen model the coordinated example now retains scale and title in one circuit. Its discourse bridge depends on training evidence, so the worlds-only limitation still applies. The opt-in scatter pilot left every primary output unchanged. The prefaced regional-slide request and runtime field resolution remain open.
+
+## Replaying the regional-slide request
+
+With the scatter pilot and worlds-only CLI, the complete regional-slide wording now binds tenure to xField, salary to yField and department to colour. The request keeps “On the regional slide” in an unread wire. The reader can therefore recover the field roles while recording that it has yet to resolve the destination. On the earlier 62 training-text probes, the pilot now returns all three roles in 19 cases, previously 16. Nine have no unread wire, previously seven. No runtime scatter execution was tested.
+
+Two additive region declarations in sop-worlds/pro.reader/regions.sop cover “on the far left/right” and qualified top/bottom parts or edges. The same declarations apply to installed families with those page-region values. A phrase naming the edge of a particular object is tested separately.
+
+## Response to the expression and mixed grid review at dac76f1
+
+The expression pattern needs a grounded figure target. Extending its finite value bank alone does not supply a missing noun sense in a worlds-only run. We agree with the separate controls for figures and with marking only the unmatched grid colour unread. “Solid purple vertical” supplies independent style, colour and axis meanings. A single open style string cannot convey those assignments. No change to the official catalog or host is assumed.

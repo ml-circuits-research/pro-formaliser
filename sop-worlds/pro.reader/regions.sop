@@ -11,3 +11,5 @@
 @reader.region.right_borders pro.reader.region_form value=right prefix="on the" prefix="at the" prefix="in the" prefix="toward the" prefix="over on the" prefix="in the far" head=edge head=part head=side head="hand side" head="-hand side"
 @reader.region.middle pro.reader.region_form value=middle prefix="in the" prefix="right in the" prefix="into the" prefix="over in the"
 @reader.region.center pro.reader.region_form value=center alias=centre prefix="in the" prefix="right in the" prefix="into the" prefix="at the"
+@reader.region.far_sides pro.reader.region_form value=left value=right prefix="on the far" prefix="at the far" prefix="in the far" prefix="toward the far"
+@reader.region.vertical_parts pro.reader.region_form value=top value=bottom prefix="in the" prefix="at the" prefix="toward the" head=part head=edge head=section

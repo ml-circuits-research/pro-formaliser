@@ -197,3 +197,6 @@
 
 ## Three-cohort review of coordinated effects at 25579ab
 - Original-text reasonable coverage reached 51.0% on primary and 43.9% on replication. Spelling brought primary to 52.3%. The third lot gained two complete scenes. No prior reasonable reading disappeared. The optional scatter and expression worlds gave no whole-request gain on primary.
+
+## Placement, addressed requests and spelling
+- Trained on the pinned splits for buckets 0, 37 and 73. Both ledge placements now survive in the aquarium request. The worlds-only scatter pilot returns the three field roles in the regional-slide control with the destination explicitly unread. The spelling context preserves the verb “ink” in the Pack label request. Full semantic replay follows separately.

@@ -43,11 +43,28 @@ test('uses a nominal head after an exact quoted selector and supports unrelated 
   assert.match(read('set the SAT17 calm',rig)[0].sop,/rig\.inventory value=SAT17 operator=eq phase=selector/u);
 });
 
+test('binds identity before a catalog-licensed result marker across families', () => {
+  const drawing=[circuit()+' family_words=part',ids('shoulders','"shoulders"'),variant.replace('blush','apron')].join('\n');
+  const [part]=read('set the "shoulders" part to the apron variant',drawing);
+  assert.match(part.sop,/part\.ids value="shoulders" operator=eq phase=selector/u);
+  assert.match(part.sop,/part\.variant value=apron operator=eq phase=result/u);
+  assert.ok(validate(part.sop,base));
+  assert.ok(evidenceInText('set the "shoulders" part to the apron variant',part.sop,base));
+
+  const rig=[circuit('rig')+' family_words=rig',
+    '@i w.request.constraint request=$r on=attribute attribute=rig.inventory value=SAT17 operator=eq phase=result',
+    '@p w.request.constraint request=$r on=attribute attribute=rig.profile value=calm operator=eq phase=result',
+  ].join('\n');
+  const [inventory]=read('set the SAT17 rig to calm',rig);
+  assert.match(inventory.sop,/rig\.inventory value=SAT17 operator=eq phase=selector/u);
+  assert.deepEqual(read('set the SAT17 rig in calm',rig),[]);
+  assert.deepEqual(read('set the SAT17 rig to unsettled',rig),[]);
+});
+
 test('does not promote payloads, assignments, stale evidence or overlapping scopes', () => {
   const positive=[circuit(),ids('head'),size].join('\n');
   assert.deepEqual(read('set the head', [circuit(),ids('head')].join('\n')),[]);
   assert.deepEqual(read('set small size to the head',positive),[]);
-  assert.deepEqual(read('set the head to small',positive),[]);
   assert.deepEqual(read('rename the head small',positive.replace('predicate=set','predicate=rename')),[]);
   assert.deepEqual(read('do not set the head small',positive),[]);
   assert.deepEqual(read("don't set the head small",positive),[]);

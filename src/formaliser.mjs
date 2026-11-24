@@ -730,7 +730,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
       }
       for (const candidate of [...candidates,...additional.values()]) {
-        for (const reading of spatialAnchorReadings(text,candidate,worlds,permit)) {
+        for (const reading of spatialAnchorReadings(text,candidate,worlds,permit,model.spatialAnchorHeads)) {
           const key=admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
         }

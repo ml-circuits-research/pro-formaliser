@@ -21,6 +21,27 @@ function admittedLead(ts,end,worlds) {
     worlds.joiners[words.at(-1)]==='addition' && (words.length===1 || known(words.slice(0,-1).join(' ')));
 }
 
+// A fronted location can qualify an instruction without naming its owner.
+// Preserve that span until a world supplies the placement binding.
+function addressedLead(ts,end,worlds) {
+  const comma=ts.slice(0,end).findIndex(([word])=>word===',');
+  const start=comma+1;
+  const lead=ts.slice(start,end).map(([word])=>word);
+  const grammar=worlds.scopeGrammar;
+  if (!grammar.modals.has(lead[0]) || !grammar.addressees.has(lead[1]) ||
+      !worlds.literalGrammar.leads.has(lead.join(' '))) return;
+  if (comma<0) return {courtesyStart:ts[start][2]};
+  const markerEnd=ts.slice(0,comma).findIndex(([word])=>worlds.determiners[word]==='definite');
+  if (markerEnd<1 || markerEnd+1>=comma ||
+      !worlds.lookup(ts.slice(0,markerEnd).map(([word])=>word).join(' ')).some(
+        ([role,license,slot])=>role==='marker' && license==='*' && slot==='spatial')) return;
+  const nominal=ts.slice(markerEnd+1,comma);
+  if (!nominal.every(([word])=>/^[\p{L}\p{M}\p{N}_]+$/u.test(word) &&
+      !grammar.auxiliary.has(word) && !grammar.conditionals.has(word) &&
+      !worlds.negatives.has(word) && !worlds.joiners[word])) return;
+  return {courtesyStart:ts[start][2],locationEnd:ts[comma-1][3]};
+}
+
 export function argumentSequences(facts,catalog) {
   const forms=new Map();
   for (const w of facts('core.word')) {
@@ -83,9 +104,10 @@ export function sequencePacket(ts,worlds) {
     if (!matchesAt(ts,i,f.prefix)) continue;
     const start=i+f.prefix.length;
     if (start>=stop) continue;
+    const addressed=f.owned && addressedLead(ts,i,worlds);
     if (f.owned) {
-      if (!worlds.literalGrammar.licenses(f.family,f.act) || ts[stop]?.[0]==='?' ||
-          !admittedLead(ts,i,worlds)) continue;
+      if (!worlds.literalGrammar.licenses(f.family,f.act) ||
+          !addressed && (ts[stop]?.[0]==='?' || !admittedLead(ts,i,worlds))) continue;
     } else if (!f.prefix.some((_,a)=>f.prefix.slice(a).some((_,b)=>
       worlds.lookup(f.prefix.slice(a,a+b+1).join(' ')).some(([role,act,family,mode])=>
         role==='target' && act===f.act && family===f.family && mode===f.mode)))) continue;
@@ -123,7 +145,7 @@ export function sequencePacket(ts,worlds) {
         anchor:ts[i][2],start:ts[start][2],end:ts[end-1][3]};
       if (f.owned) {
         const boundary=f.prefix.findLastIndex(word=>[',',':'].includes(word));
-        packet.owned={ownerKey:f.ownerKey ?? '',ownerValue:f.ownerValue ?? '',
+        packet.owned={...addressed,ownerKey:f.ownerKey ?? '',ownerValue:f.ownerValue ?? '',
           predicateStart:ts[i+boundary+1][2],predicateEnd:ts[start-1][3],utteranceEnd:ts[stop-1][3]};
       }
       packets.push(packet);
@@ -183,10 +205,11 @@ export function sequenceFrameReading(text,proof,extraBindings=[]) {
       ' value='+(canonical && atom.test(canonical) ? canonical : encode(value))+
       (words===value ? '' : ' words='+encode(words))+' operator=eq phase=result');
   }
-  const lead=span(0,predicateStart).trim();
+  const lead=span(proof.owned.courtesyStart ?? 0,predicateStart).trim();
   if (lead) lines.push('@f1 w.request.filler text='+encode(lead.replace(/,\s*$/u,'')));
   const remainder=span(proof.end,utteranceEnd).replace(/^\s*,?\s*/u,'');
   const unread=proof.bindings.filter(([key])=>key===unreadPart).map(([, ,a,b])=>span(a,b));
+  if (proof.owned.locationEnd) unread.unshift(span(0,proof.owned.locationEnd).trim());
   if (remainder) unread.push(remainder);
   for (const [i,raw] of unread.entries()) lines.push('@r1.u'+i+' w.request.unread request=$r1 text='+encode(raw));
   return {sop:lines.join('\n'),source:'argument-frame',status:unread.length ? 'partial' : 'matched'};

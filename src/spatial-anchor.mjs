@@ -13,6 +13,78 @@ const quote=JSON.stringify;
 const word=/^[\p{L}\p{M}\p{N}_]+$/u;
 const boundary=/^[,;.!?—–，。！？；]$/u;
 const forms=text=>tokens(text).map(t=>t[0]).join(' ');
+const bindingId=({tab,family,relationKey,anchorKey})=>JSON.stringify([tab,family,relationKey,anchorKey]);
+const relationValues=(worlds,binding)=>worlds.requestKeys.find(key=>key.family===binding.family &&
+  key.tab===binding.tab && key.name===binding.relationKey)?.values ?? [];
+const definite=(worlds,key)=>['definite','demonstrative'].includes(worlds.determiners[key]);
+
+export function createSpatialAnchorLearner(worlds) {
+  const tables=new Map();
+  for (const binding of worlds.spatialBindings) {
+    tables.set(bindingId(binding),{binding,values:relationValues(worlds,binding),heads:new Map(),markers:new Map()});
+  }
+  function observe(table,key,noun) {
+    const witnesses=table.get(key) ?? new Set();
+    if (witnesses.size<2) witnesses.add(noun);
+    table.set(key,witnesses);
+  }
+  return {
+    observe(text,wires) {
+      if (text.includes('?')) return;
+      const requests=new Map(wires.filter(w=>w.type===type('request')).map(w=>['$'+w.id,w]));
+      const local=Map.groupBy(wires,w=>field(w,'request'));
+      for (const [ref,request] of requests) {
+        if (request.attrs.polarity || ![undefined,'do','propose'].includes(field(request,'mood')) ||
+            !['make','place','change'].includes(field(request,'act'))) continue;
+        const members=local.get(ref) ?? [];
+        const targets=members.filter(w=>w.type===type('target'));
+        const [target]=targets;
+        const noun=field(target,'sort') ?? field(target,'family');
+        const scope=field(request,'words') ?? (requests.size===1 ? text : undefined);
+        if (targets.length!==1 || !scope || !owned(text,scope) || quotedSpans(scope).length) continue;
+        for (const {binding,values,heads,markers} of tables.values()) {
+          if (field(target,'family')!==binding.family) continue;
+          const constraints=members.filter(w=>w.type===type('constraint') && !w.attrs.want && field(w,'operator')==='relation');
+          const anchors=constraints.filter(w=>field(w,'attribute')===binding.anchorKey && field(w,'phase')==='selector');
+          const relations=constraints.filter(w=>field(w,'attribute')===binding.relationKey && field(w,'phase')==='result');
+          if (anchors.length!==1 || relations.length!==1) continue;
+          const anchor=field(anchors[0],'value'), written=field(relations[0],'words');
+          const range=owned(scope,anchor), placement=owned(scope,written);
+          if (!range || !placement || placement[0]>=range[0] ||
+              placement[1]!==range[1] && (placement[1]>range[0] ||
+                /\S/u.test(scope.slice(placement[1],range[0])))) continue;
+          const value=forms(field(relations[0],'value') ?? '').replaceAll(' ','_');
+          if (!values.includes(value)) continue;
+          const [det,...label]=forms(anchor).split(' ');
+          if (!definite(worlds,det) || !label.length || label.length>6 || !label.every(key=>
+              word.test(key) && !worlds.evidenceVocabulary.grammar.has(key) && !worlds.joiners[key] &&
+              !worlds.lookup(key).some(([role])=>['act','marker','reference'].includes(role)))) continue;
+          observe(heads,label.join(' '),noun);
+          const marker=forms(scope.slice(placement[0],range[0]));
+          const terms=marker.split(' ');
+          if (terms.length<2 || terms.length>5 || !terms.every(key=>word.test(key))) continue;
+          // Corroborate the meaning itself. Sharing a value bank cannot turn
+          // a neutral preposition into a specific direction.
+          const suffix=terms.some((_,i)=>worlds.lookup(terms.slice(i).join(' ')).some(
+            ([role,license,slot,sense])=>{
+              if (role==='marker') return license==='*' && slot==='spatial' && sense===value;
+              if (role!=='constraint' || slot!==binding.family) return false;
+              const [constraint]=parse('@c w.request.constraint '+sense);
+              return field(constraint,'attribute')===binding.relationKey && field(constraint,'value')===value;
+            }));
+          if (suffix) observe(markers,JSON.stringify([marker,value]),noun);
+        }
+      }
+    },
+    finish() {
+      const corroborated=table=>[...table].filter(([,witnesses])=>witnesses.size>=2).map(([key])=>key);
+      return Object.fromEntries([...tables].map(([key,{heads,markers}])=>[key,{
+        heads:corroborated(heads),markers:corroborated(markers).map(item=>JSON.parse(item)),
+      }]));
+    },
+  };
+}
+
 const landmarkSurfaces=new WeakMap();
 
 function scopedMarkers(worlds,binding) {
@@ -56,7 +128,7 @@ function owned(text,scope) {
   return hits.length===1 ? hits[0] : undefined;
 }
 
-function shape(scope,target,request,binding,relation,worlds,permit) {
+function shape(scope,target,request,binding,relation,worlds,permit,learned,siblings) {
   const chars=Array.from(scope), ts=tokens(scope), quotes=quotedSpans(scope);
   const phrase=(a,b)=>ts.slice(a,b).map(([key])=>key).join(' ');
   const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
@@ -80,9 +152,8 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
   while (end<ts.length && !boundary.test(ts[end][0])) end++;
   if (start>=end || quoted(at,end) ||
       !permit(span(0,end),quotedSpans(span(0,end)))) return;
-  const relationBank=worlds.requestKeys.find(key=>key.family===binding.family && key.tab===binding.tab &&
-    key.name===binding.relationKey && key.values.length)?.values;
-  if (!relationBank) return;
+  const relationBank=relationValues(worlds,binding);
+  if (!relationBank.length) return;
   const choices=[];
   const scoped=['make','place'].includes(act) ? scopedMarkers(worlds,binding) : undefined;
   const markerForms=(a,b)=>worlds.lookup(phrase(a,b)).filter(
@@ -93,24 +164,33 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
       const marker=span(markerAt,markerEnd);
       const values=new Set(markerForms(markerAt,markerEnd).map(entry=>entry[3]));
       const alias=!values.size && scoped?.get(phrase(markerAt,markerEnd));
+      const markerKey=phrase(markerAt,markerEnd);
+      const learnedValues=learned?.markers?.filter(([surface,value])=>surface===markerKey && relationBank.includes(value)) ?? [];
+      if (!values.size) for (const [,value] of learnedValues) values.add(value);
       if (alias?.size===1 && markerAt===start && relationBank.includes([...alias][0]) &&
           (field(target,'mode')==='new' || ['definite','demonstrative'].includes(field(target,'determiner')))) {
         values.add([...alias][0]);
       }
+      let expandMarker=false;
       if (relation) {
-        const written=field(relation,'words') ?? field(relation,'value');
-        if (forms(written)===forms(marker)) {
-          const priorValue=field(relation,'value');
-          if (values.has(priorValue)) {values.clear();values.add(priorValue);}
-          else values.clear();
-        } else values.clear();
+        const priorValue=field(relation,'value');
+        const written=forms(field(relation,'words') ?? priorValue);
+        if (written===markerKey) {
+          if (!values.has(priorValue)) continue;
+          values.clear();
+          values.add(priorValue);
+        } else {
+          expandMarker=learnedValues.length===1 && markerKey.endsWith(' '+written) &&
+            values.has(learnedValues[0][1]);
+          if (!expandMarker) continue;
+        }
       }
       if (values.size!==1) continue;
       const value=[...values][0];
-      const det=worlds.determiners[ts[markerEnd][0]];
+      const det=ts[markerEnd][0];
       const tail=ts.slice(markerEnd,end);
       if (tail.length>9 || !tail.every(([key])=>word.test(key))) continue;
-      if (det==='definite' || alias && det==='demonstrative') {
+      if (definite(worlds,det)) {
         // A landmark is a complete noun phrase at the end of this local span.
         // Require a typed terminal noun and keep every written modifier.
         let headAt=markerEnd+1;
@@ -120,7 +200,8 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
           const inventory=(worlds.ownerInventory?.get(JSON.stringify(['change',surface])) ?? [])
             .map(({family})=>family);
           if ([...local,...inventory].some(family=>alias ? family===binding.family :
-            worlds.familyTabs[family]?.includes(binding.tab))) break;
+            worlds.familyTabs[family]?.includes(binding.tab)) || !alias &&
+            (learned?.heads?.includes(surface) || siblings.has(surface))) break;
         }
         if (headAt>=end) continue;
         if (ts.slice(markerEnd+1,headAt).some(([key])=>worlds.joiners[key] || worlds.determiners[key] ||
@@ -146,18 +227,31 @@ function shape(scope,target,request,binding,relation,worlds,permit) {
       const from=chars.slice(0,ts[markerAt][2]).join('').length;
       const labelFrom=chars.slice(0,ts[markerEnd][2]).join('').length;
       const to=chars.slice(0,ts[end-1][3]).join('').length;
-      choices.push({anchor:span(markerEnd,end),marker,value,from,to,labelFrom});
+      choices.push({anchor:span(markerEnd,end),marker,value,from,to,labelFrom,expandMarker});
     }
   }
-  return choices.length===1 ? choices[0] : undefined;
+  // Emphatic markers can share their endpoint with a shorter marker.
+  // Keep the fullest grounded form; different anchor spans remain ambiguous.
+  const maximal=choices.filter(choice=>!choices.some(other=>other.labelFrom===choice.labelFrom &&
+    other.to===choice.to && other.from<choice.from));
+  return maximal.length===1 ? maximal[0] : undefined;
 }
 
-export function spatialAnchorReadings(text,candidate,worlds,permit) {
+export function spatialAnchorReadings(text,candidate,worlds,permit,learned) {
   if (!candidate.sop?.includes(' '+type('unread')+' ') ||
       !candidate.sop.includes(' '+type('target')+' ') || !hasAnchorTail(text,worlds)) return [];
   const wires=parse(candidate.sop), requests=wires.filter(w=>w.type===type('request'));
   const targets=wires.filter(w=>w.type===type('target'));
-  const ids=new Set(wires.map(w=>w.id)), outputs=[];
+  const placements=new Map();
+  const scopes=new Map();
+  let next=0;
+  for (const request of requests) {
+    const scope=field(request,'words') ?? (requests.length===1 ? text : undefined);
+    const bounds=literalRanges(text,scope,next)[0];
+    if (!bounds) continue;
+    scopes.set(request.id,{scope,bounds});
+    next=bounds[1];
+  }
   for (const request of requests) {
     if (request.attrs.polarity || ['ask','check'].includes(field(request,'mood'))) continue;
     const ref='$'+request.id;
@@ -165,11 +259,11 @@ export function spatialAnchorReadings(text,candidate,worlds,permit) {
     if (members.length!==1) continue;
     const [target]=members, family=field(target,'family');
     const local=wires.filter(w=>field(w,'request')===ref);
-    const scope=field(request,'words') ?? (requests.length===1 ? text : undefined);
-    const range=scope && owned(text,scope);
-    if (!range) continue;
-    const unread=local.filter(w=>w.type===type('unread'))
-      .map(w=>owned(text,field(w,'text'))).filter(Boolean);
+    const declared=scopes.get(request.id);
+    if (!declared) continue;
+    const {scope,bounds}=declared;
+    const unread=local.filter(w=>w.type===type('unread')).map(w=>owned(scope,field(w,'text'))).filter(Boolean);
+    if (!unread.length) continue;
     for (const binding of worlds.spatialBindings.filter(b=>b.family===family)) {
       if (!worlds.requestKeys.some(key=>key.family===family && key.tab===binding.tab &&
           key.name===binding.anchorKey && key.head==='fill+span' && !key.values.length)) continue;
@@ -183,43 +277,69 @@ export function spatialAnchorReadings(text,candidate,worlds,permit) {
       const mode=field(target,'mode'), act=field(request,'act');
       if (!(mode==='new' && act==='make' ||
           mode==='existing' && (act==='place' || act==='change' && relation))) continue;
-      const placement=shape(scope,target,request,binding,relation,worlds,permit);
+      const siblings=new Set(targets.flatMap(w=>{
+        const owner=field(w,'request')?.slice(1);
+        const source=scopes.get(owner);
+        const noun=field(w,'sort_words') ?? field(w,'family_words') ?? field(w,'sort');
+        return owner!==request.id && source?.bounds[1]<=bounds[0] && field(w,'mode')==='new' &&
+          worlds.familyTabs[field(w,'family')]?.includes(binding.tab) && owned(source.scope,noun) ? [forms(noun)] : [];
+      }));
+      const placement=shape(scope,target,request,binding,relation,worlds,permit,learned?.[bindingId(binding)],siblings);
       if (!placement) continue;
-      const {from,to,marker,value,anchor:words}=placement;
-      const start=range[0]+from, end=range[0]+to;
-      if (!unread.some(([a,b])=>a<end && b>start)) continue;
+      const {from,to,marker,value,anchor:words,expandMarker}=placement;
+      if (!unread.some(([a,b])=>a<to && b>from)) continue;
       if (local.some(w=>w.type===type('constraint') && w!==anchor && w!==relation &&
           ['words','key_words',...(w.attrs.words ? [] : ['value'])].some(key=>{
             const evidence=field(w,key), at=evidence && owned(scope,evidence);
             return at && at[0]<to && at[1]>placement.labelFrom;
           }))) continue;
-      if (anchor && !forms(words).startsWith(forms(field(anchor,'value'))+' ')) continue;
-      const used=new Set(ids);
-      function id(suffix) {
-        const base=request.id+suffix;
-        let next=base;
-        for (let i=2;used.has(next);i++) next=base+i;
-        used.add(next);
-        return next;
+      if (anchor) {
+        const prior=forms(field(anchor,'value'));
+        if (!(expandMarker && forms(words)===prior || forms(words).startsWith(prior+' '))) continue;
       }
-      const anchorId=anchor?.id ?? id('.landmark');
-      const existingLookups=wires.filter(w=>w.type===type('lookup') && field(w,'constraint')==='$'+anchorId);
+      const existingLookups=anchor ? wires.filter(w=>w.type===type('lookup') &&
+        field(w,'constraint')==='$'+anchor.id) : [];
       if (existingLookups.some(w=>field(w,'request')!==ref || field(w,'key')!=='thing')) continue;
       if (anchor && (Object.keys(anchor.attrs).some(key=>
           !['request','on','attribute','value','operator','phase'].includes(key)) ||
-        wires.some(w=>!existingLookups.includes(w) && Object.values(w.attrs).flat().includes('$'+anchorId)))) continue;
-      const nextAnchor={id:anchorId,type:type('constraint'),attrs:{request:[ref],on:['place'],
-        attribute:[binding.anchorKey],value:[quote(words)],operator:['relation'],phase:['selector']}};
-      const related=wires.map(w=>w===anchor ? nextAnchor : w);
-      if (!relation) related.push({id:id('.relation'),type:type('constraint'),attrs:{request:[ref],on:['place'],
-        attribute:[binding.relationKey],value:[value],words:[quote(marker)],operator:['relation'],phase:['result']}});
-      if (!anchor) related.push(nextAnchor);
-      if (!existingLookups.length) related.push({id:id('.landmarkLookup'),type:type('lookup'),attrs:{
-        request:[ref],constraint:['$'+anchorId],key:['thing'],from:['page']}});
-      const kept=consumeUnread(related,text,start,end);
-      outputs.push({sop:serialize(kept),source:'spatial-anchor',
-        status:kept.some(w=>w.type===type('unread')) ? 'partial' : 'matched'});
+        wires.some(w=>!existingLookups.includes(w) && Object.values(w.attrs).flat().includes('$'+anchor.id)))) continue;
+      const tab=placements.get(binding.tab) ?? [];
+      placements.set(binding.tab,tab);
+      tab.push({ref,apply(related) {
+        const used=new Set(related.map(w=>w.id));
+        function id(suffix) {
+          const base=request.id+suffix;
+          let next=base;
+          for (let i=2;used.has(next);i++) next=base+i;
+          used.add(next);
+          return next;
+        }
+        const anchorId=anchor?.id ?? id('.landmark');
+        const nextAnchor={id:anchorId,type:type('constraint'),attrs:{request:[ref],on:['place'],
+          attribute:[binding.anchorKey],value:[quote(words)],operator:['relation'],phase:['selector']}};
+        const enriched=related.map(w=>{
+          if (w===anchor) return nextAnchor;
+          if (expandMarker && w===relation) return {...w,attrs:{...w.attrs,value:[value],words:[quote(marker)]}};
+          return w;
+        });
+        if (!relation) enriched.push({id:id('.relation'),type:type('constraint'),attrs:{request:[ref],on:['place'],
+          attribute:[binding.relationKey],value:[value],words:[quote(marker)],operator:['relation'],phase:['result']}});
+        if (!anchor) enriched.push(nextAnchor);
+        if (!existingLookups.length) enriched.push({id:id('.landmarkLookup'),type:type('lookup'),attrs:{
+          request:[ref],constraint:['$'+anchorId],key:['thing'],from:['page']}});
+        return consumeUnread(enriched,scope,from,to,w=>field(w,'request')===ref);
+      }});
     }
   }
-  return outputs;
+  return [...placements.values()].flatMap(options=>{
+    const groups=[...Map.groupBy(options,option=>option.ref).values()];
+    const compatible=groups.filter(group=>group.length===1).flat();
+    const competing=groups.filter(group=>group.length>1).flat();
+    const combined=compatible.reduce((current,option)=>option.apply(current),wires);
+    // Independent placements compose within their tab. A competing binding
+    // gets its own candidate with the unambiguous placements.
+    const circuits=competing.length ? competing.map(option=>option.apply(combined)) : [combined];
+    return circuits.map(circuit=>({sop:serialize(circuit),source:'spatial-anchor',
+      status:circuit.some(w=>w.type===type('unread')) ? 'partial' : 'matched'}));
+  });
 }

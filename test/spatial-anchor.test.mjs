@@ -103,3 +103,68 @@ test('a written proper name can supply the lookup for a spatial landmark',async 
     assert.equal((await reader.propose(text)).candidates.some(c=>c.source==='spatial-anchor'),false,text);
   }
 });
+
+test('corroborates landmark phrases and recovers repeated placements in their own clauses',async t=>{
+  const {train}=await import('../src/model.mjs');
+  const rows=['seal','barn'].map(sort=>{
+    const text='Draw a '+sort+' right on the hemsill';
+    return {text,sop:
+      '@r w.request.request act=make mood=do words='+JSON.stringify(text)+' predicate=Draw\n'+
+      '@t w.request.target request=$r family=drawn mode=new sort='+sort+'\n'+
+      '@p w.request.constraint request=$r on=place attribute=drawn.relation value=on words="right on the hemsill" operator=relation phase=result\n'+
+      '@a w.request.constraint request=$r on=place attribute=drawn.anchor value="the hemsill" operator=relation phase=selector'};
+  });
+  const conflicting=rows.map(({text,sop})=>({
+    text:text.replace('right on','covered by'),
+    sop:sop.replaceAll('right on','covered by').replace('value=on','value=behind')
+  }));
+  assert.ok(Object.values(train(conflicting).spatialAnchorHeads).every(({markers})=>
+    markers.every(([phrase])=>phrase!=='covered by')));
+  const trained=train(rows);
+  const reader=createReader({...model,spatialAnchorHeads:trained.spatialAnchorHeads});
+  const weak=createReader({...model,spatialAnchorHeads:train(rows.slice(0,1)).spatialAnchorHeads});
+  t.after(()=>Promise.all([reader.close(),weak.close()]));
+  const text='Draw an iris right on the hemsill, and a seal right on the hemsill';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const complete=candidates.find(candidate=>{
+    if (candidate.source!=='spatial-anchor') return false;
+    const wires=parse(candidate.sop);
+    return ['iris','seal'].every(sort=>{
+      const target=wires.find(w=>field(w,'sort')===sort);
+      if (!target) return false;
+      const local=wires.filter(w=>field(w,'request')===field(target,'request'));
+      return local.some(w=>field(w,'attribute')==='drawn.anchor' && field(w,'value')==='the hemsill') &&
+        local.some(w=>field(w,'attribute')==='drawn.relation' && field(w,'value')==='on' && field(w,'words')==='right on') &&
+        !local.some(w=>field(w,'text')?.includes('hemsill'));
+    });
+  });
+  assert.ok(complete);
+  assert.deepEqual(complete.evidence.missing,[]);
+  assert.deepEqual(anchors((await weak.propose(text)).candidates,'the hemsill'),[]);
+});
+
+test('keeps competing spatial binding alternatives on separate circuits',async()=>{
+  const {spatialAnchorReadings}=await import('../src/spatial-anchor.mjs');
+  const worlds=loadWorlds({paths:[]});
+  const binding=worlds.spatialBindings.find(b=>b.family==='drawn');
+  const alternate={...binding,relationKey:'drawn.alternateRelation',anchorKey:'drawn.alternateAnchor'};
+  const keyAlias={[binding.relationKey]:alternate.relationKey,[binding.anchorKey]:alternate.anchorKey};
+  const requestKeys=worlds.requestKeys.flatMap(k=>k.family===binding.family && k.tab===binding.tab &&
+    Object.hasOwn(keyAlias,k.name) ? [k,{...k,name:keyAlias[k.name]}] : [k]);
+  const text='Draw a seal behind the house';
+  const candidate={sop:
+    '@r w.request.request act=make mood=do predicate=Draw\n'+
+    '@t w.request.target request=$r family=drawn mode=new sort=seal\n'+
+    '@u w.request.unread request=$r text="behind the house"'};
+  const readings=spatialAnchorReadings(text,candidate,
+    {...worlds,requestKeys,spatialBindings:[binding,alternate]},()=>true);
+  assert.equal(readings.length,2);
+  for (const [i,{sop}] of readings.entries()) {
+    const wires=parse(sop);
+    const constraints=wires.filter(w=>w.type==='w.request.constraint');
+    const expected=[binding,alternate][i];
+    assert.deepEqual(constraints.map(w=>field(w,'attribute')),[expected.relationKey,expected.anchorKey]);
+    const lookup=wires.find(w=>w.type==='w.request.lookup');
+    assert.equal(field(lookup,'constraint'),'$'+constraints[1].id);
+  }
+});
