@@ -201,3 +201,7 @@
 @pro.reader.property_quantity.family core.slot of=pro.reader.property_quantity key=family kind=atom required=true
 @pro.reader.property_quantity.key core.slot of=pro.reader.property_quantity key=key kind=atom required=true
 @pro.reader.property_quantity.quantity core.slot of=pro.reader.property_quantity key=quantity kind=atom required=true
+
+# A reciprocal pronoun completes a declared binary predicate in this language.
+@pro.reader.reciprocal_marker core.type of=pro.reader.reciprocal_marker closed=true
+@pro.reader.reciprocal_marker.text core.slot of=pro.reader.reciprocal_marker key=text kind=string many=true required=true

@@ -1,5 +1,5 @@
 import { quotedPredicates } from './predicate-scope.mjs';
-import { literalRanges, literalField, sortRanges } from './evidence.mjs';
+import { catalogReference, literalRanges, literalField, sortRanges } from './evidence.mjs';
 import { parse } from './schema.mjs';
 
 const normalize = text => text.normalize('NFKC').toLowerCase().trim().replace(/\s+/gu,' ');
@@ -104,7 +104,7 @@ export function evidenceInText(text, sop, worlds) {
     }
     if (type==='w.request.target' && attrs.sort && !attrs.sort_words && !sortRanges(scope,decode(attrs.sort[0])).length) return false;
     for (const [key,vs] of Object.entries(attrs)) {
-      if (literalField(key) && vs.some(v => !literalRanges(key === 'words' && type==='w.request.request' ? text : scope,decode(v)).length)) return false;
+      if (literalField(key) && vs.some(v => !catalogReference(worlds?.evidenceVocabulary,{type},key,v) && !literalRanges(key === 'words' && type==='w.request.request' ? text : scope,decode(v)).length)) return false;
     }
     if (type === 'w.request.constraint' && attrs.value?.some(v => (!attrs.words || v.startsWith('"')) && !present(decode(v)))) return false;
   }

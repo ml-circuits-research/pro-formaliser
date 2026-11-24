@@ -65,28 +65,34 @@ export function compileOwnerPropertyOperands(facts,requestKeys,words) {
       for (const surface of valuesOf(wire,'text')) addOwner(act,form(surface),family,sort);
     }
   }
-  const quantities=new Map(), unitNames=new Map(), ownerPropertyUnits=new Map();
-  const add=(table,surface,quantity)=>{
-    if (!table.has(surface)) table.set(surface,new Set());
-    table.get(surface).add(quantity);
+  const unitsByName=new Map(), unitNames=new Map(), unitSymbols=new Map(), ownerPropertyUnits=new Map();
+  const addUnit=(table,surface,unit)=>{
+    if (!table.has(surface)) table.set(surface,new Map());
+    table.get(surface).set(unit.id,unit);
   };
   for (const wire of facts('k.units.unit')) {
     const [name]=valuesOf(wire,'name'), [quantity]=valuesOf(wire,'quantity');
     if (!name || !quantity) continue;
-    for (const surface of [name,...valuesOf(wire,'symbol')]) add(unitNames,form(surface),quantity);
-    add(quantities,name,quantity);
+    const unit={id:wire.id,name,quantity};
+    addUnit(unitNames,form(name),unit);
+    for (const symbol of valuesOf(wire,'symbol')) addUnit(unitSymbols,symbol,unit);
+    addUnit(unitsByName,name,unit);
   }
   for (const wire of words) {
     if (!valuesOf(wire,'of').includes('k.units.unit.name')) continue;
-    for (const name of valuesOf(wire,'means')) for (const quantity of quantities.get(name) ?? []) {
-      for (const surface of valuesOf(wire,'text')) add(unitNames,form(surface),quantity);
+    for (const name of valuesOf(wire,'means')) for (const unit of unitsByName.get(name)?.values() ?? []) {
+      for (const surface of valuesOf(wire,'text')) addUnit(unitNames,form(surface),unit);
     }
   }
   for (const wire of facts('pro.reader.property_quantity')) {
     const [family,key,quantity]=['family','key','quantity'].map(field=>valuesOf(wire,field)[0]);
-    if (family && key && quantity) add(ownerPropertyUnits,identity(family,key),quantity);
+    if (!family || !key || !quantity) continue;
+    const id=identity(family,key);
+    if (!ownerPropertyUnits.has(id)) ownerPropertyUnits.set(id,new Set());
+    ownerPropertyUnits.get(id).add(quantity);
   }
-  return {ownerPropertyOpen,ownerInventory,ownerPropertyUnits,ownerPropertyUnitNames:unitNames};
+  return {ownerPropertyOpen,ownerInventory,ownerPropertyUnits,
+    ownerPropertyUnitNames:unitNames,ownerPropertyUnitSymbols:unitSymbols};
 }
 
 function catalogProperty(worlds,family,surface) {
@@ -177,10 +183,10 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
         const number=heads.includes('number') && !property.values.length;
         if (!words.trim() || !quotedValue && (unsafe(from,b) || overlapsConnector(from,b) ||
             !number && !plain(from,b))) return [];
-        let resolved;
+        let resolved, measurement;
         if (property.values.length) resolved=closedValue(worlds,property,form(words));
         else if (number && !quotedValue) {
-          const unit=worlds.ownerPropertyUnits?.get(identity(family,property.name));
+          const dimensions=worlds.ownerPropertyUnits?.get(identity(family,property.name));
           for (let j=b;j>from;j--) {
             const written=span(from,j), numeral=worlds.nominalNumbers.get(before(from,j));
             const literal=decimal.test(written) && Number.isFinite(Number(written));
@@ -189,8 +195,17 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
               resolved=literal ? written : numeral.value;
               break;
             }
-            const quantity=worlds.ownerPropertyUnitNames?.get(before(j,b));
-            if (unit?.size===1 && quantity?.size===1 && unit.has([...quantity][0])) resolved=raw;
+            const units=new Map([
+              ...(worlds.ownerPropertyUnitNames?.get(before(j,b)) ?? []),
+              ...(worlds.ownerPropertyUnitSymbols?.get(span(j,b)) ?? [])
+            ]);
+            if (dimensions?.size!==1 || units.size!==1 || written.startsWith('-')) continue;
+            const [unit]=units.values();
+            if (!dimensions.has(unit.quantity)) continue;
+            if (measurement) return [];
+            const measure=(literal ? written : numeral.value).replace(/^\+/u,'').replace(/^\./u,'0.');
+            measurement={measure,unit:unit.name,words:written};
+            resolved=raw;
           }
           // A written reference to an earlier property is not a scalar
           // operand. Preserve it without evaluating it or guessing a formula.
@@ -210,7 +225,7 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
           resolved=words;
         }
         if (!resolved || resolved!==words && !atom.test(resolved) && !decimal.test(resolved)) return [];
-        records.push({property:property.name,keyWords,words,resolved});
+        records.push({property:property.name,keyWords,words,resolved,measurement});
       }
       return records;
     };
@@ -258,11 +273,13 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
                 '@r1.t w.request.target request=$r1 family='+quote(family)+' mode=existing fill=description'+
                   (det.mode ? ' determiner='+det.mode : '')+' description='+quote(span(start,valueAt))+
                   (sort ? ' sort='+quote(sort)+' sort_words='+quote(head) : ' family_words='+quote(head)),
-                ...records.map(({unread,property,keyWords,words,resolved},i)=>unread ?
+                ...records.map(({unread,property,keyWords,words,resolved,measurement},i)=>unread ?
                   '@r1.u'+(i+1)+' w.request.unread request=$r1 text='+quote(unread) :
                   '@r1.c'+(i+1)+' w.request.constraint request=$r1 on=attribute attribute='+quote(property)+
                   ' value='+(resolved===words || decimal.test(resolved) ? quote(resolved) : resolved)+
-                  ' operator=eq phase=result key_words='+quote(keyWords)+' words='+quote(words))
+                  ' operator=eq phase=result key_words='+quote(keyWords)+' words='+quote(words)+
+                  (measurement ? ' measure='+measurement.measure+' unit='+quote(measurement.unit)+
+                    ' measure_words='+quote(measurement.words) : ''))
               ].join('\n');
               const alternatives=outputs.get(family) ?? new Map();
               const unread=records.flatMap(record=>record.unread ? [record.unread] : []).join(' ');

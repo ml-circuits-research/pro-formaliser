@@ -1,5 +1,6 @@
 :- use_module(library(lists)).
 :- use_module(library(apply)).
+:- use_module(library(pairs)).
 :- use_module(library(readutil)).
 :- use_module(library(http/json)).
 :- initialization(main, main).
@@ -18,14 +19,49 @@ estimate(Q, Result) :-
           findall(W,(member(R,Reasons),W=R.weight),Weights), sum_list(Weights,ContextScore),
           Prior is 1/(1+C.index), Score is Prior+ContextScore,
           Key = sort(Score,Prior),
-          Row = _{index:C.index,score:Score,contextScore:ContextScore,reasons:Reasons} ),
+          Base = _{index:C.index,score:Score,contextScore:ContextScore,reasons:Reasons},
+          ( get_dict(textEvidence,C,Proof) -> Row=Base.put(textEvidence,Proof) ; Row=Base ) ),
         Scored),
-    keysort(Scored,Asc), reverse(Asc,Desc), pairs_rows(Desc,Ranking),
+    keysort(Scored,Asc), reverse(Asc,Desc), pairs_rows(Desc,ContextRanking),
+    text_ranking(ContextRanking,Ranked), maplist(drop_text_packet,Ranked,Ranking),
     decision(Ranking,Decision,Index),
     Result = _{selectedIndex:Index,decision:Decision,ranking:Ranking}.
 
 pairs_rows([],[]).
 pairs_rows([_-X|Xs],[X|Rs]) :- pairs_rows(Xs,Rs).
+drop_text_packet(Row,Public) :- (del_dict(textEvidence,Row,_,Public) -> true ; Public=Row).
+
+% Text compares only compatible act/owner interpretations, leaving their
+% shared positions relative to other interpretations as ranked by context.
+text_ranking(Ranking,Ranking) :-
+    \+ (member(R,Ranking),get_dict(textEvidence,R,_)), !.
+text_ranking(Ranking,Reordered) :-
+    findall(Group-(Position-Row),
+        ( nth0(Position,Ranking,Row),
+          ( get_dict(textEvidence,Row,Proof) -> Group=lane(Proof.lane)
+          ; Group=isolated(Position) ) ), Pairs),
+    keysort(Pairs,Ordered), group_pairs_by_key(Ordered,Groups),
+    maplist(text_group,Groups,RankedGroups),
+    append(RankedGroups,Ranked), keysort(Ranked,ByPosition),
+    pairs_rows(ByPosition,Reordered).
+
+text_group(_-[Pair],[Pair]) :- !.
+text_group(_-Pairs,Pairs) :-
+    \+ (member(_-Row,Pairs), Proof=Row.textEvidence, Proof.asked+Proof.keyedEffects > 0), !.
+text_group(_-Pairs,Refilled) :-
+    pairs_keys(Pairs,Positions),
+    findall(Key-Result,
+        ( member(_-Row,Pairs), Proof=Row.textEvidence,
+          Weight is Proof.quality*1.5,
+          Score is Row.score+Weight,
+          Key=sort(Score,Row.score),
+          Reason=_{signal:"written_property_evidence",weight:Weight,asked:Proof.asked,
+                   supportedEffects:Proof.groundedEffects,unsupportedEffects:Proof.unsupportedEffects,
+                   unread:Proof.unread},
+          append(Row.reasons,[Reason],Reasons),
+          Result=Row.put(_{textScore:Weight,reasons:Reasons}) ), Scores),
+    keysort(Scores,Asc), reverse(Asc,Desc), pairs_rows(Desc,Rows),
+    pairs_keys_values(Refilled,Positions,Rows).
 
 decision([],"unresolved",null).
 decision([R],"single_candidate",R.index).

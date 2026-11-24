@@ -53,6 +53,10 @@ export function sortRanges(text,sort,start=0,end=text.length) {
   return [...text.slice(start,end).matchAll(re)].map(m=>[start+m.index,start+m.index+m[0].length]);
 }
 
+export function catalogReference(vocabulary,wire,key,raw) {
+  return raw.startsWith('$') && vocabulary?.referenceSlots?.get(wire.type)?.has(key);
+}
+
 export function literalField(key) {
   return key==='predicate' || key==='words' || key.endsWith('_words') || ['text','name','description','ids'].includes(key);
 }
@@ -80,6 +84,7 @@ export function evidenceReport(text,wires,vocabulary) {
       const optional=wire.type==='w.request.target' && ['sort','ordinal'].includes(slot);
       if (!literalField(slot) && !fallback && !optional) continue;
       for (const item of items) {
+        if (catalogReference(vocabulary,wire,slot,item)) continue;
         const phrase=decode(item);
         const ranges=optional && slot==='sort' ? sortRanges(text,phrase,...scope) : literalRanges(text,phrase,...scope);
         if (ranges.length) spans.push({wire:wire.id,slot,kind,text:phrase,ranges});

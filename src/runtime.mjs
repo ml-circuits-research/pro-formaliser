@@ -28,7 +28,7 @@ export function createReader(model, worlds = loadWorlds(),options) {
       const result = {...(first ?? {status:'unresolved',sop:'',unread:text}),alternatives,candidateCount,multipleInterpretations};
       if (context === undefined && tab === undefined) return report(result);
       if (context !== undefined && (!context || typeof context !== 'object' || Array.isArray(context))) throw Error('Expected a discussion context object');
-      const estimation = await estimator.estimate(candidates,{tab,...context});
+      const estimation = await estimator.estimate(candidates,{tab,...context},{utterance:text});
       if (estimation.selectedIndex === null) return report({...result,estimation});
       const [best,...rest] = estimation.ranking.map(r=>({...candidates[r.index],generatorIndex:r.index}));
       return report({...best,status:best.status ?? (best.source==='lexicon' || best.unread ? 'partial' : 'matched'),

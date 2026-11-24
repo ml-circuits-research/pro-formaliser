@@ -1,3 +1,5 @@
+import {compileValidationModules} from './schema.mjs';
+import {compileReciprocal} from './reciprocal-reading.mjs';
 import {compileDiscourseReasons} from './discourse-reason.mjs';
 import {sequenceObjectPronouns} from './sequence-reference.mjs';
 import {compileNominalNumbers} from './nominal-number.mjs';
@@ -18,7 +20,7 @@ import { compileFixedProperties } from './fixed-properties.mjs';
 import { nominalPositionForms } from './nominal-phrases.mjs';
 import { spatialAliases } from './spatial-aliases.mjs';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { delimiter, extname, join, resolve } from 'node:path';
+import { basename, delimiter, dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse, quote, str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { languageFrames } from './language-frames.mjs';
@@ -640,11 +642,13 @@ function compile(facts) {
 }
 
 function collect(facts, file, selection) {
-  for (const wire of readFacts(file, selection)) {
+  const wires=readFacts(file, selection);
+  for (const wire of wires) {
     if (wire.pattern || Object.values(wire.attrs).some(items => items.some(item => item.startsWith('?')))) continue;
     if (!facts.has(wire.type)) facts.set(wire.type, new Map());
     facts.get(wire.type).set(wire.id, wire);
   }
+  return wires;
 }
 
 function providerTypes(facts) {
@@ -681,10 +685,13 @@ export function loadWorlds({ paths = (process.env.SOP_WORLDS ?? '').split(delimi
   if (!paths.length) return baseWorlds ??= compileFacts(baseFacts);
 
   const overlay = new Map();
+  const overlayFiles = new Map();
   for (const entry of paths) {
     const path = resolve(entry);
     const files = statSync(path).isDirectory() ? worldFiles(path, true) : [path];
-    for (const file of files) collect(overlay, file);
+    for (const file of files) {
+      if (!overlayFiles.has(file)) overlayFiles.set(file,collect(overlay,file));
+    }
   }
   const facts = new Map([...baseFacts].map(([type, wires]) => [type, new Map(wires)]));
   const extra = new Set([...providerTypes(overlay)].filter(type => !types.has(type) && !pinnedProviders.has(type)));
@@ -695,5 +702,29 @@ export function loadWorlds({ paths = (process.env.SOP_WORLDS ?? '').split(delimi
       facts.get(type).set(id, wire);
     }
   }
-  return compileFacts(facts);
+  const worlds=compileFacts(facts);
+  // Only a request extension explicitly selected by the caller participates
+  // in circuit validation. Its shard facts belong to the same module.
+  const modules=[];
+  for (const [file,schema] of overlayFiles) {
+    if (basename(file)!=='schema.sop' || !schema.some(w=>w.type==='core.module' &&
+        values(w,'imports').includes('w.request'))) continue;
+    const shards=join(dirname(file),'shards');
+    const moduleFacts=[...overlayFiles].filter(([path])=>dirname(path)===shards).flatMap(([,wires])=>wires);
+    modules.push({schema,facts:moduleFacts});
+  }
+  if (modules.length) {
+    const referenceSlots=new Map();
+    for (const {schema} of modules) {
+      for (const slot of schema.filter(w=>w.type==='core.slot' && one(w,'type'))) {
+        const owner=one(slot,'of');
+        if (!referenceSlots.has(owner)) referenceSlots.set(owner,new Set());
+        referenceSlots.get(owner).add(one(slot,'key'));
+      }
+    }
+    worlds.evidenceVocabulary.referenceSlots=referenceSlots;
+    worlds.validationModules=compileValidationModules(modules,[...facts.get('w.request.key').values()]);
+    worlds.reciprocal=compileReciprocal(type=>[...(facts.get(type)?.values() ?? [])]);
+  }
+  return worlds;
 }

@@ -134,6 +134,16 @@ test('binds two coordinated dimensions to one native owner and leaves relative a
     assert.deepEqual(effects.map(w=>['attribute','value','key_words','words'].map(k=>field(w,k))),[
       ['node.width','6 inches','width','6 inches'],['node.height','4 inches','height','4 inches']
     ]);
+    assert.deepEqual(effects.map(w=>['measure','unit','measure_words'].map(k=>field(w,k))),[
+      ['6','inch','6'],['4','inch','4']
+    ]);
+    const spelled='Set the width of the product photo to six inches and the height to +.5 cm';
+    const spelledCandidate=await proposal(spelled);
+    assert.ok(spelledCandidate,spelled);
+    assert.deepEqual(parse(spelledCandidate.sop).filter(w=>w.type==='w.request.constraint')
+      .map(w=>['measure','unit','measure_words'].map(k=>field(w,k))),[
+      ['6','inch','six'],['0.5','centimetre','+.5']
+    ]);
     const relative='Set the width of the product photo to 6.5 inches and the height to twice the width';
     const partial=await proposal(relative);
     check(relative,partial,worlds,'the product photo','node.width','6.5 inches','width');
@@ -143,6 +153,8 @@ test('binds two coordinated dimensions to one native owner and leaves relative a
     for (const input of [
       'Set the width of the product photo to 6 inches and the height to 4 seconds',
       'Set the width of the product photo to 6 inches and the height to 4 dinks',
+      'Set the width of the product photo to 6 inches and the height to -4 inches',
+      'Set the width of the product photo to 6 inches and the height to −4 inches',
       'Set the width of the product photo to 6 inches and the width to 4 inches',
       'Set the width of the product photo to 6 inches and the height of the backdrop to 4 inches',
       'Set the width of the product photo to 6 inches and delete it',
@@ -169,6 +181,8 @@ test('compiles owner inventories and backing slot types from an unrelated overla
     '@protocol w.request.key tab=lab family=instrument name=instrument.protocol head=candidate means=backing.protocol',
     '@aperture w.request.key tab=lab family=instrument name=instrument.aperture head=number means=backing.aperture',
     '@aperture.length pro.reader.property_quantity family=instrument key=instrument.aperture quantity=length',
+    '@first_unit k.units.unit name=first_unit symbol=ambiguousunit symbol=caseUnit quantity=length',
+    '@second_unit k.units.unit name=second_unit symbol=ambiguousunit symbol=CaseUnit quantity=length',
     '@inventory pro.reader.owner_inventory tab=lab family=instrument act=change provider=k.lab.tools',
     '@glass k.lab.tools name=quill_scope',
     '@stone k.lab.tools name=bore_scope',
@@ -192,12 +206,18 @@ test('compiles owner inventories and backing slot types from an unrelated overla
     check(combined,pair,configured,'the sun viewer','instrument.caption','Light and shade','caption');
     const aperture=parse(pair.sop).find(w=>field(w,'attribute')==='instrument.aperture');
     assert.equal(field(aperture,'value'),'3 inches');
+    assert.deepEqual(['measure','unit','measure_words'].map(k=>field(aperture,k)),['3','inch','3']);
+    const cased=await reader.propose('Set the aperture on the sun viewer to 3 CaseUnit');
+    const casedPair=cased.candidates.find(c=>c.source==='owner-property');
+    assert.ok(casedPair);
+    assert.equal(field(parse(casedPair.sop).find(w=>field(w,'attribute')==='instrument.aperture'),'unit'),'second_unit');
     for (const input of [
       'Change the caption on the unknown clarifier to Slate Alloy',
       'Change the caption on the viewer to Slate Alloy',
       'Change the count on the sun viewer to Slate Alloy',
       'Change the option on the sun viewer to Slate Alloy',
       'Change the protocol on the sun viewer to Slate Alloy',
+      'Change the aperture on the sun viewer to 3 ambiguousunit',
       'Change the caption on the sun viewer to Slate Alloy and delete it'
     ]) {
       const proposals=await reader.propose(input);

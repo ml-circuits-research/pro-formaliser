@@ -1,3 +1,4 @@
+import {reciprocalReading} from './reciprocal-reading.mjs';
 import {spatialAnchorReadings} from './spatial-anchor.mjs';
 import {discourseReason,discourseReasonReading} from './discourse-reason.mjs';
 import {sequenceReferenceReadings} from './sequence-reference.mjs';
@@ -657,6 +658,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const candidate of [...candidates,...additional.values()]) {
         for (const reading of spatialAnchorReadings(text,candidate,worlds,permit)) {
           const key=admissibleKey(text,reading.sop);
+          if (key) additional.set(key,reading);
+        }
+      }
+      if (worlds.reciprocal) {
+        for (const candidate of [...candidates,...additional.values()]) {
+          const reading=reciprocalReading(text,candidate,worlds);
+          const key=reading && admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
         }
       }

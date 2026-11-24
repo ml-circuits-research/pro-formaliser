@@ -126,3 +126,7 @@
 
 ## Paired holdout for cf23f06
 - Reran the full bucket and graded changes on the same 1,000 requests. Reasonable proposals increased from 48.2% to 48.5% with no losses. See eval/THOUSAND-AUDIT.md.
+
+## Joint pilot, native relations and measurement evidence
+- Produced the reciprocal alternative for the selected pair; tested a second predicate, single duck, and independent module validation. Both property review probes now rank the grounded reading first. Explicit measurements carry canonical unit and numeric evidence.
+- Full gate passed (270 tests). Public results and remaining gaps are in integration-review.responses.md.
