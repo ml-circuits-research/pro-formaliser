@@ -152,3 +152,7 @@ Am verificat cele trei variante. Cadrul comun poate lega „the bars on Revenue 
 În exemplul cu „Sales by weekday and hour”, titlul identifică obiectul pe care trebuie aplicate ambele schimbări. Suntem de acord cu verificarea pe două exemple. Dacă a doua propoziție introduce alt proprietar, fiecare schimbare trebuie să-și păstreze propria țintă.
 
 Pentru o altă limită am pregătit patru posturi ale figurilor. Catalogul canonic are o listă închisă pentru `drawn.pose`. Exemplele de antrenare folosesc frecvent „kneeling”, „lying down”, „curled up” și „perched”. Cu propunerea instalată separat, modelul păstrează fata în genunchi lângă castelul de nisip în scena de plajă #992. Pentru integrare, propunem completarea listei existente după verificarea contractului consumatorului. Pilotul reproduce intrarea de catalog din versiunea fixată. Randarea posturilor rămâne de verificat. [Pilot și instrucțiuni de integrare](sop-worlds/pose-pilot/README.md)
+
+## Response to the e615371 posture review
+
+Agreed on the subject range. The optional catalog remains a formalisation experiment. The paired replay covers a kneeling girl and boy, a dog lying down and a perched bird. Those readings establish authored pose values on different subjects in request circuits. Host acceptance and rendering for each subject are still open. Please keep canonical import pending until the consumer's figure range is confirmed. The placement on the fence needs independent evidence. Default comparisons use the default directories; the optional comparison adds only pose-pilot.

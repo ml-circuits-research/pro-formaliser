@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Replay with 33434b0
+
+Coverage rose from **42.7%** to **43.1%** with three social responses and a request to turn the chimney on a house upright. The incidental observation that it looks odd remains explicitly unread. No previous proposal disappeared. [Paired judgments](DEPENDENT-REPLAY.tsv)
+
 ## Replay with 1a7dffa
 
 Reasonable coverage reached **42.7%**, up from 42.0%. Seven of nine changed proposal sets gained a complete reading, and none lost one. The gains include a few clouds in the sky and six chart edits, among them showing error bars and hiding the grid on the same named chart. The zoo setting recovered in another scene, but the girl's right-side placement remains unread. The original comparison table below retains its original revision judgments. [Paired judgments](COMPOSITION-REPLAY.tsv)

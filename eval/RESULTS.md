@@ -2,6 +2,10 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Owner slots and social responses
+
+Reader `33434b0` reached **50.6%** on the primary sample (**51.9%** with spelling) and **43.1%** on the replica. All six changed sets gained a complete alternative. None of the third sample’s 1,000 sets changed. An optional posture catalog changed six primary sets with the same model. Only one gained a complete proposal, taking original-text coverage to **50.7%**. The others still missed separate details or attached them to the wrong object. [Paired judgments](DEPENDENT-REPLAY.tsv)
+
 ## Catalog properties, quantities and scene settings
 
 Reader `1a7dffa` reached **50.4%** reasonable on the primary 1,000 and **42.7%** on the second 1,000. The primary gained nine of 13 changed sets, and the second sample gained seven of nine. All 48 spelling unions were unchanged. The 13 separate spelling recoveries bring the primary result to **51.7%** with spelling enabled.

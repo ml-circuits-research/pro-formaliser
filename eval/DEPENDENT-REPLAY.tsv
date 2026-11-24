@@ -1,0 +1,13 @@
+sample_group	sample	source	row	previous	current	reference_issue	reason
+primary	356	drawing/scenes-20.csv	946	L2b	L4	0	The circuit selects the trunk by its tree owner and applies upright as the result, preserving the written tree through a separate lookup.
+primary	638	diagram/diagrams-04.csv	3801	L1d	L4	1	The effect-free alternative preserves the full acknowledgment and positive self-report. The reference drops the final words with it.
+replica	8	drawing/placement-04.csv	928	0	1	0	Effect-free coverage preserves the acknowledgment, gratitude and farewell without a fabricated edit.
+replica	156	document/text-01.csv	4701	0	1	0	Effect-free coverage preserves gratitude and approval despite the missing apostrophe in the native contraction.
+replica	576	drawing/placement-04.csv	822	0	1	1	The new effect-free alternative retains both the gratitude and the closure. The reference covers only the gratitude token.
+replica	665	drawing/scenes-20.csv	978	0	1	0	Selects the chimney by its house owner and sets it upright. The writer's observation that it looks odd remains unread and does not become an extra action.
+pose	28	drawing/scenes-04.csv	849	L2c	L2c	0	The overlay adds kneeling to the small boy facing left on the right. The strongest complete enumeration still leaves the crab's depth within the pool unread.
+pose	52	drawing/scenes-11.csv	710	L2c	L2c	1	The new alternatives recognize the bird perched. They still do not encode the meadow glow, edge condition and preservation as a complete request sequence.
+pose	323	drawing/scenes-04.csv	853	L1c	L1c	0	The new proposals add the kneeling pose to the boy but still bind later colors and places to him, without creating the pool, bucket or crab.
+pose	815	drawing/scenes-08.csv	2641	L2c	L2c	1	The overlay grounds lying down on the dog, but no new proposal captures the full scene-wide hard neon treatment while preserving the scene.
+pose	921	drawing/scenes-11.csv	770	L2c	L2c	1	The overlay binds perched, but the same-plane and no-addition-or-removal constraints remain unread. Some alternatives also make up a separate upward effect from the location phrase.
+pose	992	drawing/scenes-04.csv	840	L2c	L4	1	A complete alternative sets the beach scene and places all six objects with the requested sizes, colors and positions, including the girl kneeling. The reference omits the small hat size.

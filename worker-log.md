@@ -179,3 +179,6 @@
 
 ## Native owner slots, dialogue and finite postures
 - Added independent owner/endpoint bindings, an effect-free reading for fully covered social turns, and a catalog-backed posture pilot. The integrated suite passed all 325 tests including disjoint-world controls. The pose catalog is optional and awaits integration review.
+
+## Three-sample review at 33434b0
+- Replayed three lots of 1,000. Default coverage reached 50.6% on primary, 43.1% on replica; the third lot was unchanged. All 48 spelling unions reproduced byte for byte. The optional pose world yielded one additional complete primary reading. See eval/DEPENDENT-REPLAY.tsv.
