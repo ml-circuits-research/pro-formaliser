@@ -107,3 +107,6 @@
 ## Centralized handover and integration review
 - Moved the ten bundled reader files under sop-worlds and updated their consumers. The full gate passed (257 tests).
 - Replayed all six integration observations through the public reader and recorded decisions in integration-review.responses.md.
+
+## Independent replication
+- A fresh 1,000-request sample from bucket 37 yielded 36.8% reasonable for fa5ff40 and 41.1% for 03b29bc. All paired verdicts and reproduction steps are in eval/REPLICATION-37.md.
