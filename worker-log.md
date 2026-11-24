@@ -158,3 +158,6 @@
 
 ## Conditional spans, reported words and sign identity
 - Added typed causal and report-clause alternatives and corrected new-sign target identity after independent review. Dropped the prototype for whole-program labelled-operand transfer after a three-sample replay found no semantic gains. See eval/TRAINING-OVERLAP.md.
+
+## Three-sample verification at 03f237f
+- Independent review found three new reasonable primary requests, reaching 49.2% (50.5% with spelling). The second sample remained at 41.9%. A fresh 1,000-input comparison with 4480c70 changed zero proposal sets. See eval/RESULTS.md.

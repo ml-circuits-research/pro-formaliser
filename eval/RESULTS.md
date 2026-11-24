@@ -2,6 +2,12 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Source roles and subordinate clauses
+
+Reader `03f237f` reached **49.2%** reasonable on the primary 1,000 and **41.9%** on the second 1,000. With the independent spelling path enabled, the primary reached **50.5%**. All 48 corrected-input unions were replayed and matched their earlier reviewed sets. The three new complete readings occurred outside those 48. [Primary audit](THOUSAND-AUDIT.md) · [All changes](SCOPED-REPLAY.tsv) · [Training overlap and generalization limits](TRAINING-OVERLAP.md)
+
+A fresh test compared this reader with `4480c70` on previously unused bucket 73. Both used the same model trained outside that bucket on 187,094 rows. From 1,927 held-out rows in corpus order, Python's `random.Random(730019).sample(range(1927),1000)` selected the inputs. No proposal set changed. This is a comparison between those two releases, without an absolute reasonable score for the fresh sample.
+
 ## Analytical readings and independent spelling
 
 Reader `1a427d8` reached 48.9% reasonable on the primary 1,000 and 41.9% on the second 1,000 using the original wording alone. On the primary sample, preserving original and corrected proposals adds thirteen separate recoveries, giving 50.2% with spelling enabled. The spelling context was trained for this primary split. The optional landmark catalog was excluded from both benchmarks. [Primary grades](THOUSAND-AUDIT.md) · [Second sample](REPLICATION-37.md) · [Spelling judgments](SPELL-AUDIT.md)

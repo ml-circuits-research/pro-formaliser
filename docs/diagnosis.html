@@ -56,6 +56,8 @@
   &gt; .cache/diagnosis-primary.json
 node --test test/diagnose.test.mjs</code></pre>
     <p>Pass <code>--cases path/to/plan.mjs</code> to use another plan exporting a <code>cases</code> array. Follow the release plan for scope, witness and probe fields. When reviewing a schema boundary, include the one-slot extension, witness and alternative encodings checked against the pinned schema. Keep subjective judgments in the review rationale and observed outputs in the generated report. <a href="evaluation.html#reproduction">Benchmark reproduction</a> · <a href="../eval/diagnose-cases.mjs">Example plan</a></p>
+    <h2>Generalization across wording and roles</h2>
+    <p>In a diagnostic on 100 failed requests, a nearby training example usually had the same actions, targets and constraint roles as the reference. The current reader rarely bound all the requested values to those roles. Testing transfer of whole programs with typed operands on three samples added no newly reasonable cases. The independent dependency-parser trial also found wrong attachments inside quoted text and between a person and their clothing. The reader now keeps reported and causal clauses outside values when world declarations and source spans support that interpretation. <a href="../eval/TRAINING-OVERLAP.md">Measurements and diagnostic limits</a> · <a href="../test/postposed-clause.test.mjs">Cross-domain and scope controls</a></p>
   </main>
 </body>
 </html>

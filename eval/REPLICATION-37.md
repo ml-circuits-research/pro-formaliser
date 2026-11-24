@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Replay with 03f237f
+
+Reasonable coverage remained **41.9%**. Seven sets changed. The complete airport scene remained available, and additional alternatives separated the suitcases’ size from their colour. The other six sets lost incomplete alternatives. [One judgment per changed set](SCOPED-REPLAY.tsv)
+
 ## Replay with 1a427d8
 
 Reasonable proposals reached **41.9%**, previously 41.6%. Ten sets changed. Three gained a complete reading and none lost one. The gains bind a monthly sales forecast sum, monthly order totals, and average order value by month with a right-hand legend. [Changed cases and independent review](REPLICATION-37-ANALYTICAL.tsv)

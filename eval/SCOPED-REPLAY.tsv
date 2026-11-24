@@ -1,0 +1,18 @@
+sample_group	sample	previous	current	reference_issue	reason
+primary	28	L2c	L2c	0	Separates medium size from blue color and binds left region for the pool, but all new candidates still omit the crab depth and boy kneeling.
+primary	135	L2b	L2b	1	Removed alternative confused top-right region with upward motion and yellow clothing with a landmark. Retained alternatives do not bind remaining pair and spacing. Reference leaves those later effects unresolved.
+primary	279	L2b	L2b	1	Replacement changes only blank-line formatting. Hill remains separate from the placement of six trees. Reference marks requested preservation as filler.
+primary	302	L2c	L4	0	A new full circuit has three medium blue deck chairs arranged in a row beside the boat, a large red umbrella near the boat, and the medium sitting woman facing right beside the umbrella. Unread article and degree adverb are incidental.
+primary	448	L2c	L2c	1	Four removed alternatives treat leftward movement of the two people as removal. The retained set stays incomplete. Reference lacks distance and scene-preservation semantics.
+primary	741	L2c	L4	0	A new result sets the scene to a rugged volcano slope and explicitly retains exactly as I said as a reported comparison rather than putting it in the scene value.
+primary	768	L2c	L2c	1	Removed alternative invented a drawing relation from between and failed to bind chart grouping. Reference preserves its relationship brief only as unread.
+primary	824	L2a	L2a	1	Removed alternative mistook the second swap for creation and left unchanged positions unread. Reference also lacks swap effects and reduces preservation to filler.
+primary	942	L1c	L4	1	New circuit selects the girl with pigtails, sets the result to frowning, and records the fallen sandcastle separately as cause. Reference wrongly includes cause in the expression value.
+primary	992	L2c	L2c	0	New alternatives separate the towel's medium size from blue but still do not bind both the beach scene and the girl's kneeling pose.
+replica	247	1	1	0	Exact complete scene circuit remains. Added complete alternatives also bind medium size separately from blue on the three suitcases, retaining the setting, noon, four object groups and relationships.
+replica	579	0	0	1	Removed circuits lose the leftward shift and restore, and collapse differently colored swap participants. Reference omits shift distance and gap and does not distinguish the swap participants.
+replica	669	0	0	1	Removed alternative changes a part called top and treats the requested new tower as existing. Reference does not encode matching the previous tower and takes one as a count.
+replica	708	0	0	1	Removed alternative gets the color but turns the word green into a drawn object. Retained readings still do not combine paint and label effects. Reference invents a triangle selector.
+replica	789	0	0	1	Removed alternative creates four yellow blocks rather than purple replacements and lacks the vacated-location relation, which the reference also fails to bind.
+replica	931	0	0	1	Removed alternative misreads upper-right region as direction, treats boats as existing and omits even spacing. Reference also omits even spacing.
+replica	957	0	0	1	Removed alternative creates a figure instead of swapping the two figures one in from each end. Preservation is unread and the reference leaves the swap unresolved.
