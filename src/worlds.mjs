@@ -216,7 +216,7 @@ function compile(facts) {
   const nominalInflection = createNominalInflection(facts);
   const senses=lexicalSenses(facts);
   const knownWords = new Set();
-  const acts = new Map(), targets = new Map(), constraints = new Map(), markers = new Map();
+  const acts = new Map(), targets = new Map(), framedTargets = new Map(), constraints = new Map(), markers = new Map();
   const semanticFamilies = new Set(), familyActs = new Map();
   const determiners = new Map(), joiners = new Map(), negatives = new Set(), fillerPhrases = new Set(), discourse = [];
   const actFacts = facts('k.actions.act');
@@ -292,13 +292,16 @@ function compile(facts) {
     for (const word of text.toLowerCase().match(/[\p{L}\p{M}]+/gu) ?? []) knownWords.add(word);
   }
 
-  function bind({ of, family, sort = '', acts, mode, surfaces }) {
+  function bind({ of, family, sort = '', acts, mode, surfaces, argumentRole }) {
     semanticFamilies.add(family);
     const binding = { family, sort, acts: [...new Set(acts.filter(act => actNames.has(act)))], mode };
     for (const act of binding.acts) index(familyActs, family, act);
     for (const text of new Set([...surfaces, ...(aliases.get(of) ?? [])])) {
       spell(text);
-      index(targets, phrase(text), binding);
+      if (argumentRole) {
+        for (const act of binding.acts) index(framedTargets, phrase(text),
+          ['target',act,family,mode,sort,0,argumentRole]);
+      } else index(targets, phrase(text), binding);
     }
   }
 
@@ -758,6 +761,7 @@ function compile(facts) {
     properties: surface => propertiesBySurface.get(surface) ?? [],
     tuples: surface => tuples.get(surface) ?? [],
     nominalInflection,
+    frameTargets: surface => framedTargets.get(surface) ?? [],
     isReference: text => references.has(phrase(text)),
     lookup(surface, activeActs = actNames) {
       const entries = [...(acts.get(surface) ?? []), ...(constraints.get(surface) ?? []), ...(markers.get(surface) ?? [])];

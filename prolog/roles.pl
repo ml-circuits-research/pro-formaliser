@@ -1,4 +1,4 @@
-:- module(roles, [index_roles/3, reset_role_cache/0, direct_target/5, direct_reference/4, target_determiner/6, attached_roles/10, constraint_phase/8, set_phase/3, role_fit/8]).
+:- module(roles, [index_roles/3, reset_role_cache/0, nominal_prefix/3, direct_target/5, direct_reference/4, target_determiner/6, attached_roles/10, constraint_phase/8, set_phase/3, role_fit/8]).
 :- use_module(library(http/json)).
 :- use_module(library(ordsets)).
 :- use_module(library(pcre)).

@@ -238,11 +238,12 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     if (typeof text !== 'string') throw Error('Expected a text string');
     const ts = tokens(text), chars = Array.from(text);
     const ambiguousTargets = [], templates = [], hits = [], determiners = [], properties = [], predicateModes=[];
-    const inflectionHits = [], inflectionTargets = [], declaredActs = [], nominalHeads = [];
+    const inflectionHits = [], inflectionTargets = [], declaredActs = [], nominalHeads = [], frameTargets = [];
     const demonstratives=ts.some(([key])=>worlds.determiners[key]==='demonstrative');
     // A quoted label may itself contain punctuation, negation or a sequence word.
     // Its span remains available to property binding in Prolog.
     const quotes = quotedSpans(text);
+    const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
     const scopeText = maskQuoted(text,quotes);
     const outside = scopeText === text ? null : new Set(tokens(scopeText).map(t => t[2]));
     const amounts=ts.flatMap((_,start)=>worlds.motionAmountPhrases.flatMap(words=>
@@ -271,6 +272,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const learned = Object.hasOwn(model.lexicon ?? {},words) ? model.lexicon[words] : [];
         const local = new Set(learned.map(e => JSON.stringify(e.slice(0,-1))));
         const declared = worlds.lookup(words);
+        if (language.frames.length) {
+          const direct=worlds.frameTargets(words);
+          const entries=direct.length ? direct : worlds.nominalInflection(words,worlds.frameTargets);
+          for (const entry of entries) frameTargets.push([ts[i][2],ts[j][3],entry.slice(0,6),entry[6]]);
+        }
         const nativeActs = [...new Set(declared.filter(([role])=>role==='act').map(([,act])=>act))];
         if (nativeActs.length) {
           declaredActs.push([ts[i][2],ts[j][3],nativeActs,nativeActs.length===1 && nativeHead(words,nativeActs[0])]);
@@ -310,7 +316,6 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const allowConstraints = scope.windows.length > 0;
     const exact = examples.get(text) ?? [];
     const transfers = exact.length ? [] : transfer(text);
-    const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
     const topicCommands=scope.restricted ? undefined : topicCommandPacket(text,ts,quotes,worlds,topicGrammar);
     const propertyCommands=scope.restricted || quotes.length ? undefined : propertyCommandPacket(text,ts,model.propertyCommands);
     const argumentSequences=quotes.length ? [] : sequencePacket(ts,worlds,scope.restricted,text);
@@ -331,7 +336,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         acts:[...new Set(worlds.spatialBindings.flatMap(binding=>binding.namedActs))],
         modifiers:[...worlds.spatialModifiers.rules.keys()].map(words=>words.split(/\s+/u)),
       } : undefined;
-    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer,readingScope=scope) {
       const key = admissibleKey(text,answer.sop);
@@ -404,6 +409,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const sop of resolveRelationKeys.targetlessAlternatives(answer.sop)) {
         contextualTargets.push({...plain,sop});
       }
+    }
+    for (const answer of response.frameTargets ?? []) {
+      const sop=resolveRelationKeys(answer.sop);
+      const partial=parse(sop).some(wire=>wire.type==='w.request.unread');
+      retain({...answer,sop,source:'frame-target-inventory',status:partial?'partial':'matched'});
     }
     for (const answer of response.frontedCandidates ?? []) {
       for (const sop of [resolveRelationKeys(answer.sop),...resolveRelationKeys.targetlessAlternatives(answer.sop)]) {

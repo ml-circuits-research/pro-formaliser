@@ -100,6 +100,16 @@ The optional [target binding schema](../sop-worlds/pro.reader/schema.sop) declar
 `pro.reader.target` for SOP tooling. The reader can also run this example with
 `--worlds-only`, which skips loading a trained model.
 
+## Targets from a native inventory
+
+A [target inventory declaration](../sop-worlds/pro.reader/target-inventory.sop)
+projects vocabulary from the declared identity slot of a provider. It can
+repeat `act` for several operations on the same family. Each operation needs
+its own licence on that family and mode. Set `argument_role` to require a
+complete native frame that places the written noun in that role. The resulting
+proposal uses the provider's canonical kind and keeps aliases or plural
+wording as evidence.
+
 ## Spatial relation keys
 
 The lexical reader can attach a grounded nominal anchor to the direct

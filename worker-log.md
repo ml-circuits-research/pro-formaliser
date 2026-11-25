@@ -541,3 +541,7 @@
 ## Complete declared verb phrases
 - Prolog keeps the full written predicate of a fixed multiword verb when a native frame proves it.
 - The real 165-text replay changed 14 inputs and kept 151 candidate lists equal. All 506 release tests passed.
+
+## Existing targets from proved noun roles
+- A native frame now admits existing inventory kinds for licensed actions without widening the general lexicon.
+- The real 214-row replay added eight complete direct readings and a two-command circuit. All 508 tests passed.

@@ -47,11 +47,12 @@ export function nativeTargetInventory(facts,words,licensed) {
   }
   const live=w=>one(w,'derived')!=='true';
   return declarations.flatMap(wire=>{
-    const family=one(wire,'family'),act=one(wire,'act'),mode=one(wire,'mode');
+    const family=one(wire,'family'),mode=one(wire,'mode'),argumentRole=one(wire,'argument_role');
     const provider=one(wire,'provider'),identity=one(wire,'identity'),requires=one(wire,'requires');
-    if (!['new','existing'].includes(mode) || one(slot(provider,identity),'id')!=='true' ||
-        !licensed.some(binding=>binding.family===family && binding.acts.includes(act) &&
-          (binding.mode ?? (act==='make' ? 'new' : 'existing'))===mode)) return [];
+    const acts=[...new Set(values(wire,'act'))].filter(act=>licensed.some(binding=>
+      binding.family===family && binding.acts.includes(act) &&
+      (binding.mode ?? (act==='make' ? 'new' : 'existing'))===mode));
+    if (!['new','existing'].includes(mode) || !acts.length || one(slot(provider,identity),'id')!=='true') return [];
     const relation=requires && slot(provider,requires);
     const destination=one(relation,'type'),by=one(relation,'by');
     if (requires && (!destination || !by || one(slot(destination,by),'id')!=='true')) return [];
@@ -62,7 +63,7 @@ export function nativeTargetInventory(facts,words,licensed) {
       if (names.length!==1 || !noun.test(sort) ||
           requires && !values(fact,requires).some(value=>members.has(value))) return [];
       const surfaces=[sort,...(aliases.get(JSON.stringify([provider+'.'+identity,sort])) ?? [])];
-      return [{family,sort,mode,acts:[act],surfaces}];
+      return [{family,sort,mode,acts,surfaces,argumentRole}];
     });
   });
 }

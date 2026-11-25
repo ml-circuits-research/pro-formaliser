@@ -755,3 +755,13 @@ The default-model before/after replay used 165 texts. Fourteen changed, includin
 A novel overlay verb phrase reuses the same mechanism in the focused regression. Leading standalone “please” and copy/paste with an unbound operand still have broader alternatives. No new canonical declarations were required and no aggregate benchmark was run. [Regressions](test/language.test.mjs)
 
 All 506 isolated release tests passed.
+
+## Bulk findings fixed — native inventory confined to the proved noun role
+
+A target-inventory declaration can now select a declared frame argument and list several applicable acts. Each act still needs a native family and mode licence. The new existing-object binding uses the installed object inventory for remove and pick only within their proved thing role. Prolog builds these readings separately from the bounded general lexical search. Aliases and plurals retain the source wording, and selectors still use the existing constraint rules.
+
+The actual default-model before/after replay read 214 input rows. Eight rows produced complete direct readings, with seven distinct texts. Examples include “Remove the grass”, “Remove this puppy” and “Select the daffodils”. The compound “delete octopus, but leave coral alone” gained a complete circuit with distinct removal and preservation requests. The other 205 rows returned identical ordered SOP candidates. A separate worlds-only control retained red as a selector over existing daffodils. Native catalogue and source-evidence checks passed. No aggregate benchmark ran.
+
+An inventory enabled across ordinary lexical search also produced unrelated targets in requests such as “can i have a fresh sheet of paper” and “what can u see in my picture”. That experiment informed the argument-scoped design. Route the optional `argument_role` projection and existing-object binding through the shared grammar channel. The current installed frame subset leaves locative and trailing-adverb removal cases outside this path. Copy and save applicability still depend on their separately reviewed canonical additions. [Declaration](sop-worlds/pro.reader/target-inventory.sop) · [Regressions](test/frame-target-inventory.test.mjs)
+
+All 508 isolated release tests passed.

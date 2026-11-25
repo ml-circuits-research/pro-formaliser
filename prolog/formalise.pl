@@ -30,7 +30,7 @@ main :- repeat,
 answer(Q, Plans) :- get_dict(landmarkPair,Q,Packet), !, landmark_pair_plans(Packet,Plans).
 answer(Q, Plans) :- get_dict(setExclusion,Q,Packet), !, exclusion_plans(Packet,Plans).
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,frontedCandidates:Fronted,universalCandidates:Universal,proofs:Proofs,groundedPredicates:Grounded,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
+answer(Q, _{candidates:Answers,frontedCandidates:Fronted,frameTargets:FrameTargets,universalCandidates:Universal,proofs:Proofs,groundedPredicates:Grounded,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
     topic_commands(Q,Topics),
     native_property_frames(Q,NativeProperties),
     verb_effects(Q,VerbEffects),
@@ -55,6 +55,8 @@ answer(Q, _{candidates:Answers,frontedCandidates:Fronted,universalCandidates:Uni
                 clean_candidate(Front,CleanFront) ), Fronts),
       list_to_set(Fronts,Fronted)
     ; Fronted=[] ),
+    findall(Candidate, frame_target_candidate(WithProperties,Proofs,Candidate), FrameTargetCandidates),
+    list_to_set(FrameTargetCandidates,FrameTargets),
     universal_inventory_plans(WithProperties, Plans),
     findall(CleanUniversal,
             ( member(Plan, Plans), Target=Plan.targetHit,
@@ -71,6 +73,19 @@ answer(Q, _{candidates:Answers,frontedCandidates:Fronted,universalCandidates:Uni
     findall(C, member(_-[C|_],Groups), Reps),
     append(Head,Reps,Combined), maplist(clean_candidate,Combined,Clean),
     property_commands(Q, PropertyCommands), append(Clean,PropertyCommands,All), list_to_set(All, Answers).
+
+% Inventory vocabulary contributes only to the argument proved by a native
+% frame. Keep that path outside the bounded ordinary lexical search.
+frame_target_candidate(Q, Proofs, Clean) :-
+    member(Proof,Proofs), Act=Proof.act,
+    offsets(Q.tokens,Proof.predicate,PS,PE),
+    member(Argument,Proof.roles), offsets(Q.tokens,Argument.range,First,End),
+    member([Start,End,Entry,Role],Q.frameTargets), Role=Argument.role,
+    Entry=["target",Act|_], Start>=First, nominal_prefix(Q,First,Start),
+    Head=[PS,PE,["act",Act,"do",0],0],
+    Hit=[Start,End,Entry,0],
+    Scoped=Q.put(_{actHits:[Head],targetHits:[Hit|Q.targetHits],requiredTarget:Hit}),
+    lexical_candidate(Scoped,_,Candidate), clean_candidate(Candidate,Clean).
 
 clean_candidate(C, Clean) :- (del_dict(binding,C,_,Clean) -> true ; Clean=C).
 
