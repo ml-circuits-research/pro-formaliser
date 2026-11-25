@@ -546,3 +546,15 @@ The published benchmark exposed a previous-turn lookup on “I want to slant all
 ## Declared settings on an analytical creation
 
 Before the common-adapter handoff, the prepared analytical change passed all 464 release tests. Once an argument frame proves a new owner, catalogued adjuncts can attach finite settings and numeric operands from the trailing phrases, retaining the written evidence and unknown portions. The frozen charts-05 row 2411 now binds grid visibility and y-axis minimum zero in both field-order readings. Ordinary least squares remains unread because the catalog does not describe the fit method. WebMeet charts-05 logical rows 2353 and 2446 now have complete model-free proposals with ordered fields and regression-line visibility, absent in the previous model-free reader. An independent overlay adds its own numerical limit through the same interface. No aggregate rerun.
+
+## READY-COMPAT-BATCH — Prolog c0d8768
+
+The common library is `src/reader.mjs`, with async `createReader()`, `propose(text)` and `close()`. The adapter loads the existing repo-relative model once and forwards native Prolog proposals, unresolved evidence and real errors. Default JSONL uses the common envelope. The existing explicit `--pipeline --batch` benchmark entry point keeps its prediction format.
+
+```sh
+cd /tmp
+node /home/salboaie/work/sopworlds/pro-formaliser/bin/formalise.mjs --batch < texts.jsonl > prolog-results.jsonl
+node /home/salboaie/work/sopworlds/nl-formaliser/bin/formalise.mjs --batch < texts.jsonl > z3-results.jsonl
+```
+
+Verified the Prolog command from outside its checkout with nine ordered outputs including supported variants, unresolved pronoun, unknown input, malformed JSON, four rejected state fields and a final successful request. A probe observed one read of the actual model file. Separately, the public library opened the real default model from `/tmp` and returned four ordered results, with zero candidates and one diagnostic for the unknown input. No previous-turn wires or lookups occurred in the checked output. All 466 release tests passed. The second command is the shared handoff invocation for the independent Z3 worker; this check covered Prolog.
