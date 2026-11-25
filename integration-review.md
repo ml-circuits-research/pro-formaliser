@@ -860,3 +860,30 @@ Route this scoped report delta through coordinator/data with expected-old-cell v
 ## DATA PUBLICATION — approved report corrections closed
 
 2026-11-25 21:56 CET: WebMeet 70673ae6dfc9965d18a58fcccfa5fe9aa1289888 publishes PROLOG-GOLD-004/005; requested exact benefit-unread amendments are included. Native batch gate99/99, uncovered-word advisories retained. NL and other cells preserved; no broader draft approval. Please mark corresponding report IDs fixed with this revision in your own report file; retain their source evidence. This data publication does not update reader accuracy or unfreeze benchmark gold.
+
+
+## Comparable aggregate checkpoint — measured gain below threshold; standby upheld
+
+Reviewed metrics-only checkpoint56129f9 afterddb5157; measured current source dbfa509, baseline a7b9a18. Worker response mtime2026-11-25 21:59:17.128221838 +0100; artifact review22:03:00–22:05:18 +0100. No engine/benchmark rerun or implementation was initiated. Verified three saved JSONL SHA256 values and frozen-model SHA256 against lastResult-prolog.md; all three streams contain1000 records, inputs have only text, both outputs have zero error results,114 proposal sets differ and both sides reach238 distinct proposals maximum. Independently matched all1000 input texts to THOUSAND-GRADES cohort coordinates and pinned WebMeeta85de79. Installed knowledge is3b2deebd as reported.
+
+Reconstructed all1000 paired grades from922 carried records plus the114-row changed-set TSV, with overlap resolved by the explicit paired judgments. Counts agree with lastResult-prolog.md:
+
+| Grade | Baseline | Current |
+| --- | ---: | ---: |
+| L0 | 11 (1.1%) | 11 (1.1%) |
+| L1 | 92 (9.2%) | 89 (8.9%) |
+| L2 | 351 (35.1%) | 353 (35.3%) |
+| L3 | 209 (20.9%) | 209 (20.9%) |
+| L4 | 337 (33.7%) | 338 (33.8%) |
+| L3+L4 | 546 (54.6%) | 547 (54.7%) |
+
+The paired improvement is +0.1 percentage points: two gains and one loss. Inspected the actual saved circuits for all three threshold crossings: sample385 removes a forced previous-turn skew source;987 adds literal them to undo;366 loses the named-chart value-label-hide circuit. These corroborate the reported changes. Sample937 is graded L4 on both sides, explicitly correcting the historical baseline judgment; the historical54.5% remains separate and that common correction contributes zero paired gain. The recorded run began21:50:16CET, with baseline/current final responses21:55:11/21:55:50. No fresh score is attributed to the later documentation checkpoint.
+
+This is artifact/cohort/count verification and limited semantic spot-checking, not an independent fresh semantic regrade of every request. The three-reviewer judgments on78 cases and carried evidence remain fallible development-cohort evaluations, not corpus-wide accuracy. The baseline's reported full historical-set reproduction and identical invocation/budget are worker provenance claims consistent with the saved results; no rerun was performed to independently certify runtime timing.
+
+The delivered comparable result is far below the owner's +5-point criterion. Worker explicitly reports STANDBY until26November2026 08:00CET or earlier owner resume; uphold that operational pause and assign no new implementation/experiments. The named-chart label-hide regression is recorded evidence for later owner-directed work, not a task to execute during standby. Report006 remains in the already approved coordinator/data route; old001–005 are closed and not reaudited. Reviewer file stable for publication; only reviewer notes/activity changed, no source/report/result/Git/PSys edits.
+
+
+## DATA PUBLICATION — PROLOG-GOLD-006 closed
+
+2026-11-25 22:09 CET: WebMeet 845d6a41c05ae3c7d5a7e2bd170bcba1291a208d publishes the exact approved006destination correction, native1/1,NL/otherwires retained. No action is requested from the worker during STANDBY; its error-report status may be updated after08:00/resume. The verified paired result54.6→54.7 remains the decision basis; no new implementation/benchmark requested.
