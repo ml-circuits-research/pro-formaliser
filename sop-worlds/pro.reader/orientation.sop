@@ -10,3 +10,4 @@
 @pro.reader.orientation.text core.slot of=pro.reader.orientation key=text kind=string required=true many=true
 
 @reader.drawing.orientation pro.reader.orientation tab=drawing family=drawn act=change attribute=drawn.facingTarget source_attribute=drawn.facing landmark_type=k.objects.object text=face text=faces text=facing text="to face" core.source="k.words.face.verb.3"
+@reader.drawing.orientation.heading pro.reader.nominal_pattern tab=drawing family=drawn key=drawn.facing pattern="facing {value}" heading=true

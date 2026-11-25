@@ -1,5 +1,5 @@
 import { supportedMeaning } from './training-evidence.mjs';
-import { literalField, literalRanges } from './evidence.mjs';
+import { evidenceReport, literalField, literalRanges } from './evidence.mjs';
 import { nativeInventory } from './native-inventory.mjs';
 import { tokens } from './lexicon.mjs';
 import { quotedSpans } from './literal-roles.mjs';
@@ -330,7 +330,8 @@ export function nominalPositionForms(facts, requestKeys, words=facts('core.word'
     const subjects=subjectKinds(wire);
     if (subjects?.length===0) return;
     const entry=[words,key,value,'attribute','eq','result'];
-    add(family,subjects ? [...entry,subjects,field(wire,'strict_subject')==='true'] : entry);
+    const heading=field(wire,'heading')==='true';
+    add(family,heading || subjects ? [...entry,subjects,field(wire,'strict_subject')==='true',heading] : entry);
   };
   for (const wire of facts('pro.reader.nominal_pattern')) {
     const family=field(wire,'family'), tab=field(wire,'tab'), key=field(wire,'key');
@@ -517,8 +518,9 @@ export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, 
   // forms still use the phase of their existing local relation.
   const targetKind=normalize(field(target,'sort') ?? head);
   const options=at=>[...new Map((byLead.get(ts[at]?.[0]) ?? [])
-    .filter(([words,,,,,phase,subjects])=>
-      (!phase || createsTarget) && (!subjects || subjects.includes(targetKind)) && matchesAt(ts,at,words))
+    .filter(([words,,,,,phase,subjects,,headingOnly])=>
+      !headingOnly && (!phase || createsTarget) &&
+      (!subjects || subjects.includes(targetKind)) && matchesAt(ts,at,words))
     .map(entry=>[JSON.stringify(entry.slice(0,6)),entry])).values()];
   let revised;
   // A sentence-initial region before a comma can modify the one target in
@@ -554,4 +556,46 @@ export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, 
     at=next;
   }
   return revised ? [revised] : [];
+}
+
+export async function nominalHeadingReadings(text, ts, worlds, readNominal) {
+  const colon=ts.findIndex(([key])=>key===':');
+  if (colon<1 || colon>8 || ts.at(-1)?.[0]==='?' ||
+      !worlds.singularArticles.has(ts[colon+1]?.[0])) return [];
+  const chars=Array.from(text);
+  const headingEnd=ts[colon-1][3];
+  if (quotedSpans(text).some(quote=>quote.start<=headingEnd)) return [];
+  const headings=new Map();
+  for (const [family,byLead] of worlds.nominalPositions) {
+    const entries=(byLead.get(ts[0][0]) ?? []).filter(([words,,,,,,,,heading])=>
+      heading && words.length===colon && matchesAt(ts,0,words));
+    if (entries.length) headings.set(family,entries);
+  }
+  if (!headings.size) return [];
+  const body=chars.slice(ts[colon+1][2]).join('');
+  const result=await readNominal(body);
+  const surface=JSON.stringify(chars.slice(ts[0][2],headingEnd).join(''));
+  const readings=[];
+  for (const candidate of [result,...result.alternatives]) {
+    if (candidate.source!=='nominal-creation') continue;
+    const wires=parse(candidate.sop);
+    const target=wires.find(w=>w.type===targetType);
+    const request=wires.find(w=>w.type===requestType);
+    const subject=normalize(field(target,'sort') ?? noun(target) ?? '');
+    const entries=headings.get(field(target,'family')) ?? [];
+    for (const [,key,value,on,operator,phase,subjects] of entries) {
+      if (subjects && !subjects.includes(subject) ||
+          wires.some(w=>field(w,'attribute')===key)) continue;
+      const support={id:target.id+'.heading',type:constraintType,attrs:{
+        request:['$'+request.id],attribute:[encode(key)],value:[encode(value)],
+        on:[on],operator:[operator],phase:[phase],words:[surface],
+      }};
+      const packet=[...wires,support];
+      const proof=evidenceReport(text,packet,worlds.evidenceVocabulary);
+      if (!proof.missing.length && !proof.counts.uncovered && !proof.counts.unread) {
+        readings.push({sop:serialize(packet),source:'nominal-heading',status:'matched'});
+      }
+    }
+  }
+  return readings;
 }

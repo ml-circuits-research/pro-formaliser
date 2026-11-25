@@ -50,7 +50,7 @@ import { nominalClassReading } from './nominal-class.mjs';
 import { identitySelectorReadings } from './identity-selectors.mjs';
 import { openPairReadings } from './open-pairs.mjs';
 import { clauseQualifiers } from './clause-qualifiers.mjs';
-import { nativeNominalPhraseReadings, nominalPhraseReadings } from './nominal-phrases.mjs';
+import { nativeNominalPhraseReadings, nominalHeadingReadings, nominalPhraseReadings } from './nominal-phrases.mjs';
 import { sequenceNameReadings } from './sequence-names.mjs';
 import { postfixSetQuestions, prefixSetQuestions, universalTargetReading } from './set-query.mjs';
 import { modifierReading } from './nominal-modifiers.mjs';
@@ -680,7 +680,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     const ts = tokens(text);
     const parts = sequenceParts(text,ts,worlds.joiners,sequenceOptions);
-    if (!parts.length) return readEnumeration(text,base,enumerationPlans(text,ts));
+    if (!parts.length) {
+      const enumerated=await readEnumeration(text,base,enumerationPlans(text,ts));
+      const headings=await nominalHeadingReadings(text,ts,worlds,async body=>
+        readEnumeration(body,await read(body),enumerationPlans(body)));
+      return mergeReadings(enumerated,headings.filter(candidate=>admissibleKey(text,candidate.sop)),
+        enumerated.status==='matched');
+    }
     const plans = parts.map(part=>enumerationPlans(part));
     // A complete existing sequence can preserve dependencies that separate
     // lexical reads do not currently resolve.

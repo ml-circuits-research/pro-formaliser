@@ -71,6 +71,47 @@ test('a postnominal frame reads current members of an independently installed fi
   }
 });
 
+test('a declared heading supplies a property of the following single creation',async t=>{
+  const dir=mkdtempSync(join(fileURLToPath(new URL('../.cache/',import.meta.url)),'nominal-heading-'));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  const file=join(dir,'heading.sop');
+  writeFileSync(file,[
+    '@fixture.heading.state w.request.key tab=diagram family=node name=node.fixtureState head=class value=active value=idle',
+    '@fixture.heading.frame pro.reader.nominal_pattern tab=diagram family=node key=node.fixtureState pattern="status {value}" heading=true',
+  ].join('\n'));
+  const inventory=fileURLToPath(new URL('../sop-worlds/drawable-inventory-pilot/',import.meta.url));
+  const reader=createReader(undefined,loadWorlds({paths:[file,inventory]}));
+  t.after(()=>reader.close());
+  const headings=async text=>(await reader.propose(text)).candidates
+    .filter(candidate=>candidate.source==='nominal-heading').map(candidate=>parse(candidate.sop));
+
+  const boat=await headings('Facing right: a small boat on the left');
+  assert.ok(boat.some(wires=>{
+    const target=wires.find(w=>w.type==='w.request.target');
+    const owns=(key,value)=>wires.some(w=>field(w,'request')===field(target,'request') &&
+      field(w,'attribute')===key && field(w,'value')===value);
+    return field(target,'sort')==='boat' && owns('drawn.facing','right') &&
+      owns('drawn.size','small') && owns('drawn.at','left');
+  }));
+  const planes=await headings('Facing left: a plane in the sky');
+  assert.ok(planes.some(wires=>wires.some(w=>field(w,'attribute')==='drawn.anchor' &&
+    field(w,'value')==='the sky') && wires.some(w=>field(w,'attribute')==='drawn.facing' &&
+    field(w,'words')==='Facing left')));
+  const nodes=await headings('Status idle: a node');
+  assert.ok(nodes.some(wires=>wires.some(w=>field(w,'attribute')==='node.fixtureState' &&
+    field(w,'value')==='idle' && field(w,'words')==='Status idle')));
+  for (const text of [
+    'Status idle, a node',
+    'Status unlisted: a node',
+    'Status idle: a boat',
+    '"Facing left": a plane in the sky',
+    'Facing left: a plane in the sky?',
+    'Facing left: move it into the sky',
+    'Facing left: a plane in the sky; add a balloon',
+    'Facing left: a plane and a balloon',
+  ]) assert.deepEqual(await headings(text),[],text);
+});
+
 test('uses the installed person inventory for postnominal poses',async t=>{
   const inventory=fileURLToPath(new URL('../sop-worlds/drawable-inventory-pilot/',import.meta.url));
   const standard=createReader(undefined,loadWorlds({paths:[inventory]}));

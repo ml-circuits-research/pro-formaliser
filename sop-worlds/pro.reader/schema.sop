@@ -244,5 +244,6 @@
 @pro.reader.nominal_value.value core.slot of=pro.reader.nominal_value key=value kind=atom required=true
 @pro.reader.nominal_value.text core.slot of=pro.reader.nominal_value key=text kind=string many=true required=true
 @pro.reader.nominal_pattern.subject_type core.slot of=pro.reader.nominal_pattern key=subject_type kind=atom many=true
+@pro.reader.nominal_pattern.heading core.slot of=pro.reader.nominal_pattern key=heading kind=boolean
 @pro.reader.nominal_value.subject_type core.slot of=pro.reader.nominal_value key=subject_type kind=atom many=true
 @pro.reader.nominal_value.strict_subject core.slot of=pro.reader.nominal_value key=strict_subject kind=boolean

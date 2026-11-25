@@ -447,3 +447,8 @@
 - Frozen placement-01 row 666 has a default proposal with kicking, middle placement and leftward facing on the boy. Two spans remain unread.
 - The optional kneeling value applies to people and rejects explicitly typed houses and dogs.
 - All 461 isolated release tests passed. No benchmark rerun.
+
+## Finite nominal headings
+- The frozen plane request and three separate WebMeet controls have complete proposals with heading direction and independently grounded placement on one target.
+- New headings are declared in SOP and reuse the single nominal reader. An inherited alternative can still misread a canvas region as a landmark.
+- All 462 isolated release tests passed. No benchmark rerun.
