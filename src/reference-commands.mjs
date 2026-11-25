@@ -9,7 +9,9 @@ const objectCases=new Set(['object','demonstrative']);
 const verbWord=/^[\p{L}\p{M}]+$/u;
 
 export function compileReferenceCommands(facts,acts) {
-  const enabled=new Set(facts('pro.reader.reference_command').map(wire=>one(wire,'act')).filter(act=>acts.has(act)));
+  const bindings=facts('pro.reader.reference_command').filter(wire=>acts.has(one(wire,'act')));
+  const enabled=new Set(bindings.map(wire=>one(wire,'act')));
+  const exclusiveActs=new Set(bindings.filter(wire=>one(wire,'exclusive')==='true').map(wire=>one(wire,'act')));
   const references=new Set(facts('w.lang.en.pron').filter(wire=>
     values(wire,'case').some(role=>objectCases.has(role)) && values(wire,'refers').includes('thing') &&
     values(wire,'in').includes('acts')).flatMap(wire=>values(wire,'text').map(text=>terms(text).join(' '))));
@@ -31,11 +33,11 @@ export function compileReferenceCommands(facts,acts) {
       if (words.length>1 && one(verb,'separable')==='true') add(words.slice(0,1),words.slice(1),act);
     }
   }
-  return {verbs,references};
+  return {verbs,references,exclusiveActs};
 }
 
 export function referenceCommandReadings(text,ts,worlds,politeness) {
-  const {verbs,references}=worlds.referenceCommands;
+  const {verbs,references,exclusiveActs}=worlds.referenceCommands;
   if (!verbs.size) return [];
   const body=politeBody(text,ts,politeness,2);
   if (!body) return [];
@@ -51,7 +53,7 @@ export function referenceCommandReadings(text,ts,worlds,politeness) {
           '@l w.request.lookup request=$r key=thing words='+quote(span(first,last)),
           ...fillers.map((words,i)=>'@f'+(i+1)+' w.request.filler text='+quote(words)),
         ].join('\n');
-        readings.push({sop,source:'reference-command',status:'matched'});
+        readings.push({sop,source:'reference-command',status:'matched',exclusive:exclusiveActs.has(act)});
       }
     }
   }

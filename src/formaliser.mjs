@@ -326,22 +326,22 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (key && !seen.has(key)) { seen.add(key); candidates.push(answer); return true; }
     }
     const nominalRoles=new Set();
+    let exclusive=false;
     // Closed frames account for the entire current utterance, including
     // negative words that express a desired state rather than a prohibition.
-    if (!quotes.length) for (const reading of closedRequestReadings(text,ts,worlds,politeness)) {
-      retain(reading,{restricted:false});
+    if (!quotes.length) for (const {exclusive:complete,...reading} of closedRequestReadings(text,ts,worlds,politeness)) {
+      if (retain(reading,{restricted:false}) && complete) exclusive=true;
     }
     if (scope.restricted && !quotes.length) for (const reading of removalWishReadings(text,ts,worlds,politeness)) {
       retain(reading,{restricted:false});
     }
     if (!scope.restricted && !quotes.length) {
-      for (const reading of referenceCommandReadings(text,ts,worlds,politeness)) retain(reading);
-      // The exact verb frame accounts for the whole utterance. A fallback
-      // cannot supply a family or reassign any of its words to a property.
-      if (candidates.some(candidate=>candidate.source==='reference-command')) {
-        const [first,...alternatives]=candidates;
-        return {...first,alternatives,[conditionalScope]:false};
+      const referenceReadings=referenceCommandReadings(text,ts,worlds,politeness);
+      let referenceKept=false;
+      for (const {exclusive:_complete,...reading} of referenceReadings) {
+        if (retain(reading)) referenceKept=true;
       }
+      exclusive ||= referenceKept && referenceReadings.every(reading=>reading.exclusive);
       for (const reading of ellipticalPropertyReadings(text,ts,worlds,politeness)) retain(reading);
       for (const {nominalWords,...reading} of ellipticalNominals(text,ts,worlds,politeness)) {
         const {missing,counts}=evidenceReport(text,parse(reading.sop),worlds.evidenceVocabulary);
@@ -349,6 +349,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (!retain(reading)) continue;
         for (const phrase of nominalWords) nominalRoles.add(phrase);
       }
+    }
+    if (exclusive) {
+      const [first,...alternatives]=candidates;
+      return {...first,alternatives,[conditionalScope]:false};
     }
     const assignment=!scope.restricted && assignmentRole(text);
     if (assignment) for (const reading of numericAssignmentReadings(text,assignment)) retain(reading);

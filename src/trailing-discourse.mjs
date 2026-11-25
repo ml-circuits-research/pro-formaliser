@@ -7,7 +7,7 @@ const word=/^[\p{L}\p{N}\p{M}_]+$/u;
 const decode=value=>value?.startsWith('"') ? JSON.parse(value) : value;
 const keyOf=key=>key==='’' ? "'" : key;
 
-export function politeBody(text,ts,politeness,minWords) {
+export function politeBody(text,ts,politeness,minWords,leading) {
   if (ts.length<minWords || ts.length>14 || ts.some(([term])=>['?','？'].includes(term))) return;
   const chars=Array.from(text);
   const phrase=(start,end)=>ts.slice(start,end).map(([term])=>term).join(' ');
@@ -16,7 +16,8 @@ export function politeBody(text,ts,politeness,minWords) {
   while (courtesyEnd.has(ts[end-1]?.[0])) end--;
   const fillers=[];
   for (let width=Math.min(end-minWords,5);width>0;width--) {
-    if (!politeness.has(phrase(0,width))) continue;
+    const opening=phrase(0,width);
+    if (!politeness.has(opening) && !leading?.has(opening)) continue;
     fillers.push(span(0,width));
     start=width+Number(ts[width]?.[0]===',');
     break;

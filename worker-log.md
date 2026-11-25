@@ -509,3 +509,7 @@
 ## Literal objects of short commands
 - Native verb frames now retain the exact pronoun in a generic lookup, including when the verb is split by its object.
 - Six default-model cases gained clean readings and four contrast outputs compared equal before and after. All 492 release tests passed.
+
+## Closed undo and redo controls
+- Native phrase frames now handle direct undo/redo, shortcuts, correction cues and undoing an undo. Written pronouns stay unresolved.
+- The real default-model batch covered 13 inputs. All 494 release tests passed.

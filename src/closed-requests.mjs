@@ -12,6 +12,9 @@ const quote=JSON.stringify;
 export function compileClosedRequests(facts,acts) {
   const frames=new Map(facts('w.lang.en.frame').map(frame=>[one(frame,'name'),frame]));
   const parts=Map.groupBy(facts('w.lang.en.part'),part=>one(part,'frame'));
+  const phrases=new Map(facts('w.lang.en.phrase').map(wire=>[one(wire,'name'),values(wire,'item').map(form)]));
+  const corrective=new Set(facts('w.lang.en.correction').filter(wire=>one(wire,'comma')==='yes')
+    .flatMap(wire=>values(wire,'text').map(form)));
   const fixed=new Set(facts('w.lang.en.fixed').map(wire=>one(wire,'frame')));
   return facts('pro.reader.closed_request').flatMap(binding=>{
     const frame=one(binding,'frame'), act=one(binding,'act');
@@ -31,18 +34,26 @@ export function compileClosedRequests(facts,acts) {
       const kind=one(part,'is'), optional=one(part,'optional')==='yes';
       if (kind==='lead' && optional) continue;
       if (kind==='det' && optional) { pattern.push({optional,determiner:true}); continue; }
-      const variants=values(part,'word').map(form).filter(Boolean);
-      if (kind!=='word' || !variants.length) return [];
+      const variants=kind==='phrase' ? phrases.get(one(part,'phrase')) :
+        kind==='word' ? values(part,'word').map(form).filter(Boolean) : undefined;
+      if (!variants?.length) return [];
       const number=one(part,'at');
       const accepted=choices.get(number);
       if (accepted && [...accepted].some(value=>!variants.includes(value))) return [];
       const forms=accepted ? variants.filter(value=>accepted.has(value)) : variants;
       choices.delete(number);
       if (!forms.length) return [];
-      pattern.push({optional,forms:forms.map(value=>[value,value.split(' ').length])});
+      const surfaces=kind==='phrase' ? forms.flatMap(value=>{
+        const [head,...rest]=value.split(' ');
+        return corrective.has(head) && rest.length ? [value,[head,',',...rest].join(' ')] : [value];
+      }) : forms;
+      pattern.push({optional,forms:surfaces.map(value=>[value,value.split(' ').length])});
     }
     if (choices.size || !pattern.some(part=>!part.optional)) return [];
-    return [{act,pattern,courtesy:one(binding,'courtesy')==='true'}];
+    const lead=one(binding,'lead');
+    if (lead && !phrases.has(lead)) return [];
+    return [{act,pattern,courtesy:one(binding,'courtesy')==='true',leads:lead && new Set(phrases.get(lead)),
+      exclusive:one(binding,'exclusive')==='true'}];
   });
 }
 
@@ -58,17 +69,22 @@ function atEnd(pattern,part,at,end,phrase,determiners) {
 }
 
 export function closedRequestReadings(text,ts,worlds,politeness) {
-  const body=politeBody(text,ts,politeness,1);
-  if (!body) return [];
-  const {start,end,fillers,phrase,span}=body;
+  const ordinary=politeBody(text,ts,politeness,1);
+  if (!ordinary) return [];
   const readings=[];
-  for (const {act,pattern,courtesy} of worlds.closedRequests) {
+  for (const {act,pattern,courtesy,leads,exclusive} of worlds.closedRequests) {
+    const body=leads ? politeBody(text,ts,politeness,1,leads) : ordinary;
+    if (!body) continue;
+    const {start,end,fillers,phrase,span}=body;
     if (courtesy && !fillers.length || !atEnd(pattern,0,start,end,phrase,worlds.determiners)) continue;
+    const opening=start>0 && form(fillers[0]);
+    const requestLead=opening && leads?.has(opening) && !politeness.has(opening);
+    const fillerWords=requestLead ? fillers.slice(1) : fillers;
     const sop=[
-      '@r w.request.request act='+quote(act)+' mood=do words='+quote(text)+' predicate='+quote(span(start,end)),
-      ...fillers.map((words,i)=>'@f'+(i+1)+' w.request.filler text='+quote(words)),
+      '@r w.request.request act='+quote(act)+' mood=do words='+quote(text)+' predicate='+quote(span(requestLead ? 0 : start,end)),
+      ...fillerWords.map((words,i)=>'@f'+(i+1)+' w.request.filler text='+quote(words)),
     ].join('\n');
-    readings.push({sop,source:'closed-request',status:'matched'});
+    readings.push({sop,source:'closed-request',status:'matched',exclusive});
   }
   return readings;
 }
