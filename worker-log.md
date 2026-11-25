@@ -553,3 +553,7 @@
 ## Courtesy before and after a command
 - Declared courtesy now preserves independently proved command readings and exact filler words.
 - The real 136-text replay added 16 readings and kept 120 candidate lists equal. The named-endpoint regression was corrected. All 510 tests passed.
+
+## Semantic comparison of unresolved references
+- The comparator now preserves the literal words of an unresolved thing lookup.
+- The default-model controls distinguished it, that and those. All 512 tests passed.

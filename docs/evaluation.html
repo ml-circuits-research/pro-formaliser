@@ -42,7 +42,7 @@
     <ul>
     <li><strong>Exact</strong> compares trimmed SOP with normalized line endings.</li>
     <li><strong>Full wires</strong> canonicalizes slot order and local references and compares all wires and evidence.</li>
-    <li><strong>Semantic wires</strong> compares the complete graph after omitting filler, unread wires and selected evidence fields. It retains request order, act, mood, target and relevant constraints and links.</li>
+    <li><strong>Semantic wires</strong> compares the complete graph after omitting filler, unread wires and selected evidence fields. It retains request order, act, mood, target and relevant constraints and links. The literal words of a request-owned unresolved thing lookup also remain part of its meaning.</li>
     <li><strong>Act/mood</strong> checks the sequence of acts and moods. Micro-averaged wire F1 gives credit for partial structural agreement.</li>
     <li><strong>Checker errors</strong> count circuits rejected by native SOP schema, the declared family and property catalogue or the literal evidence check. The benchmark counts unresolved outputs separately.</li>
     </ul>

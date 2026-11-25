@@ -787,3 +787,11 @@ The first full run exposed a regression in named endpoints because courtesy lift
 The main remaining gap in the targeted slice is body interpretation for creation, placement and other aliases without a complete native command proof. This change consumes existing grammar and vocabulary. [Regressions](test/request-alternations.test.mjs)
 
 All 510 release tests passed after the correction.
+
+## Comparator correction — literal unresolved references retained
+
+The semantic signature now retains `words` on a request-owned thing lookup with no typed endpoint or antecedent. It normalizes SOP quoting while preserving the written literal. A different or omitted pronoun changes the semantic signature, as do a different request owner and a different lookup source. Words attached to a typed target, constraint, or answer remain supporting evidence.
+
+The focused comparator and reader tests passed. In a six-message default-model smoke run, the actual copy-it circuit matched itself on both semantic wires. The actual copy-that and copy-those circuits, and the copy-it circuit with the literal removed, matched only the shared request wire. No aggregate benchmark ran. [Comparison regressions](test/reference-circuits.test.mjs)
+
+All 512 release tests passed.

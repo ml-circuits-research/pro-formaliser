@@ -1,3 +1,5 @@
+import { str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
+
 // Request order is meaningful. Other wire positions and local IDs are incidental.
 const REQUEST = 'w.request.request';
 const AUXILIARY = new Set(['w.request.filler', 'w.request.unread']);
@@ -8,10 +10,16 @@ export function signatures(wires, semantic = false) {
   let requestIndex = 0;
   const records = kept.map(wire => {
     const request = wire.type === REQUEST ? requestIndex++ : null;
+    // Without a bound endpoint, this literal is the only written reference.
+    const unresolvedThing = semantic && wire.type === 'w.request.lookup' && str(wire.attrs.key?.[0]) === 'thing' &&
+      wire.attrs.request?.length && !wire.attrs.target?.length && !wire.attrs.constraint?.length &&
+      !wire.attrs.antecedent?.length;
     const slots = Object.entries(wire.attrs).filter(([key]) => {
       if (!semantic || !EVIDENCE.has(key)) return true;
-      return key === 'words' && wire.type === 'w.request.constraint' && !wire.attrs.value?.length;
+      return key === 'words' && (unresolvedThing || wire.type === 'w.request.constraint' && !wire.attrs.value?.length);
     }).sort(([a], [b]) => a.localeCompare(b));
+    const reference = unresolvedThing && slots.find(([key]) => key === 'words');
+    if (reference) reference[1] = reference[1].map(value => JSON.stringify(str(value)));
     return { ...wire, request, slots };
   });
   const ids = new Map(records.map(record => [record.id, record]));

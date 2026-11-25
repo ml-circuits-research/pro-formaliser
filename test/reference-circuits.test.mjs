@@ -42,3 +42,51 @@ test('a real reading can match any valid SOP column without counting the row twi
   const blank={...row,sop:'',references:[row.references[2]],referenceChecks:[row.referenceChecks[2]]};
   assert.equal(scoreReferences(blank,contextual).semanticWireMatch,true);
 });
+
+test('unresolved thing lookup words are part of the request meaning',()=>{
+  const requests=[
+    '@first w.request.request act=copy mood=do predicate=Copy',
+    '@second w.request.request act=copy mood=do predicate=copy',
+  ].join('\n');
+  const lookup='@ref w.request.lookup request=$first key=thing words=it';
+  const sop=requests+'\n'+lookup;
+  const row={text:'Copy it, then copy that',sop};
+  const compare=predicted=>scoreReferences(row,{sop:predicted});
+  const identical=compare(sop);
+  assert.equal(identical.fullWireMatch,true);
+  assert.equal(identical.semanticWireMatch,true);
+  assert.equal(identical.semanticMatchedWires,3);
+  assert.equal(compare(sop.replace('words=it','words="it"')).semanticWireMatch,true);
+  const reordered=sop.replaceAll('first','a').replaceAll('second','b').replace('@ref','@lookup').split('\n');
+  assert.equal(compare([reordered[2],...reordered.slice(0,2)].join('\n')).semanticWireMatch,true);
+  for (const different of [
+    requests,sop.replace(' words=it',''),sop.replace('words=it','words=that'),
+    sop.replace('request=$first','request=$second'),sop+' from=previous',
+  ]) {
+    const result=compare(different);
+    assert.equal(result.fullWireMatch,false,different);
+    assert.equal(result.semanticWireMatch,false,different);
+    assert.equal(result.semanticMatchedWires,2,different);
+    assert.equal(scoreReferences(row,{sop:'',alternatives:[{sop:different}]}).alternativeSemanticMatch,false);
+  }
+});
+
+test('words on an already bound lookup remain supporting evidence',()=>{
+  const examples=[
+    '@r w.request.request act=copy mood=do predicate=Copy\n'+
+      '@t w.request.target request=$r family=document mode=existing family_words=document\n'+
+      '@l w.request.lookup request=$r target=$t key=thing words=it',
+    '@r w.request.request act=place predicate=Place\n'+
+      '@c w.request.constraint request=$r on=place relation=near value=chart\n'+
+      '@l w.request.lookup request=$r constraint=$c key=thing words=it',
+    '@a w.request.request act=ask mood=ask question=count predicate=Count\n'+
+      '@r w.request.request act=make mood=do predicate=Draw\n'+
+      '@l w.request.lookup request=$r key=answer from=request antecedent=$a words=it',
+  ];
+  for (const sop of examples) {
+    const row={text:'Copy it',sop};
+    const result=scoreReferences(row,{sop:sop.replace('words=it','words=that')});
+    assert.equal(result.fullWireMatch,false);
+    assert.equal(result.semanticWireMatch,true);
+  }
+});
