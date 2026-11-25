@@ -101,7 +101,7 @@ export function quantifiedVerbReadings(text,worlds) {
           const sop=[
             '@r w.request.request act='+act+' mood=do predicate='+quote(span(start,object))+' words='+quote(text),
             '@t w.request.target request=$r family='+quote(family)+' '+target,
-            ...(target.startsWith('mode=bound') ? ['@l w.request.lookup request=$r target=$t key=thing from=previous'] : []),
+            ...(target.startsWith('mode=bound') ? ['@l w.request.lookup request=$r target=$t key=thing from=any'] : []),
             '@c w.request.constraint request=$r on=attribute attribute='+quote(key)+' operator='+operator+
               ' phase=result value='+quote(literalValue)+' words='+quote(written)+' key_words='+quote(span(start,object))+
               (delta ? ' step='+direction : '')+

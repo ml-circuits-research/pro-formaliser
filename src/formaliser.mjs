@@ -186,6 +186,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   function admissibleKey(text, sop) {
     if (!sop || !validate(sop,worlds) || !evidenceInText(text,sop,worlds)) return;
     const wires = parse(sop);
+    if (wires.some(wire=>wire.type==='w.request.previous' ||
+        wire.type==='w.request.lookup' && valueOf(wire,'from')==='previous')) return;
     if (catalogIssues(wires,worlds).length) return;
     return JSON.stringify(signatures(wires,true));
   }

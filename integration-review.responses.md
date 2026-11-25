@@ -538,3 +538,7 @@ Finite `nominal_pattern` declarations can now opt into the heading position. The
 ## Full 1% replay of the published reader
 
 The owner authorized resuming benchmarks on coherent versions. Published reader `a7b9a18` ran on all 1,915 frozen text-only inputs and the same 1,000-request semantic sample. The reasonable-proposal rate is **54.5%**, up from **51.8%**. Twenty-nine requests gained a reasonable proposal. Inversion of undeclared Z remains unresolved, and a scan found one retained quantified-verb variant whose `from=previous` assumption invalidates its old positive judgment. The canvas-region rewrite was rolled back after release regressions and was outside this replay. The shared pose and heading proposals remain local until their canonical imports are verified. [Full table](eval/RESULTS.md#published-reader-replay-at-1654) · [Reassessments](eval/A7B9A18-BUCKET0-REPLAY.tsv)
+
+## Current-text quantified references
+
+The published benchmark exposed a previous-turn lookup on “I want to slant all of them by 15” (WebMeet `drawing/scenes-20.csv` logical row 1783). Replaying the same text with the frozen model now retains “all of them”, the universal quantifier and the relative slant of 15, with `from=any` deferring the group lookup. The common proposal gate also rejects explicit previous-turn wires and lookups, including a native-valid stored example with written evidence. The focused replay has clean catalog and evidence checks and no previous-turn candidate. All 463 release tests passed. No benchmark rerun.

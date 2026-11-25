@@ -23,7 +23,8 @@ test('binds a relative signed change to every member of a contextual group',asyn
   assert.deepEqual(target.attrs.mode,['bound']);
   assert.deepEqual(target.attrs.fill,['context']);
   assert.deepEqual(target.attrs.quantifier,['"all"']);
-  assert.deepEqual(lookup.attrs.from,['previous']);
+  assert.deepEqual(target.attrs.description,['"all of them"']);
+  assert.deepEqual(lookup.attrs.from,['any']);
   assert.deepEqual(effect.attrs.attribute,['"drawn.skew"']);
   assert.deepEqual(effect.attrs.operator,['delta']);
   assert.deepEqual(effect.attrs.step,['more']);
@@ -49,6 +50,27 @@ test('binds a relative signed change to every member of a contextual group',asyn
     'Slant them by 15 seconds', 'Slant them by the gate', 'What does slant them by 15 mean?',
     'They slant them by 15', 'Slant them by 15 and delete them',
   ]) assert.deepEqual(await proposal(reader,text),[],text);
+});
+
+test('discards a stored previous-turn lookup and keeps the current-text reading',async t=>{
+  const text='Slant all of them by 15';
+  const sop=[
+    '@r w.request.request act=change mood=do predicate=Slant',
+    '@t w.request.target request=$r family=drawn mode=bound fill=context description="all of them" quantifier=all',
+    '@l w.request.lookup request=$r target=$t key=thing from=previous',
+    '@c w.request.constraint request=$r on=attribute attribute=drawn.skew operator=delta phase=result value=15 step=more',
+  ].join('\n');
+  const worlds=loadWorlds({paths:['sop-worlds']});
+  assert.ok(validate(sop,worlds));
+  assert.ok(evidenceInText(text,sop,worlds));
+  const reader=createReader({version:1,templates:[],lexicon:{},examples:[{text,sop,count:1}]},worlds);
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose(text);
+  assert.ok(candidates.some(candidate=>candidate.source==='quantified-verb' &&
+    candidate.sop.includes('description="all of them"') && candidate.sop.includes('from=any')));
+  assert.ok(candidates.every(candidate=>parse(candidate.sop).every(wire=>
+    wire.type!=='w.request.previous' &&
+    (wire.type!=='w.request.lookup' || !wire.attrs.from?.some(value=>value==='previous' || value==='"previous"')))));
 });
 
 test('reuses native comparative verb senses for independently identified owners',async t=>{

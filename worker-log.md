@@ -457,3 +457,7 @@
 - Reader a7b9a18 ran all 1,915 held-out texts with the frozen model. Same 1,000-case audit reached 54.5% L3 + L4, up from 51.8%.
 - Four LLM reviewers judged 99 changed rows. A separate output scan identified one previous-turn lookup that invalidates a carried positive grade.
 - Reverted the unverified canvas-region rewrite after regression tests failed. Results and case judgments are in eval/RESULTS.md.
+
+## Current-text quantified references
+- Frozen scenes-20 row 1783 now keeps the written quantified group and slant delta with an unresolved lookup.
+- Blocked previous-turn lookups at the proposal gate, including a stored-candidate regression control. All 463 isolated release tests passed.
