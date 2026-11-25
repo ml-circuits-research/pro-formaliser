@@ -318,3 +318,27 @@ test('binds a share qualification only when it repeats the same fields',async t=
       properties(parse(c.sop))['chart.stacking']!=='percent'),alternative);
   }
 });
+
+test('installs a closed contrast and repeated field in an unrelated world',async t=>{
+  const dir=mkdtempSync(join(tmpdir(),'repeat-calibration-'));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  const file=join(dir,'calibration.sop');
+  writeFileSync(file,`
+@fixture.calibration pro.reader.target tab=workbench family=calibration act=make sort=calibration text=calibration
+@fixture.kind w.request.key tab=workbench family=calibration name=calibration.kind head=class value=record
+@fixture.sensor w.request.key tab=workbench family=calibration name=calibration.sensor head=span
+@fixture.reference w.request.key tab=workbench family=calibration name=calibration.reference head=span
+@fixture.mode w.request.key tab=workbench family=calibration name=calibration.mode head=class value=ratio
+@fixture.ratio core.word of=calibration.mode means=ratio text="relative rather than absolute"
+@fixture.frame pro.reader.analytical_frame tab=workbench family=calibration layout=ordered_fields owner_key=calibration.kind owner_value=record owner="a calibration" prefix=make pattern="{$owner} of {calibration.sensor} against {calibration.reference}, reporting {=calibration.sensor} {calibration.mode}" scope_literal_slot=calibration.mode scope_literal="relative rather than absolute"
+`);
+  const reader=createReader(undefined,loadWorlds({paths:[file]}));
+  t.after(()=>reader.close());
+  const lead='Make a calibration of inlet temperature against reference amplitude, reporting ';
+  await proves(reader,lead+'inlet temperature relative rather than absolute.',{
+    'calibration.kind':'record','calibration.sensor':'inlet temperature',
+    'calibration.reference':'reference amplitude','calibration.mode':'ratio'
+  });
+  const other=await reader.propose(lead+'outlet temperature relative rather than absolute.');
+  assert.ok(other.candidates.every(c=>!properties(parse(c.sop))['calibration.mode']));
+});
