@@ -373,3 +373,7 @@
 - The trained replay of frozen 73 grounds avatar, specified appearance and exact tab scope. Only the separately preserved reason is unread.
 - The workbench overlay verifies the same grammar with independent schema data. Canonical routing and scope limits are recorded for review.
 - All 438 isolated release tests passed. The benchmark remains paused.
+
+## Written regions under a standing rule
+- Frozen 700 has a complete written scope and region proposal. Frozen 202 also binds the explicit exclusion and keeps the final qualifier unread. The same grammar works on a diagram node.
+- All 439 isolated release tests passed. Canonical routing and exclusions are recorded for review.

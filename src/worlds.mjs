@@ -15,6 +15,7 @@ import {compileAppositiveSelectors} from './appositive-selector.mjs';
 import {compileQuantifiedVerbs} from './quantified-verb.mjs';
 import {compileTopicCommandDeclarations} from './topic-commands.mjs';
 import {compilePostposedClauses} from './postposed-clause.mjs';
+import {compileStandingPositions} from './standing-position.mjs';
 import {analyticalArgumentFacts,compileAnalyticalOwnerProperties} from './analytical-frames.mjs';
 import {compileOrientationLandmarks} from './orientation-landmark.mjs';
 import {compileValidationModules} from './schema.mjs';
@@ -57,7 +58,7 @@ const types = new Set([
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'pro.reader.nominal_pattern','pro.reader.nominal_value','pro.reader.participant_adjunct', 'pro.reader.dependent_operand','w.lang.en.answer','k.feelings.feeling',
   'pro.reader.owned_effect','pro.reader.effect_sense','pro.reader.effect_owner','pro.reader.landmark_surface','pro.reader.appositive_selector','pro.reader.quantified_verb','pro.reader.quantified_marker','pro.reader.quantified_reference','pro.reader.topic_command','pro.reader.postposed_clause','pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
-  'pro.reader.request_intent_frame','pro.reader.result_request',
+  'pro.reader.request_intent_frame','pro.reader.result_request','pro.reader.standing_position',
   'w.lang.en.lex','k.time.zone','pro.reader.argument_format',
   nativeTargetInventoryType, universalInventoryType, nominalSelectorType, 'pro.reader.universal_agreement', 'core.type', 'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
@@ -701,6 +702,7 @@ function compile(facts) {
     },
     nominalScales:nominalScaleForms(facts,requestKeys),
     nominalPositions:nominalPositionForms(facts,requestKeys),
+    standingPositions:compileStandingPositions(facts,requestKeys),
     instanceBindings: facts('pro.reader.instance_code').map(wire => ({
       family:one(wire,'family'), prefix:one(wire,'prefix')?.toLowerCase(),
     })).filter(({family,prefix}) => familyActs.has(family) && /^\p{L}+$/u.test(prefix ?? '')),

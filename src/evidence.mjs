@@ -18,6 +18,7 @@ export function evidenceVocabulary(facts) {
     add(['politeness','filler','desire'].includes(values(w,'class')[0]) ? filler : grammar,w);
   for (const w of facts('pro.reader.trailing_discourse')) add(filler,w);
   for (const w of facts('pro.reader.discourse_edge')) add(filler,w);
+  for (const w of facts('pro.reader.standing_position')) values(w,'wrapper').forEach(v=>filler.add(normalized(v)));
   for (const w of facts('w.lang.en.imperative.lead')) add(grammar,w);
   for (const w of facts('w.lang.en.contraction.ending')) values(w,'ending').forEach(v=>endings.add(normalized(v)));
   for (const w of facts('w.lang.en.contraction'))

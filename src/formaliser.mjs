@@ -17,6 +17,7 @@ import {createAppositiveSelectorReader} from './appositive-selector.mjs';
 import {quantifiedVerbReadings} from './quantified-verb.mjs';
 import {createTopicCommands,topicCommandPacket,topicCommandReading} from './topic-commands.mjs';
 import {postposedCause,postposedClauseReadings,readsCauseAsCommand,withPostposedCause} from './postposed-clause.mjs';
+import {standingPositionReadings} from './standing-position.mjs';
 import {analyticalOwnerBindings} from './analytical-frames.mjs';
 import {orientationLandmarkReadings} from './orientation-landmark.mjs';
 import {reciprocalReading} from './reciprocal-reading.mjs';
@@ -785,6 +786,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       const readWhole=async part=>(await propose(part,false)).candidates;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
+      for (const reading of standingPositionReadings(text,worlds,model.lexicon ?? {})) {
+        const key=admissibleKey(text,reading.sop);
+        if (key) additional.set(key,reading);
+      }
       for (const reading of await measuredMotionReadings(text,worlds,wrapped,permit)) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);
