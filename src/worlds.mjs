@@ -57,6 +57,7 @@ const types = new Set([
   'pro.reader.nominal_pattern','pro.reader.nominal_value','pro.reader.participant_adjunct', 'pro.reader.dependent_operand','w.lang.en.answer','k.feelings.feeling',
   'pro.reader.owned_effect','pro.reader.effect_sense','pro.reader.effect_owner','pro.reader.landmark_surface','pro.reader.appositive_selector','pro.reader.quantified_verb','pro.reader.quantified_marker','pro.reader.quantified_reference','pro.reader.topic_command','pro.reader.postposed_clause','pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
   'pro.reader.request_intent_frame','pro.reader.result_request',
+  'w.lang.en.lex',
   nativeTargetInventoryType, universalInventoryType, nominalSelectorType, 'pro.reader.universal_agreement', 'core.type', 'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
   'k.layouts.slot','pro.reader.region_form','pro.reader.retention','k.values.direction','pro.reader.motion','pro.reader.measured_motion','pro.reader.owner_inventory','k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.spatial_modifier','pro.reader.argument_label','pro.reader.source_container','pro.reader.landmark_pair','pro.reader.set_exclusion','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.discourse_edge','pro.reader.sentence_addition','pro.reader.benefactive','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
@@ -209,6 +210,10 @@ function compile(facts) {
   const actFacts = facts('k.actions.act');
   const actNames = new Set(actFacts.map(wire => one(wire, 'name')).filter(Boolean));
   const words = facts('core.word').filter(isEnglish);
+  const targetNameLabels = new Set(words.filter(wire=>values(wire,'means').includes('w.request.target.name'))
+    .flatMap(wire=>values(wire,'text').map(phrase)));
+  const targetNameWords = new Set(facts('w.lang.en.lex').filter(wire=>one(wire,'name')==='name.letter.after')
+    .flatMap(wire=>values(wire,'item').map(phrase)).filter(marker=>targetNameLabels.has(marker)));
   const requestKeys = facts('w.request.key').map(wire => ({
     id: wire.id, tab: one(wire, 'tab'), family: one(wire, 'family'), name: one(wire, 'name'),
     head: one(wire, 'head'), values: values(wire, 'value'), means: one(wire, 'means'),
@@ -222,12 +227,14 @@ function compile(facts) {
   for (const wire of facts('pro.reader.tuple')) {
     const family = one(wire,'family'), tab = one(wire,'tab');
     const keys = [one(wire,'first_key'),one(wire,'second_key')];
+    const labels = [one(wire,'first_label'),one(wire,'second_label')].map(label=>label && phrase(label));
     if (!family || !tab || keys[0] === keys[1] || !keys.every(name => requestKeys.some(key =>
       key.family === family && key.tab === tab && key.name === name && key.head.split('+').includes('number') &&
       !key.values.length))) continue;
     for (const act of values(wire,'act').filter(act => actNames.has(act))) {
       for (const cue of values(wire,'text')) {
-        index(tuples,phrase(cue),{kind:'tuple',family,act,keys});
+        index(tuples,phrase(cue),{kind:'tuple',family,act,keys,
+          ...(labels[0]!==labels[1] && labels.every(label=>label && !label.includes(' ')) ? {labels} : {})});
       }
     }
   }
@@ -599,6 +606,7 @@ function compile(facts) {
   return {
     bodyLeads:{neutral:leadForms('neutral'),nominal:leadForms('nominal'),actionOnly:leadForms('action_only')},
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
+    targetNameWords,
     nominalNumbers:compileNominalNumbers(facts),
     sequenceObjectPronouns:sequenceObjectPronouns(facts),
     sequenceFreshQualifiers:sequenceFreshQualifiers(facts),

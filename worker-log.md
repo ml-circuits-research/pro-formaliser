@@ -323,3 +323,7 @@
 ## Result destination boundaries
 - The public reader retains the written destination separately from the purpose and marks the calculation reading partial until shared grammar covers the destination.
 - Both reviewer inputs and a custom no-comma boundary pass. All 405 isolated release tests passed.
+
+## Written operands and labelled coordinates
+- The full chart-plus-calculation control preserves the chart measure and the separate calculation intents. An overlay supplies a new measure without code changes.
+- Same-model replay on six holdout requests recovered the named `Valid?` node and both coordinates. All 411 tests passed. Canonical staging proposals are in integration-review.responses.md.

@@ -33,6 +33,8 @@ Revizia oficială `f48e08f7a285e23534228eb8a6b6f07e78cd64a3` adaugă cheile `cha
 
 Scopul și destinația unei cereri se pot reprezenta prin `w.request.intent` din schema oficială `ae80c054`. Cadrele de limbă declară marcajul, rolul și polaritatea. Fiecare fir păstrează expresia scrisă și referința la cererea căreia îi aparține. O destinație care menționează explicit răspunsul se leagă de cererea care produce acel răspuns. Limitele declarate pot păstra separat o destinație ca text neinterpretat până când gramatica îi poate atribui un fir propriu. [Cadrele de limbă](pro.reader/request-intents.sop) · [Teste](../test/request-intents.test.mjs)
 
+Un cadru de argumente poate limita un câmp deschis la expresiile din vocabularul proprietății prin `lexical_part`. În „a sales chart”, măsura păstrează exact cuvântul „sales”, iar ținta rămâne graficul. Perechile de coordonate pot declara etichetele celor două câmpuri și le acceptă în oricare ordine, cu nume și valori scrise. [Cadre pentru măsuri](pro.reader/nominal-operands.sop) · [Teste pentru coordonate](../test/tuples.test.mjs)
+
 Pentru integrare în depozitul de lumi, declarațiile `core.word` pot intra în shardurile de vocabular ale domeniilor respective, iar cadrele în shardurile `w.lang.en`. Directorul `w.relational/` urmează structura unui modul separat, cu `schema.sop` și `shards/`. Modulul importă `w.request`. Testul încarcă atât schema, cât și cheile de catalog la care se referă un graf.
 
 ## Ce reprezintă modulul propus

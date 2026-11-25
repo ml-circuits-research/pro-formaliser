@@ -1,6 +1,7 @@
 import { parse, serialize, str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { visibleTokens } from './composition.mjs';
 import { tokens } from './lexicon.mjs';
+import { tupleAssignments } from './tuple-assignments.mjs';
 
 const requestType = 'w.request.request';
 const word = /[\p{L}\p{N}]/u;
@@ -48,14 +49,19 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
   if (end < 4 || end > 72) return [];
   const span = (from, to) => chars.slice(ts[from][2], ts[to - 1][3]).join('');
   const events = [];
-  const verb = start => ts.slice(start, start + 5).some((_, offset) =>
-    worlds.lookup(keys.slice(start, start + offset + 1).join(' ')).some(([role]) => role === 'act'));
+  const verbalPurpose = (start, frame) => {
+    const ends = ts.slice(start, start + 5).map((_, offset) => start + offset + 1)
+      .filter(stop => worlds.lookup(keys.slice(start, stop).join(' ')).some(([role]) => role === 'act'));
+    if (!ends.length) return false;
+    return !ends.some(stop => worlds.tuples(keys.slice(start-frame.cue.length,stop).join(' '))
+      .some(tuple => tupleAssignments(ts,stop,tuple.labels)));
+  };
   for (let i = 1; i < end; i++) {
     for (const frame of worlds.requestIntents.intents) {
       const valueStart = i + frame.cue.length;
       if (valueStart >= end || !matches(keys, i, frame.cue) || !word.test(keys[valueStart]) ||
           frame.form === 'nominal' && worlds.scopeGrammar.universalHeads.has(keys[valueStart]) ||
-          frame.form === 'verbal' && !verb(valueStart)) continue;
+          frame.form === 'verbal' && !verbalPurpose(valueStart, frame)) continue;
       const previous = keys[i - 1];
       const boundary = previous === ',' || worlds.joiners[previous] === 'coordination' ? i - 1 : i;
       events.push({start: i, boundary, valueStart, frame});

@@ -14,13 +14,16 @@ property_hit(Text, [Start, KeyEnd, Property],
     Property.kind == "tuple", !,
     Act = Property.act, Family = Property.family,
     property_outside_quotes(Text, Start),
-    sub_string(Text, KeyEnd, _, 0, Suffix),
-    property_prefix(Suffix, PrefixLength, Tail),
-    tuple_values(Tail, Length, First, Second),
-    End is KeyEnd + PrefixLength + Length,
     KeyLength is KeyEnd - Start,
     sub_string(Text, Start, KeyLength, _, KeyWords),
-    maplist(numeric_body(KeyWords), Property.keys, [First,Second], Bodies).
+    ( get_dict(assignments, Property, Assignments) ->
+        End = Property.end,
+        maplist(labelled_numeric_body(KeyWords), Property.keys, Assignments, Bodies)
+    ; sub_string(Text, KeyEnd, _, 0, Suffix),
+      property_prefix(Suffix, PrefixLength, Tail),
+      tuple_values(Tail, Length, First, Second),
+      End is KeyEnd + PrefixLength + Length,
+      maplist(numeric_body(KeyWords), Property.keys, [First,Second], Bodies) ).
 
 property_hit(Text, [CueStart, End, Property],
              [Start, End, ["constraint", "*", Family, Body, 0], 0]) :-
@@ -69,6 +72,11 @@ numeric_body(KeyWords, Key, Value, Body) :-
     maplist(property_quote, [Key, Value, KeyWords], [Attribute, Encoded, Cue]),
     format(string(Body), 'on=attribute attribute=~s value=~s operator=eq phase=result key_words=~s',
            [Attribute,Encoded,Cue]).
+
+labelled_numeric_body(Cue, Key, [Label,Value], Body) :-
+    numeric_body(Cue, Key, Value, Base),
+    property_quote(Label, Encoded),
+    format(string(Body), '~s key_words=~s', [Base,Encoded]).
 
 property_value("number", Suffix, Consumed, Value, Value) :-
     property_prefix(Suffix, Start, Tail),

@@ -52,6 +52,8 @@
 @pro.reader.tuple.tab core.slot of=pro.reader.tuple key=tab kind=atom required=true
 @pro.reader.tuple.first_key core.slot of=pro.reader.tuple key=first_key kind=atom required=true
 @pro.reader.tuple.second_key core.slot of=pro.reader.tuple key=second_key kind=atom required=true
+@pro.reader.tuple.first_label core.slot of=pro.reader.tuple key=first_label kind=atom
+@pro.reader.tuple.second_label core.slot of=pro.reader.tuple key=second_label kind=atom
 @pro.reader.tuple.act core.slot of=pro.reader.tuple key=act kind=atom many=true required=true
 @pro.reader.tuple.text core.slot of=pro.reader.tuple key=text kind=string many=true required=true
 
@@ -124,6 +126,7 @@
 @pro.reader.argument_sequence.mode core.slot of=pro.reader.argument_sequence key=mode enum=new enum=existing required=true
 @pro.reader.argument_sequence.prefix core.slot of=pro.reader.argument_sequence key=prefix kind=string many=true required=true
 @pro.reader.argument_sequence.part core.slot of=pro.reader.argument_sequence key=part kind=atom kind=string many=true required=true
+@pro.reader.argument_sequence.lexical_part core.slot of=pro.reader.argument_sequence key=lexical_part kind=atom many=true
 
 @pro.reader.argument_sequence.owner core.slot of=pro.reader.argument_sequence key=owner kind=string many=true
 @pro.reader.argument_sequence.owner_key core.slot of=pro.reader.argument_sequence key=owner_key kind=atom

@@ -34,9 +34,54 @@ test('leaves numeric lists or quoted coordinates outside the tuple reading', asy
     'put the object at (1,2), (3,4)',
     'put the object at 1, 2 and 3',
     'put the object at "1, 2"',
+    'put the object at x=1, y=2, z=3',
+    'put the object at x=1, x=2',
+    'put the object at x=1, y=2,+3',
+    'put the object at x=1, y=2.5.6',
   ]) {
     const proposal = await reader.propose(text);
     assert.ok(proposal.candidates.every(candidate => pairs(candidate).length === 0),text);
+  }
+});
+
+test('binds an explicitly assigned x and y in either written order with exact evidence', async t => {
+  const reader = createReader();
+  t.after(() => reader.close());
+  const expected = [['node.x','-340.5','result'],['node.y','+110','result']];
+  for (const input of ['Move the node to position y=+110, x=-340.5', 'Move the node at (x=-340.5, y=+110)']) {
+    const {candidates} = await reader.propose(input,{evidence:true});
+    const complete = candidates.find(candidate => JSON.stringify(pairs(candidate))===JSON.stringify(expected));
+    assert.ok(complete,input);
+    assert.deepEqual(complete.evidence.missing,[]);
+    assert.equal(complete.evidence.counts.unread,undefined);
+    assert.equal(complete.evidence.counts.uncovered,undefined);
+  }
+});
+
+test('keeps punctuation inside an explicitly named coordinate target', async t => {
+  const reader = createReader();
+  t.after(() => reader.close());
+  const expected = [['node.x','340','result'],['node.y','110','result']];
+  for (const text of [
+    'uh push the node named Valid? to position x=340, y=110',
+    'Move the node called "Valid?" at x=340, y=110',
+  ]) {
+    const {candidates} = await reader.propose(text,{evidence:true});
+    const named = candidates.find(candidate => parse(candidate.sop).some(wire =>
+      wire.type==='w.request.target' && decode(wire.attrs.name?.[0])==='Valid?') &&
+      JSON.stringify(pairs(candidate))===JSON.stringify(expected));
+    assert.ok(named,text);
+    assert.equal(named.status,'matched');
+    assert.deepEqual(named.evidence.missing,[]);
+    assert.equal(named.evidence.counts.unread,undefined);
+    assert.equal(named.evidence.counts.uncovered,undefined);
+  }
+  for (const text of [
+    'Do not move the node named Valid? to position x=340, y=110',
+    'Move the node named Valid if needed to position x=340, y=110',
+  ]) {
+    const {candidates} = await reader.propose(text);
+    assert.ok(candidates.every(candidate => candidate.source!=='named-tuple'),text);
   }
 });
 
@@ -49,7 +94,7 @@ test('binds an arbitrary pair and cue only to the declared act and keys', async 
 @calibrand pro.reader.target family=calibrand tab=workbench act=place sort=specimen text=specimen
 @rise w.request.key tab=workbench family=calibrand name=calibrand.rise head=number
 @span w.request.key tab=workbench family=calibrand name=calibrand.arc head=number
-@position pro.reader.tuple tab=workbench family=calibrand first_key=calibrand.rise second_key=calibrand.arc act=place text="at fixed offsets"
+@position pro.reader.tuple tab=workbench family=calibrand first_key=calibrand.rise second_key=calibrand.arc first_label=up second_label=across act=place text="at fixed offsets"
 `);
   const reader = createReader(undefined,loadWorlds({paths:[file]}));
   t.after(() => reader.close());
@@ -57,4 +102,7 @@ test('binds an arbitrary pair and cue only to the declared act and keys', async 
     ['calibrand.rise','-9','result'],['calibrand.arc','10','result'],
   ]);
   assert.deepEqual(pairs(await reader.formalise('put the specimen at -9,10')), []);
+  assert.deepEqual(pairs(await reader.formalise('put the specimen at fixed offsets across=10, up=-9')), [
+    ['calibrand.rise','-9','result'],['calibrand.arc','10','result'],
+  ]);
 });

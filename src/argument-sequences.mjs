@@ -60,6 +60,7 @@ export function argumentSequences(facts,catalog) {
     const owners=many(w,'owner').map(keys).filter(words=>words.length), ownerKey=one(w,'owner_key'),ownerValue=one(w,'owner_value');
     const owned=owners.length>0;
     const predicateBank=many(w,'predicate_surface').map(keys).filter(words=>words.length);
+    const lexicalParts=new Set(many(w,'lexical_part'));
     if (Boolean(ownerKey)!==Boolean(ownerValue) || ownerKey && (mode!=='new' || !props.get(ownerKey)?.values.includes(ownerValue))) continue;
     const openFields=new Set();
     const parts=many(w,'part').map(p=>{
@@ -76,6 +77,12 @@ export function argumentSequences(facts,catalog) {
         const literal=keys(p);
         return p.includes('.') || !literal.length ? null : {literal};
       }
+      if (lexicalParts.has(p)) {
+        if (prop.values.length || !prop.head.split('+').includes('span')) return null;
+        const bank=[...forms.get(prop.name) ?? [],...forms.get(prop.means) ?? []]
+          .filter(([words])=>words.length).map(([words])=>[words,'']);
+        return bank.length ? {key:p,bank} : null;
+      }
       if (prop.values.length && prop.head.split('+').some(h=>['class','candidate'].includes(h))) {
         const bank=prop.values.map(v=>[keys(v),v]);
         for (const [alias,v] of forms.get(prop.name) ?? []) if (prop.values.includes(v)) bank.push([alias,v]);
@@ -88,6 +95,7 @@ export function argumentSequences(facts,catalog) {
     if (parts.some(p=>!p)) continue;
     const slots=parts.filter(p=>p.key && p.key!==unreadPart).map(p=>p.key);
     if (slots.length<2 || new Set(slots).size!==slots.length ||
+        [...lexicalParts].some(key=>!slots.includes(key)) ||
         owned && (!slots.includes(ownerPart) || slots.includes(ownerKey))) continue;
     const scopeLiteralSlot=one(w,'scope_literal_slot');
     const scopeLiterals=many(w,'scope_literal').map(keys);

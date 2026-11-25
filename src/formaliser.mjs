@@ -2,6 +2,7 @@ import {measuredMotionReadings} from './measured-motion.mjs';
 import {landmarkPairReadings} from './landmark-pairs.mjs';
 import {coordinatedRequestReadings,sentenceRequestReadings} from './sentence-requests.mjs';
 import {requestIntentPlans,resultRequestReading,withRequestIntents} from './request-intents.mjs';
+import {namedTupleReading,tupleAssignments,tupleTargetNames} from './tuple-assignments.mjs';
 import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
 import {universalInventoryPacket} from './universal-inventory.mjs';
@@ -225,8 +226,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (outside && !outside.has(ts[j][2])) break;
         words += (j===i?'':' ') + ts[j][0];
         for (const property of worlds.properties(words)) properties.push([ts[i][2],ts[j][3],property]);
-        if (/^(?:[0-9]+|[(:=+-])$/u.test(ts[j+1]?.[0] ?? '')) {
-          for (const tuple of worlds.tuples(words)) properties.push([ts[i][2],ts[j][3],tuple]);
+        for (const tuple of worlds.tuples(words)) {
+          const labelled = tupleAssignments(ts,j+1,tuple.labels);
+          if (labelled || /^(?:[0-9]+|[(:=+-])$/u.test(ts[j+1]?.[0] ?? '')) {
+            properties.push([ts[i][2],ts[j][3],labelled ? {...tuple,...labelled} : tuple]);
+          }
         }
         if (Object.hasOwn(worlds.determiners,words)) determiners.push([ts[i][2],ts[j][3],worlds.determiners[words]]);
         for (const mode of modes.get(words) ?? []) predicateModes.push([ts[i][2],ts[j][3],...mode]);
@@ -256,7 +260,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
       }
     }
-    const scope = requestScope(text,scopeText,worlds,hits);
+    const tupleNames = tupleTargetNames(ts,properties,hits,quotes,worlds);
+    const scope = requestScope(text,maskQuoted(scopeText,tupleNames),worlds,hits);
     hits.push(...scope.intentHits);
     const allowConstraints = scope.windows.length > 0;
     const exact = examples.get(text) ?? [];
@@ -301,6 +306,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (answer.source !== 'lexicon') { retain(answer); continue; }
       const {operationMode,...plain}=answer;
       const lexical = {...plain,sop:resolveRelationKeys(answer.sop)};
+      for (const plan of tupleNames) {
+        const named = namedTupleReading(text,lexical,plan,worlds);
+        if (named) retain(named);
+      }
       retain(lexical);
       if (operationMode) retain({...lexical,sop:lexical.sop.replace(/^(.*w\.request\.request[^\n]*)/u,
         line=>line+' mode='+operationMode)});

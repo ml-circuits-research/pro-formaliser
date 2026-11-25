@@ -108,6 +108,25 @@ test('keeps independent owners and excludes quantification from purpose', async 
   assert.ok(quantified.candidates.every(candidate => !intents(parse(candidate.sop)).length));
 });
 
+test('distinguishes declared coordinate assignments from a purpose clause', async t => {
+  const reader = createReader();
+  t.after(() => reader.close());
+  const placement = 'uh push the node named Valid? to position x=340, y=110';
+  const { candidates } = await reader.propose(placement);
+  assert.ok(candidates.some(candidate => parse(candidate.sop).some(wire =>
+    wire.type === 'w.request.target' && read(wire, 'family') === 'node')));
+  assert.ok(candidates.every(candidate => !intents(parse(candidate.sop)).length));
+
+  const purpose = await reader.propose('Move the node to position the chart on the page.');
+  assert.ok(purpose.candidates.some(candidate => intents(parse(candidate.sop)).some(wire =>
+    read(wire, 'value') === 'position the chart on the page')));
+
+  const both = await reader.propose('Move the node to position x=-340, y=+110 for the talk.');
+  const values = both.candidates.flatMap(candidate => intents(parse(candidate.sop)))
+    .map(wire => read(wire, 'value'));
+  assert.deepEqual(new Set(values), new Set(['the talk']));
+});
+
 test('uses an installed role frame and preserves negative delivery with written evidence', async t => {
   const overlay = await mkdtemp(join(tmpdir(), 'request-intents-'));
   await writeFile(join(overlay, 'intents.sop'),

@@ -45,6 +45,61 @@ test('binds analytical chart layouts in either owner order without learned examp
     {'chart.type':'line','chart.measure':'tickets','chart.aggregate':'sum','chart.period':'week'});
 });
 
+test('grounds declared chart measures written before the chart noun', async t => {
+  const reader = createReader();
+  t.after(() => reader.close());
+  for (const [article, measure] of [['a', 'sales'], ['an', 'order value']]) {
+    const text = `Create ${article} ${measure} chart.`;
+    const result = await proves(reader, text, {'chart.measure': measure});
+    assert.ok(result.evidence.spans.some(span => span.slot === 'value' &&
+      span.kind === 'grounded' && span.text === measure), text);
+    assert.equal(result.evidence.counts.uncovered, undefined);
+  }
+});
+
+test('binds an overlay measure by its written form and leaves unrelated modifiers unbound', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'prenominal-measure-'));
+  t.after(() => rmSync(dir, {force: true, recursive: true}));
+  const path = join(dir, 'chart-measure.sop');
+  writeFileSync(path, '@fixture.backlog core.word of=chart.measure text="ticket backlog" means=backlog\n');
+  const reader = createReader(undefined, loadWorlds({paths: [path]}));
+  t.after(() => reader.close());
+  const result = await proves(reader, 'Create a ticket backlog chart.', {'chart.measure': 'ticket backlog'});
+  assert.ok(result.evidence.spans.some(span => span.slot === 'value' &&
+    span.kind === 'grounded' && span.text === 'ticket backlog'));
+
+  for (const text of ['Create a marketing chart.', 'Create an Acme chart.', 'Create a chart named Sales.']) {
+    const {candidates} = await reader.propose(text);
+    assert.ok(candidates.every(candidate => !('chart.measure' in properties(parse(candidate.sop)))), text);
+  }
+});
+
+test('keeps a prenominal chart measure separate from the next calculation and its purpose', async t => {
+  const reader = createReader();
+  t.after(() => reader.close());
+  const text = 'Create a sales chart, then calculate total revenue to explain the change to the board.';
+  const {candidates} = await reader.propose(text, {evidence: true});
+  const result = candidates.find(candidate => {
+    const wires = parse(candidate.sop);
+    const requests = wires.filter(wire => wire.type === 'w.request.request');
+    const chart = requests.find(wire => decode(wire.attrs.predicate?.[0]) === 'Create');
+    const calculation = requests.find(wire => decode(wire.attrs.predicate?.[0]) === 'calculate');
+    if (requests.length !== 2 || !chart || !calculation) return false;
+    const measure = wires.find(wire => wire.type === 'w.request.constraint' &&
+      decode(wire.attrs.attribute?.[0]) === 'chart.measure' &&
+      decode(wire.attrs.value?.[0]) === 'sales');
+    const purpose = wires.find(wire => wire.type === 'w.request.intent' &&
+      decode(wire.attrs.role?.[0]) === 'purpose' &&
+      decode(wire.attrs.value?.[0]) === 'explain the change to the board');
+    return decode(measure?.attrs.request?.[0]) === '$' + chart.id &&
+      decode(calculation.attrs.asked_words?.[0]) === 'total revenue' &&
+      decode(purpose?.attrs.request?.[0]) === '$' + calculation.id;
+  });
+  assert.ok(result, text);
+  assert.deepEqual(result.evidence.missing, []);
+  assert.deepEqual(result.catalog.issues, []);
+});
+
 test('loads a distinct analytical layout through a normal reader overlay', async t => {
   const dir=mkdtempSync(join(tmpdir(),'analytical-overlay-'));
   t.after(()=>rmSync(dir,{force:true,recursive:true}));

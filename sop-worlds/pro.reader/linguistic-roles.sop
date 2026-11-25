@@ -34,11 +34,11 @@
 @reader.diagram.chart.measure_dimension pro.reader.arguments tab=diagram family=chart act=make mode=new anchor=nominal first_key=chart.measure second_key=chart.dimension prefix="chart of" prefix="chart showing" separator=by separator=per separator="grouped by" separator="for each" separator="split by"
 
 # Ordered page coordinates.
-@reader.drawing.drawn.coordinates pro.reader.tuple tab=drawing family=drawn first_key=drawn.x second_key=drawn.y act=place act=make act=copy text=at text=to text="at coordinates"
-@reader.drawing.part.coordinates pro.reader.tuple tab=drawing family=part first_key=part.x second_key=part.y act=place act=make act=copy text=at text=to text="at coordinates"
-@reader.diagram.node.coordinates pro.reader.tuple tab=diagram family=node first_key=node.x second_key=node.y act=place act=make act=copy text=at text=to text="at coordinates"
-@reader.diagram.chart.coordinates pro.reader.tuple tab=diagram family=chart first_key=chart.x second_key=chart.y act=place act=make act=copy text=at text=to text="at coordinates"
-@reader.diagram.group.coordinates pro.reader.tuple tab=diagram family=group first_key=group.x second_key=group.y act=place act=make act=copy text=at text=to text="at coordinates"
+@reader.drawing.drawn.coordinates pro.reader.tuple tab=drawing family=drawn first_key=drawn.x second_key=drawn.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
+@reader.drawing.part.coordinates pro.reader.tuple tab=drawing family=part first_key=part.x second_key=part.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
+@reader.diagram.node.coordinates pro.reader.tuple tab=diagram family=node first_key=node.x second_key=node.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
+@reader.diagram.chart.coordinates pro.reader.tuple tab=diagram family=chart first_key=chart.x second_key=chart.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
+@reader.diagram.group.coordinates pro.reader.tuple tab=diagram family=group first_key=group.x second_key=group.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
 
 # Measured adjectives attach to compatible numeric properties in any loaded family.
 @reader.measure.width w.lang.en.cue name=reader.measure.width on=attribute attribute=width trail=wide takes=number priority=2
