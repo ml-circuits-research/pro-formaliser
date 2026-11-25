@@ -4,6 +4,7 @@ import { tokens } from './lexicon.mjs';
 import { quotedSpans } from './literal-roles.mjs';
 import { nativeInventory } from './native-inventory.mjs';
 import { requestScope } from './request-scope.mjs';
+import { writtenSpatialAnchor } from './spatial-anchor.mjs';
 
 const ns='w.request.';
 const form=text=>tokens(text ?? '').map(([term])=>term).join(' ');
@@ -11,6 +12,7 @@ const value=(wire,key)=>str(wire?.attrs[key]?.[0]);
 const values=(wire,key)=>(wire.attrs[key] ?? []).map(str);
 const word=/^[\p{L}\p{M}\p{N}_]+$/u;
 const definite=new Set(['definite','demonstrative']);
+const articles=new Set([...definite,'indefinite']);
 const tokenText=ts=>ts.map(([term])=>term).join(' ');
 const identity=(...parts)=>JSON.stringify(parts);
 
@@ -27,9 +29,12 @@ export function compileAppositiveSelectors(facts,requestKeys,words=facts('core.w
           !row.values.length && row.head.split('+').some(head=>['span','candidate'].includes(head)))) return [];
     const items=nativeInventory(type=>type===itemType && itemField
       ? facts(type).filter(item=>values(item,itemField).some(label=>classes.has(label))) : facts(type),itemType,words);
-    return items.size ? [{family,attribute,markers,items}] : [];
+    const subjects=values(wire,'subject_type').map(type=>nativeInventory(facts,type,words));
+    return items.size ? [{tab,family,attribute,markers,items,subjects}] : [];
   });
-  return {bindings,proforms};
+  const adjacentHeads=new Set(bindings.filter(binding=>binding.subjects.length)
+    .flatMap(binding=>binding.markers.map(marker=>marker.split(' ')[0])));
+  return {bindings,proforms,adjacentHeads};
 }
 
 function positive(text,ts,worlds,permit) {
@@ -120,12 +125,13 @@ function predicateRoles(model,worlds) {
   };
 }
 
-function typedItem(binding,input,worlds) {
-  const valid=input.every(([term])=>word.test(term) && !worlds.joiners[term]);
-  if (!valid || input.length<2 || !definite.has(worlds.determiners[input[0][0]])) return false;
-  for (let i=1;i<input.length;i++) {
+function typedItem(binding,input,worlds,allowedDeterminers=definite,allowBare=false) {
+  if (!input.length || input.some(([term])=>!word.test(term) || worlds.joiners[term])) return false;
+  const start=Number(allowedDeterminers.has(worlds.determiners[input[0][0]]));
+  if (!start && !allowBare) return false;
+  for (let i=start;i<input.length;i++) {
     if (binding.items.get(tokenText(input.slice(i)))?.size!==1) continue;
-    const modifiers=input.slice(1,i);
+    const modifiers=input.slice(start,i);
     if (modifiers.every(([term])=>!worlds.evidenceVocabulary.grammar.has(term) &&
       !worlds.lookup(term).some(([role])=>['act','marker','reference'].includes(role)))) return true;
   }
@@ -204,4 +210,112 @@ export function createAppositiveSelectorReader(model,worlds) {
     selector.attrs.phase=['selector'];
     return {...candidate,sop:serialize(wires),source:'appositive-selector'};
   };
+}
+
+function adjacentItems(ts,start,binding,worlds) {
+  const coordinated=[];
+  let at=start;
+  while (at<ts.length) {
+    let itemEnd;
+    for (let end=at+1;end<=Math.min(at+8,ts.length-1);end++) {
+      if (!typedItem(binding,ts.slice(at,end),worlds,articles,coordinated.length>0)) continue;
+      const amount=worlds.motionAmountPhrases.find(terms=>terms.every((term,i)=>ts[end+i]?.[0]===term));
+      const next=end+(amount?.length ?? 0);
+      if (ts[next] && worlds.lookup(ts[next][0]).some(([role,act,slot])=>
+        role==='marker' && act==='place' && slot==='place')) {
+        return {items:[...coordinated,[at,end]],boundary:end,placement:next};
+      }
+      if (worlds.joiners[ts[end][0]]==='coordination') {
+        itemEnd=end;
+        break;
+      }
+    }
+    if (!itemEnd) return;
+    coordinated.push([at,itemEnd]);
+    at=itemEnd+1;
+  }
+}
+
+// A typed nominal modifier belongs to the existing target. A separately
+// witnessed placement survives; a loose destination fragment cannot move it.
+export function adjacentSelectorReading(text,candidate,worlds,permit,ts=tokens(text)) {
+  if (text.length>240 || ts.length<7 || quotedSpans(text).length ||
+      !ts.some(([term])=>worlds.appositiveSelectors.adjacentHeads.has(term))) return;
+  const wires=parse(candidate.sop), requests=wires.filter(wire=>wire.type===ns+'request');
+  if (requests.length!==1 || wires.some(wire=>[ns+'context',ns+'previous',ns+'clock'].includes(wire.type))) return;
+  const [request]=requests, owner='$'+request.id, predicate=value(request,'predicate');
+  if (value(request,'act')!=='place' || ![undefined,'do'].includes(value(request,'mood')) || request.attrs.polarity ||
+      !predicate || !worlds.lookup(form(predicate)).some(([role,act])=>role==='act' && act==='place')) return;
+  const local=wires.filter(wire=>value(wire,'request')===owner);
+  const targets=local.filter(wire=>wire.type===ns+'target');
+  const [target]=targets, family=value(target,'family');
+  if (targets.length!==1 || value(target,'mode')!=='existing' || target.attrs.name ||
+      !positive(text,ts,worlds,permit)) return;
+  const head=targetHead(text,target), pivot=exact(text,predicate);
+  if (!head || !pivot) return;
+  const chars=Array.from(text), span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
+  let end=ts.length;
+  if (['.','!'].includes(ts.at(-1)?.[0])) end--;
+  const headEnd=ts.findIndex(([, , ,stop])=>chars.slice(0,stop).join('').length===head[1])+1;
+  const first=tokens(predicate).length;
+  if (pivot[0]!==0 || first<1 || head[0]<pivot[1] || headEnd<=first || headEnd>=end ||
+      !definite.has(worlds.determiners[ts[first][0]]) ||
+      ts.slice(first,headEnd).some(([term])=>worlds.joiners[term]) ||
+      ts.slice(first,end).some(([term])=>!word.test(term))) return;
+  const scoped=value(request,'words');
+  if (scoped && form(scoped)!==tokenText(ts.slice(0,end))) return;
+  const subject=text.slice(...head);
+  for (const binding of worlds.appositiveSelectors.bindings) {
+    if (binding.family!==family || !binding.subjects.some(forms=>forms.get(form(subject))?.size===1)) continue;
+    const spatial=worlds.spatialBindings.find(row=>row.tab===binding.tab && row.family===family);
+    if (!spatial) continue;
+    for (const marker of binding.markers) {
+      const itemStart=headEnd+marker.split(' ').length;
+      if (tokenText(ts.slice(headEnd,itemStart))!==marker) continue;
+      const match=adjacentItems(ts.slice(0,end),itemStart,binding,worlds);
+      if (!match || match.placement>=end-1 || ts.slice(match.placement,end).some(([term])=>worlds.joiners[term])) continue;
+      const description=span(first,match.boundary), subjectBase=span(first,headEnd);
+      if (target.attrs.description && ![description,subjectBase].includes(value(target,'description'))) continue;
+      const suffix=span(match.boundary,end);
+      const placement=span(match.placement,end);
+      const bare=match.boundary===match.placement;
+      const regions=bare ? (worlds.nominalPositions.get(family)?.get(ts[match.placement][0]) ?? [])
+        .filter(([words,key,,,operator])=>key===spatial.regionKey && operator==='region' &&
+          words.join(' ')===tokenText(ts.slice(match.placement,end))) : [];
+      const region=regions.length===1 ? regions[0] : undefined;
+      const placed=bare && !region ? writtenSpatialAnchor(span(0,headEnd)+' '+placement,
+        target,request,spatial,worlds,permit) : undefined;
+      const anchored=placed && form(placement)===form(placed.marker+' '+placed.anchor);
+      const keep=local.filter(wire=>wire.type===ns+'constraint' && value(wire,'phase')==='selector' &&
+        exact(subjectBase,value(wire,'words') ?? value(wire,'value') ?? '') &&
+        value(wire,'attribute')!==binding.attribute);
+      const retained=wires.filter(wire=>!local.includes(wire) || wire===target ||
+        keep.includes(wire) || wire.type===ns+'lookup' && value(wire,'target')==='$'+target.id);
+      target.attrs.description=[JSON.stringify(description)];
+      const add=(type,attrs)=>{
+        let id=target.id+'.'+type;
+        while (retained.some(wire=>wire.id===id)) id+='_';
+        retained.push({id,type:ns+type,attrs:{request:[owner],...attrs}});
+        return '$'+id;
+      };
+      for (const [a,b] of match.items) add('constraint',{
+        on:['attribute'],attribute:[binding.attribute],value:[JSON.stringify(span(a,b))],operator:['eq'],phase:['selector'],
+      });
+      if (region) {
+        const [,attribute,regionValue,on,operator]=region;
+        add('constraint',{on:[on],attribute:[attribute],value:[regionValue],words:[JSON.stringify(placement)],
+          operator:[operator],phase:['result']});
+      }
+      if (anchored) {
+        add('constraint',{on:['place'],attribute:[spatial.relationKey],value:[placed.value],
+          words:[JSON.stringify(placed.marker)],operator:['relation'],phase:['result']});
+        const anchor=add('constraint',{on:['place'],attribute:[spatial.anchorKey],value:[JSON.stringify(placed.anchor)],
+          operator:['relation'],phase:['selector']});
+        add('lookup',{constraint:[anchor],key:['thing'],from:['page']});
+      }
+      const matched=Boolean(anchored || region);
+      if (!matched) add('unread',{text:[JSON.stringify(suffix)],note:['"unresolved destination"']});
+      return {...candidate,sop:serialize(retained),source:'adjacent-selector',status:matched?'matched':'partial'};
+    }
+  }
 }

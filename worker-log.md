@@ -392,3 +392,8 @@
 - Frozen 488 keeps the scope on the cat and separately creates the small bird at the top. Frozen 399 retains the exact tree and landmark relation. The final remarks stay unread.
 - Shared grammar routing and the different-family control are recorded for review.
 - All 444 isolated release tests passed. No benchmark rerun.
+
+## Adjacent item selectors
+- Frozen 981 now binds both written attire items to the existing man and keeps the cat and the remainder in independent requests. The ordered-landmark destination stays literal and unresolved.
+- The reader uses installed subject and item providers with the existing region and landmark checks. Routed the selector declaration and the spatial schema gap in the review response.
+- All 447 isolated release tests passed. No benchmark rerun.

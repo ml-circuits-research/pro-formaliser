@@ -752,7 +752,9 @@ function providerTypes(facts, effective=facts) {
   for (const role of facts.get('pro.reader.creation_role')?.values() ?? []) sources.push(one(role,'value_type'));
   for (const frame of facts.get('pro.reader.postposed_clause')?.values() ?? []) sources.push(one(frame,'value_type'));
   for (const frame of facts.get('pro.reader.dependent_operand')?.values() ?? []) sources.push(one(frame,'item_type'));
-  for (const frame of facts.get('pro.reader.appositive_selector')?.values() ?? []) sources.push(one(frame,'item_type'));
+  for (const frame of facts.get('pro.reader.appositive_selector')?.values() ?? []) {
+    sources.push(one(frame,'item_type'),...values(frame,'subject_type'));
+  }
   for (const frame of facts.get('pro.reader.orientation')?.values() ?? []) sources.push(one(frame,'landmark_type'));
   for (const frame of facts.get('pro.reader.motion')?.values() ?? []) sources.push(one(frame,'target_type'));
   for (const selector of facts.get(nominalSelectorType)?.values() ?? []) sources.push(...nominalSelectorProviders(selector));

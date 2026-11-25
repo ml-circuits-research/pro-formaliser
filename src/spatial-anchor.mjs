@@ -237,6 +237,12 @@ function shape(scope,target,request,binding,relation,worlds,permit,learned,sibli
   return maximal.length===1 ? maximal[0] : undefined;
 }
 
+export function writtenSpatialAnchor(text,target,request,binding,worlds,permit) {
+  if (!worlds.requestKeys.some(key=>key.family===binding.family && key.tab===binding.tab &&
+      key.name===binding.anchorKey && key.head==='fill+span' && !key.values.length)) return;
+  return shape(text,target,request,binding,undefined,worlds,permit,undefined,new Set());
+}
+
 export function spatialAnchorReadings(text,candidate,worlds,permit,learned) {
   if (!candidate.sop?.includes(' '+type('unread')+' ') ||
       !candidate.sop.includes(' '+type('target')+' ') || !hasAnchorTail(text,worlds)) return [];

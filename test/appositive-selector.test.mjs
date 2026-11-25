@@ -91,3 +91,80 @@ test('supports a separately declared owner family, appositive, and finite action
   assert.ok(evidenceInText(text,reading.sop,worlds));
   assert.deepEqual(catalogIssues(parse(reading.sop),worlds,'lab'),[]);
 });
+
+const placementLexicon={
+  man:[['target','place','drawn','existing','man',10]],
+  girl:[['target','place','drawn','existing','girl',10]],
+  cat:[['target','make','drawn','new','cat',10]],
+};
+
+test('keeps adjacent attire on the selected person and an independently written location on the action',async t=>{
+  const model={version:1,examples:[],templates:[],lexicon:placementLexicon};
+  const worlds=loadWorlds();
+  const reader=createReader(model,worlds);
+  t.after(()=>reader.close());
+  for (const [text,attribute,result] of [
+    ['put the man in the blue shirt near the house','drawn.relation','near'],
+    ['move the girl in a red hat on the left','drawn.at','left'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>candidate.source==='adjacent-selector' && candidate.status==='matched');
+    assert.ok(reading,text);
+    assert.ok(validate(reading.sop,worlds));
+    assert.deepEqual(reading.catalog.issues,[]);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0);
+    assert.equal(reading.evidence.missing.length,0);
+    const wires=parse(reading.sop);
+    assert.deepEqual(wires.filter(wire=>wire.attrs.attribute?.[0]==='drawn.wear').map(wire=>wire.attrs.phase[0]),['selector']);
+    assert.equal(wires.find(wire=>wire.attrs.attribute?.[0]===attribute).attrs.value[0],result);
+    assert.ok(!wires.some(wire=>wire.attrs.value?.[0]==='in'));
+  }
+});
+
+test('keeps coordinated attire and the full unresolved destination in a sequence',async t=>{
+  const worlds=loadWorlds();
+  const reader=createReader({version:1,examples:[],templates:[],lexicon:placementLexicon},worlds);
+  t.after(()=>reader.close());
+  const move='bring the man in the yellow shirt and orange hat all the way to the right end of the line';
+  const text='Draw a cat, then '+move+', and the rest stay exactly where they are';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const reading=candidates.find(candidate=>candidate.sop.includes('attribute=drawn.wear') &&
+    candidate.sop.includes('value=place') && candidate.sop.includes('sort=cat'));
+  assert.ok(reading);
+  assert.ok(validate(reading.sop,worlds));
+  assert.equal(reading.evidence.missing.length,0);
+  assert.deepEqual(reading.catalog.issues,[]);
+  const wires=parse(reading.sop);
+  const owner='$'+wires.find(wire=>wire.attrs.predicate?.[0]==='bring').id;
+  const local=wires.filter(wire=>wire.attrs.request?.[0]===owner);
+  assert.deepEqual(local.filter(wire=>wire.type==='w.request.constraint').map(wire=>wire.attrs.value[0]),
+    ['"the yellow shirt"','"orange hat"']);
+  assert.equal(local.find(wire=>wire.type==='w.request.unread').attrs.text[0],'"all the way to the right end of the line"');
+  for (const query of [
+    'move the cup in the red hat near the house',
+    'move the man in the red tent near the house',
+    'move the man in the red hat near the house if ready',
+    'move the man in the red hat and remove the house',
+  ]) {
+    const {candidates}=await reader.propose(query);
+    assert.ok(!candidates.some(candidate=>candidate.source==='adjacent-selector'),query);
+  }
+});
+
+test('an installed item provider can extend the adjacent selector vocabulary',async t=>{
+  const dir=mkdtempSync(join(tmpdir(),'adjacent-selector-'));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  writeFileSync(join(dir,'accessory.sop'),[
+    '@visor w.lab.accessory name=visorplate',
+    '@adjacent pro.reader.appositive_selector tab=drawing family=drawn attribute=drawn.wear text=fitted subject_type=k.people.kind item_type=w.lab.accessory',
+  ].join('\n'));
+  const worlds=loadWorlds({paths:[dir]});
+  const reader=createReader({version:1,examples:[],templates:[],lexicon:placementLexicon},worlds);
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose('move the girl fitted a visorplate near the house',{evidence:true});
+  const reading=candidates.find(candidate=>candidate.source==='adjacent-selector' && candidate.status==='matched');
+  assert.ok(reading);
+  assert.deepEqual(reading.catalog.issues,[]);
+  assert.deepEqual(reading.evidence.missing,[]);
+  assert.ok(reading.sop.includes('attribute=drawn.wear value="a visorplate" operator=eq phase=selector'));
+});

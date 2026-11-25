@@ -13,7 +13,7 @@ import {dependentOperandReadings} from './dependent-operands.mjs';
 import {createDialogueCoverage} from './dialogue-coverage.mjs';
 import {createEffectSequence} from './effect-sequence.mjs';
 import {ownedEffectReadings} from './owned-effects.mjs';
-import {createAppositiveSelectorReader} from './appositive-selector.mjs';
+import {adjacentSelectorReading,createAppositiveSelectorReader} from './appositive-selector.mjs';
 import {quantifiedVerbReadings} from './quantified-verb.mjs';
 import {createTopicCommands,topicCommandPacket,topicCommandReading} from './topic-commands.mjs';
 import {postposedCause,postposedClauseReadings,readsCauseAsCommand,withPostposedCause} from './postposed-clause.mjs';
@@ -504,6 +504,15 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const candidate of [...candidates]) {
         for (const reading of spatialModifierReadings(text,candidate,worlds)) retain(reading);
       }
+    }
+    if (!scope.restricted && !quotes.length && ts.some(([term])=>worlds.appositiveSelectors.adjacentHeads.has(term))) {
+      const offset=candidates.length;
+      const lexical=candidates.findIndex(candidate=>candidate.source==='lexicon');
+      for (const candidate of [...candidates]) {
+        const reading=adjacentSelectorReading(text,candidate,worlds,()=>true,ts);
+        if (reading) retain(reading);
+      }
+      if (lexical>=0) candidates.splice(lexical,0,...candidates.splice(offset));
     }
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
     if (response.proofs.length) {
