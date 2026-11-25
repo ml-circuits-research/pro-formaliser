@@ -47,6 +47,7 @@ import { fileURLToPath } from 'node:url';
 import { parse, quote, str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { languageFrames } from './language-frames.mjs';
 import { compileClosedRequests } from './closed-requests.mjs';
+import { compileRemovalWishes, removalWishType } from './removal-wishes.mjs';
 import { evidenceVocabulary } from './evidence.mjs';
 import { scopeGrammar } from './scope-grammar.mjs';
 import { tokens } from './lexicon.mjs';
@@ -60,7 +61,7 @@ const types = new Set([
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'pro.reader.nominal_pattern','pro.reader.nominal_value','pro.reader.participant_adjunct', 'pro.reader.dependent_operand','w.lang.en.answer','k.feelings.feeling',
   'pro.reader.owned_effect','pro.reader.effect_sense','pro.reader.effect_owner','pro.reader.landmark_surface','pro.reader.appositive_selector','pro.reader.quantified_verb','pro.reader.quantified_marker','pro.reader.quantified_reference','pro.reader.topic_command','pro.reader.postposed_clause','pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
-  'pro.reader.request_intent_frame','pro.reader.result_request','pro.reader.standing_position','pro.reader.incidental_modifier','pro.reader.closed_request',
+  'pro.reader.request_intent_frame','pro.reader.result_request','pro.reader.standing_position','pro.reader.incidental_modifier','pro.reader.closed_request',removalWishType,
   'w.lang.en.lex','k.time.zone','pro.reader.argument_format',
   nativeTargetInventoryType, universalInventoryType, nominalSelectorType, 'pro.reader.universal_agreement', 'pro.reader.set_count', 'core.type', 'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
@@ -656,6 +657,7 @@ function compile(facts) {
     stativeVerbAliases:stativeVerbAliases(senses),
     languageFrames:languageFrames(facts),
     closedRequests:compileClosedRequests(facts,actNames),
+    removalWishes:compileRemovalWishes(facts,words),
     alternations:compileAlternations(facts),
     scopeGrammar:scopeGrammar(facts),
     discourseEdges:compileDiscourseEdges(facts,discourse),
@@ -799,6 +801,7 @@ function providerTypes(facts, effective=facts) {
   }
   for (const frame of facts.get('pro.reader.benefactive')?.values() ?? []) sources.push(one(frame,'name_provider'),one(frame,'name_blocker'));
   for (const binding of facts.get('pro.reader.owner_inventory')?.values() ?? []) sources.push(one(binding,'provider'));
+  for (const binding of facts.get(removalWishType)?.values() ?? []) sources.push(one(binding,'provider'));
   const providerFacts=type=>[...(([nativeTargetInventoryType,universalInventoryType].includes(type) ? facts : effective)
     .get(type)?.values() ?? [])];
   sources.push(...nativeTargetProviderTypes(providerFacts),...universalInventoryProviderTypes(providerFacts));

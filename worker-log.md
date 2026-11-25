@@ -501,3 +501,7 @@
 ## Closed selection requests
 - Compiled the declared whole-clause frames for clearing the selection into the native targetless deselect act.
 - The real before/after CLI batch produced five new clean readings across 11 messages. All 488 release tests passed.
+
+## Removal expressed as a wish
+- A bounded native wish frame now proposes removal when the whole phrase contains a declared cessation cue and a known object description.
+- Five positive and five contrast inputs checked on the default-model CLI. All 489 release tests passed.

@@ -62,6 +62,7 @@ import { namedTargetReading } from './target-names.mjs';
 import { catalogIssues } from './catalog.mjs';
 import { frameSupport } from './language-frames.mjs';
 import { closedRequestReadings } from './closed-requests.mjs';
+import { removalWishReadings } from './removal-wishes.mjs';
 import { contextScores } from './context.mjs';
 import { prologWorker } from './prolog-worker.mjs';
 import { requestScope } from './request-scope.mjs';
@@ -327,6 +328,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     // Closed frames account for the entire current utterance, including
     // negative words that express a desired state rather than a prohibition.
     if (!quotes.length) for (const reading of closedRequestReadings(text,ts,worlds,politeness)) {
+      retain(reading,{restricted:false});
+    }
+    if (scope.restricted && !quotes.length) for (const reading of removalWishReadings(text,ts,worlds,politeness)) {
       retain(reading,{restricted:false});
     }
     if (!scope.restricted && !quotes.length) {
