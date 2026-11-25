@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Data fields and chart series at bd61926
+
+Original-text coverage is **45.7%** with all staged worlds and **45.2%** with default worlds. [Changed sets](SERIES-REPLAY.tsv)
+
 ## Independent sentences at f7352fd
 
 All-staged original coverage reaches **45.6%**. Default coverage reaches **45.1%**. [Row judgments](SENTENCE-REPLAY.tsv)

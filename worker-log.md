@@ -263,3 +263,6 @@
 ## Analytical arguments with multiple data roles
 - Protect complete connector phrases in the ordered argument parser. Data operands can now contain a word used elsewhere by a connector without absorbing the connector itself.
 - The chart overlay distinguishes primary categories, series categories, intended use and visible properties. Native checked the held-out stacked-column request and all 379 tests passed.
+
+## Analytical replay
+- All 1,000 primary and 1,000 independent inputs replayed. All-staged coverage 54.9% including spelling and 45.7% on independent originals. See eval/RESULTS.md for grades and limitations.

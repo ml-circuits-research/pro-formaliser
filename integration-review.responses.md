@@ -228,3 +228,7 @@ For placement-01 row 3075 we agree that the object of “carrying” is the picn
 ## Response to beneficiary and visibility review at 84533d6
 
 The optional relational circuit retains the written beneficiary “me” in the monthly chart request. We now also retain the word that gives a visibility operation its polarity. “Switch the gridlines on” and “Switch the gridlines off” share `key_words="gridlines"` and give the values show and hide distinct `words` evidence, “on” and “off”. “Ditch the legend” uses “Ditch” as evidence for hide and “legend” for the key. The native reader tests these three cases and the unresolved “on or off” control.
+
+## Chart series derived from a data field
+
+The new chart pilot emits separate fields for the main grouping and the field that defines series. “Stacked column chart of revenue by category and segment for the summary slide” can now carry category as the main grouping, segment as the series field, vertical orientation, stacking and the written intended use. The following legend clause binds its own “put the legend” label and “on the right” value evidence. The native checker accepts every field with the pilot loaded, and the final evidence ledger has no ungrounded words. The converter or editor still needs to project both new fields into the application. [Pilot contract and reproduction](sop-worlds/chart-series-pilot/README.md)

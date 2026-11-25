@@ -2,6 +2,37 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Data fields and chart series
+
+Reader `bd61926` reaches **54.9% L3 + L4** on the primary 1,000 requests including spelling. The independent 1,000 original texts reach **45.7%**. The comparison uses the same held-out requests, trained models and judging rules. The reader receives text only, with no active tab or discussion history. [Changed proposal sets and semantic judgments](SERIES-REPLAY.tsv)
+
+| Profile | Primary original | Primary including spelling | Independent original |
+| --- | ---: | ---: | ---: |
+| Default | 51.6% | 53.1% | 45.2% |
+| All staged worlds | 53.5% | **54.9%** | **45.7%** |
+
+| Grade | All staged worlds, original or corrected |
+| --- | ---: |
+| L0 – Fail | 1.3% |
+| L1 – Wrong | 9.3% |
+| L1a – Wrong intent | 1.9% |
+| L1b – Wrong target | 2.2% |
+| L1c – Wrong detail or role | 3.6% |
+| L1d – Invented instruction | 1.6% |
+| L2 – Incomplete | 34.5% |
+| L2a – Missing action, question or step | 6.0% |
+| L2b – Missing object, endpoint or reference | 8.3% |
+| L2c – Missing value, property, placement, scope or condition | 20.2% |
+| L3 – Identical and reasonable | 20.5% |
+| L4 – Reasonable alternative | 34.4% |
+| **L3 + L4 – Reasonable** | **54.9%** |
+
+The changed sets add new readings, with two earlier partial variants replaced in the stacked revenue-by-region request. Review found no loss of a reasonable reading.
+
+The ordered argument reader recognizes complete connectors such as “and put the legend”. An article inside that connector can also appear independently in a data or purpose field. The same decoder uses the optional series and intended-use declarations, closed catalog values and ordinary open fields. The tested stacked column chart keeps revenue, the category and series fields, the summary slide, vertical stacking and its right-hand legend. The literal evidence ledger grounds every content word in this request. The series and intended-use fields need application bindings before execution. [World declarations and reproduction](../sop-worlds/chart-series-pilot/README.md)
+
+The reference audit now identifies **24.5%** with a material issue. **4.0%** of all requests have both a material reference issue and a reasonable proposal. The new issue stores “region across and total profit up” only as axis labels. The data-oriented reading uses region to group marks and sums the profit measure.
+
 ## Independent sentences and written visibility cues
 
 Reader `f7352fd` reaches **54.4% L3 + L4** on the same 1,000 random primary requests, with spelling and all staged worlds. The independent 1,000 original requests reach **45.6%**. The public reader received the request text without discussion history, active tab or annotation. The independent benchmark records binary judgments. The rows below give the full primary grade breakdown. [Paired judgments for changed proposal sets](SENTENCE-REPLAY.tsv)

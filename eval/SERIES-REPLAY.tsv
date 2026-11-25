@@ -1,0 +1,17 @@
+profile	sample	source	row	previous	current	reference_note	reason
+primary	226	diagram/charts-01.csv	3095	L2c	L4		The new bar chart groups by segment and uses average advertising spend as its measure. The previous reference issue was already counted.
+primary	245	diagram/charts-05.csv	3362	L2c	L4	The reference uses the open chart type stacked, leaving the explicit vertical orientation to the evidence text.	One chart keeps revenue, category, segment, vertical stacking, intended summary slide and right-hand legend.
+primary	620	diagram/charts-05.csv	1797	L2c	L4	The reference stores the data-axis roles only as labels.	One proposed chart uses region for the horizontal grouping and total profit for the vertical measure, with the aggregation tied to profit.
+primary	724	diagram/charts-05.csv	3496	L2c	L4		One chart keeps average profit, both grouping fields, grouped layout, the summary slide as intended use and printed mark values.
+primary	960	diagram/diagrams-01.csv	4071	L2c	L4	The reference leaves the channel breakdown unread.	One stacked bar chart of revenue by region uses channel to define the series and sets the legend on the right.
+primary-spell	226	diagram/charts-01.csv	3095	L2c	L4		The new bar chart groups by segment and uses average advertising spend as its measure. The previous reference issue was already counted.
+primary-spell	245	diagram/charts-05.csv	3362	L2c	L4	The reference uses the open chart type stacked, leaving the explicit vertical orientation to the evidence text.	One chart keeps revenue, category, segment, vertical stacking, intended summary slide and right-hand legend.
+primary-spell	620	diagram/charts-05.csv	1797	L2c	L4	The reference stores the data-axis roles only as labels.	One proposed chart uses region for the horizontal grouping and total profit for the vertical measure, with the aggregation tied to profit.
+primary-spell	724	diagram/charts-05.csv	3496	L2c	L4		One chart keeps average profit, both grouping fields, grouped layout, the summary slide as intended use and printed mark values.
+primary-spell	960	diagram/diagrams-01.csv	4071	L2c	L4	The reference leaves the channel breakdown unread.	One stacked bar chart of revenue by region uses channel to define the series and sets the legend on the right.
+replica	266	diagram/charts-05.csv	825	0	1		The proposed line chart displays revenue totals for each year.
+base-primary	226	diagram/charts-01.csv	3095	L2c	L4		The new bar chart groups by segment and uses average advertising spend as its measure. The previous reference issue was already counted.
+base-primary	620	diagram/charts-05.csv	1797	L2c	L4	The reference stores the data-axis roles only as labels.	One proposed chart uses region for the horizontal grouping and total profit for the vertical measure, with the aggregation tied to profit.
+default-spell	226	diagram/charts-01.csv	3095	0	1		The new bar chart groups by segment and uses average advertising spend as its measure. The previous reference issue was already counted.
+default-spell	620	diagram/charts-05.csv	1797	0	1	The reference stores the data-axis roles only as labels.	One proposed chart uses region for the horizontal grouping and total profit for the vertical measure, with the aggregation tied to profit.
+base-replica	266	diagram/charts-05.csv	825	0	1		The proposed line chart displays revenue totals for each year.
