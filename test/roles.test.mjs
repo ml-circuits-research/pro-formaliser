@@ -199,3 +199,44 @@ test('context reorders the same unbound spatial family hypotheses', async () => 
     await reader.close();
   }
 });
+
+test('written nouns keep demonstratives nominal even if the action lacks a target binding', async t => {
+  const reader = createReader();
+  t.after(() => reader.close());
+  for (const [text, act, object] of [
+    ['Copy that tree','copy','that tree'],
+    ['Copy those trees','copy','those trees'],
+    ['Copy that red tree','copy','that red tree'],
+    ['Save that chart','save','that chart'],
+  ]) {
+    const { candidates } = await reader.propose(text);
+    const actions = candidates.filter(({sop}) => fields(sop, 'request').some(r => r.act === act));
+    assert.ok(actions.length,text);
+    assert.ok(actions.every(({sop}) => fields(sop, 'request').every(r => !r.refers)),text);
+    assert.ok(actions.some(({sop}) => fields(sop, 'unread').some(r => r.text === object)),text);
+  }
+  for (const [text, pronoun] of [['Copy it','it'],['Copy that again','that'],['Copy that back','that']]) {
+    const { candidates } = await reader.propose(text);
+    const reference = candidates.find(({sop}) => fields(sop, 'request').some(r => r.act === 'copy' && r.refers));
+    assert.ok(reference,text);
+    assert.ok(fields(reference.sop,'lookup').some(r => r.words === pronoun && r.from !== 'previous'),text);
+  }
+});
+
+test('a native copy applicability and noun inventory keeps the written object as its source',async t => {
+  const worlds = loadWorlds({paths:['sop-worlds/copy-target-pilot']});
+  const reader = createReader(undefined,worlds);
+  t.after(() => reader.close());
+  for (const [text, object] of [
+    ['Copy that tree','tree'],['Copy the boat','boat'],['Make a copy of that house','house'],
+  ]) {
+    const { candidates } = await reader.propose(text,{evidence:true});
+    const reading = candidates.find(({sop}) =>
+      fields(sop,'request').some(r => r.act === 'copy') &&
+      fields(sop,'target').some(r => r.family === 'drawn' && r.sort === object && r.mode === 'existing'));
+    assert.ok(reading,text);
+    assert.deepEqual(fields(reading.sop,'unread'),[],text);
+    assert.deepEqual(reading.catalog.issues,[],text);
+    assert.deepEqual(reading.evidence.missing,[],text);
+  }
+});

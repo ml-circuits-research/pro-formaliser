@@ -1,0 +1,4 @@
+# Propose the existing object and group kinds as valid sources for canonical copy.
+@w.drawing.kind.object std.schema.kind of=w.drawing.object world=w.drawing acts=make acts=remove acts=change acts=place acts=pick acts=ask acts=group acts=copy core.source="copy-target proposal"
+@w.drawing.kind.group std.schema.kind of=w.drawing.group world=w.drawing acts=make acts=remove acts=change acts=pick acts=ask acts=copy core.source="copy-target proposal"
+@reader.copy.inventory.object pro.reader.target_inventory family=drawn act=copy mode=existing provider=k.objects.object identity=name

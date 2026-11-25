@@ -134,8 +134,10 @@ lexical_candidate(Q, score(Tier, Score, 0), Candidate) :-
       Extra is 5 + Evidence + RoleFit + AttachmentFit + ScopeFit + log(1+K)/2 - log(1+Gap)/2
     ; \+ get_dict(requiredTarget,Q,_), direct_reference(Q,Act,End,RS-RE), RE =< WindowEnd,
       format(string(ReferenceRequest),'~s refers=thing',[Req]),
+      span(Q.text, RS, RE, Reference), encode(Reference, RefWords),
+      format(string(ReferenceLookup),'@r1.ref w.request.lookup request=$r1 key=thing words=~s',[RefWords]),
       attached_roles(Scoped,Act,none,"existing",RE,Attached,Used,_,Fit,_),
-      Bounds = [Start-End,RS-RE|Used], Wires = [ReferenceRequest|Attached], Extra is 4 + Fit, Tier=1
+      Bounds = [Start-End,RS-RE|Used], Wires = [ReferenceRequest,ReferenceLookup|Attached], Extra is 4 + Fit, Tier=1
     ; \+ get_dict(requiredTarget,Q,_), Bounds = [Start-End], Wires = [Req], Extra = 0, Tier=1 ),
     sort(Bounds, Sorted), string_length(Q.text, Length),
     residuals(Sorted, Q.text, 0, Length, 1, Unread),

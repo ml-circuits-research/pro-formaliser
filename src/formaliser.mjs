@@ -229,12 +229,16 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   const classHeads = new Set([...(worlds.nominalClasses?.values() ?? [])].flatMap(forms => [...forms.keys()]));
   const numberHeads = new Set([...worlds.nominalNumbers.keys()].map(term=>term.split(' ')[0]));
   const positionHeads = new Set([...(worlds.nominalPositions?.values() ?? [])].flatMap(forms => [...forms.keys()]));
+  const ownerNouns=new Set([...worlds.ownerInventory.keys()].map(key=>JSON.parse(key)[1]));
+  const nounEvidence=surface=>ownerNouns.has(surface) ? [['target']] :
+    worlds.lookup(surface).filter(([role])=>role==='target');
   const worker = prologWorker(new URL('../prolog/formalise.pl',import.meta.url));
   async function read(text) {
     if (typeof text !== 'string') throw Error('Expected a text string');
     const ts = tokens(text), chars = Array.from(text);
     const ambiguousTargets = [], templates = [], hits = [], determiners = [], properties = [], predicateModes=[];
-    const inflectionHits = [], inflectionTargets = [], declaredActs = [];
+    const inflectionHits = [], inflectionTargets = [], declaredActs = [], nominalHeads = [];
+    const demonstratives=ts.some(([key])=>worlds.determiners[key]==='demonstrative');
     // A quoted label may itself contain punctuation, negation or a sequence word.
     // Its span remains available to property binding in Prolog.
     const quotes = quotedSpans(text);
@@ -271,6 +275,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
           declaredActs.push([ts[i][2],ts[j][3],nativeActs,nativeActs.length===1 && nativeActs[0]===words]);
         }
         const families = new Set(declared.filter(e=>e[0]==='target').map(e=>e[2]));
+        if (demonstratives && !worlds.referenceCommands.particles.has(words) &&
+            (families.size || ownerNouns.has(words) || worlds.nominalInflection(words,nounEvidence).length)) {
+          nominalHeads.push([ts[i][2],ts[j][3]]);
+        }
         if (!families.size && !learned.some(([role]) => role === 'target')) {
           const senses = worlds.nominalInflection(words, worlds.lookup);
           for (const entry of senses) {
@@ -322,7 +330,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         acts:[...new Set(worlds.spatialBindings.flatMap(binding=>binding.namedActs))],
         modifiers:[...worlds.spatialModifiers.rules.keys()].map(words=>words.split(/\s+/u)),
       } : undefined;
-    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer,readingScope=scope) {
       const key = admissibleKey(text,answer.sop);

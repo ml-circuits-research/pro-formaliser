@@ -725,3 +725,13 @@ The actual default-model before/after replay used 139 texts. Thirteen gained gro
 The correction covers wrappers whose command has a complete supported frame. It leaves unresolved meanings such as a named copy source whose family has no copy licence, and does not resolve unsupported selection details from the noun alone. Bare punctuated echoes and modal verbs without that frame, including the exercised placement and undo shapes, remain outside this proof. Canonical save applicability is still routed through coordinator/data as recorded in the previous review. [Regressions](test/request-alternations.test.mjs)
 
 All 501 isolated release tests passed.
+
+## Bulk findings fixed — demonstrative noun phrases and literal references
+
+Prolog now uses the native noun inventory and the declared noun morphology when deciding whether a demonstrative introduces a written noun phrase. The grammatical decision is independent of whether the act is licensed for the noun's family. Declared separable particles remain eligible for standalone references. A true standalone reference now carries its exact words on a request-owned thing lookup, with no previous-turn source or invented identity.
+
+The default-model before/after replay used 137 texts. Nine stopped offering the false standalone-reference reading, including “Copy that red tree”, “save that chart” and “copy that tree and paste it”. Twenty-two inputs emitted an exact lexical reference lookup, including “Copy it”, “make a copy of it” and “copy that again”. A separate 31-input replay with the opt-in proposal produced nine complete declared drawing-source readings. “Copy that red tree” retained the tree, demonstrative and red selector. A worlds-only group control also kept the explicit group as its source. Catalog and evidence checks passed.
+
+The proposal adds copy applicability to the existing drawing object and group declarations and uses the native object inventory for existing sources. Route those additions through coordinator/data and preserve any other canonical acts at merge. Bare-pronoun alignment can still offer a context family without a written family, and the direct grammar does not yet handle every compound copy/paste or destination. The separate 120-text copy diagnosis found many settings-transfer requests such as “copy the same grid lines treatment over to the sales chart”. They require a typed transferable setting and unresolved source, distinct from copying a drawing object. No aggregate benchmark was run. [Copy target proposal](sop-worlds/copy-target-pilot/README.md) · [Role regressions](test/roles.test.mjs)
+
+All 503 isolated release tests passed.

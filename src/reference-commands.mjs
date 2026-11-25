@@ -15,7 +15,7 @@ export function compileReferenceCommands(facts,acts) {
   const references=new Set(facts('w.lang.en.pron').filter(wire=>
     values(wire,'case').some(role=>objectCases.has(role)) && values(wire,'refers').includes('thing') &&
     values(wire,'in').includes('acts')).flatMap(wire=>values(wire,'text').map(text=>terms(text).join(' '))));
-  const verbs=new Map();
+  const verbs=new Map(), particles=new Set();
   function add(head,tail,act) {
     const key=quote([head.join(' '),tail.join(' ')]);
     const alternatives=verbs.get(key) ?? new Set();
@@ -24,16 +24,20 @@ export function compileReferenceCommands(facts,acts) {
   }
   for (const verb of facts('k.actions.verb')) {
     const act=one(verb,'act');
-    if (!enabled.has(act) || one(verb,'object')!=='thing') continue;
+    if (one(verb,'object')!=='thing') continue;
+    const separable=one(verb,'separable')==='true';
     for (const text of values(verb,'text')) {
       const words=terms(text);
       if (!words.length || !words.every(word=>verbWord.test(word))) continue;
+      const tail=words.slice(1);
+      if (separable && tail.length) particles.add(tail.join(' '));
+      if (!enabled.has(act)) continue;
       add(words,[],act);
       // Native separability licenses an intervening object after the verb.
-      if (words.length>1 && one(verb,'separable')==='true') add(words.slice(0,1),words.slice(1),act);
+      if (separable && tail.length) add(words.slice(0,1),tail,act);
     }
   }
-  return {verbs,references,exclusiveActs};
+  return {verbs,references,exclusiveActs,particles};
 }
 
 export function referenceCommandReadings(text,ts,worlds,politeness) {

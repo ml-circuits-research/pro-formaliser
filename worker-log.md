@@ -529,3 +529,7 @@
 ## Polite modal commands
 - A complete native command inside a declared courtesy wrapper keeps the act, exact courtesy and unresolved operands.
 - The current model gained grounded readings for 13 of 139 diagnostic texts. All 501 release tests passed.
+
+## Demonstrative noun phrases and copy sources
+- Prolog separates written noun phrases from standalone references and retains the exact lookup words.
+- The 137-text default replay removed nine false reference readings. The optional copy target declarations produced nine complete source readings. All 503 tests passed.

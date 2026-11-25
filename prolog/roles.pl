@@ -46,10 +46,17 @@ direct_reference(Q, Act, PredicateEnd, S-E) :-
     next_token(Q, PredicateEnd, Limit, S),
     reference_hit(Q, S-E),
     \+ ( reference_hit(Q,S-Longer), Longer > E ),
-    \+ ( member([S,E,_],Q.determiners), next_token(Q,E,Limit,Next),
-         member([Nominal,_,["target",Licence,_,_,_,_],_],Q.targetHits),
-         Nominal >= Next, (Licence == "*" ; Licence == Act),
-         nominal_prefix(Q,Next,Nominal) ).
+    \+ ( member([S,E,Det],Q.determiners), next_token(Q,E,Limit,Next),
+         following_nominal(Q, Act, Det, Next) ).
+
+following_nominal(Q, Act, _, Next) :-
+    member([Nominal,_,["target",Licence,_,_,_,_],_],Q.targetHits),
+    Nominal >= Next, (Licence == "*" ; Licence == Act),
+    nominal_prefix(Q,Next,Nominal).
+% The noun can be declared even when the requested act cannot operate on it.
+following_nominal(Q, _, "demonstrative", Next) :-
+    member([Nominal,_],Q.nominalHeads), Nominal >= Next,
+    nominal_prefix(Q,Next,Nominal).
 
 prior_nominal(Q, Act, From, To) :-
     member([A,B,["target",Licence,_,_,_,_],_], Q.targetHits),
