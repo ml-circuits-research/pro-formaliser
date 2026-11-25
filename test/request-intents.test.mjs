@@ -53,6 +53,44 @@ test('delivers purpose and destination on the independent analytical request', a
   assert.deepEqual(candidate.evidence.missing, []);
 });
 
+for (const {text, destination, expectedIntents} of [
+  {
+    text: 'Calculate total revenue for the board appendix, to go on the summary slide of the deck.',
+    destination: 'to go on the summary slide of the deck',
+    expectedIntents: [['purpose', 'the board appendix', 'for the board appendix', 'yes']],
+  },
+  {
+    text: 'Calculate total revenue to go on the summary slide.',
+    destination: 'to go on the summary slide',
+    expectedIntents: [],
+  },
+]) {
+  test(`keeps the result destination unread in "${text}"`, async t => {
+    const reader = createReader();
+    t.after(() => reader.close());
+    const { candidates } = await reader.propose(text, { evidence: true });
+    const readings = candidates.map(candidate => ({candidate, wires: parse(candidate.sop)}));
+    const swallowed = readings.flatMap(({wires}) => intents(wires))
+      .filter(wire => read(wire, 'value')?.includes(destination));
+    assert.deepEqual(swallowed, []);
+    const reading = readings.find(({wires}) => {
+      const request = wires.find(wire => wire.type === 'w.request.request' &&
+        read(wire, 'act') === 'ask' && read(wire, 'predicate') === 'Calculate' &&
+        read(wire, 'question') === 'total' && read(wire, 'asked_words') === 'total revenue');
+      if (!request) return false;
+      const unread = wires.filter(wire => wire.type === 'w.request.unread' && owns(wire, request));
+      const relations = intents(wires);
+      return unread.length === 1 && read(unread[0], 'text') === destination &&
+        relations.length === expectedIntents.length && relations.every((wire, index) =>
+          owns(wire, request) && intentFields(wire).every((field, slot) => field === expectedIntents[index][slot]));
+    });
+    assert.ok(reading, text);
+    assert.equal(reading.candidate.status, 'partial');
+    assert.deepEqual(reading.candidate.catalog.issues, []);
+    assert.deepEqual(reading.candidate.evidence.missing, []);
+  });
+}
+
 test('keeps independent owners and excludes quantification from purpose', async t => {
   const reader = createReader();
   t.after(() => reader.close());
@@ -86,6 +124,26 @@ test('uses an installed role frame and preserves negative delivery with written 
       relations.some(wire => read(wire, 'words') === 'with the aim to compare the regions') &&
       relations.some(wire => read(wire, 'value') === 'the appendix' && read(wire, 'want') === 'no') &&
       !candidate.evidence.counts.unread && !candidate.evidence.counts.uncovered;
+  }), text);
+});
+
+test('uses an installed result-destination boundary without a comma', async t => {
+  const overlay = await mkdtemp(join(tmpdir(), 'request-intents-'));
+  await writeFile(join(overlay, 'intents.sop'),
+    '@intent.test pro.reader.request_intent_frame text="slated for" role=destination form=nominal owner=answer want=yes resolution=unresolved\n');
+  const reader = createReader(undefined, loadWorlds({ paths: [overlay] }));
+  t.after(async () => { await reader.close(); await rm(overlay, {recursive: true}); });
+  const text = 'Compute total refunds for the audit slated for the front page.';
+  const { candidates } = await reader.propose(text, { evidence: true });
+  assert.ok(candidates.some(candidate => {
+    const wires = parse(candidate.sop);
+    const request = wires.find(wire => wire.type === 'w.request.request' &&
+      read(wire, 'predicate') === 'Compute' && read(wire, 'asked_words') === 'total refunds');
+    return candidate.status === 'partial' && request &&
+      intents(wires).some(wire => owns(wire, request) && read(wire, 'value') === 'the audit') &&
+      wires.some(wire => wire.type === 'w.request.unread' && owns(wire, request) &&
+        read(wire, 'text') === 'slated for the front page') &&
+      !candidate.evidence.missing.length;
   }), text);
 });
 

@@ -304,3 +304,9 @@ Setup installs canonical revision `ae80c054199849d4918058b10a165618be38c2df`. Th
 ```
 
 The candidate retains `a sales` as unread on the chart request. The calculation, roles, ownership and literal evidence pass native and reader checks. Separate controls retain intents on two different requests, preserve negative purpose and delivery, exclude the quantified `for each` control, and install a new purpose cue through an overlay without code changes. The independent grouped-effects and chart controls passed. All 402 tests passed in the isolated release snapshot. The existing chart intended-use pilot is still available. PSys2 codec verification and application execution are separate pending work. The benchmark remains paused. [Reader controls](test/request-intents.test.mjs) · [Declared grammar](sop-worlds/pro.reader/request-intents.sop)
+
+## Result destination boundary corrected
+
+The default public reader preserves `asked_words="total revenue"` for both reviewer inputs. In the combined request it emits the purpose `value="the board appendix"` and an unread `text="to go on the summary slide of the deck"` with `note="unresolved destination"`. The single-destination control retains `to go on the summary slide` on its calculation request as well. Both readings are partial and preserve the literal source evidence. No candidate in either control includes the destination in a purpose value.
+
+Installed frames can declare unresolved role boundaries independently of punctuation or domain words. An overlay using `slated for` verifies that the same mechanism preserves an unresolved destination after a purpose without a comma. The shared result-destination grammar will replace the unresolved representation once published. All 405 tests passed. The benchmark was not run. [Controls](test/request-intents.test.mjs) · [Boundary declarations](sop-worlds/pro.reader/request-intents.sop)

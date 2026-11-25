@@ -13,9 +13,12 @@
 @pro.reader.request_intent_frame.form core.slot of=pro.reader.request_intent_frame key=form enum=nominal enum=verbal required=true
 @pro.reader.request_intent_frame.owner core.slot of=pro.reader.request_intent_frame key=owner enum=request enum=answer required=true
 @pro.reader.request_intent_frame.want core.slot of=pro.reader.request_intent_frame key=want enum=yes enum=no required=true
+@pro.reader.request_intent_frame.resolution core.slot of=pro.reader.request_intent_frame key=resolution enum=resolved enum=unresolved default=resolved
 @reader.intent.purpose.infinitive pro.reader.request_intent_frame text=to text="in order to" role=purpose form=verbal owner=request want=yes
 @reader.intent.purpose.nominal pro.reader.request_intent_frame text=for role=purpose form=nominal owner=request want=yes
 @reader.intent.purpose.excluded pro.reader.request_intent_frame text="not for" role=purpose form=nominal owner=request want=no
 @reader.intent.purpose.excluded.verb pro.reader.request_intent_frame text="not to" role=purpose form=verbal owner=request want=no
 @reader.intent.destination.answer pro.reader.request_intent_frame text="and put that answer on" text="and put the answer in" text="and put that result on" text="and put the result in" role=destination form=nominal owner=answer want=yes
 @reader.intent.destination.answer.not pro.reader.request_intent_frame text="and do not put that answer on" text="and do not put the result in" role=destination form=nominal owner=answer want=no
+# Keep these written boundaries until the shared result-destination grammar is available.
+@reader.intent.boundary.answer.destination pro.reader.request_intent_frame text="to go on" text="to go in" role=destination form=nominal owner=answer want=yes resolution=unresolved

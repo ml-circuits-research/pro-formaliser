@@ -18,7 +18,7 @@ export function compileRequestIntents(facts) {
   return {
     results,
     predicates: new Set(results.map(frame => frame.cue.join(' '))),
-    intents: frames('pro.reader.request_intent_frame', ['role', 'form', 'owner', 'want'])
+    intents: frames('pro.reader.request_intent_frame', ['role', 'form', 'owner', 'want', 'resolution'])
       .sort((a, b) => b.cue.length - a.cue.length),
   };
 }
@@ -68,7 +68,8 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
     const tail = [first];
     for (const event of events.slice(i + 1)) {
       if (event.boundary >= tail.at(-1).valueStart &&
-          (event.boundary < event.start || worlds.joiners[keys[event.start]] === 'coordination' || event.frame.want === 'no')) {
+          (event.boundary < event.start || worlds.joiners[keys[event.start]] === 'coordination' ||
+            event.frame.want === 'no' || event.frame.resolution === 'unresolved')) {
         tail.push(event);
       }
     }
@@ -100,11 +101,20 @@ export function withRequestIntents(text, plan, candidate) {
   owner.attrs.words = [quote(text.slice(plan.body.length - scope.length))];
   const ids = new Set(wires.map(wire => wire.id));
   let n = 0;
-  for (const {role, value, words, want} of plan.intents) {
+  let hasUnresolved = false;
+  for (const {role, value, words, want, resolution} of plan.intents) {
     while (ids.has('intent.' + n)) n++;
-    wires.push({id: 'intent.' + n++, type: 'w.request.intent', attrs: {
-      request: [ref], role: [role], value: [quote(value)], words: [quote(words)], want: [want],
-    }});
+    const id = 'intent.' + n++;
+    if (resolution === 'unresolved') {
+      hasUnresolved = true;
+      wires.push({id, type: 'w.request.unread', attrs: {
+        request: [ref], text: [quote(words)], note: [quote('unresolved ' + role)],
+      }});
+    } else {
+      wires.push({id, type: 'w.request.intent', attrs: {
+        request: [ref], role: [role], value: [quote(value)], words: [quote(words)], want: [want],
+      }});
+    }
   }
-  return {sop: serialize(wires), status: candidate.status, source: 'request-intent'};
+  return {sop: serialize(wires), status: hasUnresolved ? 'partial' : candidate.status, source: 'request-intent'};
 }

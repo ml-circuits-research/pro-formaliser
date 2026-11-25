@@ -319,3 +319,7 @@
 ## INTEGRATE-3 request intents
 - Installed `ae80c054`. The public reader emits request-owned purpose and destination, keeps negative intent and preserves separate calculation ownership.
 - The exact chart control leaves `a sales` unread on the chart. All 402 isolated release tests passed. See integration-review.responses.md.
+
+## Result destination boundaries
+- The public reader retains the written destination separately from the purpose and marks the calculation reading partial until shared grammar covers the destination.
+- Both reviewer inputs and a custom no-comma boundary pass. All 405 isolated release tests passed.
