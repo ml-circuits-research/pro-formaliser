@@ -2,7 +2,7 @@
 // Give the reviewer the blind JSON only. Decode its verdicts with the key later.
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { normalizeText } from '../src/corpus.mjs';
+import { normalizeText, referencesOf } from '../src/corpus.mjs';
 
 const [input,prefix,edition = '1'] = process.argv.slice(2);
 if (!input || !prefix) throw Error('Expected a benchmark details JSONL and output prefix');
@@ -10,7 +10,7 @@ const digest = (salt, text) => createHash('sha256').update(salt + '\0' + text).d
 const disagreements = new Map();
 for (const line of readFileSync(input,'utf8').trimEnd().split('\n')) {
   const row = JSON.parse(line);
-  if (row.semanticWireMatch) continue;
+  if (row.semanticWireMatch || row.alternativeSemanticMatch || !referencesOf(row).length) continue;
   const text = normalizeText(row.text);
   if (!disagreements.has(text)) disagreements.set(text,row);
 }
@@ -19,10 +19,13 @@ const ranked = [...disagreements].sort(([a],[b]) => digest('audit-'+edition,a).l
 for (const [,row] of ranked.slice(0,24)) {
   const id = blind.length+1;
   const aIsModel = (parseInt(digest('side-'+edition,row.text).slice(0,2),16) % 2) === 0;
-  const pair = [row.prediction.sop,row.sop];
+  const references=referencesOf(row);
+  const model=[row.prediction,...(row.prediction.alternatives ?? [])].map(({sop})=>sop).filter(Boolean);
+  const pair = [model,references.map(({sop})=>sop)];
   if (!aIsModel) pair.reverse();
   blind.push({id,text:row.text,A:pair[0],B:pair[1]});
-  key.push({id,model:aIsModel?'A':'B',source:row.source,row:row.row});
+  key.push({id,model:aIsModel?'A':'B',source:row.source,row:row.row,
+    columns:references.map(({column})=>column),referenceChecks:row.referenceChecks});
 }
 writeFileSync(prefix+'.json', JSON.stringify(blind,null,2));
 writeFileSync(prefix+'-key.json', JSON.stringify(key,null,2));

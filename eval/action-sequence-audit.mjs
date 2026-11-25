@@ -1,5 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {parse,str} from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
+import {validReferencesOf} from './reference-circuits.mjs';
 
 const [benchmarkFile, batchFile, gradeFile] = process.argv.slice(2);
 if (!gradeFile) throw Error('Usage: node eval/action-sequence-audit.mjs benchmark.jsonl batch.jsonl THOUSAND-GRADES.tsv');
@@ -35,26 +36,28 @@ for (const [i,line] of grades.entries()) {
   if (Number(get('sample')) !== i+1) throw Error('Batch and grade order must match the documented sample');
   const row = reference.get(get('source')+':'+get('row'));
   if (!row) throw Error('Reference missing for sample '+get('sample'));
-  const gold = program(row.sop);
-  const expected = gold.acts;
+  const gold = validReferencesOf(row).map(({sop})=>program(sop));
   const candidate = predictions[i];
   const programs = [candidate,...candidate.alternatives].map(result=>program(result.sop));
   const alternatives = programs.map(p=>p.acts);
-  const group = expected === '' ? 'no action' : expected.includes(' ') ? 'multiple actions' : 'single action';
+  const groups=new Set(gold.map(({acts})=>acts === '' ? 'no action' : acts.includes(' ') ? 'multiple actions' : 'single action'));
+  const group=groups.size>1 ? 'variable action count' : [...groups][0] ?? 'no valid reference';
   const count = counts.get(group) ?? {total:0,reasonable:0,incomplete:0,matchedActsIncomplete:0,matchedSlotsIncomplete:0,matchedActsWrong:0,poolAddsCoverage:0};
   count.total++;
   if (['L3','L4'].includes(get('grade'))) count.reasonable++;
   else if (get('grade').startsWith('L2')) {
     count.incomplete++;
-    if (alternatives.includes(expected)) count.matchedActsIncomplete++;
-    if (programs.some(p=>p.acts===expected && p.slots===gold.slots)) count.matchedSlotsIncomplete++;
+    if (gold.some(({acts})=>alternatives.includes(acts))) count.matchedActsIncomplete++;
+    if (gold.some(({acts,slots})=>programs.some(p=>p.acts===acts && p.slots===slots))) count.matchedSlotsIncomplete++;
     // Optimistic test: even incompatible participants and extra wrong facts are
     // allowed. This bounds a literal recombination of those exact facts only.
-    const eligible=programs.filter(p=>p.acts===expected);
-    const union=new Set(eligible.flatMap(p=>p.facts));
-    if (gold.facts.length && gold.facts.every(f=>union.has(f)) &&
-        !eligible.some(p=>gold.facts.every(f=>p.facts.includes(f)))) count.poolAddsCoverage++;
-  } else if (alternatives.includes(expected)) count.matchedActsWrong++;
+    if (gold.some(({acts,facts})=>{
+      const eligible=programs.filter(p=>p.acts===acts);
+      const union=new Set(eligible.flatMap(p=>p.facts));
+      return facts.length && facts.every(f=>union.has(f)) &&
+        !eligible.some(p=>facts.every(f=>p.facts.includes(f)));
+    })) count.poolAddsCoverage++;
+  } else if (gold.some(({acts})=>alternatives.includes(acts))) count.matchedActsWrong++;
   counts.set(group,count);
 }
 console.log(JSON.stringify(Object.fromEntries(counts),null,2));

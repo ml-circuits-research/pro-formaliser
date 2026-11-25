@@ -1,4 +1,4 @@
-import { normalizeText } from './corpus.mjs';
+import { circuitObservations, normalizeText } from './corpus.mjs';
 import { parse } from './schema.mjs';
 import { spellingNeighbors, spellcheckTokens } from './spell.mjs';
 
@@ -10,7 +10,7 @@ const minimumUtterances = 3;
 
 export function learnSpellingProtection(rows, dictionary) {
   const evidence = new Map(), occurrenceCounts = new Map(), seen = new Set();
-  for (const { text, sop } of rows) {
+  for (const { text, sop } of circuitObservations(rows)) {
     const unknown = new Set(spellcheckTokens(text).map(([word]) => word.toLowerCase())
       .filter(word => !dictionary.has(word)));
     if (!unknown.size) continue;
@@ -46,7 +46,7 @@ export function learnSpellingProtection(rows, dictionary) {
 // much more frequent preposition fits the same adjacent words.
 export function learnPredicatePairs(rows,dictionary) {
   const evidence=new Map();
-  for (const {text,sop} of rows) {
+  for (const {text,sop} of circuitObservations(rows)) {
     if (!sop.includes('predicate=')) continue;
     let wires;
     try { wires=parse(sop); } catch { continue; }

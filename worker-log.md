@@ -485,3 +485,7 @@
 ## Clause boundaries and unread fragments
 - A declared clause boundary can preserve grounded actions on either side of an unread fragment. The partial circuit keeps the fragment verbatim.
 - WebMeet charts-04 row 3549 retains the Y bounds in both reader modes. All 473 release tests passed.
+
+## Numbered SOP references
+- Corpus and evaluation retain numbered reference circuits on the same text row. Native checker findings identify the source file, record and column.
+- Tested legacy and numbered files, plus a real candidate matching only a valid numbered reference. All 483 release tests passed.

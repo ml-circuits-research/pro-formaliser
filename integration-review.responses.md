@@ -584,3 +584,9 @@ The release gate passed all 471 tests. A real batch from outside the checkout re
 A partial circuit now keeps independently grounded actions in order when another explicitly separated clause cannot be read. The skipped span is emitted verbatim in an unread wire. The reader checks scope before splitting and skips cross-clause reference binding for this fallback.
 
 For WebMeet `diagram/charts-04.csv` logical row 3549, both the default model and worlds-only reader now emit Y minimum 0 and maximum 10. The X-axis request remains unread. The native catalog check is clean. Evidence still reports one ambiguous occurrence of the written token 10 because the unread X phrase also contains that token. This remains a partial example. The isolated release gate passed all 473 tests. No aggregate benchmark was run.
+
+## READY — numbered SOP reference columns
+
+The Git corpus consumer now accepts legacy `text,sop` and consecutive numbered SOP columns. It retains each nonblank circuit with its original column name on the same source record. The evaluation sends one input per distinct text, checks every reference independently and credits a match to any valid reference. Native errors retain the file, CSV record and column. Blind review shows separate circuits, including cells with checker findings. The learner observes each distinct circuit within the row after the text split.
+
+Git fixtures cover old and new CSV layouts and exercise rejection of malformed headers and record widths. The real worlds-only reader supplied two valid chart-width circuits and the comparison accepted the one present only in the numbered column, rejecting an invented numeric reference. The pinned legacy corpus loaded 189,021 rows. All 483 isolated release tests passed. No aggregate benchmark or corpus training run was performed.

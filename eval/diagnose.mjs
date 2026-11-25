@@ -2,12 +2,14 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { delimiter, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
+import { referencesOf } from '../src/corpus.mjs';
 import { createReader } from '../src/runtime.mjs';
 import { parse } from '../src/schema.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
 import { checkCircuit } from './check-circuit.mjs';
 import { releaseCases } from './diagnose-cases.mjs';
 import { probeSchema } from './diagnose-schema.mjs';
+import { validReferencesOf } from './reference-circuits.mjs';
 import { signatures } from '../src/signatures.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -61,8 +63,11 @@ async function diagnoseProbes(row, review, witness, resources) {
   const evidence = { reproducedCandidates: sops(candidates) === sops(baseline) };
   if (witness) {
     evidence.witness = checkCircuit(row.text, witness, worlds);
-    evidence.annotationDisagrees = JSON.stringify(signatures(parse(witness), true)) !==
-      JSON.stringify(signatures(parse(row.sop), true));
+    if (evidence.witness.nativeValid) {
+      const shape=JSON.stringify(signatures(parse(witness),true));
+      evidence.annotationDisagrees=!validReferencesOf(row).some(({sop})=>
+        shape===JSON.stringify(signatures(parse(sop),true)));
+    }
   }
   const positions = (readings, wire) => readings.flatMap((candidate, index) => hasWire(candidate.sop, wire) ? [index] : []);
   const probes = review.probes ?? {};
@@ -101,7 +106,7 @@ async function diagnoseProbes(row, review, witness, resources) {
 }
 
 export async function diagnose(rows, cases, model) {
-  const disagreements = rows.filter(row => !row.semanticWireMatch);
+  const disagreements = rows.filter(row => !row.semanticWireMatch && !row.alternativeSemanticMatch);
   const byKey = new Map(disagreements.map(row => [keyOf(row), row]));
   const claims = cases.filter(review => byKey.has(keyOf(review)));
   if (new Set(claims.map(keyOf)).size !== claims.length) throw Error('Duplicate diagnostic review for a held-out row');
@@ -113,7 +118,10 @@ export async function diagnose(rows, cases, model) {
     const reviewed = [];
     for (const review of claims) {
       const key = keyOf(review), row = byKey.get(key);
-      const witness = review.witness === 'annotation' ? row.sop : review.witness;
+      const refs=referencesOf(row);
+      const witness = review.witness === 'annotation' ?
+        (review.referenceColumn ? refs.find(ref=>ref.column===review.referenceColumn) :
+          refs.length===1 ? refs[0] : undefined)?.sop : review.witness;
       const evidence = await diagnoseProbes(row, review, witness, { reader, model, worlds, paths, directory });
       reviewed.push({ key, text: row.text, scope: review.scope, review: review.review,
         proposed: review.category, classification: reviewDecision(review, evidence), evidence });

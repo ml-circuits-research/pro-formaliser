@@ -12,6 +12,7 @@ import { loadWorlds } from './worlds.mjs';
 import { learnConstraints } from './constraints.mjs';
 import { contextLearner } from './context.mjs';
 import { learnLexicon } from './lexicon.mjs';
+import { circuitObservations } from './corpus.mjs';
 
 const tokenPattern = /[\p{L}\p{N}\p{M}_]+|[^\s]/gu;
 const attributePattern = /[\t ]+([\w.]+)=("(?:\\.|[^"\\])*"|[^\s"]+)/gu;
@@ -328,7 +329,7 @@ function learnTemplates(rows, openKeys, grammar) {
 
 export function train(rows) {
   const openKeys = new Set(loadWorlds().requestKeys.filter(k => k.head === 'span' && !k.values.length).map(k => k.name));
-  const { examples, templates } = learnTemplates(rows, openKeys, loadWorlds().evidenceVocabulary.grammar);
+  const { examples, templates } = learnTemplates(circuitObservations(rows), openKeys, loadWorlds().evidenceVocabulary.grammar);
   const context = contextLearner();
   const forms = slotForms();
   const modifiers=modifierLearner(loadWorlds());
@@ -344,8 +345,8 @@ export function train(rows) {
     sceneConstructs.observe(text,wires);
     spatialAnchors.observe(text,wires);
   }};
-  const lexicon = learnLexicon(rows, context, forms, modifiers, nominalPhrases, modes, openPairs, scenes, commands, verbs, topics);
-  for (const [phrase, records] of Object.entries(learnConstraints(rows))) {
+  const lexicon = learnLexicon(circuitObservations(rows), context, forms, modifiers, nominalPhrases, modes, openPairs, scenes, commands, verbs, topics);
+  for (const [phrase, records] of Object.entries(learnConstraints(circuitObservations(rows)))) {
     if (!Object.hasOwn(lexicon, phrase)) Object.defineProperty(lexicon, phrase, {value:[],enumerable:true});
     lexicon[phrase].push(...records);
   }

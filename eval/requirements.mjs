@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { parse } from '../src/schema.mjs';
 import { evidenceReport } from '../src/evidence.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
+import { validReferencesOf } from './reference-circuits.mjs';
 
 const decode=v=>v.startsWith('"') ? JSON.parse(v) : v;
 const fields=(w,keys)=>Object.fromEntries(keys.filter(k=>w.attrs[k]).map(k=>[k,w.attrs[k].map(decode)]));
@@ -47,11 +48,17 @@ export function compareRequirements(gold,prediction) {
   return {kept,omitted,added:[...buckets.values()].flat()};
 }
 
+function compareRow(row, prediction) {
+  const comparisons=validReferencesOf(row).map(({sop})=>compareRequirements(parse(sop),prediction));
+  const distance=({omitted,added})=>omitted.length+added.length;
+  return comparisons.reduce((best,next)=>!best || distance(next)<distance(best) ? next : best,undefined);
+}
+
 export function measureRequirements(rows,worlds=loadWorlds()) {
   const counts={},evidence={};
   for (const row of rows) {
     const pred=row.prediction.sop ? parse(row.prediction.sop) : [];
-    for (const [outcome,records] of Object.entries(compareRequirements(parse(row.sop),pred))) {
+    for (const [outcome,records] of Object.entries(compareRow(row,pred) ?? {})) {
       for (const {role} of records) {
         counts[role] ??= {kept:0,omitted:0,added:0};
         counts[role][outcome]++;
@@ -70,6 +77,6 @@ if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
   else {
     const row=rows.find(r=>r.source===source && r.row===Number(line));
     if (!row) throw Error('No held-out row with that source and row number');
-    console.log(JSON.stringify({text:row.text,...compareRequirements(parse(row.sop),parse(row.prediction.sop))},null,2));
+    console.log(JSON.stringify({text:row.text,comparison:compareRow(row,parse(row.prediction.sop ?? '')) ?? null},null,2));
   }
 }

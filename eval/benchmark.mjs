@@ -4,11 +4,10 @@ import { dirname, join, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import { DATASET, DATASET_REVISION, loadCorpus, normalizeText, splitCorpus } from '../src/corpus.mjs';
-import { parse } from '../src/schema.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
 import { checkCircuit } from './check-circuit.mjs';
+import { checkReferences, scoreReferences } from './reference-circuits.mjs';
 import { measureRequirements } from './requirements.mjs';
-import { intersectCount, signatures } from './signatures.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const cache = join(root, '.cache');
@@ -26,22 +25,13 @@ const sampleReportPath = resolve(options.report ?? join(cache, 'benchmark.json')
 const { train } = await import('../src/model.mjs');
 const worlds = loadWorlds();
 
-const parseCircuit = sop => {
-  try {
-    return typeof sop === 'string' ? parse(sop) : null;
-  } catch {
-    return null;
-  }
-};
-function checkCircuits(rows) {
-  let errors = 0;
+function summarizeChecks(checks) {
   const counts = new Map();
-  for (const { text, sop } of rows) {
-    const result = checkCircuit(text, sop, worlds);
-    if (result.errors.length) errors++;
+  const invalid = checks.filter(check=>check.errors.length);
+  for (const result of invalid) {
     for (const violation of result.errors) counts.set(violation, (counts.get(violation) ?? 0) + 1);
   }
-  return { checked: rows.length, errors,
+  return { checked: checks.length, errors:invalid.length, invalid,
     violations: [...counts].map(([violation, count]) => ({ violation, count })) };
 }
 
@@ -53,12 +43,14 @@ function summarize(training, heldOut) {
     heldOutUniqueTexts: new Set(heldOut.map(row => row.text)).size,
     parsed: 0, parsedNonempty: 0, exact: 0, fullWireMatch: 0, semanticWireMatch: 0,
     alternativeSemanticMatch: 0, rowsWithAlternatives: 0, ambiguousExactTexts: 0, actMoodMatch: 0,
+    rowsWithValidReference: 0,
     semanticGoldWires: 0, semanticPredictedWires: 0, semanticMatchedWires: 0, statuses: {},
   };
   const goldByText = new Map();
   for (const row of heldOut) {
     if (!goldByText.has(row.text)) goldByText.set(row.text, new Set());
-    goldByText.get(row.text).add(row.goldSemanticKey);
+    for (const key of row.goldSemanticKeys) goldByText.get(row.text).add(key);
+    out.rowsWithValidReference += Number(row.goldSemanticKeys.length>0);
     out.rowsWithAlternatives += Number(Boolean(row.prediction.alternatives?.length));
     for (const key of ['parsed', 'parsedNonempty', 'exact', 'fullWireMatch', 'semanticWireMatch', 'alternativeSemanticMatch', 'actMoodMatch']) {
       out[key] += Number(row[key]);
@@ -99,46 +91,20 @@ const batch = execFileSync(process.execPath, [
 const inferenceSeconds = (performance.now() - inferAt) / 1000;
 if (batch.length !== inputs.length) throw new Error('Expected one batch prediction per exact input');
 const predictions = new Map(inputs.map((text, index) => [text, batch[index]]));
-const actMood = wires => JSON.stringify(wires.filter(w => w.type === 'w.request.request')
-  .map(w => [w.attrs.act, w.attrs.mood]));
-const clean = sop => sop.trim().replaceAll('\r\n', '\n');
+console.error('Checking held-out references and emitted predictions against native SOP schema, catalogue and evidence');
 const scored = heldOut.map(row => {
   const prediction = predictions.get(row.text);
   if (prediction.error) throw new Error('Cannot formalise ' + row.source + ':' + row.row + ': ' + prediction.error);
-  const gold = parseCircuit(row.sop);
-  if (!gold) throw new Error('Cannot parse gold ' + row.source + ':' + row.row);
-  const wires = parseCircuit(prediction.sop);
-  const goldSemantic = signatures(gold, true);
-  const predictedSemantic = wires ? signatures(wires, true) : [];
-  const common = intersectCount(goldSemantic, predictedSemantic);
-  const semanticWireMatch = wires !== null && common === goldSemantic.length && common === predictedSemantic.length;
-  const alternativeSemanticMatch = !semanticWireMatch && (prediction.alternatives ?? []).some(alternative => {
-    const parsedAlternative = parseCircuit(alternative.sop);
-    if (!parsedAlternative) return false;
-    const candidate = signatures(parsedAlternative, true);
-    return candidate.length === goldSemantic.length && intersectCount(candidate, goldSemantic) === goldSemantic.length;
-  });
-  return {
-    ...row, prediction, goldSemanticKey: JSON.stringify(goldSemantic),
-    parsed: wires !== null,
-    parsedNonempty: Boolean(wires?.length),
-    exact: wires !== null && clean(prediction.sop) === clean(row.sop),
-    fullWireMatch: wires !== null && JSON.stringify(signatures(wires)) === JSON.stringify(signatures(gold)),
-    semanticWireMatch,
-    alternativeSemanticMatch,
-    actMoodMatch: wires !== null && actMood(wires) === actMood(gold),
-    semanticGoldWires: goldSemantic.length,
-    semanticPredictedWires: predictedSemantic.length,
-    semanticMatchedWires: common,
-  };
+  const referenceChecks=checkReferences(row,worlds);
+  return {...row,prediction,referenceChecks,...scoreReferences({...row,referenceChecks},prediction)};
 });
 
-console.error('Checking held-out gold and emitted predictions against native SOP schema, catalogue and evidence');
 const checkerResults = {
-  gold: checkCircuits(scored),
-  predictions: checkCircuits(scored
-    .filter(row => typeof row.prediction.sop === 'string' && row.prediction.sop.trim())
-    .map(row => ({ text: row.text, sop: row.prediction.sop }))),
+  gold: summarizeChecks(scored.flatMap(({source,row,referenceChecks})=>
+    referenceChecks.map(check=>({source,row,...check})))),
+  predictions: summarizeChecks(scored
+    .filter(({prediction})=>typeof prediction.sop==='string' && prediction.sop.trim())
+    .map(({source,row,text,prediction})=>({source,row,...checkCircuit(text,prediction.sop,worlds)}))),
 };
 
 const report = {
@@ -151,5 +117,5 @@ const report = {
 };
 mkdirSync(dirname(sampleReportPath), { recursive: true });
 writeFileSync(sampleReportPath, JSON.stringify(report, null, 2) + '\n');
-if (options.details) writeFileSync(resolve(options.details), scored.map(({ goldSemanticKey, ...row }) => JSON.stringify(row)).join('\n') + '\n');
+if (options.details) writeFileSync(resolve(options.details), scored.map(({ goldSemanticKeys, ...row }) => JSON.stringify(row)).join('\n') + '\n');
 console.log(JSON.stringify(report, null, 2));
