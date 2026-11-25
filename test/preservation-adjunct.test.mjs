@@ -105,6 +105,44 @@ test('motion amount wording cannot transfer a retention constraint onto the move
   assert.ok(matching.some(w=>w.type==='w.request.unread' && value(w,'text').includes('all the way')));
 });
 
+test('binds a directional prohibition to the named thing kept in place',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,owner,direction,pause] of [
+    ["no — the boat stays put, don't move it left",'the boat','left'],
+    ["no — the boat stays put, hold off, don't shift it left",'the boat','left','hold off'],
+    ['The green boat stays put; do not push it upwards.','The green boat','up'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(c=>c.source==='retention-correction');
+    assert.ok(reading,text);
+    const wires=parse(reading.sop), requests=wires.filter(w=>w.type==='w.request.request');
+    const [keep,ban]=requests;
+    assert.equal(requests.length,2);
+    const keepTarget=wires.find(w=>w.type==='w.request.target' && value(w,'request')==='$'+keep.id);
+    const bound=wires.find(w=>w.type==='w.request.target' && value(w,'request')==='$'+ban.id);
+    assert.equal(value(keepTarget,'description'),owner);
+    assert.equal(value(bound,'mode'),'bound');
+    assert.equal(value(bound,'family_words'),'it');
+    assert.equal(wires.filter(w=>w.type==='w.request.lookup').length,1);
+    assert.ok(wires.some(w=>value(w,'request')==='$'+keep.id && value(w,'attribute')==='drawn.keep' && value(w,'value')==='place'));
+    const effects=wires.filter(w=>value(w,'request')==='$'+ban.id && w.type==='w.request.constraint');
+    assert.deepEqual(effects.map(w=>['attribute','value','want'].map(key=>value(w,key))),[['drawn.direction',direction,'no']]);
+    assert.deepEqual(wires.filter(w=>w.type==='w.request.unread').map(w=>value(w,'text')),pause ? [pause] : []);
+    assert.deepEqual(reading.evidence.missing,[]);
+    assert.deepEqual(reading.catalog.issues,[]);
+    assert.ok(!reading.evidence.counts.uncovered);
+  }
+  for (const text of [
+    "The boat stays put, don't move the dock left.",
+    "The boats stay put, don't move it left.",
+    "If ready the boat stays put, don't move it left.",
+    "The boat stays put, don't move it left if wet.",
+    "The boat stays put, don't move it left?",
+    'The boat stays put, label it "do not move it left".',
+  ]) assert.ok((await reader.propose(text)).candidates.every(c=>c.source!=='retention-correction'),text);
+});
+
 test('binds a scoped keep request to the single written owner of its preceding change',async t=>{
   const reader=createReader();
   t.after(()=>reader.close());

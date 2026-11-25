@@ -382,3 +382,8 @@
 - The frozen replay separates the retained objects in controls 990 and 981. The same proposals preserve the unresolved modifier or broader preservation words.
 - Normalized the retention declarations and used canonical amount phrases to prevent a spurious preservation effect on the moved object.
 - All 441 isolated release tests passed. No benchmark rerun.
+
+## Retention with a directional prohibition
+- Frozen 462 now has a complete proposal retaining the boat and binding the forbidden direction to it. Frozen 16 adds the same result with the separately written pause unread.
+- The scoped reader uses the canonical imperative-negation and direction facts. Canonical routing is recorded in the review responses.
+- All 443 isolated release tests passed. No benchmark rerun.

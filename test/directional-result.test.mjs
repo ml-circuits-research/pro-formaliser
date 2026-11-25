@@ -54,6 +54,36 @@ test('leaves anchor relations, numeric measurements and different scopes to othe
   }
 });
 
+test('grounds a written prohibition only when the complete direction is independently resolved',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,word,canonical,description] of [
+    ["don't move it left",'left','left',undefined],
+    ['Do not push the boat upwards','upwards','up','the boat'],
+    ['Don’t shift the cloud backward','backward','backward','the cloud'],
+    ['Please do not move the boat left','left','left','the boat'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(c=>c.source==='directional-prohibition');
+    assert.ok(reading,text);
+    const [direction]=facts(reading.sop,'constraint');
+    assert.deepEqual([direction.attribute,direction.value,direction.want,direction.words],
+      ['drawn.direction',canonical,'no',word]);
+    assert.equal(facts(reading.sop,'target')[0].description,description);
+    assert.deepEqual(reading.catalog.issues,[]);
+    assert.deepEqual(reading.evidence.missing,[]);
+    assert.ok(!reading.evidence.counts.uncovered && !reading.evidence.counts.unread);
+  }
+  for (const text of [
+    'Do not just move it left','Do you not move it left?',"Don't move it left?",
+    "Don't move it left if needed", "Don't move it left too far", 'Do not move it slightly left',
+    'Do not move it three pixels left', 'Do not move it left or right',
+    'Do not move it right of the dock', 'Draw "do not move it left"',
+  ]) {
+    assert.ok((await reader.propose(text)).candidates.every(c=>c.source!=='directional-prohibition'),text);
+  }
+});
+
 test('keeps each written qualifier on its target and direction on the result',async t=>{
   const reader=createReader();
   t.after(()=>reader.close());

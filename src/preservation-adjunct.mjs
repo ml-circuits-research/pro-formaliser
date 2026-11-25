@@ -3,6 +3,8 @@ import { quotedSpans } from './literal-roles.mjs';
 import { literalRanges } from './evidence.mjs';
 import { evidenceInText } from './grounding.mjs';
 import { parse, serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
+import { directionalResultCandidates, motionSelector, writtenMotionTargets } from './directional-result.mjs';
+import { requestScope } from './request-scope.mjs';
 
 const quote=JSON.stringify;
 const decode=value=>value?.startsWith('"') ? JSON.parse(value) : value;
@@ -41,11 +43,84 @@ export function compilePreservationAdjuncts(facts,requestKeys) {
       options.add(name);
       keys.set(family,options);
     }
-    frames.push({value,leads,tails,keys,scopeLeads,scopeKey,subjectPredicates,
+    frames.push({value,leads,tails,keys,scopeLeads,scopeKey,subjectPredicates,pause:new Set(fields(wire,'pause').map(keyOf)),
       reinforcement:new Set(fields(wire,'reinforcement').map(keyOf)),ambient:new Set(fields(wire,'ambient_family')),
       remainder:new Set(fields(wire,'remainder').map(keyOf))});
   }
   return frames;
+}
+
+export function namedRetentionReadings(text,worlds) {
+  const ts=tokens(text), chars=Array.from(text);
+  if (ts.length<4 || ts.some(([term])=>term==='?') || quotedSpans(text).length) return [];
+  const stop=ts.length-Number(['.','!'].includes(ts.at(-1)[0]));
+  const phrase=(a,b)=>ts.slice(a,b).map(([key])=>key).join(' ');
+  const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
+  if (!['definite','demonstrative','possessive'].includes(worlds.determiners[ts[0][0]])) return [];
+  const readings=[];
+  for (const frame of worlds.preservationAdjuncts) for (let head=2;head<Math.min(stop-1,10);head++) {
+    if (frame.remainder.has(phrase(0,head))) continue;
+    for (let after=head+1;after<stop;after++) {
+      if (!frame.subjectPredicates.has(phrase(head,after)) || !frame.tails.has(phrase(after,stop))) continue;
+      for (const binding of worlds.directionalResults.bindings) {
+        const keys=frame.keys.get(binding.family);
+        if (keys?.size!==1 || !worlds.literalGrammar.licenses(binding.family,'change')) continue;
+        const [key]=keys;
+        for (const {target,selector} of writtenMotionTargets(worlds,binding,0,head,phrase,span)) {
+          const sop=[
+            '@r1 w.request.request act=change mood=do predicate='+quote(span(head,after))+' words='+quote(text),
+            '@r1.t w.request.target request=$r1 family='+quote(binding.family)+' mode=existing'+target,
+            '@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page',
+            ...motionSelector(selector),
+            '@r1.keep w.request.constraint request=$r1 on=attribute attribute='+quote(key)+
+              ' value='+frame.value+' words='+quote(span(0,stop))+' operator=eq phase=result',
+          ].join('\n');
+          readings.push({sop,source:'written-retention',status:'matched'});
+        }
+      }
+    }
+  }
+  return readings;
+}
+
+export function retentionCorrectionReadings(text,worlds) {
+  if (quotedSpans(text).length || text.includes('?')) return [];
+  const parts=text.split(/[,;—–]/u).map(part=>part.trim());
+  const rejection=parts.length>2 && worlds.scopeGrammar.rejections.has(keyOf(parts[0])) ? parts.shift() : undefined;
+  if (parts.length<2 || parts.length>3 || parts.some(part=>!part)) return [];
+  const first=parts[0], last=parts.at(-1);
+  const pause=parts.length===3 ? parts[1] : undefined;
+  const pauseSpans=pause ? literalRanges(text,pause) : [];
+  if (pause && (pauseSpans.length!==1 || !worlds.preservationAdjuncts.some(frame=>frame.pause.has(keyOf(pause))))) return [];
+  const negative=directionalResultCandidates(last,tokens(last),[],worlds)
+    .filter(reading=>reading.source==='directional-prohibition');
+  if (!negative.length) return [];
+  const firstScope=requestScope(first,first,worlds,[]), lastScope=requestScope(last,last,worlds,[]);
+  if (firstScope.restricted || !lastScope.restricted) return [];
+  const result=[];
+  for (const keeper of namedRetentionReadings(first,worlds)) {
+    const keep=parse(keeper.sop), kept=keep.find(wire=>wire.type===target);
+    const sort=one(kept,'sort');
+    if (one(kept,'fill')!=='description' || !sort || keyOf(one(kept,'sort_words') ?? sort)!==keyOf(sort)) continue;
+    for (const ban of negative) {
+      const forbidden=parse(ban.sop), t=forbidden.find(wire=>wire.type===target);
+      const reference=one(t,'family_words');
+      if (one(t,'family')!==one(kept,'family') || !reference ||
+          worlds.sequenceObjectPronouns.get(keyOf(reference))!=='sg' || !lastScope.permits(forbidden)) continue;
+      t.attrs.mode=['bound'];
+      delete t.attrs.fill;
+      const wires=[...keep.map(wire=>({id:'keep.'+wire.id,type:wire.type,attrs:Object.fromEntries(
+        Object.entries(wire.attrs).map(([key,items])=>[key,items.map(item=>item.startsWith('$') ? '$keep.'+item.slice(1) : item)]))})),
+        ...forbidden.filter(wire=>wire.type!=='w.request.lookup')];
+      if (rejection) wires.push({id:'correction',type:filler,attrs:{text:[quote(rejection)]}});
+      if (pause) {
+        wires.find(wire=>wire.id==='r1').attrs.words=[quote(text.slice(pauseSpans[0][0]).trimEnd())];
+        wires.push({id:'pause',type:unread,attrs:{request:['$r1'],text:[quote(pause)],note:[quote('stated pause')]}});
+      }
+      result.push({sop:serialize(wires),source:'retention-correction',status:pause ? 'partial' : 'matched'});
+    }
+  }
+  return result;
 }
 
 function* scopedRetentionMatches(ts,begin,stop,worlds,span,term,hidden) {

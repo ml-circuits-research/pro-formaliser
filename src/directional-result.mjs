@@ -9,6 +9,7 @@ const quote=JSON.stringify;
 const endings=new Set(['.','!','?']);
 const existingDeterminers=new Set(['definite','demonstrative','possessive']);
 const atom=/^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u;
+const apostrophe=text=>text.replaceAll('’',"'");
 
 export function compileDirectionalResults(facts,requestKeys,words=facts('core.word')) {
   const placeFrames=new Set(facts('w.lang.en.frame')
@@ -42,7 +43,12 @@ export function compileDirectionalResults(facts,requestKeys,words=facts('core.wo
     offsetKey:keys.some(key=>key.name===offsetKey && key.head.split('+').includes('number')) ? offsetKey : undefined,
     targets:targetType ? nativeInventory(facts,targetType,words) : new Map()});
   }
-  return {predicates,degrees,bindings};
+  const negators=facts('pro.reader.scope_cue').filter(wire=>one(wire,'kind')==='predicateNegators')
+    .flatMap(wire=>values(wire,'text').map(normal));
+  const prohibitions=new Set(facts('w.lang.en.neg.imperative').flatMap(wire=>values(wire,'text'))
+    .filter(text=>!text.includes(' ') || negators.some(form=>normal(text).endsWith(' '+form)))
+    .map(text=>apostrophe(normal(text))));
+  return {predicates,degrees,bindings,prohibitions};
 }
 
 export function writtenMotionTargets(worlds,binding,start,end,phrase,span) {
@@ -95,14 +101,18 @@ export function directionalResultCandidates(text,ts,quotes,worlds) {
   const output=[];
   for (let start=0;start<Math.min(12,stop-2);start++) {
     const lead=phrase(0,start).replace(/ ,$/u,'');
-    if ((lead || question) && !worlds.literalGrammar.leads.has(lead) &&
+    const negative=motion.prohibitions.has(apostrophe(phrase(0,start)));
+    if (negative ? question : (lead || question) && !worlds.literalGrammar.leads.has(lead) &&
       (question || !worlds.fillerPhrases.has(lead))) continue;
     for (let head=start+1;head<Math.min(start+8,stop-1);head++) {
       const predicate=phrase(start,head);
       if (!motion.predicates.has(predicate) ||
           !worlds.lookup(predicate).some(([role,act,mood])=>role==='act' && act==='place' && (!mood || mood==='do'))) continue;
       const content=ts.slice(head,stop).map(([term])=>term);
-      if (content.some(term=>!/^[\p{L}\p{M}\p{N}_]+$/u.test(term) || worlds.negatives.has(term) || worlds.joiners[term])) continue;
+      if (content.some(term=>!/^[\p{L}\p{M}\p{N}_]+$/u.test(term) || worlds.negatives.has(term) ||
+          worlds.joiners[term] || worlds.scopeGrammar.conditionals.has(term))) continue;
+      if (negative && [...worlds.scopeGrammar.conditionals.keys()].some(form=>
+        (' '+content.join(' ')+' ').includes(' '+form+' '))) continue;
       for (const binding of motion.bindings) {
         if (!worlds.literalGrammar.licenses(binding.family,binding.act)) continue;
         for (let from=head+1;from<stop;from++) {
@@ -112,6 +122,7 @@ export function directionalResultCandidates(text,ts,quotes,worlds) {
             for (let end=head+1;end<=from;end++) {
               if (end<from && (to<stop || !motion.degrees.has(phrase(end,from)))) continue;
               const degree=end<from ? span(end,from) : to<stop ? span(to,stop) : undefined;
+              if (negative && degree) continue;
               const directionWords=span(from,to);
               for (const {target,selector} of writtenMotionTargets(worlds,binding,head,end,phrase,span)) {
                 const lines=[
@@ -121,15 +132,20 @@ export function directionalResultCandidates(text,ts,quotes,worlds) {
                   ...motionSelector(selector),
                   '@r1.c1 w.request.constraint request=$r1 on=attribute attribute='+quote(binding.directionKey)+
                     ' value='+direction+' operator=eq phase=result'+
-                    (directionWords!==direction ? ' words='+quote(directionWords) : ''),
+                    (negative ? ' want=no words='+quote(directionWords) :
+                      directionWords!==direction ? ' words='+quote(directionWords) : ''),
                 ];
                 const unread=degree && !binding.degreeKey;
                 if (degree && binding.degreeKey) lines.push('@r1.c2 w.request.constraint request=$r1 on=attribute attribute='+
                   quote(binding.degreeKey)+' value='+quote(degree)+' operator=eq phase=result');
                 if (unread) lines.push('@r1.u1 w.request.unread request=$r1 text='+quote(degree)+
                   (binding.offsetKey ? ' note='+quote(binding.offsetKey) : ''));
-                if (start) lines.push('@f1 w.request.filler text='+quote(span(0,start)));
-                output.push({sop:lines.join('\n'),source:'directional-result',status:unread ? 'partial' : 'matched'});
+                if (start && !negative) lines.push('@f1 w.request.filler text='+quote(span(0,start)));
+                if (negative && worlds.fillerPhrases.has(phrase(0,1))) {
+                  lines.push('@f1 w.request.filler text='+quote(span(0,1)));
+                }
+                output.push({sop:lines.join('\n'),source:negative ? 'directional-prohibition' : 'directional-result',
+                  status:unread ? 'partial' : 'matched'});
               }
             }
           }

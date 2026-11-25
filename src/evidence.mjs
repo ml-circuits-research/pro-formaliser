@@ -20,6 +20,7 @@ export function evidenceVocabulary(facts) {
   for (const w of facts('pro.reader.discourse_edge')) add(filler,w);
   for (const w of facts('pro.reader.standing_position')) values(w,'wrapper').forEach(v=>filler.add(normalized(v)));
   for (const w of facts('w.lang.en.imperative.lead')) add(grammar,w);
+  for (const w of facts('w.lang.en.neg.imperative')) add(grammar,w);
   for (const w of facts('w.lang.en.contraction.ending')) values(w,'ending').forEach(v=>endings.add(normalized(v)));
   for (const w of facts('w.lang.en.contraction'))
     if (values(w,'expands').some(v=>lexemes(v).every(t=>grammar.has(t)))) add(grammar,w);

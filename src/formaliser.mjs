@@ -26,7 +26,7 @@ import {spatialAnchorReadings} from './spatial-anchor.mjs';
 import {discourseReason,discourseReasonReading} from './discourse-reason.mjs';
 import {sequenceReferenceReadings} from './sequence-reference.mjs';
 import {nativePropertyPacket,nativePropertyReadings} from './native-property-frames.mjs';
-import {preservationAdjunct,preservationAdjunctReading} from './preservation-adjunct.mjs';
+import {namedRetentionReadings,preservationAdjunct,preservationAdjunctReading,retentionCorrectionReadings} from './preservation-adjunct.mjs';
 import { directionalResultCandidates } from './directional-result.mjs';
 import { verbEffectIndex,verbEffectReading } from './verb-effects.mjs';
 import { transformationReadings } from './transformation.mjs';
@@ -354,11 +354,15 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
     }
     for (const reading of nativePropertyReadings(text,response.nativeProperties ?? [])) retain(reading);
+    if (scope.restricted) for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) {
+      if (reading.source==='directional-prohibition') retain(reading);
+    }
     if (!scope.restricted) {
       for (const candidate of compounds(text,ts,quotes)) retain(candidate);
       for (const candidate of endpoints(text,ts,quotes)) retain(candidate);
       for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
       for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) retain(reading);
+      for (const reading of namedRetentionReadings(text,worlds)) retain(reading);
       for (const reading of transformationReadings(text,ts,quotes,worlds)) retain(reading);
       for (const reading of ownedEffectReadings(text,worlds)) retain(reading);
       for (const reading of quantifiedVerbReadings(text,worlds)) retain(reading);
@@ -796,6 +800,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       const readWhole=async part=>(await propose(part,false)).candidates;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
+      for (const reading of retentionCorrectionReadings(text,worlds)) {
+        const key=admissibleKey(text,reading.sop);
+        if (key) additional.set(key,reading);
+      }
       for (const reading of standingPositionReadings(text,worlds,model.lexicon ?? {})) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);
