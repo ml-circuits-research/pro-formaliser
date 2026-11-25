@@ -638,3 +638,7 @@
 ## Infinitive action openings
 - An explicit action opening now keeps its exact words and projects the independently grounded request, with literal references preserved.
 - 61 of 120 matching WebMeet texts gained a body proposal. All 60 contrast outputs were identical and all 536 release tests passed.
+
+## Comparable 1,000-request replay and checkpoint
+- The rerun baseline reproduced all 1,000 saved proposal sets. Paired L3+L4 moved from 54.6% to 54.7%, with two gains and one loss.
+- Run metadata and per-case judgments are published with the result. The reader enters standby until 26 November 2026 at 08:00 CET.

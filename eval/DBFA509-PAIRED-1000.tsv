@@ -1,0 +1,115 @@
+sample	source	row	baseline	current	reference_issue	method	reason
+14	diagram/charts-05.csv	1039	L2a	L2a	1	paired_review	Retains creation of a monthly sales line chart but leaves the above-target count question unread.
+26	diagram/nodes-05.csv	2694	L1d	L1d	0	paired_review	Reads the figure's return from the journal as a separate undo instead of restricting undo to the later swap.
+33	drawing/scenes-03.csv	1546	L4	L4	1	paired_review	"Retains moving the written ""it"" slightly to the right. The reference adds a prior house request."
+45	diagram/nodes-06.csv	2705	L4	L4	0	paired_review	Creates the ellipse labeled Survey chart and connects Survey chart to Q1 in one circuit.
+47	diagram/nodes-01.csv	702	L4	L4	1	paired_review	Creates a small olive circle in the lower right and keeps it in place. The reference omits the keep step.
+54	drawing/scenes-13.csv	1892	L4	L4	1	paired_review	Applies both stripes and the thin white outline to the existing shirt in one circuit. The reference uses an unrelated prior request and history lookup.
+72	document/text-02.csv	1971	L4	L4	0	carry	All previously graded semantics and unread spans retained
+82	diagram/nodes-05.csv	441	L2b	L2b	1	paired_review	"Leaves ""the first one"" unread and fails to preserve its ordinal reference. The reference supplies a previous selection."
+112	drawing/scenes-13.csv	77	L2a	L2a	1	paired_review	Recognizes the initial push but leaves the two-space return unformalized. The reference turns it into restoration of a target called spaces.
+115	diagram/nodes-12.csv	3463	L1a	L1a	0	paired_review	Treats the purpose clause as a question and misses the instruction to color the nodes by cluster.
+124	diagram/nodes-01.csv	1490	L4	L4	0	paired_review	Connects Roast to Sift and applies teal to the newly created arrow in one circuit.
+131	drawing/scenes-02.csv	141	L4	L4	1	paired_review	Sets scale 0.8 on the face part. The reference assigns a scale to a generic drawn target.
+134	drawing/scenes-16.csv	649	L3	L3	0	carry	Same adjudicated exact candidate retained
+146	drawing/placement-04.csv	908	L2c	L2c	1	paired_review	"Retains ""leave it"" and leaves ""like that"" unread. The reference marks the preservation request as filler."
+147	diagram/nodes-06.csv	2789	L4	L4	0	carry	All previously graded semantics and unread spans retained
+167	drawing/scenes-16.csv	1369	L3	L3	0	carry	Same adjudicated exact candidate retained
+172	drawing/scenes-16.csv	3566	L3	L3	0	carry	Same adjudicated exact candidate retained
+173	calendar/meetings-07.csv	246	L2b	L2b	0	paired_review	"Recognizes deletion and retains ""it"" but leaves the explicit Focus pod antecedent unread."
+188	diagram/diagrams-03.csv	1280	L1d	L1d	0	paired_review	Treats the stand-up complaint as an extra construction request and misses the logarithmic axis and both chart grid lines.
+191	drawing/scenes-06.csv	1817	L4	L4	0	carry	All previously graded semantics and unread spans retained
+192	diagram/charts-06.csv	4335	L2b	L2b	1	paired_review	Recognizes a possible placement but loses both ordinal anchors. The reference imports a fourth box from prior text.
+198	document/text-02.csv	2244	L4	L4	0	carry	All previously graded semantics and unread spans retained
+209	diagram/nodes-06.csv	1179	L4	L4	0	paired_review	Creates the triangle labeled Team sizes and connects Team sizes to Hours worked in one circuit.
+217	diagram/nodes-12.csv	4611	L2b	L2b	0	paired_review	Retains a generic question with the description and its canvas target unread.
+249	diagram/charts-02.csv	532	L4	L4	0	carry	All previously graded semantics and unread spans retained
+252	drawing/scenes-03.csv	3476	L2b	L2b	1	paired_review	Keeps a partial change reading but leaves the green-shirt selector and move-first instruction unparsed. Reference imports a previous turn.
+265	diagram/diagrams-03.csv	3712	L2b	L2b	0	paired_review	Recognizes the chart edit but leaves the March target and orange result unread in the chart reading.
+279	drawing/scenes-06.csv	526	L2b	L2b	1	paired_review	Some proposals recover six trees, but none places them along the named hill while preserving everything else. Reference treats preservation as filler.
+291	diagram/nodes-12.csv	4866	L1d	L1d	0	paired_review	The proposal recognizing selection adds an immediate move and leaves the written g1 unread.
+292	diagram/nodes-07.csv	1086	L4	L4	1	paired_review	Removes one unspecified existing sketch despite the typo. Reference marks the indefinite sketch as definite.
+308	diagram/diagrams-03.csv	2585	L2c	L2c	0	paired_review	Creates the cloud and recognizes placement of it, but leaves the left-of destination at the Rota table unread.
+319	drawing/scenes-16.csv	644	L3	L3	0	carry	Same adjudicated exact candidate retained
+324	diagram/charts-06.csv	2287	L1b	L1b	1	paired_review	A proposal retains the exact title but targets a hat for the shift. Reference also drops the literal it for the title request.
+333	drawing/objects-04.csv	184	L3	L3	0	carry	Same adjudicated exact candidate retained
+346	diagram/nodes-02.csv	2025	L1a	L1a	1	paired_review	Reads the polite creation request as a question. Reference omits the instruction to keep the roots level.
+353	drawing/scenes-04.csv	544	L4	L4	1	paired_review	A proposal makes the medium kid in front of the tent and preserves it for the rightward-facing instruction. Reference imports a previous turn.
+366	diagram/charts-02.csv	90	L4	L2b	0	paired_review	The chart value-label hiding proposal disappeared. The remaining removal proposals leave the named chart and label target unbound or misread them as part IDs.
+384	diagram/nodes-06.csv	4094	L4	L4	0	paired_review	A single retained proposal creates the hexagon with label Design and connects Design to Platform in the requested direction.
+385	drawing/scenes-20.csv	1783	L1b	L4	1	paired_review	Applies a relative skew of 15 and keeps all of them literal with no specific lookup source. Reference uses an absolute assignment.
+396	drawing/scenes-08.csv	3553	L4	L4	0	carry	All previously graded semantics and unread spans retained
+407	diagram/ui-coverage.csv	192	L4	L4	1	paired_review	Places the literal unresolved it at x=150 in a full proposal. Reference lacks the literal reference.
+416	diagram/diagrams-01.csv	2678	L2c	L2c	1	paired_review	Recognizes alignment, grouping and an edit with literal them, but omits top edge, thin outline and margins. The reference binds grouping and outline to the title.
+423	diagram/charts-05.csv	2411	L2c	L2c	1	paired_review	A field-based proposal sets scatter, gridlines and zero minimum but drops the requested OLS fit. The exact reference also drops the fit and uses labels for fields.
+425	drawing/objects-04.csv	289	L3	L3	0	carry	Same adjudicated exact candidate retained
+429	drawing/scenes-16.csv	2120	L4	L4	0	carry	All previously graded semantics and unread spans retained
+432	diagram/nodes-12.csv	4891	L4	L4	0	paired_review	The single pick proposal identifies the arrow by n2 and Start. Restyling gives the reason for focusing.
+439	drawing/scenes-08.csv	3609	L3	L3	0	carry	Same adjudicated exact candidate retained
+501	drawing/scenes-06.csv	3536	L4	L4	1	paired_review	One proposal adds a bird on the fence facing the sun and preserves other positions. The reference leaves facing unread.
+502	diagram/diagrams-04.csv	935	L3	L3	0	carry	Same adjudicated exact candidate retained
+514	drawing/scenes-16.csv	2158	L4	L4	0	carry	All previously graded semantics and unread spans retained
+522	drawing/scenes-16.csv	2601	L4	L4	0	carry	All previously graded semantics and unread spans retained
+545	drawing/scenes-16.csv	339	L3	L3	0	carry	Same adjudicated exact candidate retained
+547	calendar/meetings-03.csv	130	L2c	L2c	1	paired_review	The best meeting edit sets Main but leaves Intro, start, duration and notes removal unread. The reference omits notes removal.
+567	drawing/scenes-06.csv	301	L4	L4	1	paired_review	One proposal adds exactly one duck in the middle and preserves other positions. The reference injects a previous message.
+579	document/text-02.csv	2064	L4	L4	0	carry	All previously graded semantics and unread spans retained
+582	document/text-02.csv	1915	L4	L4	0	carry	All previously graded semantics and unread spans retained
+584	document/text-02.csv	1650	L4	L4	0	carry	All previously graded semantics and unread spans retained
+594	drawing/scenes-16.csv	3029	L3	L3	0	carry	Same adjudicated exact candidate retained
+599	diagram/nodes-01.csv	2401	L2c	L2c	0	paired_review	Recognizes halving and italicizing but leaves the named text and its size change unread.
+600	diagram/charts-05.csv	2718	L2a	L2a	1	paired_review	Recognizes some chart creation and repetition but lacks a circuit that synchronizes the y axes. The reference imports prior text.
+613	diagram/nodes-05.csv	2213	L2b	L2b	0	paired_review	Recognizes redo and undo but does not bind both to the same swap.
+617	drawing/scenes-16.csv	1602	L3	L3	0	carry	Same adjudicated exact candidate retained
+627	document/text-01.csv	4775	L1d	L1d	1	paired_review	A generic change stands in for preservation. Duplicate sample 146 has the same proposals and a different legacy grade. The reference treats the instruction as filler.
+631	drawing/scenes-16.csv	737	L4	L4	0	carry	All previously graded semantics and unread spans retained
+633	drawing/scenes-08.csv	3510	L4	L4	0	carry	All previously graded semantics and unread spans retained
+635	diagram/nodes-02.csv	1050	L2c	L2c	1	paired_review	Recognizes a photo change and grouping but leaves the width, height ratio and box grouping operand unread.
+638	diagram/diagrams-04.csv	3801	L4	L4	1	paired_review	A filler-only proposal preserves the entire expression of thanks and satisfaction. The reference truncates it.
+642	document/text-07.csv	1094	L4	L4	0	paired_review	The retained deletion proposal targets the existing chapter as a section. It leaves the explicitly requested contents scope unread.
+645	diagram/diagrams-01.csv	1703	L2c	L2c	0	paired_review	Identifies the feasibility question about putting the nodes somewhere but does not encode their shared top alignment.
+655	drawing/scenes-16.csv	2892	L4	L4	0	carry	All previously graded semantics and unread spans retained
+658	drawing/placement-01.csv	1926	L2c	L2c	0	paired_review	Places a small boy in the bottom left but leaves the turn toward the viewer unread.
+660	diagram/charts-04.csv	3549	L1a	L2a	1	paired_review	A standalone proposal sets the chart y-axis range to 0–10 and leaves the requested x-axis change unread.
+676	calendar/meetings-02.csv	1052	L3	L3	0	carry	Same adjudicated exact candidate retained
+681	diagram/diagrams-01.csv	4411	L4	L4	1	paired_review	Builds and repeats the sales-by-region bar chart for the stated years with a shared y axis. The reference drops the dates and sync.
+689	diagram/nodes-04.csv	796	L2b	L2b	1	paired_review	Recognizes a feasibility question about the Payment arrow's endpoint but does not bind Confirm's left edge.
+701	drawing/scenes-07.csv	2747	L4	L4	1	paired_review	Changes the background scenery to a cave with stalactites. The reference relies on history.
+704	diagram/nodes-04.csv	1186	L2c	L2c	1	paired_review	"Adds a caption below the picture but leaves ""Drink Water"" unread or applies it to a chart. The reference imports a prior caption request."
+715	drawing/placement-01.csv	1727	L4	L4	1	paired_review	Places two clouds at the top and a kite between them. The reference adds a prior sky instruction.
+719	drawing/scenes-16.csv	2779	L4	L4	0	carry	All previously graded semantics and unread spans retained
+721	drawing/objects-04.csv	1317	L3	L3	0	carry	Same adjudicated exact candidate retained
+734	drawing/scenes-08.csv	4042	L4	L4	1	paired_review	Adds a kid beside the path and preserves everything else's position. The reference omits preservation.
+735	calendar/meetings-02.csv	274	L4	L4	0	carry	All previously graded semantics and unread spans retained
+741	drawing/scenes-13.csv	4608	L4	L4	1	paired_review	Sets the background to a rugged volcano slope and keeps the comparison phrase unresolved. The reference imports an unrelated prior movement.
+742	drawing/objects-01.csv	930	L2c	L2c	1	paired_review	Recognizes a feasibility question but leaves the reset to default unresolved. The reference assumes an avatar setting.
+753	drawing/scenes-16.csv	3507	L3	L3	0	carry	Same adjudicated exact candidate retained
+773	diagram/charts-01.csv	3217	L4	L4	0	carry	All previously graded semantics and unread spans retained
+779	diagram/diagrams-05.csv	385	L2a	L2a	1	paired_review	Recognizes restoration but misses the request to try the other size. The reference also omits that request.
+790	drawing/scenes-16.csv	3164	L3	L3	0	carry	Same adjudicated exact candidate retained
+797	drawing/scenes-21.csv	19	L4	L4	0	paired_review	The house and creation command occur together in a single proposal. The local it points back to the requested house.
+799	diagram/nodes-05.csv	2737	L2c	L2c	1	paired_review	Retains undo of the last move and a separate check but leaves the count criterion unread. Reference attaches count metadata to the undo target span.
+802	diagram/charts-03.csv	3775	L1b	L1b	0	paired_review	The most concrete creation proposal targets a node instead of a mind-map diagram and treats the closing phrase as a preservation instruction.
+813	drawing/scenes-13.csv	2965	L1b	L1b	0	paired_review	The concrete removal readings target the house or a purported part ID rather than the shadow behind the house.
+820	drawing/scenes-17.csv	1615	L3	L3	0	carry	Same adjudicated exact candidate retained
+824	diagram/nodes-05.csv	264	L2a	L2a	1	paired_review	Some proposals recover the first two box ordinals but none preserves both swaps and the remainder. Reference treats explicit preservation as filler.
+825	diagram/diagrams-04.csv	2184	L4	L4	0	paired_review	A single proposal connects Server to Database and accounts for both courtesy phrases.
+829	diagram/nodes-02.csv	2313	L1c	L2c	1	paired_review	The generic change proposal preserves literal that and leaves the requested diagram result unread. Reference imports a previous turn.
+857	drawing/placement-01.csv	666	L4	L4	0	paired_review	A retained proposal creates a boy at center, mid-kick, facing left, with no extra placement action.
+859	diagram/nodes-13.csv	658	L4	L4	0	paired_review	A complete proposal removes the existing group with the written name Process.
+868	drawing/placement-04.csv	842	L1d	L1d	0	paired_review	The acknowledgment still produces a change or creation instruction without textual support.
+876	diagram/diagrams-01.csv	707	L2b	L2b	1	paired_review	Recognizes placement and literal it but leaves the Fridge anchor and right-of relation unread. Reference adds previous text and a previous-turn lookup.
+902	drawing/scenes-07.csv	2263	L2c	L2c	1	paired_review	Recognizes a partial placement or arrangement request but leaves the left-heavy adjustment and preservation unread. Reference treats preservation as filler.
+903	diagram/nodes-06.csv	1142	L4	L4	0	paired_review	A single proposal creates the rectangle labelled Monthly sales and links it to Votes per option in that direction.
+909	diagram/nodes-05.csv	2723	L2a	L2a	1	paired_review	Usable undo readings lack one correctly scoped count of all remaining row figures. Reference leaves the count question as unread on undo.
+916	drawing/scenes-06.csv	2990	L2a	L2a	1	paired_review	Recovers a proposed small dog and bottom placement in part, but lacks faithful removal and preservation steps. Reference imports a previous turn.
+920	diagram/charts-03.csv	2367	L2c	L2c	1	paired_review	Recognizes the chart Budget split and pie border but omits the requested thin width. Reference also omits thin.
+934	drawing/objects-05.csv	226	L3	L3	0	carry	Same adjudicated exact candidate retained
+937	drawing/scenes-07.csv	1604	L4	L4	1	common_recheck	Historical L2c corrected on both sides. A proposal present in both runs turns the car on the path toward the house and preserves other positions. The reference treats preservation as filler.
+939	drawing/scenes-13.csv	414	L2a	L2a	1	paired_review	The closest circuit shrinks the house but leaves recolouring and preserving the chimney height unread. The reference also treats chimney preservation as filler.
+943	drawing/scenes-19.csv	136	L2c	L2c	0	paired_review	An edit retains literal it, but width 140 and height 70 remain unread.
+971	drawing/scenes-20.csv	296	L4	L4	0	paired_review	A proposal leans the existing kite by setting its angle to 30 degrees.
+976	drawing/scenes-16.csv	2566	L4	L4	0	carry	All previously graded semantics and unread spans retained
+984	diagram/nodes-06.csv	3342	L4	L4	0	paired_review	One proposal creates the rectangle with label Dev and then connects Dev to Prod.
+987	drawing/scenes-05.csv	2440	L2b	L4	1	paired_review	The undo-swap proposal preserves them as a literal unresolved reference. The reference injects an earlier hat exchange.
+995	calendar/meetings-07.csv	367	L4	L4	0	paired_review	Sets the design critique meeting length to a measured one hour.

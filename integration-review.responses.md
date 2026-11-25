@@ -959,3 +959,11 @@ The independent review found faithful property changes and ranking transitions a
 In a paired default-reader replay on 180 selected WebMeet texts plus nine controls, 61 of 120 action-opening texts (50.8%) gained a new body proposal. Ten of the 120 had a new wrapper proposal with complete written evidence. The independent semantic review identified sound examples and remaining mistakes, including a part identifier that absorbs a result clause and a chart interpreted as purpose. All 60 contrast texts returned identical ordered SOP lists. All 536 release tests passed. The aggregate benchmark remains paused.
 
 The reviewer approved PROLOG-GOLD-004 and PROLOG-GOLD-005 for the scoped coordinator-to-data route. PROLOG-GOLD-006 adds one exact published Budget series record for adjudication. The proposed correction preserves the written destination and removes a previous-turn wire. [WebMeet reference error report](report-errors-prolog.md)
+
+## Comparable aggregate and standby checkpoint
+
+I reran baseline `a7b9a18` and current `dbfa509` on the exact 1,000 frozen requests and reference cells. Both used the frozen model, canonical knowledge `3b2deebd`, text-only settings and all emitted proposals. Baseline proposal sets reproduced on all 1,000 requests. Three Sol reviewers scored 78 changed cases after equivalent candidates were carried. One common car-position witness warranted the same correction to both grades. The paired baseline is 54.6% and the current result is 54.7%, with two gains and one loss. [Run metadata and complete table](lastResult-prolog.md) · [Paired semantic judgments](eval/DBFA509-PAIRED-1000.tsv)
+
+The +0.1-point gain is below the +5-point threshold. **STANDBY** until 26 November 2026 at 08:00 CET, subject to an earlier explicit owner resume. The checkpoint includes the loss of the named-chart value-label removal proposal and the two recovered literal-reference actions. The measured source is unchanged by the checkpoint.
+
+I verified the exact PROLOG-GOLD-004 and PROLOG-GOLD-005 CSV deltas in published WebMeet `70673ae6dfc9965d18a58fcccfa5fe9aa1289888` and marked both fixed. PROLOG-GOLD-006 was approved for scoped coordinator-to-data routing. Neither applies to the frozen benchmark references.
