@@ -30,7 +30,7 @@ main :- repeat,
 answer(Q, Plans) :- get_dict(landmarkPair,Q,Packet), !, landmark_pair_plans(Packet,Plans).
 answer(Q, Plans) :- get_dict(setExclusion,Q,Packet), !, exclusion_plans(Packet,Plans).
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,frontedCandidates:Fronted,frameTargets:FrameTargets,splitTargets:SplitTargets,universalCandidates:Universal,proofs:Proofs,groundedPredicates:Grounded,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
+answer(Q, _{candidates:Answers,relativePlacements:RelativePlacements,frontedCandidates:Fronted,frameTargets:FrameTargets,splitTargets:SplitTargets,universalCandidates:Universal,proofs:Proofs,groundedPredicates:Grounded,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
     topic_commands(Q,Topics),
     native_property_frames(Q,NativeProperties),
     verb_effects(Q,VerbEffects),
@@ -45,6 +45,8 @@ answer(Q, _{candidates:Answers,frontedCandidates:Fronted,frameTargets:FrameTarge
     property_constraints(Q, ExtraHits), append(Q.hits,ExtraHits,Hits),
     findall(B, (member(P,Proofs), target_scope(Q.tokens,Q.targetRoles,P,B)), RawBounds), sort(RawBounds, Bounds),
     reset_role_cache, index_roles(Q.put(_{roleScopes:Bounds,groundedPredicates:Grounded}), Hits, WithProperties),
+    findall(Placement, relative_placement(WithProperties,Placement), RawPlacements),
+    list_to_set(RawPlacements,RelativePlacements),
     ( get_dict(frontedPlan, Q, Clause) ->
       findall(CleanFront,
               ( member(ActHit,WithProperties.actHits),
@@ -75,6 +77,36 @@ answer(Q, _{candidates:Answers,frontedCandidates:Fronted,frameTargets:FrameTarge
     findall(C, member(_-[C|_],Groups), Reps),
     append(Head,Reps,Combined), maplist(clean_candidate,Combined,Clean),
     property_commands(Q, PropertyCommands), append(Clean,PropertyCommands,All), list_to_set(All, Answers).
+
+relative_placement(Q, _{sop:Sop}) :-
+    get_dict(relativePlacement,Q,Plan),
+    member(Subject,Plan.subjects), member(Frame,Plan.frames), member(Predicate,Frame.predicates),
+    append(Subject,Predicate,Prefix), same_token_prefix(Prefix,Q.tokens),
+    length(Subject,AfterSubject), length(Prefix,AfterPredicate), AfterPredicate<Plan.end,
+    offsets(Q.tokens,[0,AfterSubject],SubjectStart,SubjectEnd),
+    offsets(Q.tokens,[AfterSubject,AfterPredicate],PredicateStart,PredicateEnd),
+    offsets(Q.tokens,[AfterPredicate,Plan.end],PlaceStart,PlaceEnd),
+    once((member([PlaceStart,MarkerEnd,["marker","*","spatial",Relation,_],_],Q.hits),
+          Relation\=="", MarkerEnd<PlaceEnd,
+          relative_anchor(Q,Frame.act,PlaceStart,MarkerEnd,PlaceEnd))),
+    span(Q.text,SubjectStart,SubjectEnd,SubjectWords), encode(SubjectWords,Ref),
+    span(Q.text,PredicateStart,PredicateEnd,PredicateWords), encode(PredicateWords,Verb),
+    span(Q.text,PlaceStart,PlaceEnd,PlaceWords), encode(PlaceWords,Place), encode(Frame.act,Act),
+    format(string(Sop),'@r w.request.request act=~s mood=do refers=thing predicate=~s~n@r.ref w.request.lookup request=$r key=thing words=~s~n@r.destination w.request.intent request=$r role=destination value=~s words=~s',
+           [Act,Verb,Ref,Place,Place]).
+
+same_token_prefix([], _).
+same_token_prefix([Key|Keys], [[Key,_,_,_]|Tokens]) :- same_token_prefix(Keys,Tokens).
+
+relative_anchor(Q, Act, Start, MarkerEnd, End) :-
+    once((append(_,[[Key,Raw,Anchor,Stop]|Rest],Q.tokens), Anchor>=MarkerEnd)),
+    ( member([Anchor,B,_,_],Q.referenceHits), B=<End
+    ; member(Reference,Q.relativePlacement.references), same_token_prefix(Reference,[[Key,Raw,Anchor,Stop]|Rest])
+    ; ( member([A,B,["target",_,Family|_],_],Q.targetHits)
+      ; member([A,B,["target",_,Family|_],_],Q.frameTargets) ),
+      A>=Anchor, B=<End, native_nominal_prefix(Q,Act,Family,Anchor,A)
+    ; span(Q.text,Start,MarkerEnd,Marker), sub_string(Marker,_,1,_," "),
+      member([Anchor,DetEnd,_],Q.determiners), DetEnd<End ).
 
 % Inventory vocabulary contributes only to the argument proved by a native
 % frame. Keep that path outside the bounded ordinary lexical search.

@@ -25,6 +25,44 @@ function intentFields(wire) {
     read(wire, key) ?? (key === 'want' ? 'yes' : undefined));
 }
 
+test('native modal placement keeps the literal moving subject separate from the destination',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,subject,predicate,destination] of [
+    ['He should be to the right of the man in the orange hat.','He','should be','to the right of the man in the orange hat'],
+    ['It should be next to the box.','It','should be','next to the box'],
+    ['They should be on the bench.','They','should be','on the bench'],
+    ['She should stand next to her.','She','should stand','next to her'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const candidate=candidates.find(reading=>reading.source==='relative-placement');
+    assert.ok(candidate,text);
+    const wires=parse(candidate.sop);
+    const request=wires.find(wire=>wire.type==='w.request.request');
+    const reference=wires.find(wire=>wire.type==='w.request.lookup');
+    const [intent]=intents(wires);
+    assert.equal(read(request,'predicate'),predicate,text);
+    assert.equal(read(request,'act'),'place',text);
+    assert.equal(read(reference,'words'),subject,text);
+    assert.equal(read(reference,'from'),undefined,text);
+    assert.equal(owns(reference,request),true,text);
+    assert.equal(read(intent,'role'),'destination',text);
+    assert.equal(read(intent,'value'),destination,text);
+    assert.equal(owns(intent,request),true,text);
+    assert.equal(wires.some(wire=>wire.type==='w.request.target'),false,text);
+    assert.deepEqual(candidate.catalog.issues,[],text);
+    assert.deepEqual(candidate.evidence.missing,[],text);
+    assert.equal(candidate.evidence.counts.uncovered ?? 0,0,text);
+  }
+  for (const text of ['He is next to the tree.', 'Should he be next to the tree?',
+    'He should not be next to the tree.', 'He should be next to the tree if ready.',
+    'He should be next to the tree or above the box.', 'He should be on standby.', 'He should be in the know.',
+    'It should be in focus on the chart.', 'It should be next to the.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='relative-placement'),text);
+  }
+});
+
 test('a verb-specific replacement marker keeps the operand out of purpose', async t => {
   const reader=createReader();
   t.after(()=>reader.close());

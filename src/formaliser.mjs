@@ -1,7 +1,7 @@
 import {measuredMotionReadings} from './measured-motion.mjs';
 import {landmarkPairReadings} from './landmark-pairs.mjs';
 import {coordinatedRequestReadings,sentenceRequestReadings} from './sentence-requests.mjs';
-import {requestIntentPlans,resultRequestReading,unresolvedDestinationReadings,withRequestIntents} from './request-intents.mjs';
+import {relativePlacementPacket,requestIntentPlans,resultRequestReading,unresolvedDestinationReadings,withRequestIntents} from './request-intents.mjs';
 import {namedTupleReading,tupleAssignments,tupleTargetNames} from './tuple-assignments.mjs';
 import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
@@ -244,6 +244,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     // Its span remains available to property binding in Prolog.
     const quotes = quotedSpans(text);
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
+    const relativePlacement=languageFrames ? relativePlacementPacket(ts,quotes,worlds) : undefined;
     const splitPlans=languageFrames && !quotes.length ? splitTargetPlans(text,ts,worlds,politeness) : [];
     const splitNominals=[], splitNumbers=[];
     const scopeText = maskQuoted(text,quotes);
@@ -286,7 +287,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
             splitNominals.push([ts[i][2],ts[j][3],entry.slice(0,6)]);
           }
         }
-        if (language.frames.length) {
+        if (language.frames.length || relativePlacement) {
           const direct=worlds.frameTargets(words);
           const entries=direct.length ? direct : worlds.nominalInflection(words,worlds.frameTargets);
           for (const entry of entries) frameTargets.push([ts[i][2],ts[j][3],entry.slice(0,6),entry[6]]);
@@ -352,7 +353,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         acts:[...new Set(worlds.spatialBindings.flatMap(binding=>binding.namedActs))],
         modifiers:[...worlds.spatialModifiers.rules.keys()].map(words=>words.split(/\s+/u)),
       } : undefined;
-    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,splitPlans:scope.restricted?[]:splitPlans,splitNominals,splitNumbers,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,relativePlacement:scope.restricted?undefined:relativePlacement,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,splitPlans:scope.restricted?[]:splitPlans,splitNominals,splitNumbers,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer,readingScope=scope,preferCompleteEvidence=false) {
       const key = admissibleKey(text,answer.sop);
@@ -415,6 +416,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     const contextualTargets = [];
     const response = await worker.request(request);
+    for (const {sop} of response.relativePlacements ?? []) retain({sop,source:'relative-placement',status:'matched'});
     for (const answer of response.candidates) {
       if (answer.source !== 'lexicon') { retain(answer); continue; }
       if (nominalRoles.size && parse(answer.sop).some(wire=>{

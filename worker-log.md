@@ -595,3 +595,7 @@
 ## Inventory ownership and shapes
 - Native inventory modifiers now require the same family and compatible act. Canonical shape words preserve diagram-node owners.
 - The optional `shape-target-pilot` is staged for shared review. The default full suite passed all 524 tests.
+
+## Modal relative placement
+- Prolog keeps the literal subject lookup and written destination on the same proved place request.
+- One of 190 targeted WebMeet requests gained a complete destination subclause. All 525 tests passed.

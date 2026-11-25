@@ -869,3 +869,11 @@ The paired replay exposed a lost diagram-node interpretation of “set the width
 The general modifier and owner changes were published separately in `e5b9a59`. As requested in `8c86201`, the optional inventory reuses the installed `block` to `cube` alias and proposes only the additional `cuboid` reading. Shared integration still needs review of the inventory declarations and that additional sense.
 
 In a paired default-model replay on 140 targeted WebMeet requests, the core added complete evidence-backed node-width or node-size proposals in two requests. Enabling the pilot added complete geometry alternatives in two requests, with one request common to both sets of gains. No previously evidence-complete semantic alternatives were lost. Removing the duplicate cube alias produced identical SOP lists in all 140 pilot calls. The full core gate passed all 524 tests, and the focused pilot tests passed after removing the duplicate. No aggregate benchmark ran.
+
+## Keep the referent separate from a modal placement destination
+
+Prolog now uses the installed relative-place wish frame with a declared modal and a literal third-person subject. “He should be to the right of the man in the orange hat” places `He` in the unresolved lookup and retains the whole destination with its direction. Both belong to the same place request. “It should be next to the box” and “they should be on the bench” use the same mechanism. No family, live identity or dialogue history is inferred. The request's destination role preserves the written relation without assigning a family-specific spatial key. [Modal placement regressions](test/request-intents.test.mjs)
+
+The anchored form requires a declared spatial marker and local nominal evidence. Questions, conditions, disjunctions, negative forms, statements with bare copulas, and non-spatial state expressions do not enter this proof. Finite narrative movement and isolated regions remain distinct constructions.
+
+The paired default-model replay covered 190 WebMeet inputs selected for placement-modal wording. One input gained the complete destination subclause “it should be under the bridge” with its own `it` lookup. The earlier clause remains partial. The other 189 returned identical ordered SOP lists and all 525 release tests passed. No aggregate benchmark ran.
