@@ -254,3 +254,7 @@ A read-only run through `psys2/official-dataset/sop_dataset.py::parse` retains t
 ## Measured placement and displacement
 
 The staged declarations keep the distance from a written boundary separate from displacement along a stated direction. On the held-out “can you place a large sun about one inch from the right border”, the SOP checker accepted the emitted shape, size, amount, anchor, approximation and source spans. A read-only PSys2 dataset conversion retained the measure, unit, boundary and approximation. Applying those boundary and precision constraints is still an application check. [Pilot contract and reproduction](sop-worlds/measured-motion-pilot/README.md)
+
+## Coordinated steps and a newly created target
+
+The held-out Roast–Sift request now carries the connection endpoints and a separate teal update with `mode=bound` and the written target “the new arrow”. The native checker accepts the whole circuit. A read-only PSys2 dataset conversion retains the two requests, their order, all three values and the bound target. Application execution still needs to resolve that target to the newly created connection. [Reader regression](test/coordinated-requests.test.mjs)

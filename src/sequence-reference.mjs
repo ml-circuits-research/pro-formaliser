@@ -3,6 +3,7 @@ import { literalRanges } from './evidence.mjs';
 import { tokens } from './lexicon.mjs';
 import { quotedSpans } from './literal-roles.mjs';
 import { consumeUnread } from './nominal-evidence.mjs';
+import { declaresArgumentRoles } from './sentence-requests.mjs';
 
 const type=name=>'w.request.'+name;
 const field=(wire,key)=>{
@@ -29,6 +30,11 @@ export function sequenceObjectPronouns(facts) {
     }
   }
   return items;
+}
+
+export function sequenceFreshQualifiers(facts) {
+  return new Set(facts('pro.reader.fresh_reference').flatMap(wire=>
+    (wire.attrs.text ?? []).map(raw=>forms(raw.startsWith('"') ? JSON.parse(raw) : raw))));
 }
 
 function interval(text,phrase) {
@@ -87,6 +93,31 @@ function pronounAfterPredicate(scope,request,worlds) {
   return options.length===1 ? options[0] : undefined;
 }
 
+function freshTarget(scope,request,target,source,priorText,worlds) {
+  if (!target || field(target,'mode')!=='existing' || field(source,'mode')!=='new' ||
+      field(target,'family')!==field(source,'family') ||
+      ['name','ids','count','count_words','quantity','ordinal','quantifier'].some(key=>target.attrs[key])) return;
+  const description=field(target,'description'), predicate=field(request,'predicate');
+  const words=description && interval(scope,description), verb=predicate && interval(scope,predicate);
+  if (!words || !verb || words[0]<verb[1] || scope.slice(verb[1],words[0]).trim()) return;
+  const intro=scope.slice(0,verb[0]), lead=forms(intro);
+  if (lead && !connective(intro,worlds) && !worlds.literalGrammar.leads.has(lead) && !worlds.fillerPhrases.has(lead)) return;
+  const from=Array.from(scope.slice(0,words[0])).length, to=Array.from(scope.slice(0,words[1])).length;
+  if (quotedSpans(scope).some(span=>span.start<to && span.end>from)) return;
+  const [article,...nominal]=forms(description).split(' ');
+  if (worlds.determiners[article]!=='definite') return;
+  const head=[field(target,'family_words'),field(target,'sort_words'),field(target,'sort')]
+    .filter(Boolean).map(forms).find(value=>nominal.join(' ').endsWith(' '+value) &&
+      worlds.sequenceFreshQualifiers.has(nominal.join(' ').slice(0,-value.length-1)));
+  const kind=field(source,'sort'), targetKind=field(target,'sort');
+  if (!head || kind && targetKind && forms(kind)!==forms(targetKind) ||
+      kind && !targetKind && forms(kind)!==head) return;
+  const number=ownedNumber(priorText,source,worlds);
+  if (number==='pl' || number!=='sg' && (kind || field(source,'determiner')==='quantified' ||
+      ['count','count_words','quantity','quantifier'].some(key=>source.attrs[key]))) return;
+  return {raw:description,start:words[0],stop:words[1],predicate,intro,number:'sg'};
+}
+
 function localEffects(wires,request) {
   return wires.filter(w=>w.type===type('constraint') && field(w,'request')==='$'+request.id);
 }
@@ -122,24 +153,27 @@ export function sequenceReferenceReadings(text,candidate,worlds,permit) {
   for (let i=1;i<scopes.length;i++) {
     const {request:prior,scope:priorText,where:priorAt}=scopes[i-1];
     const {request,scope,where}=scopes[i];
-    if (!liveActions.has(field(prior,'act')) ||
-        [prior,request].some(w=>['ask','check'].includes(field(w,'mood')) || w.attrs.polarity) ||
+    if ([prior,request].some(w=>['ask','check'].includes(field(w,'mood')) || w.attrs.polarity) ||
         !operations.has(field(request,'act')) || !permit(priorText,quotedSpans(priorText)) ||
         !permit(scope,quotedSpans(scope))) continue;
-    const pronoun=pronounAfterPredicate(scope,request,worlds);
-    if (!pronoun) continue;
-    const gap=text.slice(priorAt[1],where[0]);
-    if (!connective(gap,worlds) && !(/^\s*[,;.?!]*\s*$/u.test(gap) &&
-        connective(pronoun.intro,worlds))) continue;
     const targets=request=>wires.filter(w=>w.type===type('target') && field(w,'request')==='$'+request.id);
     const earlier=targets(prior), later=targets(request);
     if (earlier.length!==1 || later.length>1) continue;
     const [source]=earlier,[target]=later, family=field(source,'family');
     if (!family || !worlds.literalGrammar.licenses(family,field(request,'act'))) continue;
+    const priorAct=field(prior,'act');
+    const creates=priorAct==='make' || field(source,'mode')==='new' &&
+      declaresArgumentRoles(worlds,priorAct,source,localEffects(wires,prior));
+    const fresh=creates ? freshTarget(scope,request,target,source,priorText,worlds) : undefined;
+    const pronoun=fresh ?? pronounAfterPredicate(scope,request,worlds);
+    if (!pronoun || !fresh && !liveActions.has(field(prior,'act'))) continue;
+    const gap=text.slice(priorAt[1],where[0]);
+    if (!connective(gap,worlds) && !(/^\s*[,;.?!]*\s*$/u.test(gap) &&
+        connective(pronoun.intro,worlds))) continue;
     const previousMode=field(source,'mode');
     if (previousMode!=='bound' && !['new','existing'].includes(previousMode) ||
         previousMode==='existing' && !['written','description'].includes(field(source,'fill'))) continue;
-    const number=bound.get(source.id) ?? ownedNumber(priorText,source,worlds);
+    const number=fresh?.number ?? bound.get(source.id) ?? ownedNumber(priorText,source,worlds);
     if (number!==pronoun.number) continue;
     const effects=localEffects(wires,request);
     const act=field(request,'act');
@@ -147,14 +181,14 @@ export function sequenceReferenceReadings(text,candidate,worlds,permit) {
       role==='act' && sense===act && (!mood || mood==='do'));
     const preserve=preservation(effects,family,worlds);
     if (!explicit && !preserve) continue;
-    const locative=pronoun.ts.slice(pronoun.end).some(([token])=>worlds.sequenceObjectPronouns.get(token)==='place');
+    const locative=pronoun.ts?.slice(pronoun.end).some(([token])=>worlds.sequenceObjectPronouns.get(token)==='place');
     if (locative && preserve && !hasPlacement(localEffects(wires,prior),family,worlds)) continue;
     if (effects.some(w=>w.attrs.want ||
       !worlds.requestKeys.some(key=>key.family===family && key.name===field(w,'attribute')) ||
       field(w,'phase')==='selector' && !worlds.spatialBindings.some(binding=>binding.family===family &&
         binding.anchorKey===field(w,'attribute')))) continue;
     const textual=target && [field(target,'family_words'),field(target,'description')].filter(Boolean);
-    if (target && (field(target,'mode')!=='existing' || field(target,'family')!==family ||
+    if (target && !fresh && (field(target,'mode')!=='existing' || field(target,'family')!==family ||
         ['name','sort','sort_words','ids','count','count_words','ordinal','quantity'].some(key=>target.attrs[key]) ||
         textual.some(value=>forms(value)!==forms(pronoun.raw)))) continue;
     if (!target && field(request,'refers')!=='thing') continue;

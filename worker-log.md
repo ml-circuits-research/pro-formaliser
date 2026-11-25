@@ -289,3 +289,8 @@
 - Staged worlds declare measured placement, displacement and precision. Units and amount evidence survive native validation and PSys2 dataset conversion.
 - All 387 tests passed. Replayed both 1,000-request samples. Primary including spelling 55.0%, independent originals 45.9%. The changed set and judgment are in eval/MEASURED-MOTION-REPLAY.tsv.
 - Applying measured placement in PSys2 and binding separate measured actions within multi-clause requests remain open.
+
+## Coordinated requests and newly created targets
+- Complete clause readings combine in source order. A declared freshness phrase can bind a compatible target from the immediately preceding creation.
+- All 392 tests passed. Same 1,000-request samples scored 55.1% on the primary with spelling and 45.9% on independent originals. See eval/COORDINATED-REQUEST-REPLAY.tsv.
+- PSys2 conversion retains the bound target. Execution and the attachment of colour selectors to moving people remain open.

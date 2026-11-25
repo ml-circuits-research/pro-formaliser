@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Coordinated requests and newly created targets
+
+Original-text coverage is **45.9%** with all staged worlds and **45.2%** with default worlds. A repeated movement still lacks a separate colour selector and displacement for each figure. [Changed sets and judgments](COORDINATED-REQUEST-REPLAY.tsv)
+
 ## Written distances and placement
 
 Original-text coverage reaches **45.9%** with all staged worlds and **45.2%** with default worlds. The new complete reading keeps an explicit approximate distance from a stated boundary. [Changed proposal sets and semantic judgment](MEASURED-MOTION-REPLAY.tsv)

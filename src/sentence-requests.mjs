@@ -1,9 +1,11 @@
 import {catalogIssues} from './catalog.mjs';
 import {visibleTokens} from './composition.mjs';
+import {catalogReference,evidenceReport,literalRanges} from './evidence.mjs';
 import {evidenceInText} from './grounding.mjs';
 import {tokens} from './lexicon.mjs';
 import {quotedSpans} from './literal-roles.mjs';
 import {parse,validate} from './schema.mjs';
+import {signatures} from './signatures.mjs';
 import {serialize,str} from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 
 const terminal=new Set(['.','?','!']);
@@ -38,20 +40,56 @@ function boundedSentences(text) {
   return word.test(tail) ? [...parts,tail] : [];
 }
 
-function credible(text,candidate,worlds) {
+export function declaresArgumentRoles(worlds,act,target,constraints) {
+  const family=one(target,'family'), mode=one(target,'mode');
+  return worlds.argumentPatterns(act).some(pattern=>{
+    if (pattern.family!==family || pattern.mode!==mode) return false;
+    const keys=pattern.relation ? [pattern.relationKey,pattern.anchorKey] : pattern.keys;
+    const phases=pattern.relation ? ['result','selector'] : pattern.phases;
+    return keys.every((key,index)=>constraints.some(wire=>one(wire,'attribute')===key &&
+      one(wire,'value') && one(wire,'phase')===phases[index]));
+  });
+}
+
+function leadsClause(text,request,target,source,worlds) {
+  const predicate=one(request,'predicate');
+  if (!predicate) return source==='nominal-creation';
+  const quotes=quotedSpans(text);
+  return literalRanges(text,predicate).some(([start,end])=>{
+    const from=Array.from(text.slice(0,start)).length, to=Array.from(text.slice(0,end)).length;
+    if (quotes.some(span=>span.start<to && span.end>from)) return false;
+    const lead=tokens(text.slice(0,start)).filter(([key])=>key!==',').map(([key])=>key).join(' ');
+    if (lead && !worlds.literalGrammar.leads.has(lead) && !worlds.fillerPhrases.has(lead) &&
+        !worlds.scopeGrammar.proposals.has(lead) && !worlds.scopeGrammar.courtesyLeads.has(lead)) return false;
+    const act=one(request,'act'), surface=tokens(predicate).map(([key])=>key).join(' ');
+    const senses=worlds.lookup(surface).filter(([role])=>role==='act');
+    if (act!=='make' || one(target,'mode')!=='new' ||
+        !senses.length || senses.some(([,sense])=>sense===act)) return true;
+    const [article]=tokens(text.slice(end))[0] ?? [];
+    return ['indefinite','quantified'].includes(worlds.determiners[article]);
+  });
+}
+
+function credible(text,candidate,worlds,coordinated=false) {
   if (!candidate?.sop) return;
   const wires=parse(candidate.sop);
   const requests=wires.filter(wire=>wire.type===requestType);
   const targets=wires.filter(wire=>wire.type===targetType);
   if (requests.length!==1 || targets.length!==1) return;
   const [request]=requests,[target]=targets, ref='$'+request.id;
-  if (one(target,'request')!==ref || !one(target,'family') || !one(target,'mode')) return;
-  const act=one(request,'act');
-  if (!act || !worlds.literalGrammar.licenses(one(target,'family'),act)) return;
+  const mode=one(target,'mode'), act=one(request,'act');
+  if (one(target,'request')!==ref || !one(target,'family') || !mode ||
+      coordinated && act==='make' && mode!=='new') return;
   const constraints=wires.filter(wire=>wire.type===constraintType && one(wire,'request')===ref);
+  if (!act || !worlds.literalGrammar.licenses(one(target,'family'),act) &&
+      (!coordinated || !declaresArgumentRoles(worlds,act,target,constraints))) return;
+  if (coordinated && !leadsClause(text,request,target,candidate.source,worlds)) return;
   const result=constraints.some(wire=>one(wire,'phase')==='result' && !one(wire,'want'));
   if (act==='ask') {
     if (!one(request,'asked') && !one(request,'question') && !constraints.length) return;
+    if (coordinated && !one(request,'asked') && !one(request,'question') &&
+        !worlds.lookup(tokens(one(request,'predicate') ?? '').map(([key])=>key).join(' '))
+          .some(([role,sense])=>role==='act' && sense==='ask')) return;
   } else if (!result && (act==='change' || !one(request,'predicate') ||
       !['name','description','sort','ids'].some(key=>one(target,key)))) return;
   if (wires.some(wire=>wire.type==='w.request.previous' || wire.type===unreadType &&
@@ -61,15 +99,46 @@ function credible(text,candidate,worlds) {
   return wires;
 }
 
-function remap(wires,prefix,text) {
+function remap(wires,prefix,text,worlds) {
   const ids=new Map(wires.map(wire=>[wire.id,prefix+wire.id]));
-  if (wires.some(wire=>Object.values(wire.attrs).flat().some(value=>value.startsWith('$') && !ids.has(value.slice(1))))) return;
+  const catalog=worlds?.validationModules?.catalogIds;
+  if (wires.some(wire=>Object.entries(wire.attrs).some(([key,values])=>values.some(value=>
+    value.startsWith('$') && !ids.has(value.slice(1)) &&
+    !(catalog?.has(value.slice(1)) && catalogReference(worlds.evidenceVocabulary,wire,key,value)))))) return;
   return wires.map(wire=>{
     const attrs=Object.fromEntries(Object.entries(wire.attrs).map(([key,values])=>[key,values.map(value=>
-      value.startsWith('$') ? '$'+ids.get(value.slice(1)) : value)]));
+      value.startsWith('$') && ids.has(value.slice(1)) ? '$'+ids.get(value.slice(1)) : value)]));
     if (wire.type===requestType && !attrs.words) attrs.words=[JSON.stringify(text)];
     return {...wire,id:ids.get(wire.id),attrs};
   });
+}
+
+export async function coordinatedRequestReadings(parts,worlds,read,permit) {
+  if (parts.length<2) return [];
+  let beam=[{wires:[],cost:0}];
+  for (const [index,part] of parts.entries()) {
+    if (!permit(part,quotedSpans(part))) return [];
+    const candidates=await read(part);
+    const seen=new Set();
+    const options=[];
+    for (const [rank,candidate] of candidates.entries()) {
+      const wires=credible(part,candidate,worlds,true);
+      if (!wires || evidenceReport(part,wires,worlds.evidenceVocabulary).counts.uncovered) continue;
+      const key=JSON.stringify(signatures(wires,false));
+      if (seen.has(key)) continue;
+      const mapped=remap(wires,'clause'+(index+1)+'.',part,worlds);
+      if (!mapped) continue;
+      const request=mapped.find(wire=>wire.type===requestType);
+      request.attrs.mood ??= [one(request,'act')==='ask' ? 'ask' : 'do'];
+      seen.add(key);
+      options.push({wires:mapped,rank});
+    }
+    if (!options.length) return [];
+    const next=beam.flatMap(prefix=>options.map(option=>
+      ({wires:[...prefix.wires,...option.wires],cost:prefix.cost+option.rank})));
+    beam=next.sort((a,b)=>a.cost-b.cost).slice(0,12);
+  }
+  return beam.map(({wires})=>({sop:serialize(wires),source:'coordinated-requests',status:'matched'}));
 }
 
 function alternatives(part,index,worlds) {
@@ -107,7 +176,7 @@ export async function combineIndependentRequests(parts,worlds,read,permit) {
         const wires=credible(body,candidate,worlds);
         if (!wires) continue;
         const prefix='sentence'+(index+1)+'.';
-        const mapped=remap(wires,prefix,body);
+        const mapped=remap(wires,prefix,body,worlds);
         if (!mapped) continue;
         const signature=serialize(mapped);
         if (seen.has(signature)) continue;

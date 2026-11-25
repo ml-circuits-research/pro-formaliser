@@ -2,6 +2,35 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Coordinated requests and newly created targets
+
+The all-staged reader reaches **55.1% L3 + L4** on the primary 1,000 requests including spelling and **45.9%** on the independent 1,000 original texts. The two samples and the trained models are frozen. Each grade applies to the whole proposal set generated from text alone. [Changed sets and judgments](COORDINATED-REQUEST-REPLAY.tsv)
+
+| Profile | Primary original | Primary including spelling | Independent original |
+| --- | ---: | ---: | ---: |
+| Default | 51.7% | 53.2% | 45.2% |
+| All staged worlds | 53.7% | **55.1%** | **45.9%** |
+
+| Grade | All staged worlds, original or corrected |
+| --- | ---: |
+| L0 – Fail | 1.3% |
+| L1 – Wrong | 9.3% |
+| L1a – Wrong intent | 1.9% |
+| L1b – Wrong target | 2.2% |
+| L1c – Wrong detail or role | 3.6% |
+| L1d – Invented instruction | 1.6% |
+| L2 – Incomplete | 34.3% |
+| L2a – Missing action, question or step | 5.9% |
+| L2b – Missing object, endpoint or reference | 8.3% |
+| L2c – Missing value, property, placement, scope or condition | 20.1% |
+| L3 – Identical and reasonable | 20.5% |
+| L4 – Reasonable alternative | 34.6% |
+| **L3 + L4 – Reasonable** | **55.1%** |
+
+The new complete proposal connects Roast to Sift and applies teal to its new arrow. Each clause has its own source and typed roles. The second target is bound to the output of the first request. Native validation accepts the graph, and PSys2 dataset conversion retains the bound mode, order and values. Resolving the bound target during execution still needs an application check. In a different two-step request, the reader still treats “in green back” as a spatial anchor and loses the distinct colour selector and movement. [Design decisions](../docs/decisions.html) · [Conversion check](../integration-review.responses.md)
+
+The audit finds a material annotation issue on **24.6%** of primary requests. **4.1%** of all primary requests have both a material annotation issue and a reasonable proposal.
+
 ## Written distances and placement
 
 The all-staged reader reaches **55.0% L3 + L4** on the primary 1,000 requests including spelling and **45.9%** on the independent 1,000 original texts. The replay uses the same frozen samples and models as the previous evaluation. The reader receives only text. [Changed proposal sets and semantic judgment](MEASURED-MOTION-REPLAY.tsv)

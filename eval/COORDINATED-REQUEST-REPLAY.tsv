@@ -1,0 +1,222 @@
+profile	sample	source	row	previous	current	reference_note	reason
+primary	72	document/text-02.csv	1971	L4	L4		Previous reasonable formalization remains available.
+primary	124	diagram/nodes-01.csv	1490	L2a	L4		A complete circuit connects Roast to Sift and applies teal to the created arrow through a bound target.
+primary	172	drawing/scenes-16.csv	3566	L3	L3		Previous reasonable formalization remains available.
+primary	197	drawing/scenes-08.csv	4342	L4	L4		Previous reasonable formalization remains available.
+primary	198	document/text-02.csv	2244	L4	L4		Previous reasonable formalization remains available.
+primary	206	document/text-02.csv	2695	L4	L4		Previous reasonable formalization remains available.
+primary	263	drawing/scenes-16.csv	1238	L4	L4		Previous reasonable formalization remains available.
+primary	319	drawing/scenes-16.csv	644	L3	L3		Previous reasonable formalization remains available.
+primary	353	drawing/scenes-04.csv	544	L4	L4		Previous reasonable formalization remains available.
+primary	396	drawing/scenes-08.csv	3553	L4	L4		Previous reasonable formalization remains available.
+primary	420	diagram/nodes-01.csv	2798	L4	L4		Previous reasonable formalization remains available.
+primary	439	drawing/scenes-08.csv	3609	L3	L3		Previous reasonable formalization remains available.
+primary	486	drawing/scenes-16.csv	1841	L4	L4		Previous reasonable formalization remains available.
+primary	514	drawing/scenes-16.csv	2158	L4	L4		Previous reasonable formalization remains available.
+primary	545	drawing/scenes-16.csv	339	L3	L3		Previous reasonable formalization remains available.
+primary	574	drawing/scenes-21.csv	645	L4	L4		Previous reasonable formalization remains available.
+primary	579	document/text-02.csv	2064	L4	L4		Previous reasonable formalization remains available.
+primary	582	document/text-02.csv	1915	L4	L4		Previous reasonable formalization remains available.
+primary	594	drawing/scenes-16.csv	3029	L3	L3		Previous reasonable formalization remains available.
+primary	617	drawing/scenes-16.csv	1602	L3	L3		Previous reasonable formalization remains available.
+primary	631	drawing/scenes-16.csv	737	L4	L4		Previous reasonable formalization remains available.
+primary	633	drawing/scenes-08.csv	3510	L4	L4		Previous reasonable formalization remains available.
+primary	655	drawing/scenes-16.csv	2892	L4	L4		Previous reasonable formalization remains available.
+primary	670	drawing/scenes-16.csv	2083	L4	L4		Previous reasonable formalization remains available.
+primary	715	drawing/placement-01.csv	1727	L4	L4		Previous reasonable formalization remains available.
+primary	719	drawing/scenes-16.csv	2779	L4	L4		Previous reasonable formalization remains available.
+primary	753	drawing/scenes-16.csv	3507	L3	L3		Previous reasonable formalization remains available.
+primary	850	drawing/scenes-16.csv	2032	L4	L4		Previous reasonable formalization remains available.
+primary	893	drawing/scenes-08.csv	4324	L4	L4		Previous reasonable formalization remains available.
+primary	899	drawing/people-08.csv	506	L4	L4		Previous reasonable formalization remains available.
+primary	917	drawing/scenes-16.csv	3600	L3	L3		Previous reasonable formalization remains available.
+primary	960	diagram/diagrams-01.csv	4071	L4	L4		Previous reasonable formalization remains available.
+primary-spell	72	document/text-02.csv	1971	L4	L4		Previous reasonable formalization remains available.
+primary-spell	124	diagram/nodes-01.csv	1490	L2a	L4		A complete circuit connects Roast to Sift and applies teal to the created arrow through a bound target.
+primary-spell	172	drawing/scenes-16.csv	3566	L3	L3		Previous reasonable formalization remains available.
+primary-spell	197	drawing/scenes-08.csv	4342	L4	L4		Previous reasonable formalization remains available.
+primary-spell	198	document/text-02.csv	2244	L4	L4		Previous reasonable formalization remains available.
+primary-spell	206	document/text-02.csv	2695	L4	L4		Previous reasonable formalization remains available.
+primary-spell	263	drawing/scenes-16.csv	1238	L4	L4		Previous reasonable formalization remains available.
+primary-spell	319	drawing/scenes-16.csv	644	L3	L3		Previous reasonable formalization remains available.
+primary-spell	353	drawing/scenes-04.csv	544	L4	L4		Previous reasonable formalization remains available.
+primary-spell	396	drawing/scenes-08.csv	3553	L4	L4		Previous reasonable formalization remains available.
+primary-spell	420	diagram/nodes-01.csv	2798	L4	L4		Previous reasonable formalization remains available.
+primary-spell	439	drawing/scenes-08.csv	3609	L3	L3		Previous reasonable formalization remains available.
+primary-spell	486	drawing/scenes-16.csv	1841	L4	L4		Previous reasonable formalization remains available.
+primary-spell	514	drawing/scenes-16.csv	2158	L4	L4		Previous reasonable formalization remains available.
+primary-spell	545	drawing/scenes-16.csv	339	L3	L3		Previous reasonable formalization remains available.
+primary-spell	574	drawing/scenes-21.csv	645	L4	L4		Previous reasonable formalization remains available.
+primary-spell	579	document/text-02.csv	2064	L4	L4		Previous reasonable formalization remains available.
+primary-spell	582	document/text-02.csv	1915	L4	L4		Previous reasonable formalization remains available.
+primary-spell	594	drawing/scenes-16.csv	3029	L3	L3		Previous reasonable formalization remains available.
+primary-spell	617	drawing/scenes-16.csv	1602	L3	L3		Previous reasonable formalization remains available.
+primary-spell	631	drawing/scenes-16.csv	737	L4	L4		Previous reasonable formalization remains available.
+primary-spell	633	drawing/scenes-08.csv	3510	L4	L4		Previous reasonable formalization remains available.
+primary-spell	655	drawing/scenes-16.csv	2892	L4	L4		Previous reasonable formalization remains available.
+primary-spell	670	drawing/scenes-16.csv	2083	L4	L4		Previous reasonable formalization remains available.
+primary-spell	715	drawing/placement-01.csv	1727	L4	L4		Previous reasonable formalization remains available.
+primary-spell	719	drawing/scenes-16.csv	2779	L4	L4		Previous reasonable formalization remains available.
+primary-spell	753	drawing/scenes-16.csv	3507	L3	L3		Previous reasonable formalization remains available.
+primary-spell	850	drawing/scenes-16.csv	2032	L4	L4		Previous reasonable formalization remains available.
+primary-spell	893	drawing/scenes-08.csv	4324	L4	L4		Previous reasonable formalization remains available.
+primary-spell	899	drawing/people-08.csv	506	L4	L4		Previous reasonable formalization remains available.
+primary-spell	917	drawing/scenes-16.csv	3600	L3	L3		Previous reasonable formalization remains available.
+primary-spell	960	diagram/diagrams-01.csv	4071	L4	L4		Previous reasonable formalization remains available.
+replica	29	drawing/scenes-16.csv	1734	1	1		Previous reasonable formalization remains available.
+replica	45	drawing/scenes-17.csv	3759	1	1		Previous reasonable formalization remains available.
+replica	82	drawing/scenes-16.csv	1502	1	1		Previous reasonable formalization remains available.
+replica	85	drawing/scenes-16.csv	3802	1	1		Previous reasonable formalization remains available.
+replica	91	drawing/scenes-16.csv	1170	1	1		Previous reasonable formalization remains available.
+replica	141	document/text-02.csv	1730	1	1		Previous reasonable formalization remains available.
+replica	169	document/text-02.csv	2693	1	1		Previous reasonable formalization remains available.
+replica	208	document/text-02.csv	2977	1	1		Previous reasonable formalization remains available.
+replica	227	drawing/scenes-16.csv	1445	1	1		Previous reasonable formalization remains available.
+replica	294	drawing/scenes-17.csv	3746	1	1		Previous reasonable formalization remains available.
+replica	306	diagram/charts-06.csv	553	1	1		Previous reasonable formalization remains available.
+replica	314	drawing/scenes-16.csv	2329	1	1		Previous reasonable formalization remains available.
+replica	324	diagram/nodes-06.csv	1272	1	1		Previous reasonable formalization remains available.
+replica	325	drawing/scenes-16.csv	368	1	1		An equivalent graph replaces one alternate spelling of the circuit, and a previously reasonable proposal remains.
+replica	350	drawing/scenes-16.csv	791	1	1		Previous reasonable formalization remains available.
+replica	372	diagram/nodes-06.csv	2808	1	1		Previous reasonable formalization remains available.
+replica	407	drawing/scenes-16.csv	1850	1	1		Previous reasonable formalization remains available.
+replica	422	drawing/scenes-19.csv	62	1	1		An equivalent graph replaces one alternate spelling of the circuit, and a previously reasonable proposal remains.
+replica	440	drawing/scenes-03.csv	2112	1	1		Previous reasonable formalization remains available.
+replica	443	drawing/scenes-12.csv	538	0	0		Separate requests remain, but the direction and each colour selector still fall into the supposed spatial anchor.
+replica	509	drawing/scenes-16.csv	2294	1	1		Previous reasonable formalization remains available.
+replica	525	drawing/scenes-16.csv	1774	1	1		Previous reasonable formalization remains available.
+replica	543	drawing/scenes-16.csv	3523	1	1		Previous reasonable formalization remains available.
+replica	614	document/text-02.csv	2410	1	1		Previous reasonable formalization remains available.
+replica	659	diagram/nodes-06.csv	4497	1	1		Previous reasonable formalization remains available.
+replica	684	drawing/scenes-16.csv	1577	1	1		An equivalent graph replaces one alternate spelling of the circuit, and a previously reasonable proposal remains.
+replica	720	drawing/scenes-16.csv	2313	1	1		Previous reasonable formalization remains available.
+replica	757	diagram/nodes-06.csv	3334	1	1		Previous reasonable formalization remains available.
+replica	821	document/text-02.csv	2607	1	1		Previous reasonable formalization remains available.
+replica	851	diagram/nodes-01.csv	1379	0	0		The placement below the subtitle is present, but the first step treats the existing list as new and the follow-up lacks a reliable binding to it.
+replica	888	drawing/scenes-16.csv	1487	1	1		Previous reasonable formalization remains available.
+replica	897	drawing/scenes-16.csv	1066	1	1		Previous reasonable formalization remains available.
+replica	923	document/text-02.csv	2494	1	1		Previous reasonable formalization remains available.
+replica	953	document/text-02.csv	2186	1	1		Previous reasonable formalization remains available.
+replica	958	drawing/scenes-16.csv	3683	1	1		Previous reasonable formalization remains available.
+base-primary	72	document/text-02.csv	1971	L4	L4		Previous reasonable formalization remains available.
+base-primary	124	diagram/nodes-01.csv	1490	L2b	L4		A complete circuit connects Roast to Sift and applies teal to the created arrow through a bound target.
+base-primary	172	drawing/scenes-16.csv	3566	L3	L3		Previous reasonable formalization remains available.
+base-primary	197	drawing/scenes-08.csv	4342	L4	L4		Previous reasonable formalization remains available.
+base-primary	198	document/text-02.csv	2244	L4	L4		Previous reasonable formalization remains available.
+base-primary	206	document/text-02.csv	2695	L4	L4		Previous reasonable formalization remains available.
+base-primary	263	drawing/scenes-16.csv	1238	L4	L4		Previous reasonable formalization remains available.
+base-primary	319	drawing/scenes-16.csv	644	L3	L3		Previous reasonable formalization remains available.
+base-primary	353	drawing/scenes-04.csv	544	L4	L4		Previous reasonable formalization remains available.
+base-primary	396	drawing/scenes-08.csv	3553	L4	L4		Previous reasonable formalization remains available.
+base-primary	420	diagram/nodes-01.csv	2798	L4	L4		Previous reasonable formalization remains available.
+base-primary	439	drawing/scenes-08.csv	3609	L3	L3		Previous reasonable formalization remains available.
+base-primary	486	drawing/scenes-16.csv	1841	L4	L4		Previous reasonable formalization remains available.
+base-primary	514	drawing/scenes-16.csv	2158	L4	L4		Previous reasonable formalization remains available.
+base-primary	545	drawing/scenes-16.csv	339	L3	L3		Previous reasonable formalization remains available.
+base-primary	574	drawing/scenes-21.csv	645	L4	L4		Previous reasonable formalization remains available.
+base-primary	579	document/text-02.csv	2064	L4	L4		Previous reasonable formalization remains available.
+base-primary	582	document/text-02.csv	1915	L4	L4		Previous reasonable formalization remains available.
+base-primary	594	drawing/scenes-16.csv	3029	L3	L3		Previous reasonable formalization remains available.
+base-primary	617	drawing/scenes-16.csv	1602	L3	L3		Previous reasonable formalization remains available.
+base-primary	631	drawing/scenes-16.csv	737	L4	L4		Previous reasonable formalization remains available.
+base-primary	633	drawing/scenes-08.csv	3510	L4	L4		Previous reasonable formalization remains available.
+base-primary	655	drawing/scenes-16.csv	2892	L4	L4		Previous reasonable formalization remains available.
+base-primary	670	drawing/scenes-16.csv	2083	L4	L4		Previous reasonable formalization remains available.
+base-primary	715	drawing/placement-01.csv	1727	L4	L4		Previous reasonable formalization remains available.
+base-primary	719	drawing/scenes-16.csv	2779	L4	L4		Previous reasonable formalization remains available.
+base-primary	753	drawing/scenes-16.csv	3507	L3	L3		Previous reasonable formalization remains available.
+base-primary	850	drawing/scenes-16.csv	2032	L4	L4		Previous reasonable formalization remains available.
+base-primary	893	drawing/scenes-08.csv	4324	L4	L4		Previous reasonable formalization remains available.
+base-primary	899	drawing/people-08.csv	506	L4	L4		Previous reasonable formalization remains available.
+base-primary	917	drawing/scenes-16.csv	3600	L3	L3		Previous reasonable formalization remains available.
+default-spell	72	document/text-02.csv	1971	1	1		Previous reasonable formalization remains available.
+default-spell	124	diagram/nodes-01.csv	1490	0	1		A complete circuit connects Roast to Sift and applies teal to the created arrow through a bound target.
+default-spell	172	drawing/scenes-16.csv	3566	1	1		Previous reasonable formalization remains available.
+default-spell	197	drawing/scenes-08.csv	4342	1	1		Previous reasonable formalization remains available.
+default-spell	198	document/text-02.csv	2244	1	1		Previous reasonable formalization remains available.
+default-spell	206	document/text-02.csv	2695	1	1		Previous reasonable formalization remains available.
+default-spell	263	drawing/scenes-16.csv	1238	1	1		Previous reasonable formalization remains available.
+default-spell	319	drawing/scenes-16.csv	644	1	1		Previous reasonable formalization remains available.
+default-spell	353	drawing/scenes-04.csv	544	1	1		Previous reasonable formalization remains available.
+default-spell	396	drawing/scenes-08.csv	3553	1	1		Previous reasonable formalization remains available.
+default-spell	420	diagram/nodes-01.csv	2798	1	1		Previous reasonable formalization remains available.
+default-spell	439	drawing/scenes-08.csv	3609	1	1		Previous reasonable formalization remains available.
+default-spell	486	drawing/scenes-16.csv	1841	1	1		Previous reasonable formalization remains available.
+default-spell	514	drawing/scenes-16.csv	2158	1	1		Previous reasonable formalization remains available.
+default-spell	545	drawing/scenes-16.csv	339	1	1		Previous reasonable formalization remains available.
+default-spell	574	drawing/scenes-21.csv	645	1	1		Previous reasonable formalization remains available.
+default-spell	579	document/text-02.csv	2064	1	1		Previous reasonable formalization remains available.
+default-spell	582	document/text-02.csv	1915	1	1		Previous reasonable formalization remains available.
+default-spell	594	drawing/scenes-16.csv	3029	1	1		Previous reasonable formalization remains available.
+default-spell	617	drawing/scenes-16.csv	1602	1	1		Previous reasonable formalization remains available.
+default-spell	631	drawing/scenes-16.csv	737	1	1		Previous reasonable formalization remains available.
+default-spell	633	drawing/scenes-08.csv	3510	1	1		Previous reasonable formalization remains available.
+default-spell	655	drawing/scenes-16.csv	2892	1	1		Previous reasonable formalization remains available.
+default-spell	670	drawing/scenes-16.csv	2083	1	1		Previous reasonable formalization remains available.
+default-spell	715	drawing/placement-01.csv	1727	1	1		Previous reasonable formalization remains available.
+default-spell	719	drawing/scenes-16.csv	2779	1	1		Previous reasonable formalization remains available.
+default-spell	753	drawing/scenes-16.csv	3507	1	1		Previous reasonable formalization remains available.
+default-spell	850	drawing/scenes-16.csv	2032	1	1		Previous reasonable formalization remains available.
+default-spell	893	drawing/scenes-08.csv	4324	1	1		Previous reasonable formalization remains available.
+default-spell	899	drawing/people-08.csv	506	1	1		Previous reasonable formalization remains available.
+default-spell	917	drawing/scenes-16.csv	3600	1	1		Previous reasonable formalization remains available.
+base-replica	29	drawing/scenes-16.csv	1734	1	1		Previous reasonable formalization remains available.
+base-replica	45	drawing/scenes-17.csv	3759	1	1		Previous reasonable formalization remains available.
+base-replica	82	drawing/scenes-16.csv	1502	1	1		Previous reasonable formalization remains available.
+base-replica	85	drawing/scenes-16.csv	3802	1	1		Previous reasonable formalization remains available.
+base-replica	91	drawing/scenes-16.csv	1170	1	1		Previous reasonable formalization remains available.
+base-replica	141	document/text-02.csv	1730	1	1		Previous reasonable formalization remains available.
+base-replica	169	document/text-02.csv	2693	1	1		Previous reasonable formalization remains available.
+base-replica	208	document/text-02.csv	2977	1	1		Previous reasonable formalization remains available.
+base-replica	227	drawing/scenes-16.csv	1445	1	1		Previous reasonable formalization remains available.
+base-replica	294	drawing/scenes-17.csv	3746	1	1		Previous reasonable formalization remains available.
+base-replica	306	diagram/charts-06.csv	553	1	1		Previous reasonable formalization remains available.
+base-replica	314	drawing/scenes-16.csv	2329	1	1		Previous reasonable formalization remains available.
+base-replica	324	diagram/nodes-06.csv	1272	1	1		Previous reasonable formalization remains available.
+base-replica	325	drawing/scenes-16.csv	368	1	1		An equivalent graph replaces one alternate spelling of the circuit, and a previously reasonable proposal remains.
+base-replica	350	drawing/scenes-16.csv	791	1	1		Previous reasonable formalization remains available.
+base-replica	372	diagram/nodes-06.csv	2808	1	1		Previous reasonable formalization remains available.
+base-replica	407	drawing/scenes-16.csv	1850	1	1		Previous reasonable formalization remains available.
+base-replica	422	drawing/scenes-19.csv	62	1	1		An equivalent graph replaces one alternate spelling of the circuit, and a previously reasonable proposal remains.
+base-replica	440	drawing/scenes-03.csv	2112	1	1		Previous reasonable formalization remains available.
+base-replica	443	drawing/scenes-12.csv	538	0	0		Separate requests remain, but the direction and each colour selector still fall into the supposed spatial anchor.
+base-replica	509	drawing/scenes-16.csv	2294	1	1		Previous reasonable formalization remains available.
+base-replica	525	drawing/scenes-16.csv	1774	1	1		Previous reasonable formalization remains available.
+base-replica	543	drawing/scenes-16.csv	3523	1	1		Previous reasonable formalization remains available.
+base-replica	614	document/text-02.csv	2410	1	1		Previous reasonable formalization remains available.
+base-replica	659	diagram/nodes-06.csv	4497	1	1		Previous reasonable formalization remains available.
+base-replica	684	drawing/scenes-16.csv	1577	1	1		An equivalent graph replaces one alternate spelling of the circuit, and a previously reasonable proposal remains.
+base-replica	720	drawing/scenes-16.csv	2313	1	1		Previous reasonable formalization remains available.
+base-replica	757	diagram/nodes-06.csv	3334	1	1		Previous reasonable formalization remains available.
+base-replica	821	document/text-02.csv	2607	1	1		Previous reasonable formalization remains available.
+base-replica	851	diagram/nodes-01.csv	1379	0	0		The placement below the subtitle is present, but the first step treats the existing list as new and the follow-up lacks a reliable binding to it.
+base-replica	888	drawing/scenes-16.csv	1487	1	1		Previous reasonable formalization remains available.
+base-replica	897	drawing/scenes-16.csv	1066	1	1		Previous reasonable formalization remains available.
+base-replica	923	document/text-02.csv	2494	1	1		Previous reasonable formalization remains available.
+base-replica	953	document/text-02.csv	2186	1	1		Previous reasonable formalization remains available.
+base-replica	958	drawing/scenes-16.csv	3683	1	1		Previous reasonable formalization remains available.
+blind	44	diagram/nodes-04.csv	2240	preserved	preserved		Previous proposal set retained.
+blind	84	drawing/scenes-16.csv	1186	preserved	preserved		Previous proposal set retained.
+blind	146	document/text-02.csv	2270	preserved	preserved		Previous proposal set retained.
+blind	149	document/text-02.csv	2655	preserved	preserved		Previous proposal set retained.
+blind	199	document/text-02.csv	2584	preserved	preserved		Previous proposal set retained.
+blind	228	drawing/scenes-16.csv	2735	preserved	preserved		Previous proposal set retained.
+blind	245	drawing/scenes-16.csv	2934	preserved	preserved		Previous proposal set retained.
+blind	328	document/text-02.csv	2511	preserved	preserved		Previous proposal set retained.
+blind	350	diagram/nodes-06.csv	1787	preserved	preserved		Previous proposal set retained.
+blind	369	drawing/scenes-16.csv	1507	preserved	preserved		Previous proposal set retained.
+blind	442	diagram/diagrams-03.csv	3365	preserved	preserved		Previous proposal set retained.
+blind	443	diagram/nodes-01.csv	944	preserved	preserved		Previous proposal set retained.
+blind	521	drawing/scenes-16.csv	3238	preserved	preserved		Previous proposal set retained.
+blind	523	drawing/scenes-16.csv	1829	preserved	preserved		The changed wording and local identifiers retain the same semantic graph.
+blind	557	drawing/scenes-16.csv	3605	preserved	preserved		Previous proposal set retained.
+blind	599	drawing/placement-02.csv	4047	preserved	preserved		Previous proposal set retained.
+blind	652	drawing/scenes-04.csv	522	preserved	preserved		Previous proposal set retained.
+blind	674	drawing/scenes-16.csv	1899	preserved	preserved		Previous proposal set retained.
+blind	700	drawing/scenes-11.csv	424	preserved	preserved		Previous proposal set retained.
+blind	808	document/text-02.csv	2356	preserved	preserved		Previous proposal set retained.
+blind	811	document/text-02.csv	2694	preserved	preserved		Previous proposal set retained.
+blind	858	drawing/scenes-16.csv	401	preserved	preserved		Previous proposal set retained.
+blind	870	drawing/scenes-16.csv	2906	preserved	preserved		Previous proposal set retained.
+blind	900	drawing/scenes-16.csv	315	preserved	preserved		Previous proposal set retained.
+blind	961	diagram/charts-06.csv	851	preserved	preserved		Previous proposal set retained.

@@ -1,6 +1,6 @@
 import {measuredMotionReadings} from './measured-motion.mjs';
 import {landmarkPairReadings} from './landmark-pairs.mjs';
-import {sentenceRequestReadings} from './sentence-requests.mjs';
+import {coordinatedRequestReadings,sentenceRequestReadings} from './sentence-requests.mjs';
 import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
 import {universalInventoryPacket} from './universal-inventory.mjs';
@@ -739,6 +739,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
       const permit=(words,quotes)=>
         !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted;
+      const canSplit=(words,quotes)=>
+        !requestScope(words,maskQuoted(words,quotes),worlds,[]).preventsSplitting;
+      const readWhole=async part=>(await propose(part,false)).candidates;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
       for (const reading of await measuredMotionReadings(text,worlds,wrapped,permit)) {
@@ -752,6 +755,26 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const reading of [...await benefactiveReadings(text,worlds,wrapped,permit), ...await participantAdjunctReadings(text,worlds,wrapped,permit), ...await effectSequence(text,read), ...await setExclusionReadings(text,worlds,read,permit,packet=>worker.request({setExclusion:packet}))]) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);
+      }
+      if (independent) {
+        const ts=tokens(text);
+        const strict=sequenceParts(text,ts,worlds.joiners,sequenceOptions);
+        const flexible=sequenceParts(text,ts,worlds.joiners,{...sequenceOptions,requireLeftAct:false});
+        const plans=JSON.stringify(strict)===JSON.stringify(flexible) ? [strict] : [strict,flexible];
+        if (plans.some(parts=>parts.length)) {
+          const scope=requestScope(text,maskQuoted(text,quotedSpans(text)),worlds,[]);
+          if (!scope.preventsSplitting) {
+            const fragments=new Map();
+            const readClause=part=>{
+              if (!fragments.has(part)) fragments.set(part,readWhole(part));
+              return fragments.get(part);
+            };
+            for (const parts of plans) for (const reading of await coordinatedRequestReadings(parts,worlds,readClause,canSplit)) {
+              const key=admissibleKey(text,reading.sop);
+              if (key && scope.permits(parse(reading.sop))) additional.set(key,reading);
+            }
+          }
+        }
       }
       for (const candidate of candidates) {
         if (!candidate.sop.includes(' words=') || candidate.sop.indexOf(' w.request.request')===
@@ -842,8 +865,6 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
       }
       if (independent) {
-        const readWhole=async part=>(await propose(part,false)).candidates;
-        const canSplit=(part,quotes)=>!requestScope(part,maskQuoted(part,quotes),worlds,[]).preventsSplitting;
         for (const reading of await sentenceRequestReadings(text,worlds,readWhole,canSplit)) {
           const key=admissibleKey(text,reading.sop);
           if (key && !additional.has(key)) additional.set(key,reading);
