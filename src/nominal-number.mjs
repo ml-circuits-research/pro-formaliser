@@ -18,6 +18,13 @@ export function compileNominalNumbers(facts) {
     const kind=first(wire,'kind'), value=first(wire,'value'), text=first(wire,'text');
     if (text && standardKinds.has(kind) && /^\d+$/u.test(value ?? '')) numbers.set(phrase(text),{kind,value});
   }
+  for (const wire of facts('w.lang.en.ordinal')) {
+    const text=first(wire,'text'), value=first(wire,'value');
+    if (text && fields(wire,'in').includes('acts') && /^-?\d+$/u.test(value ?? '')) {
+      const key=phrase(text);
+      if (key && !numbers.has(key)) numbers.set(key,{kind:'ordinal',value});
+    }
+  }
   const unspecified=new Set(facts('w.lang.en.phrase').filter(w=>first(w,'name')==='quant.some')
     .flatMap(w=>fields(w,'item').map(phrase)));
   for (const wire of facts('core.word')) {
@@ -87,7 +94,9 @@ function qualifierBefore(text,input,position,numbers,numberOf,modifiers,family,g
   }
   if (!match) return;
   const {i,number}=match;
-  if (amounts.has(numberOf(input[i-1])?.kind) || ['.',',','-','+','/'].includes(input[i-1]?.key) &&
+  const preceding=numberOf(input[i-1]);
+  const relativeBeforeCount=number.kind==='cardinal' && preceding?.kind==='ordinal' && Number(preceding.value)<0;
+  if (amounts.has(preceding?.kind) && !relativeBeforeCount || ['.',',','-','+','/'].includes(input[i-1]?.key) &&
       (numberOf(input[i-2]) || ['-','+'].includes(input[i-1].key))) return;
   const start=input[i].start, end=input[after-1].end;
   return {start,end,surface:text.slice(start,end),number,position};
@@ -118,7 +127,7 @@ function groundedModifiers(wires,input,text,scope,target,numberOf) {
   return grounded;
 }
 
-export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers={}) {
+export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers={},determiners={}) {
   const input=tokenize(text);
   const numberOf = token => token && (numbers.get(token.key) ??
     (/^\d{1,8}$/u.test(token.key) ? {kind:'cardinal',value:token.key} : undefined));
@@ -156,6 +165,9 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
   // plausible head or another qualified occurrence leaves the binding open.
   if (qualified.length!==1 || qualified[0].position!==positions[0]) return;
   const [{start,end,surface,number}]=qualified;
+  if (number.kind==='ordinal' && (amounts.has(numbers.get(phrase(head))?.kind) ||
+    ['name','ids'].some(key=>fields(target,key).some(written=>
+      literalRanges(text,written,left,right).some(([a,b])=>a<end && b>start))))) return;
   if (number.kind==='qualitative') {
     if (first(target,'mode')!=='new' || first(holder,'act')!=='make' ||
         ![undefined,'do'].includes(first(holder,'mood')) || holder.attrs.polarity) return;
@@ -176,8 +188,30 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
     (k==='on' && first(w,k)==='count') || first(w,k)===surface))) return;
   const additions=number.kind==='ordinal' ? {ordinal:[JSON.stringify(surface)]}
     : {...(number.kind==='qualitative' ? {} : {count:[String(number.value)]}),quantity:[JSON.stringify(surface)],count_words:[JSON.stringify(surface)]};
+  let consumeFrom=start;
+  if (number.kind==='ordinal') {
+    const before=input.findIndex(token=>token.start===start);
+    let determiner;
+    for (let i=Math.max(0,before-4);i<before;i++) {
+      const mode=determiners[input.slice(i,before).map(token=>token.key).join(' ')];
+      if (!['definite','demonstrative','possessive'].includes(mode) || input[i].start<left || inQuotes(input[i].start,start)) continue;
+      determiner={mode,start:input[i].start};
+      break;
+    }
+    // A relative endpoint needs its own nominal boundary. Its final word
+    // alone does not select the endpoint in compound order descriptions.
+    const predicate=first(holder,'predicate');
+    const relative=Number(number.value)<0;
+    if (relative && !determiner && !literalRanges(text,predicate,left,start)
+      .some(([,finish])=>!text.slice(finish,start).trim())) return;
+    if ((relative || candidate.source==='split-target-frame') && determiner &&
+        first(target,'mode')==='existing' && !target.attrs.determiner) {
+      additions.determiner=[determiner.mode];
+      consumeFrom=determiner.start;
+    }
+  }
   const lines=[];
-  for (const wire of consumeUnread(wires,text,start,end)) {
+  for (const wire of consumeUnread(wires,text,consumeFrom,end)) {
     const attrs=wire===target ? {...wire.attrs,...additions} : wire.attrs;
     lines.push(['@'+wire.id,wire.type,...Object.entries(attrs).flatMap(([k,vs])=>vs.map(v=>k+'='+v))].join(' '));
   }

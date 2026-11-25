@@ -245,7 +245,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const quotes = quotedSpans(text);
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
     const splitPlans=languageFrames && !quotes.length ? splitTargetPlans(text,ts,worlds,politeness) : [];
-    const splitNominals=[];
+    const splitNominals=[], splitOrdinals=[];
     const scopeText = maskQuoted(text,quotes);
     const outside = scopeText === text ? null : new Set(tokens(scopeText).map(t => t[2]));
     const amounts=ts.flatMap((_,start)=>worlds.motionAmountPhrases.flatMap(words=>
@@ -274,6 +274,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const learned = Object.hasOwn(model.lexicon ?? {},words) ? model.lexicon[words] : [];
         const local = new Set(learned.map(e => JSON.stringify(e.slice(0,-1))));
         const declared = worlds.lookup(words);
+        if (worlds.nominalNumbers.get(words)?.kind==='ordinal' &&
+            splitPlans.some(plan=>ts[i][2]>=plan.nounStart && ts[j][3]<=plan.nounEnd)) {
+          splitOrdinals.push([ts[i][2],ts[j][3]]);
+        }
         if (splitPlans.some(plan=>ts[i][2]>=plan.nounStart && ts[j][3]===plan.nounEnd)) {
           const lookup=surface=>[...worlds.frameTargets(surface),...worlds.lookup(surface)]
             .filter(([role,, ,mode])=>role==='target' && mode==='existing');
@@ -348,7 +352,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         acts:[...new Set(worlds.spatialBindings.flatMap(binding=>binding.namedActs))],
         modifiers:[...worlds.spatialModifiers.rules.keys()].map(words=>words.split(/\s+/u)),
       } : undefined;
-    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,splitPlans:scope.restricted?[]:splitPlans,splitNominals,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,splitPlans:scope.restricted?[]:splitPlans,splitNominals,splitOrdinals,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer,readingScope=scope,preferCompleteEvidence=false) {
       const key = admissibleKey(text,answer.sop);
@@ -540,9 +544,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
     }
     if (ts.some(t=>numberHeads.has(t[0]) || /^\d+$/u.test(t[0]))) {
-      for (const candidate of [...candidates]) {
-        const qualified=nominalNumberReading(text,candidate,worlds.nominalNumbers,quotes,model.modifiers);
-        if (qualified) retain(qualified);
+      for (const candidate of [...candidates,...incompleteSplitTargets]) {
+        const qualified=nominalNumberReading(text,candidate,worlds.nominalNumbers,quotes,model.modifiers,worlds.determiners);
+        if (!qualified) continue;
+        if (candidate.source!=='split-target-frame') retain(qualified);
+        else if (!parse(qualified.sop).some(wire=>wire.type==='w.request.unread')) {
+          retain({...qualified,source:'split-target-frame',status:'matched'},scope,true);
+        }
       }
     }
     if (!scope.restricted && ts.some(t=>phraseHeads.has(t[0]))) {
@@ -581,7 +589,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (!used) continue;
         const candidate = {...answer,sop,source:'nominal-inflection',status:'partial'};
         retain(candidate);
-        const qualified = nominalNumberReading(text,candidate,worlds.nominalNumbers,quotes,model.modifiers);
+        const qualified = nominalNumberReading(text,candidate,worlds.nominalNumbers,quotes,model.modifiers,worlds.determiners);
         if (qualified) retain(qualified);
       }
     }

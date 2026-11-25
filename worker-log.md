@@ -566,3 +566,8 @@
 ## Written property states
 - The fixed-property reader now preserves a final state particle after a declared setting name.
 - The default reader improved 12 of 135 targeted WebMeet requests. All 515 release tests passed.
+
+## Ordinals in nominal targets
+- The reader now preserves written action ordinals, including relative endpoints within proved split verbs.
+- The default reader replay covered 132 WebMeet requests and found six new ordinal proposals with complete written evidence.
+- All 517 release tests passed.

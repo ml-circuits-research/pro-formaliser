@@ -9,13 +9,30 @@ import { quotedSpans } from '../src/literal-roles.mjs';
 const worlds=loadWorlds();
 const candidate={sop:'@r w.request.request act=make\n@t w.request.target request=$r family=node mode=new sort=box sort_words=boxes'};
 test('a numeral qualifying one noun keeps its written evidence',()=>{
-  const count=text=>nominalNumberReading(text,candidate,worlds.nominalNumbers,quotedSpans(text));
+  const count=text=>nominalNumberReading(text,candidate,worlds.nominalNumbers,quotedSpans(text),{},worlds.determiners);
   assert.match(count('create three boxes').sop,/count=3 quantity="three" count_words="three"/u);
   assert.match(count('find the first boxes').sop,/ordinal="first"/u);
+  assert.match(count('find the last boxes').sop,/ordinal="last"/u);
   assert.equal(count('create a label "three boxes"'),undefined);
   assert.equal(count('create 0.5 boxes'),undefined);
   assert.match(count('create twenty-one boxes').sop,/count=21/u);
   assert.match(count('create half a dozen boxes').sop,/count=6/u);
+});
+
+test('an ordinal stays separate from a literal target name and retains its own determiner',()=>{
+  const text='Remove the last flower';
+  const base={sop:[
+    '@r w.request.request act=remove predicate=Remove',
+    '@t w.request.target request=$r family=drawn mode=existing sort=flower',
+    '@u w.request.unread request=$r text="the last"',
+  ].join('\n')};
+  const read=(input,proposal)=>nominalNumberReading(input,proposal,worlds.nominalNumbers,quotedSpans(input),{},worlds.determiners);
+  assert.match(read(text,base).sop,/ordinal="last" determiner=definite/u);
+  assert.doesNotMatch(read(text,base).sop,/w\.request\.unread/u);
+  const title={sop:base.sop.replace('sort=flower','sort=flower name="Last Flower"')};
+  assert.equal(read('Remove the Last Flower',title),undefined);
+  assert.equal(read('Remove the second to last flower',base),undefined);
+  assert.equal(read('Remove the last two',{sop:base.sop.replace('sort=flower','sort=flower sort_words=two')}),undefined);
 });
 
 test('chooses a qualified target when its noun is repeated in the payload',()=>{
