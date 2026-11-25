@@ -686,7 +686,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
       }
     }
-    for (const {sop} of response.relativePlacements ?? []) retain({sop,source:'relative-placement',status:'matched'});
+    for (const {sop,hasSource} of response.relativePlacements ?? []) {
+      retain({sop,source:hasSource?'placement-with-source':'relative-placement',status:hasSource?'partial':'matched'});
+    }
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
     if (response.proofs.length) {
       for (const c of candidates) {

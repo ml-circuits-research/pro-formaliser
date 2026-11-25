@@ -887,3 +887,11 @@ The initial implementation ranked the new candidate before the ordinary lexical 
 The final default-model replay covered 190 selected WebMeet inputs. Two gained a new complete proposal with the literal moving reference and its destination. One preserves “on the right” after naming the y axis. The other preserves “to the left of the one that is currently in the middle” after restoring a figure. The other 188 returned identical ordered SOP lists. No previously evidence-complete semantic alternative was lost. The aggregate benchmark remains paused.
 
 All 526 release tests passed.
+
+## Separate written placement sources from destinations
+
+Prolog now preserves a single proved split between the action's declared source and destination slots. “Move it from the dock to the bridge” keeps the literal mover, the written destination and the exact unresolved source on one request. Both orders work, including a declared region followed by a source. The fallback requires a unique split. A source-only request, ambiguous repeated markers, a temporal destination and an ordinal anchor such as “the third figure from the left” remain outside this proof. [Source and destination regressions](test/request-intents.test.mjs)
+
+The source stays unread with its role noted. Canonical `w.request.intent` currently supports destination and purpose. The proposed `w.relational.source_scope` requires a typed affected target and therefore cannot yet attach directly to this literal unresolved mover. A shared source role for that case remains a separate integration question.
+
+The focused controls gained five bounded partial circuits. The default-model replay returned identical ordered SOP lists on 257 rows covering 253 distinct WebMeet inputs. Most occurrences of `from` in the targeted slice qualified an anchor, measured distance, or occurred in a separate clause. All 527 release tests passed. No aggregate benchmark ran.

@@ -604,3 +604,7 @@
 - Direct commands now keep the moving pronoun and a grounded destination role on one request.
 - Two of 190 targeted WebMeet inputs gained evidence-complete proposals while preserving existing complete alternatives.
 - All 526 release tests passed.
+
+## Placement source and destination
+- A unique written source and destination now stay separate on one placement request with a literal mover.
+- Five controls gained the partial circuit. The 257-row replay was unchanged and all 527 tests passed.

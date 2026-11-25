@@ -98,6 +98,42 @@ test('native imperative placement preserves the written object and destination w
   }
 });
 
+test('a written placement source and destination stay separate in either order',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,source,destination] of [
+    ['Move it from the dock to the bridge.','from the dock','to the bridge'],
+    ['Move it under the bridge from the tree.','from the tree','under the bridge'],
+    ['Move it from the tree to the right.','from the tree','to the right'],
+    ['Move it to the right from the tree.','from the tree','to the right'],
+    ['Move them from Red Dock to Blue Bridge.','from Red Dock','to Blue Bridge'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>candidate.source==='placement-with-source');
+    assert.ok(reading,text);
+    assert.equal(reading.status,'partial',text);
+    const wires=parse(reading.sop);
+    const request=wires.find(wire=>wire.type==='w.request.request');
+    const origin=wires.find(wire=>wire.type==='w.request.unread');
+    const reference=wires.find(wire=>wire.type==='w.request.lookup');
+    const [intent]=intents(wires);
+    assert.equal(read(request,'act'),'place',text);
+    assert.equal(read(reference,'words'),text.split(' ')[1],text);
+    assert.equal(read(reference,'from'),undefined,text);
+    assert.equal(read(origin,'text'),source,text);
+    assert.equal(read(origin,'note'),'placement source',text);
+    assert.equal(read(intent,'value'),destination,text);
+    assert.ok([reference,origin,intent].every(wire=>owns(wire,request)),text);
+    assert.deepEqual(reading.catalog.issues,[],text);
+    assert.deepEqual(reading.evidence.missing,[],text);
+  }
+  for (const text of ['Move it from the dock.', 'Move it from the tree to Monday.',
+    'Move it from the tree to the bridge from the boat.', 'Put it next to the third figure from the left.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='placement-with-source'),text);
+  }
+});
+
 test('a verb-specific replacement marker keeps the operand out of purpose', async t => {
   const reader=createReader();
   t.after(()=>reader.close());

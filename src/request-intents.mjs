@@ -78,9 +78,12 @@ export function relativePlacementPacket(ts,quotes,worlds) {
     objects.some(object=>matches(words,predicate.length,object)));
   const subjectsHere=subjects[first] ?? [];
   if (!imperative.length && !subjectsHere.length) return;
-  const regionStarts=words.slice(0,end).flatMap((_,at)=>regions.has(words.slice(at,end).join(' ')) ? [at] : []);
+  const regionRanges=[];
+  for (let start=0;start<end;start++) for (let stop=start+1;stop<=end;stop++) {
+    if (regions.has(words.slice(start,stop).join(' '))) regionRanges.push([start,stop]);
+  }
   const temporalStarts=ts.slice(0,end).flatMap(([, ,start],at)=>temporal.has(words.slice(at,end).join(' ')) ? [start] : []);
-  return {subjects:subjectsHere,frames,references,objects,commands:imperative,regionStarts,temporalStarts,end};
+  return {subjects:subjectsHere,frames,references,objects,commands:imperative,regionRanges,temporalStarts,end};
 }
 
 function replacementMarkers(facts) {

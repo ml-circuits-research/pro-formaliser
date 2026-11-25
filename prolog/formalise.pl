@@ -78,18 +78,18 @@ answer(Q, _{candidates:Answers,relativePlacements:RelativePlacements,frontedCand
     append(Head,Reps,Combined), maplist(clean_candidate,Combined,Clean),
     property_commands(Q, PropertyCommands), append(Clean,PropertyCommands,All), list_to_set(All, Answers).
 
-relative_placement(Q, _{sop:Sop}) :-
+relative_placement(Q, _{sop:Sop,hasSource:HasSource}) :-
     get_dict(relativePlacement,Q,Plan),
     relative_placement_roles(Q.tokens,Plan,Name,Subject,Predicate,PlaceAt), PlaceAt<Plan.end,
     offsets(Q.tokens,Subject,SubjectStart,SubjectEnd),
     offsets(Q.tokens,Predicate,PredicateStart,PredicateEnd),
-    offsets(Q.tokens,[PlaceAt,Plan.end],PlaceStart,PlaceEnd),
-    once(relative_destination(Q,Plan,Name,PlaceAt,PlaceStart,PlaceEnd)),
+    placement_endpoints(Q,Plan,Name,PlaceAt,PlaceStart-PlaceEnd,Source),
     span(Q.text,SubjectStart,SubjectEnd,SubjectWords), encode(SubjectWords,Ref),
     span(Q.text,PredicateStart,PredicateEnd,PredicateWords), encode(PredicateWords,Verb),
     span(Q.text,PlaceStart,PlaceEnd,PlaceWords), encode(PlaceWords,Place), encode(Name,Act),
-    format(string(Sop),'@r w.request.request act=~s mood=do refers=thing predicate=~s~n@r.ref w.request.lookup request=$r key=thing words=~s~n@r.destination w.request.intent request=$r role=destination value=~s words=~s',
-           [Act,Verb,Ref,Place,Place]).
+    format(string(Base),'@r w.request.request act=~s mood=do refers=thing predicate=~s~n@r.ref w.request.lookup request=$r key=thing words=~s~n@r.destination w.request.intent request=$r role=destination value=~s words=~s',
+           [Act,Verb,Ref,Place,Place]),
+    placement_source_evidence(Q,Source,Base,Sop,HasSource).
 
 relative_placement_roles(Tokens, Plan, Act, [0,At], [At,End], End) :-
     member(Subject,Plan.subjects), member(Frame,Plan.frames), Act=Frame.act,
@@ -100,7 +100,40 @@ relative_placement_roles(Tokens, Plan, Act, [At,End], [0,At], End) :-
     member(Object,Plan.objects), append(Predicate,Object,Prefix),
     same_token_prefix(Prefix,Tokens), length(Predicate,At), length(Prefix,End).
 
-relative_destination(_, Plan, _, At, _, _) :- memberchk(At,Plan.regionStarts).
+placement_endpoints(Q, Plan, Act, At, Start-End, none) :-
+    offsets(Q.tokens,[At,Plan.end],Start,End),
+    once(relative_destination(Q,Plan,Act,At,Start,End)).
+placement_endpoints(Q, Plan, Act, At, Place, Source) :-
+    offsets(Q.tokens,[At,Plan.end],Start,End),
+    once((member([A,B,["marker",Act,"source"|_],_],Q.hits), A>=Start, B<End)),
+    findall(Destination-Origin, placement_pair(Q,Plan,Act,At,Start,End,Destination,Origin), Raw),
+    sort(Raw,[Place-Source]).
+
+placement_pair(Q, Plan, Act, At, Start, End, PlaceStart-End, Start-SourceEnd) :-
+    Between is At+1, Last is Plan.end-1, between(Between,Last,PlaceAt),
+    offsets(Q.tokens,[PlaceAt,Plan.end],PlaceStart,End),
+    offsets(Q.tokens,[At,PlaceAt],Start,SourceEnd),
+    placement_origin(Q,Act,Start,SourceEnd,before), relative_destination(Q,Plan,Act,PlaceAt,PlaceStart,End).
+placement_pair(Q, Plan, Act, At, Start, End, Start-PlaceEnd, SourceStart-End) :-
+    Between is At+1, Last is Plan.end-1, between(Between,Last,SourceAt),
+    offsets(Q.tokens,[SourceAt,Plan.end],SourceStart,End),
+    offsets(Q.tokens,[At,SourceAt],Start,PlaceEnd),
+    placement_origin(Q,Act,SourceStart,End,after), relative_destination(Q,Plan,Act,At,Start,PlaceEnd).
+
+placement_origin(Q, Act, Start, End, Order) :-
+    member([Start,MarkerEnd,["marker",Act,"source"|_],_],Q.hits), MarkerEnd<End,
+    ( relative_anchor(Q,Act,Start,MarkerEnd,End)
+    ; Order==before, once((member([_,_,Anchor,_],Q.tokens), Anchor>=MarkerEnd)),
+      member([Anchor,DetEnd,_],Q.determiners), DetEnd<End ),
+    \+ ( member([A,B,["marker",Act,"source"|_],_],Q.hits), A>=MarkerEnd, B<End ).
+
+placement_source_evidence(_,none,Sop,Sop,false).
+placement_source_evidence(Q,Start-End,Base,Sop,true) :-
+    span(Q.text,Start,End,SourceWords), encode(SourceWords,Source),
+    format(string(Sop),'~s~n@r.source w.request.unread request=$r text=~s note="placement source"',[Base,Source]).
+
+relative_destination(Q, Plan, _, At, Start, End) :-
+    member([At,Stop],Plan.regionRanges), offsets(Q.tokens,[At,Stop],Start,End).
 relative_destination(Q, Plan, Act, _, Start, End) :-
     member([Start,MarkerEnd,["marker",Act,"place",Relation,_],_],Q.hits),
     Relation\=="", MarkerEnd<End,
