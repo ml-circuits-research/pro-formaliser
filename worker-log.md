@@ -618,3 +618,7 @@
 - The typed argument sequence now keeps the histogram kind, source field and positive partition count on one request.
 - Ten of 212 targeted WebMeet texts gained that combination. Complete text evidence rose from 33.5% to 34.4%.
 - Existing count edits and width quantities need separate bindings. All 529 release tests passed.
+
+## Distinguish count and interval width
+- In the paired replay, width or rounding inputs with a count fell from 86.7% to 1.2%. All 65 count contrasts were identical.
+- The unchanged aggregate metadata and counts are saved in `lastResult-prolog.md`. All 530 release tests passed.

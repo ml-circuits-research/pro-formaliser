@@ -3,6 +3,7 @@ import {landmarkPairReadings} from './landmark-pairs.mjs';
 import {coordinatedRequestReadings,sentenceRequestReadings} from './sentence-requests.mjs';
 import {relativePlacementPacket,requestIntentPlans,resultRequestReading,unresolvedDestinationReadings,withRequestIntents} from './request-intents.mjs';
 import {orderingPacket} from './ordering.mjs';
+import {countOperandConflicts,keepConflictingCountsUnread} from './count-operands.mjs';
 import {namedTupleReading,tupleAssignments,tupleTargetNames} from './tuple-assignments.mjs';
 import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
@@ -212,6 +213,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (role && !fitsNumericAssignment(role,request,wires)) return;
     }
     if (catalogIssues(wires,worlds).length) return;
+    if (countOperandConflicts(text,wires,worlds).length) return;
     return JSON.stringify(signatures(wires,true));
   }
   const examples = new Map(), buckets = new Map(), frequencies = new Map();
@@ -358,6 +360,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const request = {text,ordering,relativePlacement:scope.restricted?undefined:relativePlacement,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,splitPlans:scope.restricted?[]:splitPlans,splitNominals,splitNumbers,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer,readingScope=scope,preferCompleteEvidence=false) {
+      answer=keepConflictingCountsUnread(text,answer,worlds);
       const key = admissibleKey(text,answer.sop);
       if (!key || readingScope.restricted && !readingScope.permits(parse(answer.sop))) return;
       if (!seen.has(key)) { seen.add(key); candidates.push(answer); return true; }

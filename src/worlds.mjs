@@ -53,6 +53,7 @@ import { evidenceVocabulary } from './evidence.mjs';
 import { scopeGrammar } from './scope-grammar.mjs';
 import { tokens } from './lexicon.mjs';
 import { compileOrdering } from './ordering.mjs';
+import { compileCountOperandConflicts } from './count-operands.mjs';
 import { createNominalInflection, nominalInflectionTypes } from './nominal-inflection.mjs';
 import { nativeTargetInventory, nativeTargetInventoryType, nativeTargetProviderTypes } from './native-target-inventory.mjs';
 
@@ -71,7 +72,7 @@ const types = new Set([
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
   'w.lang.en.cue', 'w.lang.en.number', 'w.lang.en.ordinal',
   'w.lang.en.det', 'w.lang.en.prep', 'w.lang.en.pron', 'w.lang.en.anaphor', 'w.lang.en.joiner', 'w.lang.en.neg', 'w.lang.en.neg.imperative', 'w.lang.en.skip', 'pro.reader.fresh_reference',
-  'w.reader.en.binding', 'w.reader.en.feature', 'w.reader.en.filter',
+  'w.reader.en.binding', 'w.reader.en.feature', 'w.reader.en.filter', 'pro.reader.count_operand_conflict',
 ]);
 const wireStart = /^[\t ]*[@?][^\s]+[\t ]+([^\s#]+)/gm;
 const values = (wire, key) => (wire.attrs[key] ?? []).map(str);
@@ -749,6 +750,7 @@ function compile(facts) {
     },
     nominalScales:nominalScaleForms(facts,requestKeys),
     ordering:compileOrdering(facts,lemma=>senses(lemma).some(wire=>one(wire,'pos')==='noun')),
+    countOperandConflicts:compileCountOperandConflicts(facts,argumentFormats),
     nominalPositions, strictNominalSubjects:strictNominalSubjects(nominalPositions),
     standingPositions:compileStandingPositions(facts,requestKeys),
     standingClosings:standingClosings(facts),

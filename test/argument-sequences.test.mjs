@@ -54,6 +54,48 @@ test('typed positive partition counts stay separate from the field and the histo
   }
 });
 
+test('a copied count with width or rounding evidence keeps the written operand unread',async t=>{
+  const wrong=[
+    ['Make a histogram of calls in bands of twenty minutes.','20','in bands of twenty minutes','partition width'],
+    ['Make a histogram of claims with a bin width of one hundred.','100','with a bin width of one hundred','partition width'],
+    ['Make a histogram of claims in 500-wide bins.','500','in 500-wide bins','partition width'],
+    ['Plot claims at 500 per bin as a histogram.','500','at 500 per bin','partition width'],
+    ['Make a histogram of claims rounded down to 500.','500','rounded down to 500','partition rounding'],
+  ];
+  function circuit(text,count,words,label='') {
+    return [
+      '@r w.request.request act=make mood=do words='+JSON.stringify(text),
+      '@r.t w.request.target request=$r family=chart mode=new sort=histogram',
+      '@r.c w.request.constraint request=$r on=attribute attribute=chart.bins value='+count+
+        ' words='+JSON.stringify(words)+label,
+    ].join('\n');
+  }
+  const mixed='Make a histogram with ten bins and a bin width of ten.';
+  const unit='In bands of twenty minutes histogram of the call length.';
+  const examples=[...wrong.map(([text,count,words])=>({text,sop:circuit(text,count,words),count:1})),
+    {text:mixed,sop:circuit(mixed,10,'ten',' key_words=bins'),count:1},
+    {text:unit,sop:circuit(unit,20,'twenty'),count:1}];
+  const reader=createReader({version:1,examples,templates:[]},loadWorlds());
+  t.after(()=>reader.close());
+  for (const [text,,words,note] of wrong) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const rewrites=candidates.filter(c=>c.sop.includes('note="'+note+'"'));
+    assert.ok(rewrites.length,text);
+    assert.ok(candidates.every(c=>!c.sop.includes('attribute=chart.bins')),text);
+    const candidate=rewrites[0];
+    const wires=parse(candidate.sop);
+    assert.ok(wires.some(w=>w.type==='w.request.unread' && value(w.attrs.text[0])===words &&
+      w.attrs.request[0]==='$'+wires[0].id),text);
+    assert.ok(wires.some(w=>w.type==='w.request.target'),text);
+    assert.equal(candidate.status,'partial',text);
+    assert.deepEqual(candidate.evidence.missing,[],text);
+  }
+  const {candidates}=await reader.propose(mixed);
+  assert.ok(hasBindings(candidates,{'chart.bins':['10','ten']}),mixed);
+  const fronted=await reader.propose(unit);
+  assert.ok(fronted.candidates.some(c=>c.sop.includes('text="bands of twenty minutes"')),unit);
+});
+
 test('native argument sequences bind a canonical aggregate and ordered written spans through propose', async () => {
   const reader=createReader(undefined,loadWorlds());
   try {

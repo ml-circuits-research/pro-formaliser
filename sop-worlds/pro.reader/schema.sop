@@ -130,6 +130,13 @@
 @pro.reader.argument_format.key core.slot of=pro.reader.argument_format key=key kind=atom required=true
 @pro.reader.argument_format.format core.slot of=pro.reader.argument_format key=format enum=identifier enum=date enum=clock enum=zone enum=measurement enum=nominal_description enum=scalar_number enum=positive_count required=true
 
+@pro.reader.count_operand_conflict core.type of=pro.reader.count_operand_conflict closed=true
+@pro.reader.count_operand_conflict.family core.slot of=pro.reader.count_operand_conflict key=family kind=atom required=true
+@pro.reader.count_operand_conflict.key core.slot of=pro.reader.count_operand_conflict key=key kind=atom required=true
+@pro.reader.count_operand_conflict.before core.slot of=pro.reader.count_operand_conflict key=before kind=string many=true
+@pro.reader.count_operand_conflict.after core.slot of=pro.reader.count_operand_conflict key=after kind=string many=true
+@pro.reader.count_operand_conflict.note core.slot of=pro.reader.count_operand_conflict key=note kind=string required=true
+
 @pro.reader.argument_sequence.owner core.slot of=pro.reader.argument_sequence key=owner kind=string many=true
 @pro.reader.argument_sequence.owner_key core.slot of=pro.reader.argument_sequence key=owner_key kind=atom
 @pro.reader.argument_sequence.owner_value core.slot of=pro.reader.argument_sequence key=owner_value kind=atom kind=string
