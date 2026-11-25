@@ -85,9 +85,13 @@ export function argumentSequences(facts,catalog) {
     const family=one(w,'family'),act=one(w,'act'),mode=one(w,'mode'),tab=one(w,'tab');
     const props=new Map(catalog.filter(k=>k.family===family && k.tab===tab).map(k=>[k.name,k]));
     const owners=many(w,'owner').map(keys).filter(words=>words.length), ownerKey=one(w,'owner_key'),ownerValue=one(w,'owner_value');
-    const inferred=one(w,'inferred_owner')==='true';
-    if (inferred && (owners.length || mode!=='new' || ownerKey)) continue;
-    const owned=owners.length>0 || inferred;
+    const inferred=one(w,'inferred_owner')==='true', contextual=one(w,'contextual_owner')==='true';
+    if (inferred && (owners.length || mode!=='new' || ownerKey || contextual) ||
+        contextual && (owners.length || mode!=='existing' || ownerKey)) continue;
+    const owned=owners.length>0 || inferred || contextual;
+    const requestMode=one(w,'request_mode');
+    if (requestMode && (!owned || !atom.test(requestMode))) continue;
+    const modeMarker=one(w,'mode_marker');
     const predicateBank=many(w,'predicate_surface').map(keys).filter(words=>words.length);
     const scopeAttribute=one(w,'scope_attribute');
     if (scopeAttribute && !catalog.some(key=>key.tab===tab && key.family==='preference' &&
@@ -136,7 +140,11 @@ export function argumentSequences(facts,catalog) {
     if (slots.length<2 || new Set(slots).size!==slots.length ||
         [...lexicalParts].some(key=>!slots.includes(key)) ||
         [...structuredParts].some(key=>!slots.includes(key)) ||
-        inferred && !structuredParts.size || owned && (!inferred && !slots.includes(ownerPart) || slots.includes(ownerKey))) continue;
+        inferred && !structuredParts.size ||
+        owned && (!inferred && !contextual && !slots.includes(ownerPart) || slots.includes(ownerKey))) continue;
+    if (contextual && (slots.length!==2 || parts.length!==2 || !parts[0].bank || parts[1].key!==predicatePart)) continue;
+    if (modeMarker && (!requestMode || parts.at(-1).literal?.join(' ')!==keys(modeMarker).join(' ') ||
+        slots.filter(key=>props.has(key)).length!==1)) continue;
     const scopeLiteralSlot=one(w,'scope_literal_slot');
     const scopeLiterals=many(w,'scope_literal').map(keys);
     const closedSlot=parts.find(part=>part.key===scopeLiteralSlot)?.bank;
@@ -147,17 +155,18 @@ export function argumentSequences(facts,catalog) {
     const boundaries=[...many(w,'open_boundary').map(keys),...bindsPredicate ? conjunctions : []].filter(words=>words.length);
     const numericModifiers=many(w,'numeric_modifier').map(keys).filter(words=>words.length);
     const declaredPrefixes=many(w,'prefix').map(keys).filter(prefix=>prefix.length);
+    if (contextual && declaredPrefixes.length) continue;
     if (scopeAttribute && (!declaredPrefixes.length || mode!=='existing' || !bindsPredicate ||
         parts[0].key!==scopePart || parts[1]?.literal?.join(' ')!==',' || !parts[2]?.nominal ||
         parts[3]?.key!==predicatePart)) continue;
     const closedResult=parts[2]?.bank && !parts[2].lexical;
     const ownerLed=!declaredPrefixes.length && mode==='existing' && parts.length===3 && parts[0].nominal &&
       (parts[1].literal && closedResult || parts[1].key===predicatePart && (closedResult || parts[2].format));
-    for (const prefix of ownerLed ? [[]] : declaredPrefixes) {
+    for (const prefix of ownerLed || contextual ? [[]] : declaredPrefixes) {
       const head=prefix[0] ?? '';
       const entries=index.get(head) ?? [];
       entries.push({prefix,parts,family,act,mode,owned,inferred,ownerKey,ownerValue,tails,boundaries,numericModifiers,
-        bindsPredicate,ownerLed,scopeAttribute,scopeLiteralSlot,scopeLiterals});index.set(head,entries);
+        bindsPredicate,ownerLed,contextual,requestMode,modeMarker,scopeAttribute,scopeLiteralSlot,scopeLiterals});index.set(head,entries);
     }
   }
   for (const frames of index.values()) {
@@ -182,6 +191,7 @@ export function sequencePacket(ts,worlds,restricted=false,text) {
     if (!matchesAt(ts,i,f.prefix) || restricted && !f.scopeLiteralSlot) continue;
     const start=i+f.prefix.length;
     if (start>=stop) continue;
+    if (f.contextual && !f.parts[0].bank.some(([words])=>matchesAt(ts,start,words))) continue;
     if (f.ownerLed) {
       const det=worlds.determiners[ts[i][0]];
       if (det && !['definite','demonstrative','possessive'].includes(det) ||
@@ -228,7 +238,9 @@ export function sequencePacket(ts,worlds,restricted=false,text) {
       if (politeTail && end===stop-1 || f.tails.some(words=>end+words.length<=stop && matchesAt(ts,end,words))) endings.push(end);
     }
     for (const end of endings) {
-      if (end-start>32) continue;
+      const marker=f.modeMarker ? keys(f.modeMarker) : [];
+      const markerAt=end-marker.length;
+      if (end-start>32 || marker.length && (markerAt<start || !matchesAt(ts,markerAt,marker))) continue;
       const parts=f.parts.map(part=>part.format ? {...part,bank:structuredBank(text,ts,start,end,worlds,f.family,part)} : part);
       if (parts.some(part=>part.format && !part.bank.length)) continue;
       const packet={family:f.family,act:f.act,mode:f.mode,parts,input:input.slice(0,end-start),
@@ -237,6 +249,9 @@ export function sequencePacket(ts,worlds,restricted=false,text) {
         const boundary=f.prefix.findLastIndex(word=>[',',':'].includes(word));
         packet.owned={...addressed,inferred:f.inferred,ownerKey:f.ownerKey ?? '',ownerValue:f.ownerValue ?? '',
           utteranceEnd:ts[stop-1][3]};
+        if (f.contextual) packet.owned.contextual=true;
+        if (f.requestMode) packet.owned.requestMode=f.requestMode;
+        if (marker.length) packet.owned.modeMarkerStart=ts[markerAt][2];
         if (f.scopeAttribute) packet.owned.scopeAttribute=f.scopeAttribute;
         if (f.scopeLiteralSlot) Object.assign(packet.owned,{scopeLiteralSlot:f.scopeLiteralSlot,scopeLiterals:f.scopeLiterals});
         if (f.bindsPredicate) {
@@ -298,16 +313,16 @@ export function sequenceScopeText(text,proof) {
 export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
   if (!proof.owned) return;
   const chars=Array.from(text), span=(start,end)=>chars.slice(start,end).join('');
-  const {ownerKey,ownerValue,predicateStart,predicateEnd,utteranceEnd}=proof.owned;
+  const {ownerKey,ownerValue,predicateStart,predicateEnd,utteranceEnd,contextual,requestMode,modeMarkerStart}=proof.owned;
   const owner=proof.bindings.find(([key])=>key===ownerPart);
   const identity=proof.bindings.find(([key])=>key===identityPart);
-  if (!owner && !proof.owned.inferred) return;
+  if (!owner && !proof.owned.inferred && !contextual) return;
   const noun=owner && span(owner[2],owner[3]);
   const target=identity ? ' fill=written name='+encode(span(identity[2],identity[3]))+' family_words='+encode(noun) :
-    proof.mode==='existing' ? ' fill=description description='+encode(noun) :
+    contextual ? ' fill=context' : proof.mode==='existing' ? ' fill=description description='+encode(noun) :
       noun ? ' determiner=indefinite family_words='+encode(noun) : '';
   const lines=[
-    '@r1 w.request.request act='+encode(proof.act)+' mood=do'+
+    '@r1 w.request.request act='+encode(proof.act)+' mood=do'+(requestMode ? ' mode='+requestMode : '')+
       (predicateStart===undefined ? '' : ' predicate='+encode(span(predicateStart,predicateEnd)))+
       ' words='+encode(text),
     '@r1.t w.request.target request=$r1 family='+encode(proof.family)+' mode='+proof.mode+target,
@@ -343,7 +358,8 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
     }
     lines.push('@r1.arg'+i+' w.request.constraint request=$r1 on=attribute attribute='+encode(key)+
       ' value='+(!measurement && canonical && atom.test(canonical) ? canonical : encode(value))+
-      (words===value && !measurement ? '' : ' words='+encode(words))+(keyWords ? ' key_words='+encode(keyWords) : '')+' operator=eq phase=result'+
+      (words===value && !measurement ? '' : ' words='+encode(words))+(keyWords ? ' key_words='+encode(keyWords) : '')+
+      (modeMarkerStart===undefined ? '' : ' key_words='+encode(span(modeMarkerStart,proof.end)))+' operator=eq phase=result'+
       (measurement ? ' measure='+measurement.measure+' unit='+encode(measurement.unit)+' measure_words='+encode(measurement.words) : ''));
   }
   const lead=span(proof.owned.courtesyStart ?? 0,proof.owned.prefaceEnd ??

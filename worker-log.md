@@ -437,3 +437,8 @@
 - Frozen meetings-03 row 326 now offers an ask/count proposal with the exact guest-list scope unread in both profiles. Neither replay emits a mutation.
 - Declared count openings feed the interrogative guard. Unqualified participant and chart controls are complete.
 - All 459 isolated release tests passed. No benchmark rerun.
+
+## Relative alignment
+- Frozen diagrams-01 rows 1613 and 1709 now have complete arrangement proposals in both reader profiles, with contextual and written group descriptions respectively.
+- Ordered argument frames retain the exact edge and mode marker. Group identity stays deferred.
+- All 460 isolated release tests passed. No benchmark rerun.

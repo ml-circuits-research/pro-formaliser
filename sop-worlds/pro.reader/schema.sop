@@ -128,6 +128,9 @@
 @pro.reader.argument_sequence.part core.slot of=pro.reader.argument_sequence key=part kind=atom kind=string many=true required=true
 @pro.reader.argument_sequence.lexical_part core.slot of=pro.reader.argument_sequence key=lexical_part kind=atom many=true
 @pro.reader.argument_sequence.structured_part core.slot of=pro.reader.argument_sequence key=structured_part kind=atom many=true
+@pro.reader.argument_sequence.contextual_owner core.slot of=pro.reader.argument_sequence key=contextual_owner kind=boolean
+@pro.reader.argument_sequence.request_mode core.slot of=pro.reader.argument_sequence key=request_mode kind=atom
+@pro.reader.argument_sequence.mode_marker core.slot of=pro.reader.argument_sequence key=mode_marker kind=string
 @pro.reader.argument_sequence.inferred_owner core.slot of=pro.reader.argument_sequence key=inferred_owner kind=boolean
 
 @pro.reader.argument_format core.type of=pro.reader.argument_format closed=true

@@ -279,3 +279,40 @@ test('loads an unrelated trailing owner with a closed typed value from an overla
     'report.audience':['West District',undefined],
   }));
 });
+
+test('binds relative alignment with either a written group or a deferred contextual group',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,description,edge,words,predicate,marker] of [
+    ['bring the top edges of the boxes into line','the boxes','top','top edges','bring','into line'],
+    ['Please bring the left edges of the nodes into line','the nodes','left','left edges','bring','into line'],
+    ['horizontal centres aligned',undefined,'centre','horizontal centres','aligned',undefined],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>candidate.source==='argument-frame' && hasBindings([candidate],{'node.edge':[edge,words]}));
+    assert.ok(reading,text);
+    const wires=parse(reading.sop);
+    const byType=type=>wires.find(wire=>wire.type==='w.request.'+type);
+    const field=(type,key)=>value(byType(type)?.attrs[key]?.[0]);
+    assert.deepEqual([field('request','act'),field('request','mode'),field('request','predicate')],['place','arrange',predicate]);
+    assert.deepEqual([field('target','family'),field('target','mode'),field('target','fill'),field('target','description')],
+      ['node','existing',description?'description':'context',description]);
+    assert.equal(field('constraint','key_words'),marker);
+    assert.equal(reading.status,'matched');
+    assert.deepEqual(reading.catalog.issues,[]);
+    assert.deepEqual(reading.evidence.missing,[]);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0);
+  }
+  for (const text of [
+    'Bring the boxes into line',
+    'Bring the top edges of the pictures into line',
+    'Bring the top edges of the boxes into line if ready',
+    'Do not bring the top edges of the boxes into line',
+    'Were the horizontal centres aligned?',
+    'Write "horizontal centres aligned"',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(!candidates.some(candidate=>candidate.source==='argument-frame' &&
+      candidate.sop.includes('attribute="node.edge"')),text);
+  }
+});
