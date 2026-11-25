@@ -545,3 +545,7 @@
 ## Existing targets from proved noun roles
 - A native frame now admits existing inventory kinds for licensed actions without widening the general lexicon.
 - The real 214-row replay added eight complete direct readings and a two-command circuit. All 508 tests passed.
+
+## Existing inventory targets with written sources
+- A declared source tail now bounds native object recognition and stays exact in the request.
+- The real 257-text replay added six direct and three composed readings. The optional module verified all six direct source links. All 509 tests passed.

@@ -27,13 +27,12 @@ export function compileSourceContainers(facts) {
   return {aliases,markers,surfaces:new Set([...markers.values()].flatMap(items=>[...items]))};
 }
 
-export function sourceContainerMatch(text,worlds) {
+function matchSourceContainers(text,worlds,ts,quotes) {
   const inventory=worlds.sourceContainers;
-  if (!worlds.validationModules?.types.has(sourceScope) || !inventory?.aliases.length) return [];
-  const ts=tokens(text), chars=Array.from(text);
+  if (!inventory?.aliases.length) return [];
+  const chars=Array.from(text);
   const offset=[0];
   for (const char of chars) offset.push(offset.at(-1)+char.length);
-  const quotes=quotedSpans(text);
   const form=(start,end)=>ts.slice(start,end).map(([key])=>key).join(' ');
   const matches=[];
   for (const marker of inventory.surfaces) {
@@ -49,12 +48,31 @@ export function sourceContainerMatch(text,worlds) {
             !worlds.scopeGrammar.negatives.has(following)) continue;
         const from=ts[i][2],to=ts[end-1][3];
         if (quotes.some(q=>q.start<to && q.end>from)) continue;
-        matches.push({...entry,marker,from:offset[from],to:offset[to],
+        matches.push({...entry,marker,first:i,end,from:offset[from],to:offset[to],
           written:text.slice(offset[ts[det][2]],offset[to])});
       }
     }
   }
   return matches;
+}
+
+export function sourceContainerMatch(text,worlds) {
+  return worlds.validationModules?.types.has(sourceScope) ?
+    matchSourceContainers(text,worlds,tokens(text),quotedSpans(text)) : [];
+}
+
+// Prove the written object independently of a complete, declared source
+// tail. The source marker is licensed against the eventual proved action.
+export function sourceFramePlans(text,ts,quotes,worlds) {
+  let end=ts.length;
+  while (['.','!'].includes(ts[end-1]?.[0])) end--;
+  return matchSourceContainers(text,worlds,ts,quotes).flatMap(match=>{
+    if (!match.first || match.end!==end) return [];
+    const language=worlds.languageFrames.prepare(ts.slice(0,match.first),quotes,worlds);
+    if (!language.frames.length) return [];
+    const acts=[...worlds.sourceContainers.markers].filter(([,markers])=>markers.has(match.marker)).map(([act])=>act);
+    return [{language,acts,families:match.affected,boundary:ts[match.first][2]}];
+  });
 }
 
 export function sourceContainerReading(text,candidate,worlds,matches=sourceContainerMatch(text,worlds)) {

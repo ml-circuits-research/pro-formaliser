@@ -6,7 +6,7 @@ import {namedTupleReading,tupleAssignments,tupleTargetNames} from './tuple-assig
 import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
 import {universalInventoryPacket} from './universal-inventory.mjs';
-import {sourceContainerMatch,sourceContainerReading} from './source-container.mjs';
+import {sourceContainerMatch,sourceContainerReading,sourceFramePlans} from './source-container.mjs';
 import {setExclusionReadings} from './set-exclusion.mjs';
 import {spatialModifierReadings} from './spatial-modifier.mjs';
 import {dependentOperandReadings} from './dependent-operands.mjs';
@@ -314,6 +314,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const scope = requestScope(text,maskQuoted(scopeText,tupleNames),worlds,hits);
     hits.push(...scope.intentHits);
     const allowConstraints = scope.windows.length > 0;
+    const sourceFrames=languageFrames && frameTargets.length && !scope.restricted ?
+      sourceFramePlans(text,ts,quotes,worlds) : [];
     const exact = examples.get(text) ?? [];
     const transfers = exact.length ? [] : transfer(text);
     const topicCommands=scope.restricted ? undefined : topicCommandPacket(text,ts,quotes,worlds,topicGrammar);
@@ -336,7 +338,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         acts:[...new Set(worlds.spatialBindings.flatMap(binding=>binding.namedActs))],
         modifiers:[...worlds.spatialModifiers.rules.keys()].map(words=>words.split(/\s+/u)),
       } : undefined;
-    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer,readingScope=scope) {
       const key = admissibleKey(text,answer.sop);

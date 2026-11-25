@@ -93,3 +93,48 @@ test('leaves named, indefinite, quoted and non-source containers in their origin
     'Remove it from the document called Annual Report',
   ]) assert.deepEqual(enriched(await reader.propose(text)),[],text);
 });
+
+test('keeps a native inventory object separate from its exact written source tail',async t=>{
+  const plain=createReader(undefined,loadWorlds({paths:[]}));
+  const worlds=sourceWorlds(), typed=createReader(undefined,worlds);
+  t.after(()=>Promise.all([plain.close(),typed.close()]));
+  for (const [text,sort,tail] of [
+    ['Remove the butterfly from the drawing.','butterfly','from the drawing'],
+    ['Remove the red daffodils off the canvas.','daffodil','off the canvas'],
+  ]) {
+    const result=await plain.propose(text,{evidence:true});
+    const partial=result.candidates.find(candidate=>candidate.source==='frame-target-inventory');
+    assert.ok(partial,text);
+    const wires=parse(partial.sop);
+    const targets=wires.filter(w=>w.type==='w.request.target');
+    assert.equal(partial.status,'partial',text);
+    assert.equal(targets.length,1,text);
+    assert.equal(get(targets[0],'sort'),sort,text);
+    assert.equal(get(targets[0],'mode'),'existing',text);
+    assert.equal(get(wires.find(w=>w.type==='w.request.unread'),'text').replace(/\.$/,''),tail,text);
+    assert.deepEqual(partial.catalog.issues,[],text);
+    assert.deepEqual(partial.evidence.missing,[],text);
+    const bound=enriched(await typed.propose(text,{evidence:true})).find(candidate=>{
+      const graph=parse(candidate.sop);
+      const target=graph.find(w=>w.type==='w.request.target' && get(w,'sort')===sort);
+      return target && graph.some(w=>w.type===type && get(w,'affected')==='$'+target.id && get(w,'words')===tail);
+    });
+    assert.ok(bound,text);
+    assert.equal(bound.status,'matched',text);
+    assert.ok(validate(bound.sop,worlds),text);
+    assert.deepEqual(bound.evidence.missing,[],text);
+    if (sort==='daffodil') assert.ok(wires.some(w=>get(w,'phase')==='selector' && get(w,'value')==='red'),text);
+  }
+  for (const text of [
+    'Remove the butterfly from the garden.',
+    'Remove the butterfly from the document.',
+    'Remove the butterfly from "the drawing".',
+    'Do not remove the butterfly from the canvas.',
+    'Remove the butterfly from the canvas if approved.',
+    'Remove the butterfly from the drawing or the canvas.',
+    'Did you remove the butterfly from the canvas?',
+  ]) {
+    const {candidates}=await plain.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='frame-target-inventory'),text);
+  }
+});

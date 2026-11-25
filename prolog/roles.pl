@@ -86,9 +86,10 @@ attached_roles(Q, Act, _, Mode, End, Wires, Bounds, Bounds, Fit, Next) :-
     attachment(Q,Act,Mode,M-N,Clause.comma,none,Wires,Bounds,_,Fit,1,Next),
     Wires=[_,_].
 attached_roles(Q, Act, Family, Mode, End, Wires, Bounds, Blocked, Bonus, FirstConstraint) :-
-    ( attached_cache(Act-Family,Mode,End,Options) -> true
+    scope_limit(Q,Limit),
+    ( attached_cache(Act-Family-Limit,Mode,End,Options) -> true
     ; findall(Option, candidate_attachment(Q,Act,Family,Mode,End,Option), Options),
-      assertz(attached_cache(Act-Family,Mode,End,Options)) ),
+      assertz(attached_cache(Act-Family-Limit,Mode,End,Options)) ),
     member(attachment(Wires,Bounds,Blocked,Bonus,FirstConstraint),Options).
 
 candidate_attachment(Q,Act,Family,Mode,End,attachment(Wires,Bounds,Blocked,Bonus,FirstConstraint)) :-

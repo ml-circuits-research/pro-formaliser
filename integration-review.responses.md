@@ -765,3 +765,13 @@ The actual default-model before/after replay read 214 input rows. Eight rows pro
 An inventory enabled across ordinary lexical search also produced unrelated targets in requests such as “can i have a fresh sheet of paper” and “what can u see in my picture”. That experiment informed the argument-scoped design. Route the optional `argument_role` projection and existing-object binding through the shared grammar channel. The current installed frame subset leaves locative and trailing-adverb removal cases outside this path. Copy and save applicability still depend on their separately reviewed canonical additions. [Declaration](sop-worlds/pro.reader/target-inventory.sop) · [Regressions](test/frame-target-inventory.test.mjs)
 
 All 508 isolated release tests passed.
+
+## Bulk findings fixed — inventory objects with written source containers
+
+The reader can now use a declared terminal container phrase to bound an independent native object-frame proof. The proved action must license the source marker, and the container's declared applicability must include the target family. Prolog scopes its target and constraint search before the source and retains the exact remainder. The existing relational module can then promote that exact unread span to a source linked to the same request and target.
+
+The actual before/after replay used 257 texts. Six direct requests gained native target readings with the source phrase preserved, including removal of a butterfly from a drawing and red daffodils off a canvas. Three composed rows changed, including the butterfly removal followed by preserving the grass and two duplicate rows with a scoped blue-house exclusion. The remaining 248 rows returned identical ordered SOP candidates. The separate 43-text relational-module replay confirmed typed source links for all six direct cases plus the composed butterfly/preserve case. Native catalogue and evidence checks passed.
+
+This uses the installed source-marker and container declarations and the existing optional source-scope relation. Default output preserves the written source as unread pending a canonical source relation. Unknown or incompatible containers, quoted tails, questions, and conditions do not supply this proof. No aggregate benchmark ran. [Regressions](test/source-container.test.mjs)
+
+All 509 isolated release tests passed.

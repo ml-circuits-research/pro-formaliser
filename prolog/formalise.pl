@@ -77,15 +77,22 @@ answer(Q, _{candidates:Answers,frontedCandidates:Fronted,frameTargets:FrameTarge
 % Inventory vocabulary contributes only to the argument proved by a native
 % frame. Keep that path outside the bounded ordinary lexical search.
 frame_target_candidate(Q, Proofs, Clean) :-
-    member(Proof,Proofs), Act=Proof.act,
+    frame_target_context(Q,Proofs,Proof,FrameQ), Act=Proof.act,
     offsets(Q.tokens,Proof.predicate,PS,PE),
     member(Argument,Proof.roles), offsets(Q.tokens,Argument.range,First,End),
     member([Start,End,Entry,Role],Q.frameTargets), Role=Argument.role,
-    Entry=["target",Act|_], Start>=First, nominal_prefix(Q,First,Start),
+    Entry=["target",Act,Family|_], Start>=First, nominal_prefix(FrameQ,First,Start),
+    ( get_dict(frameFamilies,FrameQ,Families) -> memberchk(Family,Families) ; true ),
     Head=[PS,PE,["act",Act,"do",0],0],
     Hit=[Start,End,Entry,0],
-    Scoped=Q.put(_{actHits:[Head],targetHits:[Hit|Q.targetHits],requiredTarget:Hit}),
+    Scoped=FrameQ.put(_{actHits:[Head],targetHits:[Hit|FrameQ.targetHits],requiredTarget:Hit}),
     lexical_candidate(Scoped,_,Candidate), clean_candidate(Candidate,Clean).
+
+frame_target_context(Q, Proofs, Proof, Q) :- member(Proof,Proofs).
+frame_target_context(Q, _, Proof, Scoped) :-
+    member(Plan,Q.sourceFrames), frame_proofs(Plan.language,Proofs), member(Proof,Proofs),
+    memberchk(Proof.act,Plan.acts),
+    Scoped=Q.put(_{scopes:[[0,Plan.boundary,"action",""]],frameFamilies:Plan.families}).
 
 clean_candidate(C, Clean) :- (del_dict(binding,C,_,Clean) -> true ; Clean=C).
 
