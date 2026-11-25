@@ -270,6 +270,7 @@ function compile(facts) {
   }
   const aliases = new Map();
   const valuesBySlot = new Map();
+  const closedValueAliases = new Map();
   const kindBindings = [];
   const boundValues = new Map(), boundAttributes = new Map(), properties = new Map();
 
@@ -485,6 +486,14 @@ function compile(facts) {
     for (const alias of valuesBySlot.get(key.means) ?? []) {
       if (key.values.includes(alias.value)) forms.push(alias);
     }
+    for (const {text,value} of [...valuesBySlot.get(key.name) ?? [],...valuesBySlot.get(key.means) ?? []]) {
+      if (key.values.length && key.values.includes(value)) {
+        const id=JSON.stringify([key.family,key.name,phrase(text)]);
+        const meanings=closedValueAliases.get(id) ?? new Set();
+        meanings.add(value);
+        closedValueAliases.set(id,meanings);
+      }
+    }
     const lexicalForms = [...(boundAttributes.get(key.name) ?? []), ...[...concepts]
       .flatMap(concept => boundValues.get(concept) ?? [])];
     for (const form of lexicalForms) {
@@ -672,6 +681,10 @@ function compile(facts) {
       values(w,'text').map(text=>({key:one(w,'key'),words:tokens(text).map(t=>t[0])}))).filter(entry=>entry.key && entry.words.length),entry=>entry.key),
     ownerPropertyLabels:propertyLabels,
     ownerPropertyValues:compatibleValues,
+    declaredValueAlias: (family,key,text,value) => {
+      const meanings=closedValueAliases.get(JSON.stringify([family,key,phrase(text)]));
+      return meanings?.size===1 && meanings.has(value);
+    },
     compoundReferences:facts('pro.reader.compound_reference').map(w=>({family:one(w,'family'),firstKey:one(w,'first_key'),secondKey:one(w,'second_key'),delimiter:one(w,'delimiter')})),
     universalInventory:compileUniversalInventory(facts,words,targetFamilies),
     nominalClasses, participantAdjuncts:compileParticipantAdjuncts(facts,requestKeys), sourceContainers:compileSourceContainers(facts), landmarkPairs:compileLandmarkPairs(facts), setExclusions:compileSetExclusions(facts), spatialModifiers:compileSpatialModifiers(facts), spatialBindings, selectorKeys, identityAssignmentVerbs,

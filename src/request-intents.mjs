@@ -151,6 +151,15 @@ export function withRequestIntents(text, plan, candidate, worlds) {
   if (!families.size && !one(owner, 'asked_words')) return;
   const scope = one(owner, 'words') ?? plan.body;
   const scopeStart = plan.body.length - scope.length;
+  const pendingCommand=wires.some(wire=>{
+    if (wire.type!=='w.request.unread' || one(wire,'request')!==ref) return false;
+    const written=one(wire,'text');
+    if (!written || !scope.endsWith(written)) return false;
+    const [joiner,...tail]=terms(written);
+    return worlds.joiners[joiner]==='coordination' && tail.slice(0,5).some((_,i)=>
+      worlds.lookup(tail.slice(0,i+1).join(' ')).some(([role,act])=>role==='act' && act!=='ask'));
+  });
+  if (pendingCommand) return;
   if (plan.continuation && (scopeStart >= plan.seam || !wires.some(wire=>
     wire.type === 'w.request.constraint' && one(wire,'request') === ref && one(wire,'phase') === 'result' &&
     plan.continuation.roles.has(one(wire,'attribute')) &&

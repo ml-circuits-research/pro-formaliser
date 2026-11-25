@@ -19,7 +19,8 @@ const atom=/^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u;
 function admittedLead(ts,end,worlds) {
   if (!end) return true;
   const words=ts.slice(0,end).map(([word])=>word).filter(word=>word!==',');
-  const known=text=>worlds.fillerPhrases.has(text) || worlds.literalGrammar.leads.has(text);
+  const known=text=>worlds.fillerPhrases.has(text) || worlds.literalGrammar.leads.has(text) ||
+    worlds.scopeGrammar.courtesy.has(text);
   return known(words.join(' ')) ||
     worlds.joiners[words.at(-1)]==='addition' && (words.length===1 || known(words.slice(0,-1).join(' ')));
 }
@@ -140,10 +141,14 @@ export function argumentSequences(facts,catalog) {
     const bindsPredicate=slots.includes(predicatePart);
     const boundaries=[...many(w,'open_boundary').map(keys),...bindsPredicate ? conjunctions : []].filter(words=>words.length);
     const numericModifiers=many(w,'numeric_modifier').map(keys).filter(words=>words.length);
-    for (const prefix of many(w,'prefix').map(keys).filter(prefix=>prefix.length)) {
-      const entries=index.get(prefix[0]) ?? [];
+    const declaredPrefixes=many(w,'prefix').map(keys).filter(prefix=>prefix.length);
+    const ownerLed=!declaredPrefixes.length && mode==='existing' && parts.length===3 &&
+      parts[0].nominal && parts[1].literal && parts[2].bank && !parts[2].lexical;
+    for (const prefix of ownerLed ? [[]] : declaredPrefixes) {
+      const head=prefix[0] ?? '';
+      const entries=index.get(head) ?? [];
       entries.push({prefix,parts,family,act,mode,owned,inferred,ownerKey,ownerValue,tails,boundaries,numericModifiers,
-        bindsPredicate,scopeLiteralSlot,scopeLiterals});index.set(prefix[0],entries);
+        bindsPredicate,ownerLed,scopeLiteralSlot,scopeLiterals});index.set(head,entries);
     }
   }
   for (const frames of index.values()) {
@@ -163,10 +168,16 @@ export function sequencePacket(ts,worlds,restricted=false,text) {
   while (stop && ['.','!','?'].includes(ts[stop-1][0])) stop--;
   if (!stop) return packets;
   let commandStarts;
-  for (let i=0;i<stop;i++) for (const f of worlds.argumentSequences?.get(ts[i][0]) ?? []) {
+  for (let i=0;i<stop;i++) for (const f of [...worlds.argumentSequences?.get(ts[i][0]) ?? [],
+      ...worlds.argumentSequences?.get('') ?? []]) {
     if (!matchesAt(ts,i,f.prefix) || restricted && !f.scopeLiteralSlot) continue;
     const start=i+f.prefix.length;
     if (start>=stop) continue;
+    if (f.ownerLed) {
+      const det=worlds.determiners[ts[i][0]];
+      if (det && !['definite','demonstrative','possessive'].includes(det) ||
+          !f.parts[0].nominal.some(noun=>matchesAt(ts,i+Number(Boolean(det)),noun))) continue;
+    }
     const addressed=f.owned && !f.bindsPredicate && addressedLead(ts,i,worlds);
     if (f.owned) {
       if (!worlds.literalGrammar.licenses(f.family,f.act) ||
@@ -202,8 +213,10 @@ export function sequencePacket(ts,worlds,restricted=false,text) {
       return [word,a,b,!protectedWord];
     });
     const endings=[stop];
+    const politeTail=f.ownerLed && worlds.discourse.some(({text,class:kind})=>
+      kind==='politeness' && text===ts[stop-1][0]);
     for (let end=start+1;end<stop;end++) {
-      if (f.tails.some(words=>end+words.length<=stop && matchesAt(ts,end,words))) endings.push(end);
+      if (politeTail && end===stop-1 || f.tails.some(words=>end+words.length<=stop && matchesAt(ts,end,words))) endings.push(end);
     }
     for (const end of endings) {
       if (end-start>32) continue;
@@ -220,7 +233,8 @@ export function sequencePacket(ts,worlds,restricted=false,text) {
           packet.owned.bindsPredicate=true;
           if (admittedLead(ts,start,worlds)) packet.owned.prefaceEnd=ts[start-1][3];
         }
-        else Object.assign(packet.owned,{predicateStart:ts[i+boundary+1][2],predicateEnd:ts[start-1][3]});
+        else if (!f.ownerLed) Object.assign(packet.owned,{predicateStart:ts[i+boundary+1][2],predicateEnd:ts[start-1][3]});
+        if (politeTail && end===stop-1) packet.owned.politeTail=ts[end][2];
       }
       packets.push(packet);
     }
@@ -283,7 +297,8 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
     proof.mode==='existing' ? ' fill=description description='+encode(noun) :
       noun ? ' determiner=indefinite family_words='+encode(noun) : '';
   const lines=[
-    '@r1 w.request.request act='+encode(proof.act)+' mood=do predicate='+encode(span(predicateStart,predicateEnd))+
+    '@r1 w.request.request act='+encode(proof.act)+' mood=do'+
+      (predicateStart===undefined ? '' : ' predicate='+encode(span(predicateStart,predicateEnd)))+
       ' words='+encode(text),
     '@r1.t w.request.target request=$r1 family='+encode(proof.family)+' mode='+proof.mode+target,
   ];
@@ -321,9 +336,11 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
       (measurement ? ' measure='+measurement.measure+' unit='+encode(measurement.unit)+' measure_words='+encode(measurement.words) : ''));
   }
   const lead=span(proof.owned.courtesyStart ?? 0,proof.owned.prefaceEnd ??
-    (proof.owned.bindsPredicate ? proof.anchor : predicateStart)).trim();
+    (proof.owned.bindsPredicate ? proof.anchor : predicateStart ?? proof.anchor)).trim();
   if (lead) lines.push('@f1 w.request.filler text='+encode(lead.replace(/,\s*$/u,'')));
-  const remainder=span(proof.end,utteranceEnd).replace(/^\s*,?\s*/u,'');
+  const {politeTail}=proof.owned;
+  if (politeTail!==undefined) lines.push('@f2 w.request.filler text='+encode(span(politeTail,utteranceEnd)));
+  const remainder=span(proof.end,politeTail ?? utteranceEnd).replace(/^\s*,?\s*/u,'');
   const unread=proof.bindings.filter(([key])=>key===unreadPart).map(([, ,a,b])=>span(a,b));
   if (proof.owned.locationEnd) unread.unshift(span(0,proof.owned.locationEnd).trim());
   if (remainder) unread.push(remainder);

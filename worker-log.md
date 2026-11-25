@@ -355,3 +355,8 @@
 ## INTEGRATE-4 canonical consumption
 - Installed `3b2deebd` and retired the 25 local frame and weather declarations. All eight reviewed outputs match the previous installation.
 - The native compiler preserves explicit owner precedence across shard order. All 24 focused and 430 isolated release tests passed.
+
+## Closed results with an implicit property
+- The frozen model produced complete proposals in controls 1000 and 387. Control 76 now grounds the preset and preserves the pending retention request verbatim.
+- A novel schema overlay verifies the same verb-free frame and multiword alias grounding. Canonical routing is documented in integration-review.responses.md.
+- All 433 isolated release tests passed. The benchmark remains paused.

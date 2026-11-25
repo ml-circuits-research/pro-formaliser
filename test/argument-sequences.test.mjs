@@ -73,6 +73,64 @@ test('native arguments can be installed for an unrelated catalog through an over
   } finally { await reader.close(); }
 });
 
+test('grounds an implicit closed result on its written owner with or without a verb', async t => {
+  const reader=createReader();
+  t.after(()=>reader.close());
+  const field=(wire,key)=>value(wire.attrs[key]?.[0]);
+  for (const [text,description,preset,words,predicate] of [
+    ['Set my avatar to an elderly man.','my avatar','old man','an elderly man','Set'],
+    ['um, avatar to robot please','avatar','robot',undefined,undefined],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(c=>c.source==='argument-frame' && hasBindings([c],{'drawn.preset':[preset,words]}));
+    assert.ok(reading,text);
+    const wires=parse(reading.sop), request=wires.find(w=>w.type==='w.request.request');
+    const target=wires.find(w=>w.type==='w.request.target');
+    assert.equal(field(request,'predicate'),predicate);
+    assert.equal(field(target,'description'),description);
+    assert.equal(field(target,'mode'),'existing');
+    assert.ok(!target.attrs.ids);
+    assert.equal(reading.status,'matched');
+    assert.deepEqual(reading.evidence.missing,[]);
+    assert.deepEqual(reading.catalog.issues,[]);
+    assert.ok(!reading.evidence.counts.unread && !reading.evidence.counts.uncovered);
+  }
+  for (const text of ['Draw a robot','Set the box to robot', 'Set my avatar to unknown',
+    'Do not set my avatar to robot','Set my avatar to robot if approved','Avatar to robot?']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(c=>c.source!=='argument-frame'),text);
+  }
+  const {candidates}=await reader.propose('Set my avatar to a robot for the demo.');
+  assert.ok(candidates.some(c=>hasBindings([c],{'drawn.preset':['robot','a robot']}) &&
+    parse(c.sop).some(w=>w.type==='w.request.intent' && field(w,'role')==='purpose' && field(w,'value')==='the demo')));
+
+  const tail='and keep it for the next time I open the app on this machine';
+  const combined=await reader.propose(`If you can, set my avatar to an elderly lady ${tail}.`);
+  const preset=combined.candidates.filter(c=>hasBindings([c],{'drawn.preset':['old woman','an elderly lady']}));
+  assert.ok(preset.some(c=>c.status==='partial' && parse(c.sop).some(w=>
+    w.type==='w.request.unread' && field(w,'text')===tail)));
+  assert.ok(preset.every(c=>!parse(c.sop).some(w=>w.type==='w.request.intent' && field(w,'role')==='purpose')));
+});
+
+test('an overlay can install a verb-free result frame and a multiword closed alias', async t=>{
+  const dir=mkdtempSync(fileURLToPath(new URL('../.cache/arg-fragment-overlay-',import.meta.url)));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  writeFileSync(join(dir,'frame.sop'),[
+    '@bench std.schema.world name=w.workbench',
+    '@device std.schema.kind of=w.workbench.device world=w.workbench acts=change',
+    '@setting w.request.key tab=workbench family=device name=device.mode head=class value="high precision"',
+    '@alias core.word text="fine surveying" means="high precision" of=device.mode',
+    '@frame pro.reader.argument_sequence tab=workbench family=device act=change mode=existing owner=quilloscope part="$owner" part=into part=device.mode',
+  ].join('\n'));
+  const reader=createReader(undefined,loadWorlds({paths:[dir]}));
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose('my quilloscope into fine surveying',{evidence:true});
+  const reading=candidates.find(c=>hasBindings([c],{'device.mode':['high precision','fine surveying']}));
+  assert.ok(reading);
+  assert.deepEqual(reading.evidence.missing,[]);
+  assert.deepEqual(reading.catalog.issues,[]);
+});
+
 test('an occupied result field and off-anchor target block sequence augmentation', () => {
   const text='Make chart of total Revenue by Account';
   const candidate={sop:[

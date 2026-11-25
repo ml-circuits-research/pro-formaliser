@@ -101,6 +101,12 @@ export function evidenceInText(text, sop, worlds) {
   if (quotedPredicates(text,wires).length) return false;
   const scopes = new Map(wires.filter(w => w.type === 'w.request.request')
     .map(w => ['$'+w.id,w.attrs.words?.length ? decode(w.attrs.words[0]) : text]));
+  const families = new Map();
+  for (const {type,attrs} of wires) if (type==='w.request.target' && attrs.request?.length && attrs.family?.length) {
+    const req=attrs.request[0], group=families.get(req) ?? new Set();
+    group.add(decode(attrs.family[0]));
+    families.set(req,group);
+  }
   for (const {id,type,attrs} of wires) {
     if (['w.request.clock','w.request.previous','w.request.context'].includes(type)) return false;
     const scope = scopes.get(type === 'w.request.request' ? '$'+id : attrs.request?.[0]) ?? text;
@@ -112,7 +118,13 @@ export function evidenceInText(text, sop, worlds) {
     for (const [key,vs] of Object.entries(attrs)) {
       if (literalField(key) && vs.some(v => !catalogReference(worlds?.evidenceVocabulary,{type},key,v) && !literalRanges(key === 'words' && type==='w.request.request' ? text : scope,decode(v)).length)) return false;
     }
-    if (type === 'w.request.constraint' && attrs.value?.some(v => (!attrs.words || v.startsWith('"')) && !present(decode(v)))) return false;
+    if (type === 'w.request.constraint' && attrs.value?.some(v => {
+      if (attrs.words?.length && !v.startsWith('"') || present(decode(v))) return false;
+      const owners=families.get(attrs.request?.[0]);
+      if (owners?.size!==1 || !attrs.attribute?.length) return true;
+      const [family]=owners;
+      return !attrs.words?.some(words=>worlds?.declaredValueAlias?.(family,decode(attrs.attribute[0]),decode(words),decode(v)));
+    })) return false;
     if (type === 'w.request.intent' && (!attrs.words?.length || attrs.value?.some(v =>
       !literalRanges(decode(attrs.words[0]),decode(v)).length))) return false;
   }

@@ -124,7 +124,7 @@
 @pro.reader.argument_sequence.family core.slot of=pro.reader.argument_sequence key=family kind=atom required=true
 @pro.reader.argument_sequence.act core.slot of=pro.reader.argument_sequence key=act kind=atom required=true
 @pro.reader.argument_sequence.mode core.slot of=pro.reader.argument_sequence key=mode enum=new enum=existing required=true
-@pro.reader.argument_sequence.prefix core.slot of=pro.reader.argument_sequence key=prefix kind=string many=true required=true
+@pro.reader.argument_sequence.prefix core.slot of=pro.reader.argument_sequence key=prefix kind=string many=true
 @pro.reader.argument_sequence.part core.slot of=pro.reader.argument_sequence key=part kind=atom kind=string many=true required=true
 @pro.reader.argument_sequence.lexical_part core.slot of=pro.reader.argument_sequence key=lexical_part kind=atom many=true
 @pro.reader.argument_sequence.structured_part core.slot of=pro.reader.argument_sequence key=structured_part kind=atom many=true

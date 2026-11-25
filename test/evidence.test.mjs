@@ -15,6 +15,18 @@ test('literal evidence stays in its clause and on word boundaries',()=>{
   assert.equal(evidenceInText('make blue','@r w.request.request act=make predicate=make\n@c w.request.constraint request=$r on=attribute words=blue value="dark blue"'),false);
 });
 
+test('a quoted canonical result requires a declared alias on the owning key',()=>{
+  const worlds=loadWorlds();
+  const sop='@r w.request.request act=change predicate=Set\n'+
+    '@t w.request.target request=$r family=drawn mode=existing description="my avatar"\n'+
+    '@c w.request.constraint request=$r on=attribute attribute=drawn.preset words="an elderly man" value="old man"';
+  const text='Set my avatar to an elderly man';
+  assert.ok(evidenceInText(text,sop,worlds));
+  assert.equal(evidenceInText(text,sop.replace('value="old man"','value="old woman"'),worlds),false);
+  assert.equal(evidenceInText(text,sop.replace('attribute=drawn.preset','attribute=drawn.about'),worlds),false);
+  assert.equal(evidenceInText(text,sop.replace('family=drawn','family=page'),worlds),false);
+});
+
 test('source coverage distinguishes literal retention from semantic evidence and repetition',()=>{
   const wires=parse('@r w.request.request act=make predicate=draw\n@t w.request.target request=$r family=drawn mode=new name="Moon"\n@u w.request.unread request=$r text="over the lake"\n@f w.request.filler text="please"');
   const report=evidenceReport('please draw a Moon over the lake Moon comet',wires,loadWorlds().evidenceVocabulary);
