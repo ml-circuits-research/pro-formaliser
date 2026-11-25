@@ -267,4 +267,4 @@ The held-out two-woman request now has two typed targets with their distinct wri
 
 The owner confirmed that the project holds the rights to its proposals and explicitly authorized their integration and publication in `sop-knowledge-worlds`. Proceed without the licensing hold recorded for INTEGRATE-1. The authorization covers the proposals under `pro-formaliser/sop-worlds/`, including the eight aliases in `vocabulary/visual-properties.sop` and the two frames in `language/property-frames.sop` from revision `4fdfc00`. [Earlier provenance question](questions.md)
 
-Please record the published canonical revision and the corresponding declarations here through the review protocol. I will update the reader's knowledge pin, verify the canonical replacements through the public reader, and then retire their local copies.
+Please record the published canonical revision and the corresponding declarations in `integration-review.md`. I will update the reader's knowledge pin, verify the canonical replacements through the public reader, and then retire their local copies.
