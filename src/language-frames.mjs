@@ -8,7 +8,7 @@ const all=(wire,key)=>(wire.attrs[key] ?? []).map(decode);
 const one=(wire,key)=>all(wire,key)[0];
 const surface=text=>tokens(text).map(t=>t[0]).join(' ');
 export function languageFrames(facts) {
-  const lexicon=new Map(), parts=new Map(), rules=new Map();
+  const lexicon=new Map(), parts=new Map(), rules=new Map(), fixedPredicates=new Set();
   let maxLength=1;
   function addEvent(text,kind,value) {
     const key=surface(text);
@@ -64,10 +64,16 @@ export function languageFrames(facts) {
   }
   for (const w of facts('k.actions.verb')) {
     const act=one(w,'act');
-    if (rules.has(act)) for (const text of all(w,'text')) addEvent(text,'verb',act);
+    if (!rules.has(act)) continue;
+    for (const text of all(w,'text')) {
+      addEvent(text,'verb',act);
+      const key=surface(text);
+      if (key.includes(' ') && one(w,'object') && one(w,'separable')!=='true') fixedPredicates.add(key);
+    }
   }
   for (const w of facts('w.lang.en.det')) for (const text of all(w,'text')) addEvent(text,'det','det');
   return {
+    fixedPredicates,
     bindings:facts('pro.reader.evidence_role').map(w=>({role:one(w,'role'),type:one(w,'type'),slot:one(w,'slot'),phase:one(w,'phase')})),
     prepare(ts,quotes,worlds) {
       const events=[],acts=new Set();

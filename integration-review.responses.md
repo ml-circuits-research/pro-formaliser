@@ -745,3 +745,13 @@ The actual default-model before/after run used 138 texts. All 33 repeated-settin
 The installed `w.request.intent` schema suffices for the destination. The copied setting still needs its own contract. The existing shared-property relation has symmetric members, and the numeric scaled relation requires two written endpoints and a factor. A transfer such as grid-line visibility needs a directed property role and an open source with its literal words. Retain the unread operand pending that binding. Route the declared repetition-head and destination-marker shapes through coordinator/data. [Regression cases](test/unresolved-destination.test.mjs)
 
 All 505 isolated release tests passed.
+
+## Bulk findings fixed — preserve complete declared predicates
+
+A complete native frame can now authorize a fixed verb phrase with a declared operand role and a single applicable act. Prolog keeps the entire grounded span before bounding lexical proposals, so words inside it cannot become competing heads merely because the model has seen them as verbs. The same admission check applies to single-request alignment and template proposals and to proved commands under a declared ability wrapper. Separable verb phrases keep their existing handling.
+
+The default-model before/after replay used 165 texts. Fourteen changed, including one two-command sequence. In the thirteen affected single-command inputs, the candidates preserve the full declared phrase and its act, including “make a copy of”, “get rid of” and “hold on to”. The other 151 yielded identical ordered SOP candidates, including ordinary creation, quoted text, disjunction, and separable “take out” controls. With the pre-existing copy target proposal loaded, “Make a copy of that tree” kept the written existing tree as its source. The default reader leaves the source unread when its family lacks copy applicability.
+
+A novel overlay verb phrase reuses the same mechanism in the focused regression. Leading standalone “please” and copy/paste with an unbound operand still have broader alternatives. No new canonical declarations were required and no aggregate benchmark was run. [Regressions](test/language.test.mjs)
+
+All 506 isolated release tests passed.

@@ -98,3 +98,42 @@ test('a native target declaration licenses saving that family and keeps an unsup
     assert.deepEqual(matching.evidence.missing,[],text);
   }
 });
+
+test('a complete native frame preserves a fixed multiword predicate and its operand',async t=>{
+  const dir=mkdtempSync('.cache/fixed-predicate-test-');
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  writeFileSync(join(dir,'words.sop'),'@fixture.copy k.actions.verb text="produce a facsimile of" act=copy object=thing\n');
+  const worlds=loadWorlds({paths:[dir]});
+  const reader=createReader({
+    version:1,examples:[],templates:[],
+    lexicon:{
+      make:[['act','make','do',10000]], copy:[['act','change','do',10000]],
+      produce:[['act','make','do',10000]],
+    },
+  },worlds);
+  t.after(()=>reader.close());
+  for (const [text,predicate,nominal] of [
+    ['Make a copy of the chart','Make a copy of','chart'],
+    ['Produce a facsimile of the document','Produce a facsimile of','document'],
+    ['Could you make a copy of the chart?','make a copy of','chart'],
+    ['Make a copy of it','Make a copy of',undefined],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const get=(wire,key)=>{
+      const value=wire.attrs[key]?.[0];
+      return value?.startsWith('"') ? JSON.parse(value) : value;
+    };
+    assert.ok(candidates.length,text);
+    assert.ok(candidates.every(({sop})=>parse(sop).filter(wire=>wire.type==='w.request.request')
+      .every(wire=>get(wire,'act')==='copy' && get(wire,'predicate')===predicate)),text);
+    const grounded=candidates.find(({sop})=>parse(sop).some(wire=>nominal ?
+      wire.type==='w.request.target' && get(wire,'family')===nominal :
+      wire.type==='w.request.lookup' && get(wire,'words')==='it'));
+    assert.ok(grounded,text);
+    assert.deepEqual(grounded.evidence.missing,[],text);
+    assert.deepEqual(grounded.catalog.issues,[],text);
+  }
+  const creation=await reader.propose('Make a chart');
+  assert.ok(creation.candidates.some(({sop})=>parse(sop).some(wire=>wire.type==='w.request.request' &&
+    wire.attrs.act[0]==='make')));
+});

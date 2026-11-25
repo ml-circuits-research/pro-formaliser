@@ -151,13 +151,13 @@ lexical_candidate(Q, score(Tier, Score, 0), Candidate) :-
     -> Candidate=Base.put(binding,[Start,End,Act,S,E,Family]) ; Candidate=Base ),
     Score is 12*Coverage + Extra + ActPrior + log(1+N) + min(12,End-Start)/4 - Start/3.
 
-% An exact canonical action name backed by a complete frame cannot be
-% replaced by a learned sense or by an unlicensed head inside its operands.
-% Other independently declared senses still compete.
+% Preserve the whole proved predicate, including fixed multiword verbs.
+% Other independently proved spans and declared senses outside it still compete.
 predicate_admitted(Q, Start, End, Act) :-
     ( Q.groundedPredicates == [] -> true
     ; memberchk([Start,End,Grounded], Q.groundedPredicates) -> Act == Grounded
-    ; memberchk([Start,End,Declared,_], Q.declaredActs), memberchk(Act,Declared) ).
+    ; \+ ( member([Left,Right,_], Q.groundedPredicates), Start>=Left, End=<Right ),
+      memberchk([Start,End,Declared,_], Q.declaredActs), memberchk(Act,Declared) ).
 
 request_window(Q,S-E,Act,A-B,Intent,Question) :-
     ( get_dict(scopes,Q,Scopes) ->

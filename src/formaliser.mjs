@@ -38,7 +38,7 @@ import { affectedTargetCandidates } from './affected-target.mjs';
 import { fitsNumericAssignment,numericAssignmentReadings,numericAssignmentRoles,ownerPropertyReadings } from './owner-property.mjs';
 import { serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { alternateBodies } from './request-alternations.mjs';
-import { evidenceReport } from './evidence.mjs';
+import { evidenceReport, literalRanges } from './evidence.mjs';
 import {createEndpointReferenceReader} from './endpoint-reference.mjs';
 import {createCompoundReferenceReader} from './compound-reference.mjs';
 import {nominalScaleReading} from './nominal-scales.mjs';
@@ -142,6 +142,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const [surface,act,family]=JSON.parse(key);
     add(modes,surface,[act,family,mode]);
   }
+  const nativeHead=(surface,act)=>surface===act || worlds.languageFrames.fixedPredicates.has(surface);
   const pairGrammars=[worlds.openPairs,model.openPairs].filter(Boolean);
   const openPairHeads=new Set(pairGrammars.flatMap(grammar=>
     Object.values(grammar).flatMap(frames=>frames.map(f=>f.prefix[0]))));
@@ -272,7 +273,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const declared = worlds.lookup(words);
         const nativeActs = [...new Set(declared.filter(([role])=>role==='act').map(([,act])=>act))];
         if (nativeActs.length) {
-          declaredActs.push([ts[i][2],ts[j][3],nativeActs,nativeActs.length===1 && nativeActs[0]===words]);
+          declaredActs.push([ts[i][2],ts[j][3],nativeActs,nativeActs.length===1 && nativeHead(words,nativeActs[0])]);
         }
         const families = new Set(declared.filter(e=>e[0]==='target').map(e=>e[2]));
         if (demonstratives && !worlds.referenceCommands.particles.has(words) &&
@@ -604,8 +605,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
       if (lexical>=0) candidates.splice(lexical,0,...candidates.splice(offset));
     }
-    const groundedPredicates=new Map((response.groundedPredicates ?? []).map(([start,end,act])=>
-      [chars.slice(start,end).join(''),act]));
+    const groundedRanges=response.groundedPredicates ?? [];
+    const groundedPredicates=new Map(groundedRanges.map(([start,end,act])=>[chars.slice(start,end).join(''),act]));
+    const compoundRanges=groundedRanges.filter(([start,end])=>ts.some(token=>token[2]===start && token[3]<end))
+      .map(([start,end])=>[chars.slice(0,start).join('').length,chars.slice(0,end).join('').length]);
     if (groundedPredicates.size) {
       for (let i=candidates.length-1;i>=0;i--) {
         const requests=parse(candidates[i].sop).filter(wire=>wire.type==='w.request.request');
@@ -614,7 +617,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const act=valueOf(requests[0],'act');
         const groundedAct=groundedPredicates.get(predicate);
         const declared=worlds.lookup(tokens(predicate ?? '').map(([key])=>key).join(' '));
-        if (groundedAct ? groundedAct!==act : predicate && !declared.some(([role,licensed])=>role==='act' && licensed===act)) {
+        const occurrences=compoundRanges.length ? literalRanges(text,predicate) : [];
+        const embedded=occurrences.length && occurrences.every(([start,end])=>
+          compoundRanges.some(([a,b])=>start>=a && end<=b));
+        if (groundedAct ? groundedAct!==act :
+            predicate && (embedded || !declared.some(([role,licensed])=>role==='act' && licensed===act))) {
           candidates.splice(i,1);
         }
       }
@@ -843,7 +850,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     for (const {language} of choices) {
       if (!language?.discriminating || language.conflicts.length || !text.startsWith(language.predicate)) continue;
       const surface=tokens(language.predicate).map(([key])=>key).join(' ');
-      if (surface!==language.act) continue;
+      if (!nativeHead(surface,language.act)) continue;
       const declared=worlds.lookup(surface).filter(([role])=>role==='act');
       if (declared.length && declared.every(([,act])=>act===language.act)) return language;
     }

@@ -537,3 +537,7 @@
 ## Destination of a repeated setting
 - The reader binds the explicit destination of a settings copy and preserves the exact unresolved operand.
 - The default reader replay added readings for all 33 settings copies in its 120-text corpus slice. All 505 release tests passed.
+
+## Complete declared verb phrases
+- Prolog keeps the full written predicate of a fixed multiword verb when a native frame proves it.
+- The real 165-text replay changed 14 inputs and kept 151 candidate lists equal. All 506 release tests passed.
