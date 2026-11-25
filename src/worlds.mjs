@@ -691,7 +691,7 @@ function compile(facts) {
     landmarkSurfaceFacts:facts('pro.reader.landmark_surface'),
     appositiveSelectors:compileAppositiveSelectors(facts,requestKeys,words),
     quantifiedVerbs:compileQuantifiedVerbs(facts,requestKeys),
-    requestIntents:compileRequestIntents(facts,frames,lemma=>senses(lemma).some(wire=>one(wire,'pos')==='verb')),
+    requestIntents:compileRequestIntents(facts,frames,lemma=>senses(lemma).some(wire=>one(wire,'pos')==='verb'),nominalPositions),
     topicCommands:compileTopicCommandDeclarations(facts,requestKeys),
     postposedClauses:compilePostposedClauses(facts,requestKeys,words,lemma=>
       senses(lemma).some(wire=>one(wire,'pos')==='verb')),

@@ -599,3 +599,8 @@
 ## Modal relative placement
 - Prolog keeps the literal subject lookup and written destination on the same proved place request.
 - One of 190 targeted WebMeet requests gained a complete destination subclause. All 525 tests passed.
+
+## Imperative placement with a literal reference
+- Direct commands now keep the moving pronoun and a grounded destination role on one request.
+- Two of 190 targeted WebMeet inputs gained evidence-complete proposals while preserving existing complete alternatives.
+- All 526 release tests passed.

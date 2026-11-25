@@ -63,6 +63,41 @@ test('native modal placement keeps the literal moving subject separate from the 
   }
 });
 
+test('native imperative placement preserves the written object and destination without inventing its family',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,object,predicate,destination] of [
+    ['Move it under the bridge.','it','Move','under the bridge'],
+    ['Put him next to the horse.','him','Put','next to the horse'],
+    ['Place that under Red Dock.','that','Place','under Red Dock'],
+    ['Move them to the right.','them','Move','to the right'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>candidate.source==='relative-placement');
+    assert.ok(reading,text);
+    const wires=parse(reading.sop);
+    const request=wires.find(wire=>wire.type==='w.request.request'), reference=wires.find(wire=>wire.type==='w.request.lookup');
+    const [intent]=intents(wires);
+    assert.equal(read(request,'act'),'place',text);
+    assert.equal(read(request,'predicate'),predicate,text);
+    assert.equal(read(reference,'words'),object,text);
+    assert.equal(read(reference,'from'),undefined,text);
+    assert.equal(owns(reference,request),true,text);
+    assert.equal(read(intent,'value'),destination,text);
+    assert.equal(owns(intent,request),true,text);
+    assert.equal(wires.some(wire=>wire.type==='w.request.target'),false,text);
+    assert.deepEqual(reading.catalog.issues,[],text);
+    assert.deepEqual(reading.evidence.missing,[],text);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0,text);
+  }
+  for (const text of ['Move that box under the bridge.', 'Move it from the dock.', 'Move it under the bridge from the dock.',
+    'Set it to blue.', 'Move it under the bridge?', 'Do not move it under the bridge.', 'Move it if it fits under the bridge.',
+    'Move it to Monday.', 'Put it in presentation mode.', 'Put it on the same row so the group reads as one band.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='relative-placement'),text);
+  }
+});
+
 test('a verb-specific replacement marker keeps the operand out of purpose', async t => {
   const reader=createReader();
   t.after(()=>reader.close());

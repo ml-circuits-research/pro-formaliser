@@ -80,33 +80,57 @@ answer(Q, _{candidates:Answers,relativePlacements:RelativePlacements,frontedCand
 
 relative_placement(Q, _{sop:Sop}) :-
     get_dict(relativePlacement,Q,Plan),
-    member(Subject,Plan.subjects), member(Frame,Plan.frames), member(Predicate,Frame.predicates),
-    append(Subject,Predicate,Prefix), same_token_prefix(Prefix,Q.tokens),
-    length(Subject,AfterSubject), length(Prefix,AfterPredicate), AfterPredicate<Plan.end,
-    offsets(Q.tokens,[0,AfterSubject],SubjectStart,SubjectEnd),
-    offsets(Q.tokens,[AfterSubject,AfterPredicate],PredicateStart,PredicateEnd),
-    offsets(Q.tokens,[AfterPredicate,Plan.end],PlaceStart,PlaceEnd),
-    once((member([PlaceStart,MarkerEnd,["marker","*","spatial",Relation,_],_],Q.hits),
-          Relation\=="", MarkerEnd<PlaceEnd,
-          relative_anchor(Q,Frame.act,PlaceStart,MarkerEnd,PlaceEnd))),
+    relative_placement_roles(Q.tokens,Plan,Name,Subject,Predicate,PlaceAt), PlaceAt<Plan.end,
+    offsets(Q.tokens,Subject,SubjectStart,SubjectEnd),
+    offsets(Q.tokens,Predicate,PredicateStart,PredicateEnd),
+    offsets(Q.tokens,[PlaceAt,Plan.end],PlaceStart,PlaceEnd),
+    once(relative_destination(Q,Plan,Name,PlaceAt,PlaceStart,PlaceEnd)),
     span(Q.text,SubjectStart,SubjectEnd,SubjectWords), encode(SubjectWords,Ref),
     span(Q.text,PredicateStart,PredicateEnd,PredicateWords), encode(PredicateWords,Verb),
-    span(Q.text,PlaceStart,PlaceEnd,PlaceWords), encode(PlaceWords,Place), encode(Frame.act,Act),
+    span(Q.text,PlaceStart,PlaceEnd,PlaceWords), encode(PlaceWords,Place), encode(Name,Act),
     format(string(Sop),'@r w.request.request act=~s mood=do refers=thing predicate=~s~n@r.ref w.request.lookup request=$r key=thing words=~s~n@r.destination w.request.intent request=$r role=destination value=~s words=~s',
            [Act,Verb,Ref,Place,Place]).
+
+relative_placement_roles(Tokens, Plan, Act, [0,At], [At,End], End) :-
+    member(Subject,Plan.subjects), member(Frame,Plan.frames), Act=Frame.act,
+    member(Predicate,Frame.predicates), append(Subject,Predicate,Prefix),
+    same_token_prefix(Prefix,Tokens), length(Subject,At), length(Prefix,End).
+relative_placement_roles(Tokens, Plan, Act, [At,End], [0,At], End) :-
+    member(Command,Plan.commands), Act=Command.act, Predicate=Command.predicate,
+    member(Object,Plan.objects), append(Predicate,Object,Prefix),
+    same_token_prefix(Prefix,Tokens), length(Predicate,At), length(Prefix,End).
+
+relative_destination(_, Plan, _, At, _, _) :- memberchk(At,Plan.regionStarts).
+relative_destination(Q, Plan, Act, _, Start, End) :-
+    member([Start,MarkerEnd,["marker",Act,"place",Relation,_],_],Q.hits),
+    Relation\=="", MarkerEnd<End,
+    once((member([_,_,Anchor,_],Q.tokens), Anchor>=MarkerEnd)), \+ memberchk(Anchor,Plan.temporalStarts),
+    relative_anchor(Q,Act,Start,MarkerEnd,End),
+    \+ ( member([A,B,["marker",Act,"source"|_],_],Q.hits), A>=MarkerEnd, B<End ).
 
 same_token_prefix([], _).
 same_token_prefix([Key|Keys], [[Key,_,_,_]|Tokens]) :- same_token_prefix(Keys,Tokens).
 
 relative_anchor(Q, Act, Start, MarkerEnd, End) :-
-    once((append(_,[[Key,Raw,Anchor,Stop]|Rest],Q.tokens), Anchor>=MarkerEnd)),
-    ( member([Anchor,B,_,_],Q.referenceHits), B=<End
-    ; member(Reference,Q.relativePlacement.references), same_token_prefix(Reference,[[Key,Raw,Anchor,Stop]|Rest])
+    once((append(_,AnchorTokens,Q.tokens), AnchorTokens=[[_,_,Anchor,_]|_], Anchor>=MarkerEnd)),
+    ( member([Anchor,B,_,_],Q.referenceHits), relative_anchor_tail(Q,B,End)
+    ; member(Reference,Q.relativePlacement.references), same_token_prefix(Reference,AnchorTokens),
+      length(Reference,Width), offsets(AnchorTokens,[0,Width],_,B), relative_anchor_tail(Q,B,End)
+    ; relative_title(AnchorTokens,End)
     ; ( member([A,B,["target",_,Family|_],_],Q.targetHits)
       ; member([A,B,["target",_,Family|_],_],Q.frameTargets) ),
-      A>=Anchor, B=<End, native_nominal_prefix(Q,Act,Family,Anchor,A)
+      A>=Anchor, B=<End, native_nominal_prefix(Q,Act,Family,Anchor,A), relative_anchor_tail(Q,B,End)
     ; span(Q.text,Start,MarkerEnd,Marker), sub_string(Marker,_,1,_," "),
       member([Anchor,DetEnd,_],Q.determiners), DetEnd<End ).
+
+relative_anchor_tail(_, End, End).
+relative_anchor_tail(Q, Head, End) :-
+    Head<End, once((member([_,_,At,_],Q.tokens), At>=Head)),
+    member([At,MarkerEnd,["marker","*","spatial",Relation,_],_],Q.hits), Relation\=="", MarkerEnd<End.
+
+relative_title([[_,Raw,_,Stop]|Rest], End) :-
+    string_chars(Raw,[First|_]), char_type(First,upper),
+    ( Stop=:=End ; Stop<End, relative_title(Rest,End) ).
 
 % Inventory vocabulary contributes only to the argument proved by a native
 % frame. Keep that path outside the bounded ordinary lexical search.

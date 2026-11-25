@@ -15,12 +15,15 @@ const terms = text => tokens(text).map(([key]) => key);
 const matches = (keys, at, sequence) => sequence.every((key, i) => key === keys[at + i]);
 const quote = JSON.stringify;
 
-function relativePlacementGrammar(facts) {
+function relativePlacementGrammar(facts,positions) {
   const list=(wire,key)=>(wire.attrs[key] ?? []).map(str);
   const subjectLists=facts('w.lang.en.pron').filter(wire=>one(wire,'person')==='3' && list(wire,'case').includes('subject'))
     .flatMap(wire=>list(wire,'text').map(terms)).filter(keys=>keys.length);
   const subjects=Object.fromEntries(Map.groupBy(subjectLists,([first])=>first));
   const references=facts('w.lang.en.pron').filter(wire=>one(wire,'person')==='3' && list(wire,'case').includes('object'))
+    .flatMap(wire=>list(wire,'text').map(terms)).filter(keys=>keys.length);
+  const demonstratives=facts('w.lang.en.pron').filter(wire=>list(wire,'case').includes('demonstrative') &&
+    list(wire,'refers').includes('thing') && list(wire,'in').includes('acts'))
     .flatMap(wire=>list(wire,'text').map(terms)).filter(keys=>keys.length);
   const modal=facts('w.lang.en.aux').filter(wire=>['advice','obligation','necessity'].includes(one(wire,'modal')))
     .flatMap(wire=>list(wire,'text').map(terms)).filter(keys=>keys.length);
@@ -39,16 +42,45 @@ function relativePlacementGrammar(facts) {
     const predicates=list(verb,'word').map(terms).filter(keys=>modal.some(prefix=>matches(keys,0,prefix)));
     return predicates.length ? [{act,predicates}] : [];
   });
-  return {subjects,frames,references};
+  const verbFacts=facts('k.actions.verb'), senses=new Map();
+  for (const verb of verbFacts) for (const text of list(verb,'text')) {
+    const form=terms(text).join(' '), acts=senses.get(form) ?? new Set();
+    acts.add(one(verb,'act'));
+    senses.set(form,acts);
+  }
+  const commands=verbFacts.flatMap(verb=>{
+    const act=one(verb,'act');
+    if (!places.has(act) || one(verb,'object')!=='thing' || one(verb,'separable')==='true' ||
+        ['after_particle','attribute','complement','value'].some(slot=>verb.attrs[slot])) return [];
+    return list(verb,'text').map(terms).filter(keys=>keys.length && senses.get(keys.join(' ')).size===1)
+      .map(predicate=>({act,predicate}));
+  });
+  const regions=new Set([...positions.values()].flatMap(bank=>[...bank.values()].flatMap(rows=>
+    rows.filter(([, , , ,operator])=>operator==='region').map(([surface])=>surface.join(' ')))));
+  const temporal=new Set(facts('w.lang.en.lex').filter(wire=>one(wire,'name')?.startsWith('time.'))
+    .flatMap(wire=>list(wire,'item').map(text=>terms(text).join(' '))));
+  const conjunctions=new Set(facts('w.lang.en.closed').filter(wire=>one(wire,'class')==='conjunction')
+    .flatMap(wire=>list(wire,'text').map(text=>terms(text).join(' '))));
+  return {subjects,frames,references,regions,temporal,conjunctions,objects:[...references,...demonstratives],
+    commands:Object.fromEntries(Map.groupBy(commands,({predicate})=>predicate[0]))};
 }
 
 export function relativePlacementPacket(ts,quotes,worlds) {
-  const {subjects,frames,references}=worlds.requestIntents.relativePlacement;
+  const {subjects,frames,references,regions,temporal,conjunctions,objects,commands}=worlds.requestIntents.relativePlacement;
   const first=ts[0]?.[0], end=ts.length-Number(/^[.!。！]$/u.test(ts.at(-1)?.[0] ?? ''));
-  if (!Object.hasOwn(subjects,first) || !frames.length || quotes.length || end<5 || end>28 ||
+  if (!(Object.hasOwn(subjects,first) && frames.length || Object.hasOwn(commands,first)) ||
+      quotes.length || end<4 || end>28 ||
       ts.slice(0,end).some(([term])=>!/^\p{L}[\p{L}\p{M}\p{N}_]*$/u.test(term) || worlds.joiners[term] ||
-        worlds.negatives.has(term) || worlds.scopeGrammar.choices.has(term) || worlds.scopeGrammar.conditionals.has(term))) return;
-  return {subjects:subjects[first],frames,references,end};
+        conjunctions.has(term) || worlds.negatives.has(term) || worlds.scopeGrammar.choices.has(term) ||
+        worlds.scopeGrammar.conditionals.has(term))) return;
+  const words=ts.map(([key])=>key);
+  const imperative=(commands[first] ?? []).filter(({predicate})=>matches(words,0,predicate) &&
+    objects.some(object=>matches(words,predicate.length,object)));
+  const subjectsHere=subjects[first] ?? [];
+  if (!imperative.length && !subjectsHere.length) return;
+  const regionStarts=words.slice(0,end).flatMap((_,at)=>regions.has(words.slice(at,end).join(' ')) ? [at] : []);
+  const temporalStarts=ts.slice(0,end).flatMap(([, ,start],at)=>temporal.has(words.slice(at,end).join(' ')) ? [start] : []);
+  return {subjects:subjectsHere,frames,references,objects,commands:imperative,regionStarts,temporalStarts,end};
 }
 
 function replacementMarkers(facts) {
@@ -167,7 +199,7 @@ export function unresolvedDestinationReadings(text,ts,worlds) {
   return candidates;
 }
 
-export function compileRequestIntents(facts, argumentSequences, lexicalVerb = () => false) {
+export function compileRequestIntents(facts, argumentSequences, lexicalVerb = () => false, positions = new Map()) {
   const frames = (type, fields) => facts(type).flatMap(wire =>
     (wire.attrs.text ?? []).map(raw => ({cue: terms(str(raw)), ...Object.fromEntries(
       fields.map(key => [key, one(wire, key)]))})).filter(frame => frame.cue.length));
@@ -189,7 +221,7 @@ export function compileRequestIntents(facts, argumentSequences, lexicalVerb = ()
   return {
     results,
     unresolvedDestinations:unresolvedDestinationFrames(facts),
-    relativePlacement:relativePlacementGrammar(facts),
+    relativePlacement:relativePlacementGrammar(facts,positions),
     replacementMarkers:replacementMarkers(facts),
     lexicalVerb,
     predicates: new Set(results.map(frame => frame.cue.join(' '))),

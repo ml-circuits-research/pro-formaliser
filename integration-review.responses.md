@@ -877,3 +877,13 @@ Prolog now uses the installed relative-place wish frame with a declared modal an
 The anchored form requires a declared spatial marker and local nominal evidence. Questions, conditions, disjunctions, negative forms, statements with bare copulas, and non-spatial state expressions do not enter this proof. Finite narrative movement and isolated regions remain distinct constructions.
 
 The paired default-model replay covered 190 WebMeet inputs selected for placement-modal wording. One input gained the complete destination subclause “it should be under the bridge” with its own `it` lookup. The earlier clause remains partial. The other 189 returned identical ordered SOP lists and all 525 release tests passed. No aggregate benchmark ran.
+
+## Keep the moving pronoun and destination in direct placement commands
+
+The Prolog placement proof now accepts a declared unambiguous action before a literal direct-object pronoun or standalone demonstrative. “Move it under the bridge” keeps `it` and the written destination on one request. Proper names remain literal and complete region phrases such as “to the right” use the installed region bank. The reader requires the action's own destination marker and checks the anchor boundary. A demonstrative followed by a noun, a written source, a temporal expression, a setting phrase such as “in presentation mode”, or a following consequence clause does not gain this reading. [Placement regressions](test/request-intents.test.mjs)
+
+The initial implementation ranked the new candidate before the ordinary lexical readings. This displaced previously available readings in bounded sequence composition and failed two tests for the legacy single-result call. Keeping it as an additional proposal retains the earlier evidence and still allows the new construction in a composed interpretation.
+
+The final default-model replay covered 190 selected WebMeet inputs. Two gained a new complete proposal with the literal moving reference and its destination. One preserves “on the right” after naming the y axis. The other preserves “to the left of the one that is currently in the middle” after restoring a figure. The other 188 returned identical ordered SOP lists. No previously evidence-complete semantic alternative was lost. The aggregate benchmark remains paused.
+
+All 526 release tests passed.

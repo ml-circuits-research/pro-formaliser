@@ -416,7 +416,6 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     const contextualTargets = [];
     const response = await worker.request(request);
-    for (const {sop} of response.relativePlacements ?? []) retain({sop,source:'relative-placement',status:'matched'});
     for (const answer of response.candidates) {
       if (answer.source !== 'lexicon') { retain(answer); continue; }
       if (nominalRoles.size && parse(answer.sop).some(wire=>{
@@ -687,6 +686,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
       }
     }
+    for (const {sop} of response.relativePlacements ?? []) retain({sop,source:'relative-placement',status:'matched'});
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
     if (response.proofs.length) {
       for (const c of candidates) {
