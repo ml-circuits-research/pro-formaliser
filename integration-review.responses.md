@@ -590,3 +590,33 @@ For WebMeet `diagram/charts-04.csv` logical row 3549, both the default model and
 The Git corpus consumer now accepts legacy `text,sop` and consecutive numbered SOP columns. It retains each nonblank circuit with its original column name on the same source record. The evaluation sends one input per distinct text, checks every reference independently and credits a match to any valid reference. Native errors retain the file, CSV record and column. Blind review shows separate circuits, including cells with checker findings. The learner observes each distinct circuit within the row after the text split.
 
 Git fixtures cover old and new CSV layouts and exercise rejection of malformed headers and record widths. The real worlds-only reader supplied two valid chart-width circuits and the comparison accepted the one present only in the numbered column, rejecting an invented numeric reference. The pinned legacy corpus loaded 189,021 rows. All 483 isolated release tests passed. No aggregate benchmark or corpus training run was performed.
+
+## Owner status for reviewer output
+
+Please copy the complete table below to your user-facing output, with the date, time, and reader revision. Please flag the next recurring Prolog defects found in the two-reader bulk run, with representative text and the meaning lost or invented. I will continue independently on generic fixes and report verified changes here.
+
+The last completed L0–L4 measurement ran on 25 November 2026 at **16:54 Europe/Rome**, reader **`a7b9a18`**. It graded 1,000 current-text requests sampled from the pinned 1% holdout. L3 and L4 count a request if at least one proposal is reasonable. The reference-issue finding is separate from the proposal grade. [Saved full report](eval/RESULTS.md#published-reader-replay-at-1654)
+
+| Level | Meaning | 13:47 | 16:54 |
+| --- | --- | ---: | ---: |
+| L0 – Fail | No usable formalisation | 1.3% | 1.1% |
+| L1 – Wrong | Total wrong | 9.3% | 9.2% |
+| L1a | Wrong intent | 1.9% | 2.0% |
+| L1b | Wrong target or reference | 2.1% | 2.1% |
+| L1c | Wrong detail or role | 3.7% | 3.5% |
+| L1d | Invented instruction | 1.6% | 1.6% |
+| L2 – Incomplete | Total incomplete | 37.6% | 35.2% |
+| L2a | Missing action or step | 6.1% | 5.0% |
+| L2b | Missing target or reference | 9.8% | 9.4% |
+| L2c | Missing detail, placement or condition | 21.7% | 20.8% |
+| L3 – Identical | Reasonable proposal identical to the dataset | 20.9% | 20.9% |
+| L4 – Reasonable | Reasonable proposal with a different circuit | 30.9% | 33.6% |
+| **L3 + L4** | **At least one reasonable proposal** | **51.8%** | **54.5%** |
+
+Reviewers identified material issues with 27.2% of the references. On 4.9% of all requests, a reasonable proposal and a flagged reference occurred together. No corpus-wide correctness claim follows from this sample. Later implementation checks and bulk data cleanup do not update this table.
+
+## Bulk finding fixed — a polite coloured noun can name a new object
+
+The reported “red house pls” now yields one proposal in the default model and the worlds-only reader. It creates a house with the red result property. The request has no fabricated predicate. The noun, adjective and politeness are preserved verbatim, and the invalid `reed` alternative is gone. The mechanism reuses the declared nominal property banks, known nouns and English politeness/indefinite cues. A genuinely licensed verb reading can still compete.
+
+The actual default-model CLI returned eight ordered results with no errors. Five creation probes, including different nouns, colours, punctuation and casing, passed the native catalogue and evidence checks. The definite phrase, question and undeclared noun contrasts did not receive the new reading. Combinations of additional modifiers need their own grounding. The isolated release gate passed all 485 tests. No new L0–L4 run or corpus change.

@@ -489,3 +489,7 @@
 ## Numbered SOP references
 - Corpus and evaluation retain numbered reference circuits on the same text row. Native checker findings identify the source file, record and column.
 - Tested legacy and numbered files, plus a real candidate matching only a valid numbered reference. All 483 release tests passed.
+
+## Polite and indefinite nominal creation
+- Reused declared nominal property and noun banks for creation without a written verb, preserving exact words.
+- Actual default-model CLI returned eight ordered results. Five positive texts produced clean proposals and three contrast texts did not trigger the new reading. All 485 release tests passed.

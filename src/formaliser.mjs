@@ -54,6 +54,7 @@ import { nativeNominalPhraseReadings, nominalHeadingReadings, nominalPhraseReadi
 import { sequenceNameReadings } from './sequence-names.mjs';
 import { postfixSetQuestions, prefixSetQuestions, universalTargetReading } from './set-query.mjs';
 import { modifierReading } from './nominal-modifiers.mjs';
+import { ellipticalNominals } from './nominal-selectors.mjs';
 import { literalAttachments, quotedLiteralCleanup } from './literal-attachment.mjs';
 import { createNearExample } from './near-example.mjs';
 import { nominalNumberReading } from './nominal-number.mjs';
@@ -184,6 +185,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     prefixes:clausePrefixes([...(worlds.literalGrammar?.leads ?? []),
       ...(worlds.discourse ?? []).filter(({class:kind})=>kind==='politeness' || kind==='interjection').map(({text})=>text)]),
   };
+  const politeness=new Set(worlds.discourse.filter(({class:kind})=>kind==='politeness')
+    .map(({text})=>tokens(text).map(([key])=>key).join(' ')));
   let lastAssignmentText, lastAssignment;
   function assignmentRole(text) {
     if (lastAssignmentText!==text) {
@@ -317,7 +320,16 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     function retain(answer,readingScope=scope) {
       const key = admissibleKey(text,answer.sop);
       if (key && readingScope.restricted && !readingScope.permits(parse(answer.sop))) return;
-      if (key && !seen.has(key)) { seen.add(key); candidates.push(answer); }
+      if (key && !seen.has(key)) { seen.add(key); candidates.push(answer); return true; }
+    }
+    const nominalRoles=new Set();
+    if (!scope.restricted && !quotes.length) {
+      for (const {nominalWords,...reading} of ellipticalNominals(text,ts,worlds,politeness)) {
+        const {missing,counts}=evidenceReport(text,parse(reading.sop),worlds.evidenceVocabulary);
+        if (missing.length || counts.uncovered || counts.unread || counts.ambiguous_occurrence) continue;
+        if (!retain(reading)) continue;
+        for (const phrase of nominalWords) nominalRoles.add(phrase);
+      }
     }
     const assignment=!scope.restricted && assignmentRole(text);
     if (assignment) for (const reading of numericAssignmentReadings(text,assignment)) retain(reading);
@@ -331,6 +343,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const response = await worker.request(request);
     for (const answer of response.candidates) {
       if (answer.source !== 'lexicon') { retain(answer); continue; }
+      if (nominalRoles.size && parse(answer.sop).some(wire=>{
+        if (wire.type!=='w.request.request') return false;
+        const predicate=valueOf(wire,'predicate');
+        return nominalRoles.has(predicate) &&
+          !worlds.lookup(tokens(predicate).map(([key])=>key).join(' ')).some(([role,act])=>
+            role==='act' && act===valueOf(wire,'act'));
+      })) continue;
       const {operationMode,...plain}=answer;
       const lexical = {...plain,sop:resolveRelationKeys(answer.sop)};
       for (const plan of tupleNames) {

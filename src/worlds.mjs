@@ -643,6 +643,7 @@ function compile(facts) {
   return {
     bodyLeads:{neutral:leadForms('neutral'),nominal:leadForms('nominal'),actionOnly:leadForms('action_only')},
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
+    nominalSelectorRules,
     targetNameWords,
     nominalNumbers:compileNominalNumbers(facts),
     sequenceObjectPronouns:sequenceObjectPronouns(facts),
@@ -712,8 +713,14 @@ function compile(facts) {
     numericAssignmentFamilies,
     ownerPropertyValues:compatibleValues,
     declaredValueAlias(family,key,text,value) {
-      const meanings=closedValueAliases.get(JSON.stringify([family,key,phrase(text)]));
+      const surface=phrase(text);
+      const meanings=closedValueAliases.get(JSON.stringify([family,key,surface]));
+      const nominalValues=new Set(nominalSelectorRules.flatMap(rule=>{
+        const match=rule.family===family && rule.key===key && rule.bank.get(surface);
+        return match ? [match] : [];
+      }));
       return meanings?.size===1 && meanings.has(value) ||
+        !meanings && nominalValues.size===1 && nominalValues.has(value) ||
         scalarArgumentKeys.has(JSON.stringify([family,key])) && scalarNumber(text,this,family,key)===value ||
         analyticalAdjunctAlias(this,family,key,text,value);
     },

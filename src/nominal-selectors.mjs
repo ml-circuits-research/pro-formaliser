@@ -36,12 +36,12 @@ export function directHead(noun,binding) {
   return binding.heads.find(bank=>bank.has(noun))?.get(noun);
 }
 
-export function nominalSelectorLines(selector,owner='r1') {
+export function nominalSelectorLines(selector,owner='r1',phase='selector') {
   if (!selector) return [];
   const {key,value,words,marker}=selector, quote=JSON.stringify;
   return ['@'+owner+'.subject.property w.request.constraint request=$'+owner+' on=attribute attribute='+quote(key)+
-    ' value='+quote(value)+' operator=eq phase=selector'+
-    (value!==words ? ' words='+quote(words) : '')+
+    ' value='+quote(value)+' operator=eq phase='+phase+
+    (phase==='result' || value!==words ? ' words='+quote(words) : '')+
     (marker ? ' key_words='+quote(marker) : '')];
 }
 
@@ -71,4 +71,44 @@ export function nominalSelectors(bindings,start,end,phrase,span,resolveHead=dire
     }
   }
   return matches;
+}
+
+export function ellipticalNominals(text,ts,worlds,politeness) {
+  if (ts.length<2 || ts.length>14 || ts.some(([term])=>term==='?')) return [];
+  const chars=Array.from(text);
+  const phrase=(start,end)=>ts.slice(start,end).map(([term])=>term).join(' ');
+  const span=(start,end)=>chars.slice(ts[start][2],ts[end-1][3]).join('');
+  let start=0, end=ts.length;
+  while (['.','!'].includes(ts[end-1]?.[0])) end--;
+  const fillers=[];
+  for (let width=Math.min(end-2,5);width>0;width--) {
+    if (!politeness.has(phrase(0,width))) continue;
+    fillers.push(span(0,width));
+    start=width+Number(ts[width]?.[0]===',');
+    break;
+  }
+  for (let width=Math.min(end-start-2,5);width>0;width--) {
+    if (!politeness.has(phrase(end-width,end))) continue;
+    fillers.push(span(end-width,end));
+    end-=width;
+    end-=Number(ts[end-1]?.[0]===',');
+    break;
+  }
+  const determiner=worlds.determiners[ts[start]?.[0]];
+  if (determiner && determiner!=='indefinite' || !determiner && !fillers.length) return [];
+  start+=Number(Boolean(determiner));
+  const quote=JSON.stringify;
+  return worlds.nominalSelectorRules.flatMap(binding=>{
+    if (!worlds.literalGrammar.licenses(binding.family,'make')) return [];
+    return nominalSelectors([binding],start,end,phrase,span).map(({sort,sortWords,selector})=>{
+      const sop=[
+        '@r1 w.request.request act=make mood=do words='+quote(text),
+        '@r1.t w.request.target request=$r1 family='+quote(binding.family)+' mode=new sort='+quote(sort)+
+          ' sort_words='+quote(sortWords)+(determiner ? ' determiner='+determiner : ''),
+        ...nominalSelectorLines(selector,'r1','result'),
+        ...fillers.map((f,i)=>'@f'+(i+1)+' w.request.filler text='+quote(f)),
+      ].join('\n');
+      return {sop,source:'elliptical-nominal',status:'matched',nominalWords:[sortWords,selector.words]};
+    });
+  });
 }
