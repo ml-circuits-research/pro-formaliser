@@ -49,6 +49,19 @@ test('creates a described object a measured distance from the written boundary',
   assert.equal(properties.get('drawn.distance_precision').value,'approximate');
 });
 
+test('retains the selector when an existing object moves a measured distance',async t=>{
+  const reader=createReader(undefined,loadWorlds({paths:[pilot]}));
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose('Move the boy in red half a space right');
+  const proposal=candidates.find(c=>c.source==='measured-motion' && c.sop.includes('subject.property'));
+  assert.ok(proposal);
+  assert.deepEqual(facts(proposal.sop,'constraint').map(w=>[w.attribute,w.phase,w.value,w.measure]),[
+    ['drawn.colour','selector','red',undefined],
+    ['drawn.displacement','result','half a space','0.5'],
+    ['drawn.direction','result','right',undefined],
+  ]);
+});
+
 test('keeps measured motion opt-in and requires a complete written amount and scope',async t=>{
   const plain=createReader();
   const staged=createReader(undefined,loadWorlds({paths:[pilot]}));

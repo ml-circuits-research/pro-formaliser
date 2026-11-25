@@ -1,4 +1,5 @@
 import {nativeInventory} from './native-inventory.mjs';
+import {compileNominalSelectors,nominalSelectors} from './nominal-selectors.mjs';
 import { tokens } from './lexicon.mjs';
 
 const values=(wire,key)=>(wire.attrs[key] ?? []).map(value=>value.startsWith('"') ? JSON.parse(value) : value);
@@ -25,6 +26,7 @@ export function compileDirectionalResults(facts,requestKeys,words=facts('core.wo
   const degrees=new Set(facts('w.lang.en.phrase').filter(wire=>one(wire,'name')==='degree.slight' ||
     one(wire,'name')==='degree.strong').flatMap(wire=>values(wire,'item').map(normal)));
   const directions=nativeInventory(facts,'k.values.direction',words);
+  const selectorRules=compileNominalSelectors(facts,requestKeys,words);
   const bindings=[];
   for (const wire of facts('pro.reader.motion')) {
     const [tab,family,act,directionKey,degreeKey,offsetKey,targetType]=
@@ -32,7 +34,8 @@ export function compileDirectionalResults(facts,requestKeys,words=facts('core.wo
     const keys=requestKeys.filter(key=>key.tab===tab && key.family===family);
     const direction=keys.find(key=>key.name===directionKey && key.head.split('+').includes('class'));
     if (!act || !direction?.values.length) continue;
-    bindings.push({tab,family,act,directionKey,directions:new Map([...directions].flatMap(([form,names])=>{
+    bindings.push({tab,family,act,directionKey,selectorRules:selectorRules.filter(rule=>rule.tab===tab && rule.family===family),
+      directions:new Map([...directions].flatMap(([form,names])=>{
       const allowed=[...names].filter(name=>atom.test(name) && direction.values.includes(name));
       return allowed.length===1 ? [[form,allowed[0]]] : [];
     })),degreeKey:keys.some(key=>key.name===degreeKey && key.head==='candidate' && !key.values.length) ? degreeKey : undefined,
@@ -42,29 +45,41 @@ export function compileDirectionalResults(facts,requestKeys,words=facts('core.wo
   return {predicates,degrees,bindings};
 }
 
-export function writtenMotionTarget(worlds,binding,start,end,phrase,span) {
+export function writtenMotionTargets(worlds,binding,start,end,phrase,span) {
   const description=span(start,end), whole=phrase(start,end);
-  if (worlds.isReference(whole)) return ' fill=context family_words='+quote(description);
+  if (worlds.isReference(whole)) return [{target:' fill=context family_words='+quote(description)}];
   let first=start, determiner;
   for (let i=Math.min(start+5,end-1);i>start;i--) {
     determiner=worlds.determiners[phrase(start,i)];
     if (!determiner) continue;
-    if (!existingDeterminers.has(determiner)) return;
+    if (!existingDeterminers.has(determiner)) return [];
     first=i;
     break;
   }
   const nominal=phrase(first,end);
-  if (worlds.scopeGrammar.auxiliary.has(nominal) || worlds.isReference(nominal)) return;
+  if (worlds.scopeGrammar.auxiliary.has(nominal) || worlds.isReference(nominal)) return [];
   const sorts=new Set(binding.targets.get(nominal) ?? []);
   for (const [role,act,family,mode,sort] of worlds.lookup(nominal)) {
     if (role==='target' && (act==='place' || act===binding.act) && family===binding.family &&
       mode!=='new' && sort) sorts.add(sort);
   }
-  if (sorts.size!==1) return;
-  const [sort]=sorts, sortWords=span(first,end);
-  return ' fill=description sort='+quote(sort)+' description='+quote(description)+
-    (sort!==sortWords ? ' sort_words='+quote(sortWords) : '')+
-    (determiner ? ' determiner='+determiner : '');
+  const options=nominalSelectors(binding.selectorRules,first,end,phrase,span);
+  if (sorts.size===1) options.unshift({sort:[...sorts][0],sortWords:span(first,end)});
+  return options.map(({sort,sortWords,selector})=>({
+    target:' fill=description sort='+quote(sort)+' description='+quote(description)+
+      (sort!==sortWords ? ' sort_words='+quote(sortWords) : '')+
+      (determiner ? ' determiner='+determiner : ''),
+    selector,
+  }));
+}
+
+export function motionSelector(selector) {
+  if (!selector) return [];
+  const {key,value,words,marker}=selector;
+  return ['@r1.subject.property w.request.constraint request=$r1 on=attribute attribute='+quote(key)+
+    ' value='+quote(value)+' operator=eq phase=selector'+
+    (value!==words ? ' words='+quote(words) : '')+
+    (marker ? ' key_words='+quote(marker) : '')];
 }
 
 export function directionalResultCandidates(text,ts,quotes,worlds) {
@@ -96,25 +111,26 @@ export function directionalResultCandidates(text,ts,quotes,worlds) {
             if (!direction || (to<stop && !motion.degrees.has(phrase(to,stop)))) continue;
             for (let end=head+1;end<=from;end++) {
               if (end<from && (to<stop || !motion.degrees.has(phrase(end,from)))) continue;
-              const target=writtenMotionTarget(worlds,binding,head,end,phrase,span);
-              if (!target) continue;
               const degree=end<from ? span(end,from) : to<stop ? span(to,stop) : undefined;
               const directionWords=span(from,to);
-              const lines=[
-                '@r1 w.request.request act='+quote(binding.act)+' mood=do predicate='+quote(span(start,head))+' words='+quote(text),
-                '@r1.t w.request.target request=$r1 family='+quote(binding.family)+' mode=existing'+target,
-                '@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page',
-                '@r1.c1 w.request.constraint request=$r1 on=attribute attribute='+quote(binding.directionKey)+
-                  ' value='+direction+' operator=eq phase=result'+
-                  (directionWords!==direction ? ' words='+quote(directionWords) : ''),
-              ];
-              const unread=degree && !binding.degreeKey;
-              if (degree && binding.degreeKey) lines.push('@r1.c2 w.request.constraint request=$r1 on=attribute attribute='+
-                quote(binding.degreeKey)+' value='+quote(degree)+' operator=eq phase=result');
-              if (unread) lines.push('@r1.u1 w.request.unread request=$r1 text='+quote(degree)+
-                (binding.offsetKey ? ' note='+quote(binding.offsetKey) : ''));
-              if (start) lines.push('@f1 w.request.filler text='+quote(span(0,start)));
-              output.push({sop:lines.join('\n'),source:'directional-result',status:unread ? 'partial' : 'matched'});
+              for (const {target,selector} of writtenMotionTargets(worlds,binding,head,end,phrase,span)) {
+                const lines=[
+                  '@r1 w.request.request act='+quote(binding.act)+' mood=do predicate='+quote(span(start,head))+' words='+quote(text),
+                  '@r1.t w.request.target request=$r1 family='+quote(binding.family)+' mode=existing'+target,
+                  '@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page',
+                  ...motionSelector(selector),
+                  '@r1.c1 w.request.constraint request=$r1 on=attribute attribute='+quote(binding.directionKey)+
+                    ' value='+direction+' operator=eq phase=result'+
+                    (directionWords!==direction ? ' words='+quote(directionWords) : ''),
+                ];
+                const unread=degree && !binding.degreeKey;
+                if (degree && binding.degreeKey) lines.push('@r1.c2 w.request.constraint request=$r1 on=attribute attribute='+
+                  quote(binding.degreeKey)+' value='+quote(degree)+' operator=eq phase=result');
+                if (unread) lines.push('@r1.u1 w.request.unread request=$r1 text='+quote(degree)+
+                  (binding.offsetKey ? ' note='+quote(binding.offsetKey) : ''));
+                if (start) lines.push('@f1 w.request.filler text='+quote(span(0,start)));
+                output.push({sop:lines.join('\n'),source:'directional-result',status:unread ? 'partial' : 'matched'});
+              }
             }
           }
         }

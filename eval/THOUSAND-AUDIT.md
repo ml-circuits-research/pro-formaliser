@@ -1,5 +1,7 @@
 # Text-only formalisation on 1,000 random requests
 
+With target qualifiers and a separate search for combinations of matched clauses, the all-staged reader reaches **55.1% including spelling** and **53.7% on originals**. [Full grade table](RESULTS.md#target-qualifiers-and-movement)
+
 With coordinated clause composition and newly created targets, the all-staged reader reaches **55.1% including spelling** and **53.7% on originals**. [Full grade table](RESULTS.md#coordinated-requests-and-newly-created-targets)
 
 With the written-distance pilot, the all-staged reader reaches **55.0% including spelling** and **53.6% on originals**. [Full grade table](RESULTS.md#written-distances-and-placement)

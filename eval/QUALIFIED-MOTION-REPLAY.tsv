@@ -1,0 +1,5 @@
+profile	sample	source	row	previous	current	reference_note	reason
+replica	443	drawing/scenes-12.csv	538	0	1		Two ordered movements independently select the women by their written colours and preserve backward movement. The reference gives the other contextual reading of “back”, a return to an earlier location.
+base-replica	443	drawing/scenes-12.csv	538	0	1		Two ordered movements independently select the women by their written colours and preserve backward movement. The reference gives the other contextual reading of “back”, a return to an earlier location.
+blind	146	document/text-02.csv	2270	preserved	preserved		Previous proposal set retained.
+blind	149	document/text-02.csv	2655	preserved	preserved		Previous proposal set retained.

@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Target qualifiers and movement
+
+Original-text coverage reaches **46.0%** with all staged worlds and **45.3%** with default worlds. The new complete reading keeps two separately selected people and their backward movements in the same circuit. [Changed sets and judgments](QUALIFIED-MOTION-REPLAY.tsv)
+
 ## Coordinated requests and newly created targets
 
 Original-text coverage is **45.9%** with all staged worlds and **45.2%** with default worlds. A repeated movement still lacks a separate colour selector and displacement for each figure. [Changed sets and judgments](COORDINATED-REQUEST-REPLAY.tsv)

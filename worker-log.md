@@ -294,3 +294,8 @@
 - Complete clause readings combine in source order. A declared freshness phrase can bind a compatible target from the immediately preceding creation.
 - All 392 tests passed. Same 1,000-request samples scored 55.1% on the primary with spelling and 45.9% on independent originals. See eval/COORDINATED-REQUEST-REPLAY.tsv.
 - PSys2 conversion retains the bound target. Execution and the attachment of colour selectors to moving people remain open.
+
+## Target qualifiers and movement
+- SOP declarations identify written nominal qualifiers. The motion reader keeps selectors on the target and direction on the result. Matched clauses get space to combine within the bounded search.
+- All 395 tests passed. The 1,000-request samples scored 55.1% on the primary with spelling and 46.0% on independent originals. See eval/QUALIFIED-MOTION-REPLAY.tsv.
+- PSys2 conversion keeps both selectors and directions in the new complete reading. Live execution still needs the target lookup and direction frame.

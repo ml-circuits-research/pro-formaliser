@@ -99,6 +99,30 @@ test('a named endpoint remains an argument of the leading connection predicate',
   assert.ok(candidates.every(candidate=>!candidate.sop.includes('predicate=Summary')));
 });
 
+test('keeps a combination of matched clauses beyond the lexical search limit',async t=>{
+  const reader=createReader(undefined,worlds);
+  t.after(()=>reader.close());
+  const parts=['Move the red boat left','Move the blue cloud right'];
+  const candidates=await coordinatedRequestReadings(parts,worlds,async part=>{
+    const local=(await reader.propose(part)).candidates.find(candidate=>candidate.source==='directional-result');
+    assert.ok(local);
+    const direction=part.split(' ').at(-1);
+    const prefix=local.sop.split('\n').filter(line=>!line.includes('drawn.direction')).join('\n');
+    // These fallback variants attach the direction to a place-like key.
+    // Their distinct graphs fill the ordinary beam ahead of two matches.
+    const fallback=['eq','relation','region','degree','delta','factor'].map(operator=>({
+      sop:prefix+'\n@v w.request.constraint request=$r1 on=place attribute=drawn.anchor value='+direction+
+        ' phase=result operator='+operator,
+      source:'lexicon',
+      status:'partial',
+    }));
+    return [...fallback,local];
+  },()=>true);
+  assert.ok(candidates.some(candidate=>parse(candidate.sop).filter(wire=>
+    field(wire,'attribute')==='drawn.direction').length===2));
+  assert.ok(candidates.some(candidate=>candidate.sop.includes('drawn.anchor')));
+});
+
 test('binds a written freshness qualifier to the immediately preceding creation',async t=>{
   const reader=createReader(undefined,worlds);
   t.after(()=>reader.close());

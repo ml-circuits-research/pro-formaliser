@@ -26,16 +26,16 @@
     <h1>Evaluation and reproduction</h1>
     <p>The random 1,000-request review assesses complete text-only proposal sets under the shared WebMeet grading rules. The audit records the benchmark configuration, exclusion from the earlier review, random seed, grade distribution and row-level judgments. <a href="../eval/THOUSAND-AUDIT.md">Random-sample audit</a> · <a href="../../webmeet-dataset/LEGEND.md">Grading legend</a></p>
     <section lang="ro" id="staged-worlds">
-      <h2>Rezultate după legarea pașilor unei cereri</h2>
+      <h2>Rezultate după separarea țintei și a direcției</h2>
       <p>Evaluatorii LLM au verificat aceleași 1.000 de cereri din eșantionul principal, fără indicații despre aplicație sau istoricul conversației. O cerere este considerată acoperită dacă cel puțin o propunere îi redă complet sensul. Configurațiile folosesc același model antrenat. <a href="../eval/THOUSAND-AUDIT.md">Protocolul evaluării</a></p>
       <table>
         <thead><tr><th scope="col">Configurație</th><th scope="col">Eșantion principal, text original</th><th scope="col">Eșantion principal, text original sau corectat</th><th scope="col">Replică independentă, text original</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Implicită</th><td>51,7 %</td><td>53,2 %</td><td>45,2 %</td></tr>
-          <tr><th scope="row">Toate modulele experimentale</th><td>53,7 %</td><td>55,1 %</td><td>45,9 %</td></tr>
+          <tr><th scope="row">Implicită</th><td>51,7 %</td><td>53,2 %</td><td>45,3 %</td></tr>
+          <tr><th scope="row">Toate modulele experimentale</th><td>53,7 %</td><td>55,1 %</td><td>46,0 %</td></tr>
         </tbody>
       </table>
-      <p>Pe lotul principal, o cerere leagă acum direcția conexiunii Roast–Sift și actualizarea culorii de săgeata creată în primul pas. <a href="../eval/RESULTS.md">Rezultate și reproducere</a> · <a href="../eval/COORDINATED-REQUEST-REPLAY.tsv">Verdicte pentru propunerile modificate</a></p>
+      <p>Pe lotul independent, fiecare mutare păstrează culoarea care identifică femeia și direcția ei. Cele două mutări apar într-o singură propunere. <a href="../eval/RESULTS.md">Rezultate și reproducere</a> · <a href="../eval/QUALIFIED-MOTION-REPLAY.tsv">Verdicte pentru propunerile modificate</a></p>
     </section>
     <h2>Holdout and metrics</h2>
     <p>The benchmark reads committed WebMeet blobs from revision <code>a85de79de826f983855aa2dafc6de7548978fbff</code> and uses knowledge revision <code>ba7cbcf2ab78b8b99d077e8958013d52618c6d04</code>. It groups texts globally using Unicode NFKC, lowercase and collapsed whitespace. A SHA-256 bucket determines whether the whole group is held out. Reported counts are row-weighted, so multiple annotations of the same text can contribute multiple rows. Related templates and paraphrases can straddle partitions. <a href="../src/corpus.mjs">Corpus input</a> · <a href="../eval/RESULTS.md">Benchmark methodology and tables</a></p>

@@ -3,7 +3,7 @@ import {tokens} from './lexicon.mjs';
 import {quotedSpans} from './literal-roles.mjs';
 import {resolvePropertyUnit} from './owner-property.mjs';
 import {evidenceReport,literalRanges} from './evidence.mjs';
-import {writtenMotionTarget} from './directional-result.mjs';
+import {motionSelector,writtenMotionTargets} from './directional-result.mjs';
 
 const field=(wire,key)=>str(wire.attrs[key]?.[0]);
 const fields=(wire,key)=>(wire.attrs[key] ?? []).map(str);
@@ -76,17 +76,16 @@ function writtenPredicate(config,worlds,head,key,span,question) {
   }
 }
 
-function motionSubject(worlds,binding,end,predicate,key,span) {
-  if (!worlds.literalGrammar.licenses(binding.family,binding.act)) return;
+function motionSubjects(worlds,binding,end,predicate,key,span) {
+  if (!worlds.literalGrammar.licenses(binding.family,binding.act)) return [];
   const {objectStart,lead}=predicate;
-  const target=writtenMotionTarget(worlds,binding,objectStart,end,key,span);
-  if (!target) return;
-  return {sop:[
+  return writtenMotionTargets(worlds,binding,objectStart,end,key,span).map(({target,selector})=>({sop:[
     '@r1 w.request.request act='+quote(binding.act)+' mood=do predicate='+quote(predicate.predicate),
     '@r1.t w.request.target request=$r1 family='+quote(binding.family)+' mode=existing'+target,
     '@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page',
+    ...motionSelector(selector),
     ...(lead ? ['@f1 w.request.filler text='+quote(lead)] : []),
-  ].join('\n')};
+  ].join('\n')}));
 }
 
 function nominalSubject(candidate,config,predicate) {
@@ -201,8 +200,7 @@ export async function measuredMotionReadings(text,worlds,read,permit) {
       const candidates=[...(await readOnce(body))];
       for (const binding of plan.direction ? [plan.binding] : locations) {
         if (!config.acts.has(binding.act) || config.creationPredicates.has(predicate.form)) continue;
-        const motion=motionSubject(worlds,binding,plan.head,predicate,key,span);
-        if (motion) candidates.push(motion);
+        candidates.push(...motionSubjects(worlds,binding,plan.head,predicate,key,span));
       }
       if (plan.anchor && config.creationPredicates.has(predicate.form)) for (const candidate of await readOnce(span(predicate.objectStart,plan.head))) {
         const nominal=nominalSubject(candidate,config,predicate);

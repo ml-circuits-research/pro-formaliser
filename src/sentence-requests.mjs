@@ -113,32 +113,45 @@ function remap(wires,prefix,text,worlds) {
   });
 }
 
+function extendCombinations(beam,options) {
+  const next=beam.flatMap(prefix=>options.map(option=>
+    ({wires:[...prefix.wires,...option.wires],cost:prefix.cost+option.rank})));
+  return next.sort((a,b)=>a.cost-b.cost).slice(0,12);
+}
+
 export async function coordinatedRequestReadings(parts,worlds,read,permit) {
   if (parts.length<2) return [];
   let beam=[{wires:[],cost:0}];
+  let matched=beam;
   for (const [index,part] of parts.entries()) {
     if (!permit(part,quotedSpans(part))) return [];
     const candidates=await read(part);
-    const seen=new Set();
+    const seen=new Map();
     const options=[];
     for (const [rank,candidate] of candidates.entries()) {
       const wires=credible(part,candidate,worlds,true);
       if (!wires || evidenceReport(part,wires,worlds.evidenceVocabulary).counts.uncovered) continue;
       const key=JSON.stringify(signatures(wires,false));
-      if (seen.has(key)) continue;
+      if (seen.has(key)) {
+        if (candidate.status==='matched') seen.get(key).matched=true;
+        continue;
+      }
       const mapped=remap(wires,'clause'+(index+1)+'.',part,worlds);
       if (!mapped) continue;
       const request=mapped.find(wire=>wire.type===requestType);
       request.attrs.mood ??= [one(request,'act')==='ask' ? 'ask' : 'do'];
-      seen.add(key);
-      options.push({wires:mapped,rank});
+      const option={wires:mapped,rank,matched:candidate.status==='matched'};
+      seen.set(key,option);
+      options.push(option);
     }
     if (!options.length) return [];
-    const next=beam.flatMap(prefix=>options.map(option=>
-      ({wires:[...prefix.wires,...option.wires],cost:prefix.cost+option.rank})));
-    beam=next.sort((a,b)=>a.cost-b.cost).slice(0,12);
+    beam=extendCombinations(beam,options);
+    // Complete local readings can be ranked below lexical fallbacks on every
+    // clause. Give their combinations space independently of the mixed beam.
+    matched=extendCombinations(matched,options.filter(option=>option.matched));
   }
-  return beam.map(({wires})=>({sop:serialize(wires),source:'coordinated-requests',status:'matched'}));
+  const combined=new Set([...beam,...matched].map(({wires})=>serialize(wires)));
+  return [...combined].map(sop=>({sop,source:'coordinated-requests',status:'matched'}));
 }
 
 function alternatives(part,index,worlds) {

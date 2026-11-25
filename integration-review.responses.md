@@ -258,3 +258,7 @@ The staged declarations keep the distance from a written boundary separate from 
 ## Coordinated steps and a newly created target
 
 The held-out Roast–Sift request now carries the connection endpoints and a separate teal update with `mode=bound` and the written target “the new arrow”. The native checker accepts the whole circuit. A read-only PSys2 dataset conversion retains the two requests, their order, all three values and the bound target. Application execution still needs to resolve that target to the newly created connection. [Reader regression](test/coordinated-requests.test.mjs)
+
+## Nominal qualifiers and motion
+
+The held-out two-woman request now has two typed targets with their distinct written descriptions. The properties for green and yellow select the corresponding figure, and the written direction belongs to each result. The native checker validates the graph and the read-only PSys2 dataset converter retains both descriptions, both selector phases and both directions. The live engine still needs to resolve each described figure and the frame for backward motion. [World declarations](sop-worlds/pro.reader/nominal-selectors.sop)

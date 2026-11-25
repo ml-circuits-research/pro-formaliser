@@ -24,6 +24,7 @@ import {compileNativePropertyFrames} from './native-property-frames.mjs';
 import {compilePreservationAdjuncts} from './preservation-adjunct.mjs';
 import { compileOwnerPropertyOperands } from './owner-property.mjs';
 import { compileDirectionalResults } from './directional-result.mjs';
+import { nominalSelectorProviders,nominalSelectorType } from './nominal-selectors.mjs';
 import { nativeVerbEffects } from './verb-effects.mjs';
 import { compileTransformations } from './transformation.mjs';
 import { compileCreationRoles } from './literal-roles.mjs';
@@ -54,7 +55,7 @@ const types = new Set([
   'w.lang.en.closed', 'w.lang.en.imperative.lead', 'w.lang.en.contraction', 'w.lang.en.contraction.ending',
   'pro.reader.nominal_pattern','pro.reader.nominal_value','pro.reader.participant_adjunct', 'pro.reader.dependent_operand','w.lang.en.answer','k.feelings.feeling',
   'pro.reader.owned_effect','pro.reader.effect_sense','pro.reader.effect_owner','pro.reader.landmark_surface','pro.reader.appositive_selector','pro.reader.quantified_verb','pro.reader.quantified_marker','pro.reader.quantified_reference','pro.reader.topic_command','pro.reader.postposed_clause','pro.reader.orientation','w.lang.en.correction','pro.reader.analytical_frame','pro.reader.analytical_owner_property','pro.reader.body_lead', 'pro.reader.owner_sort', 'pro.reader.property_quantity', 'k.units.unit',
-  nativeTargetInventoryType, universalInventoryType, 'pro.reader.universal_agreement', 'core.type', 'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
+  nativeTargetInventoryType, universalInventoryType, nominalSelectorType, 'pro.reader.universal_agreement', 'core.type', 'core.word', 'std.schema.world', 'std.schema.kind', 'core.slot',
   'k.actions.act', 'k.actions.verb', 'k.actions.role', 'w.request.key', 'pro.reader.target', 'pro.reader.spatial', 'pro.reader.literal', 'pro.reader.preservation', 'pro.reader.tuple',
   'k.layouts.slot','pro.reader.region_form','pro.reader.retention','k.values.direction','pro.reader.motion','pro.reader.measured_motion','pro.reader.owner_inventory','k.values.comparative','pro.reader.transformation','pro.reader.spatial_surface','pro.reader.spatial_modifier','pro.reader.argument_label','pro.reader.source_container','pro.reader.landmark_pair','pro.reader.set_exclusion','pro.reader.creation_role','pro.reader.coordinated_effects','pro.reader.member_action','pro.reader.trailing_discourse','pro.reader.discourse_edge','pro.reader.sentence_addition','pro.reader.benefactive','pro.reader.affected_lead','pro.reader.affected_source','pro.reader.owner_property','pro.reader.argument_sequence','pro.reader.compound_reference','pro.reader.nominal_class', 'pro.reader.fixed_property', 'pro.reader.identity', 'w.lang.en.arrangement', 'pro.reader.arguments', 'pro.reader.question_kind', 'pro.reader.scope_cue', 'pro.reader.instance_code',
   'w.lang.en.aux', 'w.lang.en.copula', 'w.lang.en.wh',
@@ -713,6 +714,7 @@ function providerTypes(facts, effective=facts) {
   for (const frame of facts.get('pro.reader.appositive_selector')?.values() ?? []) sources.push(one(frame,'item_type'));
   for (const frame of facts.get('pro.reader.orientation')?.values() ?? []) sources.push(one(frame,'landmark_type'));
   for (const frame of facts.get('pro.reader.motion')?.values() ?? []) sources.push(one(frame,'target_type'));
+  for (const selector of facts.get(nominalSelectorType)?.values() ?? []) sources.push(...nominalSelectorProviders(selector));
   for (const frame of facts.get('pro.reader.benefactive')?.values() ?? []) sources.push(one(frame,'name_provider'),one(frame,'name_blocker'));
   for (const binding of facts.get('pro.reader.owner_inventory')?.values() ?? []) sources.push(one(binding,'provider'));
   const providerFacts=type=>[...(([nativeTargetInventoryType,universalInventoryType].includes(type) ? facts : effective)
