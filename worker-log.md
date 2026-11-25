@@ -587,3 +587,7 @@
 ## Written replacement direction
 - Native replacement language now preserves the target and exact unresolved operand in both written orders.
 - The 140-input default-model replay added 17 partial replacement readings and three typed affected targets. All 522 tests passed.
+
+## Property state and purpose
+- One request now keeps a proved property state with its written nominal or infinitive purpose.
+- Three worlds-only controls gained complete circuits. The 218-row WebMeet replay was unchanged and all 523 tests passed.

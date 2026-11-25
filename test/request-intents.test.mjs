@@ -51,6 +51,30 @@ test('a verb-specific replacement marker keeps the operand out of purpose', asyn
   }
 });
 
+test('attaches a later purpose when the same request already proves a property state',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,purpose] of [
+    ['Switch the grid off for the workshop.','the workshop'],
+    ['Switch off the grid for the board.','the board'],
+    ['Switch the grid off to improve readability.','improve readability'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    assert.ok(candidates.some(candidate=>{
+      const wires=parse(candidate.sop);
+      const request=wires.find(wire=>wire.type==='w.request.request');
+      return request && wires.some(wire=>wire.type==='w.request.constraint' && owns(wire,request) &&
+        read(wire,'attribute')==='chart.grid' && read(wire,'value')==='hide') &&
+        intents(wires).some(wire=>owns(wire,request) && read(wire,'role')==='purpose' && read(wire,'value')===purpose) &&
+        !wires.some(wire=>wire.type==='w.request.unread') && !candidate.evidence.counts.uncovered;
+    }),text);
+  }
+  for (const text of ['Switch the grid for the workshop.', 'Switch the chart for the table.', 'Set the grid to improve readability.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>intents(parse(candidate.sop)).every(wire=>read(wire,'role')!=='purpose')),text);
+  }
+});
+
 test('delivers purpose and destination on the independent analytical request', async t => {
   const reader = createReader();
   t.after(() => reader.close());

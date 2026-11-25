@@ -851,3 +851,9 @@ The reader uses the written verb's declared object role and separator to disting
 The proposal uses the declared replacement mode. It coexists with other readings of ambiguous exchange verbs. A positional swap, a typed replacement endpoint and an undeclared particle construction still need their respective proofs. No new schema or catalogue declarations were added.
 
 In 140 default-model WebMeet replays, 17 texts gained exact partial replacement proposals and three of those also bound the replaced object on the same request. All 40 purpose controls and all previously evidence-complete semantic alternatives were retained. All 522 release tests passed. The aggregate benchmark remains paused.
+
+## Compose a proved property state with its written purpose
+
+“Switch the grid off for the workshop” now keeps the visibility result and the purpose on the same request. When replacement and purpose compete for the same cue, strict catalogue and written-state evidence on that request licenses the purpose reading. A lexical verb such as “improve” can also supply a written infinitive purpose after a fully proved property state. The reader uses the installed English verb senses. “Switch the grid for the workshop” and “switch the chart for the table” still reserve `for` for an operand without a preceding proved state. [Purpose regressions](test/request-intents.test.mjs)
+
+Three worlds-only controls gained complete state-and-purpose circuits. The default-model replay of 218 rows across 217 distinct WebMeet requests returned identical SOP lists. All 523 release tests passed. The aggregate benchmark remains paused.

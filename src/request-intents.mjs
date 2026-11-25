@@ -6,6 +6,7 @@ import { tokens } from './lexicon.mjs';
 import { resolveWrittenMeasurement } from './owner-property.mjs';
 import { tupleAssignments } from './tuple-assignments.mjs';
 import { detachedDiscourse } from './trailing-discourse.mjs';
+import { fixedPropertyReadings } from './fixed-properties.mjs';
 
 const requestType = 'w.request.request';
 const word = /[\p{L}\p{N}]/u;
@@ -54,6 +55,24 @@ function reservesReplacement(scope,predicate,intents,worlds) {
   // A later purpose remains possible after the predicate's own complement.
   return !keys.some((_,i)=>i>end && markers.some(marker=>matches(keys,i,marker) &&
     ts.slice(i+marker.length).some(token=>word.test(token[0]))));
+}
+
+function provesPropertyState(scope,owner,wires,families,worlds) {
+  const results=wires.filter(wire=>wire.type==='w.request.constraint' && one(wire,'request')==='$'+owner.id &&
+    one(wire,'phase')==='result' && one(wire,'on')==='attribute' && one(wire,'operator')==='eq');
+  if (!results.length) return false;
+  const ts=tokens(scope);
+  if (!worlds.fixedProperties.has(ts[0]?.[0])) return false;
+  return fixedPropertyReadings(scope,ts,quotedSpans(scope),undefined,worlds).some(reading=>{
+    if (reading.status!=='matched') return false;
+    const proof=parse(reading.sop);
+    const request=proof.find(wire=>wire.type===requestType);
+    const target=proof.find(wire=>wire.type==='w.request.target');
+    const state=proof.find(wire=>wire.type==='w.request.constraint');
+    return request && target && state && one(request,'act')===one(owner,'act') &&
+      one(request,'predicate')===one(owner,'predicate') && families.has(one(target,'family')) &&
+      results.some(result=>one(result,'attribute')===one(state,'attribute') && one(result,'value')===one(state,'value'));
+  });
 }
 
 function unresolvedDestinationFrames(facts) {
@@ -112,7 +131,7 @@ export function unresolvedDestinationReadings(text,ts,worlds) {
   return candidates;
 }
 
-export function compileRequestIntents(facts, argumentSequences) {
+export function compileRequestIntents(facts, argumentSequences, lexicalVerb = () => false) {
   const frames = (type, fields) => facts(type).flatMap(wire =>
     (wire.attrs.text ?? []).map(raw => ({cue: terms(str(raw)), ...Object.fromEntries(
       fields.map(key => [key, one(wire, key)]))})).filter(frame => frame.cue.length));
@@ -135,6 +154,7 @@ export function compileRequestIntents(facts, argumentSequences) {
     results,
     unresolvedDestinations:unresolvedDestinationFrames(facts),
     replacementMarkers:replacementMarkers(facts),
+    lexicalVerb,
     predicates: new Set(results.map(frame => frame.cue.join(' '))),
     intents: frames('pro.reader.request_intent_frame', ['role', 'form', 'owner', 'want', 'resolution'])
       .sort((a, b) => b.cue.length - a.cue.length),
@@ -173,19 +193,21 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
   const verbalPurpose = (start, frame) => {
     const ends = ts.slice(start, start + 5).map((_, offset) => start + offset + 1)
       .filter(stop => worlds.lookup(keys.slice(start, stop).join(' ')).some(([role]) => role === 'act'));
-    if (!ends.length) return false;
-    return !ends.some(stop => worlds.tuples(keys.slice(start-frame.cue.length,stop).join(' '))
-      .some(tuple => tupleAssignments(ts,stop,tuple.labels)));
+    if (ends.some(stop => worlds.tuples(keys.slice(start-frame.cue.length,stop).join(' '))
+      .some(tuple => tupleAssignments(ts,stop,tuple.labels)))) return;
+    if (ends.length) return 'action';
+    if (worlds.fixedProperties.has(keys[0]) && worlds.requestIntents.lexicalVerb(keys[start])) return 'state';
   };
   for (let i = 1; i < end; i++) {
     for (const frame of worlds.requestIntents.intents) {
       const valueStart = i + frame.cue.length;
       if (valueStart >= end || !matches(keys, i, frame.cue) || !word.test(keys[valueStart]) ||
-          frame.form === 'nominal' && worlds.scopeGrammar.universalHeads.has(keys[valueStart]) ||
-          frame.form === 'verbal' && !verbalPurpose(valueStart, frame)) continue;
+          frame.form === 'nominal' && worlds.scopeGrammar.universalHeads.has(keys[valueStart])) continue;
+      const purpose=frame.form==='verbal' ? verbalPurpose(valueStart,frame) : undefined;
+      if (frame.form==='verbal' && !purpose) continue;
       const previous = keys[i - 1];
       const boundary = previous === ',' || worlds.joiners[previous] === 'coordination' ? i - 1 : i;
-      events.push({start: i, boundary, valueStart, frame});
+      events.push({start: i, boundary, valueStart, frame, requiresState:purpose==='state'});
       i = valueStart - 1;
       break;
     }
@@ -208,7 +230,7 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
       continuation = {boundary: j, roles, words: span(j + 1,end)};
       break;
     }
-    const intents = tail.map(({start, valueStart, frame}, j) => {
+    const intents = tail.map(({start, valueStart, frame, requiresState}, j) => {
       const stop = tail[j + 1]?.boundary ?? continuation?.boundary ?? end;
       if (valueStart >= stop) return;
       let quantity, bareQuantity;
@@ -225,7 +247,7 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
       if (keys.slice(remaining, stop).some(key => !key || ['.', '?', '!', ';'].includes(key) ||
           worlds.scopeGrammar.conditionals.has(key))) return;
       const value = span(valueStart, stop);
-      return crossesRequest(value) ? undefined : {...frame, value, quantity, bareQuantity, words: span(start, stop)};
+      return crossesRequest(value) ? undefined : {...frame, value, quantity, bareQuantity, requiresState, words: span(start, stop)};
     });
     if (!intents.every(Boolean)) return [];
     const body = span(0,first.boundary);
@@ -252,7 +274,8 @@ export function withRequestIntents(text, plan, candidate, worlds) {
   if (!families.size && !one(owner, 'asked_words')) return;
   const scope = one(owner, 'words') ?? plan.body;
   const predicate=one(owner,'predicate');
-  if (reservesReplacement(scope,predicate,plan.intents,worlds)) return;
+  if ((plan.intents.some(intent=>intent.requiresState) || reservesReplacement(scope,predicate,plan.intents,worlds)) &&
+      !provesPropertyState(scope,owner,wires,families,worlds)) return;
   const scopeStart = plan.body.length - scope.length;
   const pendingCommand=wires.some(wire=>{
     if (wire.type!=='w.request.unread' || one(wire,'request')!==ref) return false;
