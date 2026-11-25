@@ -397,3 +397,8 @@
 - Frozen 981 now binds both written attire items to the existing man and keeps the cat and the remainder in independent requests. The ordered-landmark destination stays literal and unresolved.
 - The reader uses installed subject and item providers with the existing region and landmark checks. Routed the selector declaration and the spatial schema gap in the review response.
 - All 447 isolated release tests passed. No benchmark rerun.
+
+## Described targets and landmarks in separate clauses
+- Frozen 927 now returns two scoped placement requests with distinct attire selectors and exact unresolved destinations. Frozen 981 still retains the three scopes.
+- The clear same-kind landmark control binds the full written second description using the existing anchor lookup.
+- All 448 isolated release tests passed. No benchmark rerun.

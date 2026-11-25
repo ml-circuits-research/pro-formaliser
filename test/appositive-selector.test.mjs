@@ -95,6 +95,7 @@ test('supports a separately declared owner family, appositive, and finite action
 const placementLexicon={
   man:[['target','place','drawn','existing','man',10]],
   girl:[['target','place','drawn','existing','girl',10]],
+  boy:[['target','place','drawn','existing','boy',10]],
   cat:[['target','make','drawn','new','cat',10]],
 };
 
@@ -167,4 +168,52 @@ test('an installed item provider can extend the adjacent selector vocabulary',as
   assert.deepEqual(reading.catalog.issues,[]);
   assert.deepEqual(reading.evidence.missing,[]);
   assert.ok(reading.sop.includes('attribute=drawn.wear value="a visorplate" operator=eq phase=selector'));
+});
+
+test('keeps independently scoped subjects and a same-kind landmark with coordinated qualifiers',async t=>{
+  const worlds=loadWorlds();
+  const reader=createReader({version:1,examples:[],templates:[],lexicon:placementLexicon},worlds);
+  t.after(()=>reader.close());
+  const first='Could you place the boy in a white shirt and a blue cap near the middle of the line';
+  const second='move the boy in a grey shirt next to the boy in a white shirt and a blue cap';
+  const text=first+', then '+second+'?';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const candidate=candidates.find(candidate=>candidate.sop.includes('description="the boy in a grey shirt"') &&
+    candidate.sop.includes('description="the boy in a white shirt and a blue cap"') &&
+    candidate.sop.includes('attribute=drawn.anchor value="the boy in a white shirt and a blue cap"'));
+  assert.ok(candidate);
+  assert.equal(candidate.status,'partial');
+  assert.deepEqual(candidate.catalog.issues,[]);
+  assert.equal(candidate.evidence.counts.uncovered ?? 0,0);
+  assert.deepEqual(candidate.evidence.missing,[]);
+  const wires=parse(candidate.sop);
+  const [place,move]=wires.filter(wire=>wire.type==='w.request.request');
+  const owned=request=>wires.filter(wire=>wire.attrs.request?.[0]==='$'+request.id);
+  assert.equal(place.attrs.words[0],q(first));
+  assert.equal(owned(place).find(wire=>wire.type==='w.request.unread').attrs.text[0],q('near the middle of the line'));
+  assert.deepEqual(owned(move).filter(wire=>wire.attrs.attribute?.[0]==='drawn.wear').map(wire=>wire.attrs.value[0]),
+    [q('a grey shirt')]);
+  assert.equal(owned(move).find(wire=>wire.attrs.attribute?.[0]==='drawn.relation').attrs.words[0],q('next to'));
+
+  const destination='off the far right to next to the boy in a white shirt and a blue cap, on the right side';
+  const qualified=await reader.propose(first+', then place the boy in a grey shirt and a blue cap '+destination);
+  const repaired=qualified.candidates.find(candidate=>candidate.sop.includes('description="the boy in a grey shirt and a blue cap"') &&
+    candidate.sop.includes('description="the boy in a white shirt and a blue cap"'));
+  assert.ok(repaired);
+  const clauses=parse(repaired.sop);
+  const [left,right]=clauses.filter(wire=>wire.type==='w.request.request');
+  assert.notEqual(left.id,right.id);
+  const moved=clauses.filter(wire=>wire.attrs.request?.[0]==='$'+right.id);
+  assert.equal(moved.find(wire=>wire.type==='w.request.unread').attrs.text[0],q(destination));
+  assert.ok(!moved.some(wire=>wire.attrs.on?.[0]==='place'));
+  for (const query of [
+    'Could I place the boy in a white shirt near the house?',
+    'Could you place the boy in a white shirt near the house if selected?',
+    'Did you place the boy in a white shirt near the house?',
+    'Could you place the boy in a white shirt near the house and remove the boy in a red hat?',
+  ]) {
+    const {candidates}=await reader.propose(query);
+    assert.ok(!candidates.some(candidate=>candidate.source==='adjacent-selector' &&
+      candidate.sop.includes('description="the boy in a white shirt"')),query);
+  }
 });
