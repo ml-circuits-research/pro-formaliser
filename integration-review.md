@@ -1,5 +1,11 @@
 # SOP world proposals and the WebMeet handover
 
+## LATEST OWNER POLICY — autonomous formaliser commits, review afterwards
+
+The owner explicitly permits prolog-formaliser and z3-formaliser to take initiative, implement and commit in their own lanes, with existing publication authorization. Review follows committed changes: publish small coherent verified batches, report actual behavior, source/knowledge revisions, controls and limitations through integration-review.responses.md, and act on the reviewer's concrete observations or correction tasks. A blanket prior APPROVED decision is not required for formaliser initiative; earlier entries must be read under this newer policy.
+
+Keep shared schema/knowledge canonical and coordinate its needs through the review channel rather than copying contracts locally. Missing execution or language support remains a stated limitation, not an illogical input. The data worker has a separate absolute rule: it NEVER commits or pushes, including its changes in PSys2 or WebMeet; the coordinator reviews and publishes those batches. File ownership and preservation of concurrent work continue.
+
 I ran the public reader with tab context against the staged `sop-worlds/` directory, using committed WebMeet rows from `0307c79` and two controlled utterances. The three proposal tests passed. The tests check that the reader produces a matching candidate somewhere in the set and that manually constructed relational circuits validate in a separate native world. The tab-aware pipeline exposes two additional integration issues.
 
 ## Property frames and scoped aliases
@@ -315,3 +321,10 @@ The source READY is accepted for its tested calculation/answer ownership and sig
 PSys2 bc3d1e023 now publishes request-intent raw parse/render retention with typed ownership, roles, verbatim evidence and polarity. Independent codec tests16/16 and the required npm gate passed (768 pass, 0 fail, 3 skipped, 5 TODO). Canonical schema ae80c054 is already installed by f2c73fd. The earlier codec-publication wait is closed; reader compositional coverage and execution remain separate.
 
 Act on the generation review above: prevent a nominal purpose operand from absorbing an adjacent explicit destination as a complete reading. Preserve that fragment as unresolved until supported role generation exists, or represent it through declared reusable boundaries/frames. Data/language preparation for Q-NL-003 now includes this boundary control alongside purpose attachment. Keep the existing working signed/multi-owner cases and shared canonical ownership; no new broad benchmark or repeated closed integration audit is needed.
+
+
+## Result destination boundary correction verified — 0c005bf
+
+At clean published 0c005bf7608ea50cfafc7a19c80102f2b2b1581e, the default-world request-intents suite passes 7/7. It retains the prior signed/native-intent and separate-owner controls and checks the newly installed unresolved "slated for" boundary without a comma. I did not repeat the reported full 405-test gate.
+
+Independent public-reader replays of both original calculation controls now return a first-ranked partial reading among two candidates. The combined input keeps purpose="the board appendix" and the exact unread "to go on the summary slide of the deck"; the standalone input keeps the exact unread "to go on the summary slide" without inventing a purpose. Both retain asked_words="total revenue" and put the unread on that calculation request, with no missing evidence/catalogue issues and no invented target or result constraint. No candidate in either set absorbs the destination into an intent value. The additional control "Calculate total revenue for the board, including the audit, to go on the summary slide." keeps "the board, including the audit" intact as the purpose operand and separates the exact destination unread, showing that an internal comma alone does not terminate that operand. These results close the false-complete nominal-purpose absorption finding for the checked declarative boundaries. Destination generation from the shared QNL-003 role/owner/marker/operand contract is still pending; an exact unresolved destination is accepted here as an honest partial result, not claimed as fulfilled delivery or application execution.
