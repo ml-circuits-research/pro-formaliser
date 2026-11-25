@@ -15,6 +15,52 @@ const compile=(...forms)=>withFacts(`
 @fixture.cond w.lang.en.joiner kind=condition text=if
 `,forms);
 
+test('an infinitive opening preserves its independently grounded body and exact prefix',async t=>{
+  const forms=withFacts('@fixture.open pro.reader.body_lead role=action_opening text="the next job is to"',[]);
+  assert.equal(alternateBodies('The next job is to Move it under the bridge.',forms)[0].text,
+    'Move it under the bridge.');
+  assert.deepEqual(alternateBodies('The next job is to move it?',forms),[]);
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,lead,key] of [
+    ['The next thing is to change it from the top ten to the top twenty.','The next thing is to','chart.top'],
+    ['The next step is to move it under the bridge.','The next step is to','role=destination'],
+    ['Our next step is to sort the chart from smallest to largest.','Our next step is to','mode=order'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const direct=candidates.find(c=>c.source==='language-alternation' && c.sop.includes(key));
+    assert.ok(direct,text);
+    const wires=parse(direct.sop);
+    assert.ok(wires.some(w=>w.type==='w.request.filler' && w.attrs.text[0]===JSON.stringify(lead)),text);
+    assert.deepEqual(direct.catalog.issues,[],text);
+    assert.deepEqual(direct.evidence.missing,[],text);
+    assert.equal(direct.evidence.counts.uncovered ?? 0,0,text);
+  }
+  for (const text of ['The next thing is to draw a red circle?',
+    'The next thing is to not remove the tree.', 'The next thing is to move it if ready.',
+    'The next thing is to the right of the bridge.',
+    'Write "the next thing is to move it under the bridge" on the page.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(c=>c.source!=='language-alternation'),text);
+  }
+});
+
+test('an action opening cannot swallow a written reference into an attribute value',async t=>{
+  const body='label the y axis Orders on it.';
+  const reader=createReader({version:1,templates:[],examples:[{text:body,count:1,sop:[
+    '@r w.request.request act=change mood=do predicate=label',
+    '@r.t w.request.target request=$r family=chart mode=existing fill=context',
+    '@r.c w.request.constraint request=$r on=attribute attribute=chart.yLabel value="Orders on it"'+
+      ' key_words="y axis" operator=eq phase=result',
+  ].join('\n')}]});
+  t.after(()=>reader.close());
+  const literal=await reader.propose(body);
+  assert.ok(literal.candidates.some(c=>c.source==='example' && c.sop.includes('Orders on it')));
+  const {candidates}=await reader.propose('The next thing is to '+body);
+  assert.ok(candidates.every(c=>c.source!=='language-alternation' ||
+    !c.sop.includes('value="Orders on it"')));
+});
+
 test('declared overlay wrappers expose the unchanged source span and outer punctuation',()=>{
   const forms=compile(
     ['Captain, {order} if convenient','{order}','request'],

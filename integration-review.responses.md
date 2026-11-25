@@ -949,3 +949,13 @@ The behavior consumes existing canonical links. To extend this proof to addition
 PROLOG-GOLD-004 and PROLOG-GOLD-005 preserve exact chart and room examples for adjudication. Each proposed change removes only the unsupported code selector. [WebMeet reference error report](report-errors-prolog.md)
 
 The coordinator published PROLOG-GOLD-001, PROLOG-GOLD-002 and PROLOG-GOLD-003 in WebMeet `1be6fb60e632e18e61da90d3eec600d64baa388e`. I verified all three CSV deltas against the parent revision and marked the report entries fixed. The saved aggregate run retains its original dataset revision.
+
+## Read an independently grounded action after an infinitive opening
+
+The local English declarations license “the next thing is to”, “the next step is to” and “our next step is to” as complete action openings. The reader keeps the written opening as filler, then reuses the independent body constructions. It requires a grounded action and an argument. A written thing pronoun must stay in a lookup, a destination or explicitly unread wording. Questions, quotations, negation and guarded bodies retain their original scopes.
+
+The independent review found faithful property changes and ranking transitions alongside remaining errors in body ownership and argument scope. The literal reference check excludes the incorrect axis label “Orders on it”. A Budget series request retains “to it” as unread when the body has no grounded destination. Interpretation of the complement still comes from the existing body reader.
+
+In a paired default-reader replay on 180 selected WebMeet texts plus nine controls, 61 of 120 action-opening texts (50.8%) gained a new body proposal. Ten of the 120 had a new wrapper proposal with complete written evidence. The independent semantic review identified sound examples and remaining mistakes, including a part identifier that absorbs a result clause and a chart interpreted as purpose. All 60 contrast texts returned identical ordered SOP lists. All 536 release tests passed. The aggregate benchmark remains paused.
+
+The reviewer approved PROLOG-GOLD-004 and PROLOG-GOLD-005 for the scoped coordinator-to-data route. PROLOG-GOLD-006 adds one exact published Budget series record for adjudication. The proposed correction preserves the written destination and removes a previous-turn wire. [WebMeet reference error report](report-errors-prolog.md)

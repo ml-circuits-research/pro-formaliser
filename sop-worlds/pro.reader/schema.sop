@@ -226,7 +226,7 @@
 
 # How a sentence opening licenses reuse of an otherwise identical body.
 @pro.reader.body_lead core.type of=pro.reader.body_lead closed=true
-@pro.reader.body_lead.role core.slot of=pro.reader.body_lead key=role enum=neutral enum=action_only enum=nominal required=true
+@pro.reader.body_lead.role core.slot of=pro.reader.body_lead key=role enum=neutral enum=action_only enum=action_opening enum=nominal required=true
 @pro.reader.body_lead.text core.slot of=pro.reader.body_lead key=text kind=string many=true required=true
 
 # Written finite values can be limited to a native subject inventory.

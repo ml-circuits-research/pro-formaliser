@@ -194,3 +194,40 @@ The target already preserves the written room designation “focus pod” in `na
 ```
 
 **Evidence and reproduction.** Parse `git -C ../webmeet-dataset show d1c15c5857365a82358b4a324f2611088026cc9b:calendar/meetings-07.csv` as CSV to locate the record. The request key is declared in `docs/worlds/w.request/shards/keys.sop` in the knowledge repository. The paired Prolog artifacts `.cache/designation-code-before.jsonl` and `.cache/designation-code-final.jsonl` contain the exact text at zero-based index 179. Both runs returned 21 candidates and `error=null`. The baseline reader at `59727b8ed82d766c4502ebee322d412211198299` reproduced the published cell as its first `example` candidate. The updated reader returned the exact proposed circuit in the same candidate position. Passing the exact text and proposed circuit to `node bin/check-reading.mjs` validated the native schema and literal evidence and returned no catalogue issues or quote conflicts.
+
+
+## PROLOG-GOLD-006 — Series addition omits the written destination and includes prior text
+
+**Record.** `diagram/charts-06.csv`, data record **4898** (header excluded, ending on CSV line 30181), column `sop`, at WebMeet revision `1be6fb60e632e18e61da90d3eec600d64baa388e`.
+
+**Exact text.** `The next thing is to add a Budget series to it with 11, 17 and 23.`
+
+**Current circuit**
+
+```sop
+@prev w.request.previous text="Show me the Monthly sales chart."
+@f1 w.request.filler text="The next thing is to"
+@r1 w.request.request act=make mood=do predicate=add words="add a Budget series to it with 11, 17 and 23."
+@r1.t w.request.target request=$r1 family=series mode=new determiner=indefinite sort=series
+@r1.c1 w.request.constraint request=$r1 on=attribute attribute=series.label value=Budget operator=eq phase=result
+@r1.c2 w.request.constraint request=$r1 on=attribute attribute=series.values value=11 operator=eq phase=result
+@r1.c3 w.request.constraint request=$r1 on=attribute attribute=series.values value=17 operator=eq phase=result
+@r1.c4 w.request.constraint request=$r1 on=attribute attribute=series.values value=23 operator=eq phase=result
+```
+
+The phrase “to it” specifies the destination of the addition and leaves its referent unresolved. The current circuit includes that phrase only in the request wording. Add a request-owned destination with the literal value `it` and remove the previous-message wire to ground the circuit in the current message. Preserve the series target, label, and values.
+
+**Proposed circuit**
+
+```sop
+@f1 w.request.filler text="The next thing is to"
+@r1 w.request.request act=make mood=do predicate=add words="add a Budget series to it with 11, 17 and 23."
+@r1.t w.request.target request=$r1 family=series mode=new determiner=indefinite sort=series
+@r1.c1 w.request.constraint request=$r1 on=attribute attribute=series.label value=Budget operator=eq phase=result
+@r1.c2 w.request.constraint request=$r1 on=attribute attribute=series.values value=11 operator=eq phase=result
+@r1.c3 w.request.constraint request=$r1 on=attribute attribute=series.values value=17 operator=eq phase=result
+@r1.c4 w.request.constraint request=$r1 on=attribute attribute=series.values value=23 operator=eq phase=result
+@r1.destination w.request.intent request=$r1 role=destination value="it" words="to it"
+```
+
+**Evidence and reproduction.** Parse `git -C ../webmeet-dataset show 1be6fb60e632e18e61da90d3eec600d64baa388e:diagram/charts-06.csv` as CSV to locate the record. The exact text appears at zero-based index 106 in `.cache/action-opening-before.jsonl`. The baseline reader at `aed8bf7e1134fa86c9e6be413a422785b6ea8b9a` returned 50 candidates with `error=null`. The cache contains no exact reproduction of the published cell. Passing the exact text and proposed circuit to `node bin/check-reading.mjs` returned `schemaValid=true` and `literalEvidenceValid=true`, with no missing evidence, catalogue issues, or quote conflicts. The destination wire grounds “to it” at UTF-16 offsets 41–46.

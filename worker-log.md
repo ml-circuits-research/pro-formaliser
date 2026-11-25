@@ -634,3 +634,7 @@
 ## Keep written designations distinct from codes
 - The final reader removes the duplicate code assertion in 79 of 185 selected texts and preserves all 45 code contrasts.
 - Two proposed reference corrections record the exact chart and room cases. All 534 release tests passed.
+
+## Infinitive action openings
+- An explicit action opening now keeps its exact words and projects the independently grounded request, with literal references preserved.
+- 61 of 120 matching WebMeet texts gained a body proposal. All 60 contrast outputs were identical and all 536 release tests passed.

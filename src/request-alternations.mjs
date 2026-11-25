@@ -73,6 +73,15 @@ export function compileAlternations(facts) {
     const rule={mode,family,before,after,dropBefore:start,dropAfter:lhs.parts.length-end};
     rules.set(JSON.stringify(rule),rule);
   }
+  for (const wire of facts('pro.reader.body_lead').filter(w=>field(w,'role')==='action_opening')) {
+    for (const raw of wire.attrs.text ?? []) {
+      const {parts}=pattern(decode(raw)+' {action}') ?? {};
+      const before=parts?.slice(0,-1);
+      if (!before?.length || unsafe(before)) continue;
+      const rule={mode:'action',before,after:[],dropBefore:before.length,dropAfter:0};
+      rules.set(JSON.stringify(rule),rule);
+    }
+  }
   return [...rules.values()];
 }
 
@@ -114,6 +123,7 @@ export function alternateBodies(text, compiled) {
   if (terminal.has(ts[last].key) && !ts[last].hidden) ends.push(last);
   const alternatives=new Map();
   for (const {before,after,mode,family,dropBefore,dropAfter} of compiled) {
+    if (mode==='action' && question.has(ts[last].key) && !ts[last].hidden) continue;
     // A comma separates a turn-opening order marker from a noun modifier
     // (for example, “next, …” versus “next month” and “next to …”).
     if (mode==='ordered' && ts[before.length]?.key!==',') continue;

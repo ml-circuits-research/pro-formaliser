@@ -935,6 +935,18 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (declared.length && declared.every(([,act])=>act===language.act)) return language;
     }
   }
+  function lexicalActionScopes(text,requests) {
+    return requests.every(request=>{
+      const clause=valueOf(request,'words') ?? text;
+      const predicate=valueOf(request,'predicate'), act=valueOf(request,'act'), mood=valueOf(request,'mood');
+      if (!predicate || act==='ask' || (mood && mood!=='do') ||
+          !literalRanges(clause,predicate).some(([start])=>start===0)) return false;
+      const terms=tokens(predicate).map(([key])=>key), surface=terms.join(' ');
+      return worlds.lookup(surface).some(([role,name,kind])=>role==='act' && name===act && (!kind || kind==='do')) ||
+        worlds.ordering.frames.some(frame=>frame.act===act && frame.mode===valueOf(request,'mode') && frame.predicates.has(surface)) ||
+        (worlds.argumentSequences.get(terms[0]) ?? []).some(frame=>frame.act===act && frame.prefix.join(' ')===surface);
+    });
+  }
   async function wrapped(text) {
     const base=await formalise(text);
     const {alternatives,[conditionalScope]:conditional,...first}=base;
@@ -953,7 +965,17 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     for (const original of bodies) {
       const modal=politeCommandBody(text,original);
       const body=modal ?? original;
+      const actionOpening=body.mode==='action';
+      const references=[];
+      if (actionOpening) {
+        const chars=Array.from(body.text);
+        for (const [key,,start,end] of tokens(maskQuoted(body.text,quotedSpans(body.text)))) {
+          if (worlds.isReference(key) && worlds.referenceCommands.references.has(key))
+            references.push([chars.slice(0,start).join('').length,chars.slice(0,end).join('').length]);
+        }
+      }
       const {alternatives,...head}=await formalise(body.text);
+      if (actionOpening && head[conditionalScope]) continue;
       const choices=[head,...alternatives];
       const command=modal && provedCommand(body.text,choices);
       if (original.fillers && !command) continue;
@@ -962,26 +984,34 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const choice of choices) {
         if (!choice.sop) continue;
         const wires=parse(choice.sop), requests=wires.filter(w=>w.type==='w.request.request');
-        if (!command && wires.some(w=>w.type==='w.request.unread' &&
+        if (!command && !actionOpening && wires.some(w=>w.type==='w.request.unread' &&
             !Object.hasOwn(worlds.determiners,valueOf(w,'text')?.toLowerCase()))) continue;
         if (!requests.length || requests.length<boundaries.length ||
             requests.length>1 && requests.some(r=>!r.attrs.words)) continue;
         const [request]=requests;
         if (command && (requests.length!==1 || valueOf(request,'act')!==command.act ||
             valueOf(request,'predicate')!==command.predicate || choice.language?.conflicts.length)) continue;
+        if (actionOpening && (!lexicalActionScopes(body.text,requests) ||
+            !wires.some(w=>['w.request.target','w.request.constraint','w.request.lookup'].includes(w.type)))) continue;
         if (body.mode==='question' && !['ask','check'].includes(request.attrs.mood?.[0]) && request.attrs.act?.[0]!=='ask') continue;
         const evidence=evidenceReport(body.text,wires,worlds.evidenceVocabulary);
         if (evidence.missing.length || evidence.counts.uncovered) continue;
+        if (references.length) {
+          const allowed=new Set(wires.filter(wire=>wire.type==='w.request.lookup' || wire.type==='w.request.unread' ||
+            wire.type==='w.request.intent' && valueOf(wire,'role')==='destination').map(wire=>wire.id));
+          if (references.some(([start,end])=>!evidence.spans.some(span=>allowed.has(span.wire) &&
+              span.ranges.some(([a,b])=>a<=start && end<=b)))) continue;
+        }
         if (requests.length===1) request.attrs.words=[JSON.stringify(text)];
         else if (body.prefix) {
           const firstScope=valueOf(request,'words');
           if (!body.text.startsWith(firstScope)) continue;
           request.attrs.words=[JSON.stringify(text.slice(0,body.start+firstScope.length))];
         }
-        if (command) {
+        if (command || actionOpening) {
           const ids=new Set(wires.map(wire=>wire.id));
           let suffix=1;
-          for (const filler of body.fillers) {
+          for (const filler of actionOpening ? [body.prefix.replace(/,\s*$/u,'')] : body.fillers) {
             while (ids.has('f'+suffix)) suffix++;
             wires.push({id:'f'+suffix++,type:'w.request.filler',attrs:{text:[JSON.stringify(filler)]}});
           }
