@@ -683,7 +683,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (body[conditionalScope]) continue;
       for (const candidate of [body,...body.alternatives]) {
         if (!candidate.sop) continue;
-        const reading = withRequestIntents(text,plan,candidate);
+        const reading = withRequestIntents(text,plan,candidate,worlds);
         if (reading && admissibleKey(text,reading.sop)) readings.push(reading);
       }
     }

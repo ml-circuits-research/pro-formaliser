@@ -108,6 +108,42 @@ test('keeps independent owners and excludes quantification from purpose', async 
   assert.ok(quantified.candidates.every(candidate => !intents(parse(candidate.sop)).length));
 });
 
+test('keeps a counted noun phrase as purpose and a standalone quantity unread', async t => {
+  const reader = createReader();
+  t.after(() => reader.close());
+  for (const value of ['the client briefing', 'two client briefings', '24 project reviews']) {
+    const { candidates } = await reader.propose(`Calculate total revenue for ${value}.`, { evidence: true });
+    const candidate = candidates.find(candidate => {
+      const wires = parse(candidate.sop);
+      const request = wires.find(wire => read(wire, 'asked_words') === 'total revenue');
+      return request && intents(wires).some(wire => owns(wire, request) &&
+        read(wire, 'value') === value && read(wire, 'words') === `for ${value}`);
+    });
+    assert.ok(candidate, value);
+    assert.equal(candidate.status, 'matched');
+    assert.deepEqual(candidate.catalog.issues, []);
+    assert.deepEqual(candidate.evidence.missing, []);
+  }
+  for (const [text, adjunct] of [
+    ['Create a meeting for 1.', 'for 1'],
+    ['Add a meeting for two hours.', 'for two hours'],
+    ['Calculate total revenue for 2.5.', 'for 2.5'],
+  ]) {
+    const { candidates } = await reader.propose(text, { evidence: true });
+    const candidate = candidates.find(candidate => {
+      const wires = parse(candidate.sop);
+      const request = wires.find(wire => wire.type === 'w.request.request');
+      return request && wires.some(wire => wire.type === 'w.request.unread' && owns(wire, request) &&
+        read(wire, 'text') === adjunct && read(wire, 'note') === 'unresolved quantity');
+    });
+    assert.ok(candidate, text);
+    assert.equal(candidate.status, 'partial');
+    assert.deepEqual(candidate.evidence.missing, []);
+    assert.ok(candidates.every(candidate => !intents(parse(candidate.sop)).some(wire =>
+      read(wire, 'words') === adjunct)), text);
+  }
+});
+
 test('distinguishes declared coordinate assignments from a purpose clause', async t => {
   const reader = createReader();
   t.after(() => reader.close());

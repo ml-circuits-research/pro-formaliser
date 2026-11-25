@@ -343,3 +343,7 @@
 ## Adjacent target qualifiers
 - The frozen model recovered the written Mercedes and block 19 targets without binding later landmarks as targets or inventing IDs.
 - Both readings remain partial. All 428 tests passed. The exact scope checks are in integration-review.responses.md.
+
+## Counted purpose and unresolved quantities
+- Fixed the reviewer regression for counted purpose phrases. Standalone quantities and recognised units on compatible targets remain explicit when the role is unresolved.
+- All 429 isolated release tests passed. The QNL-003 consumer expectations are in integration-review.responses.md. The benchmark remains paused.

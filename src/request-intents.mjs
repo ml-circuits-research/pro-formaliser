@@ -2,6 +2,7 @@ import { parse, serialize, str } from '../.cache/knowledge/tools/sopworld/sopwor
 import { visibleTokens } from './composition.mjs';
 import { literalRanges } from './evidence.mjs';
 import { tokens } from './lexicon.mjs';
+import { resolveWrittenMeasurement } from './owner-property.mjs';
 import { tupleAssignments } from './tuple-assignments.mjs';
 import { detachedDiscourse } from './trailing-discourse.mjs';
 
@@ -80,8 +81,6 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
       const valueStart = i + frame.cue.length;
       if (valueStart >= end || !matches(keys, i, frame.cue) || !word.test(keys[valueStart]) ||
           frame.form === 'nominal' && worlds.scopeGrammar.universalHeads.has(keys[valueStart]) ||
-          frame.role === 'purpose' && frame.form === 'nominal' &&
-            (/^\d+$/u.test(keys[valueStart]) || worlds.nominalNumbers.get(keys[valueStart])?.kind === 'cardinal') ||
           frame.form === 'verbal' && !verbalPurpose(valueStart, frame)) continue;
       const previous = keys[i - 1];
       const boundary = previous === ',' || worlds.joiners[previous] === 'coordination' ? i - 1 : i;
@@ -110,10 +109,22 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
     }
     const intents = tail.map(({start, valueStart, frame}, j) => {
       const stop = tail[j + 1]?.boundary ?? continuation?.boundary ?? end;
-      if (valueStart >= stop || keys.slice(valueStart, stop).some(key => !key || ['.', '?', '!', ';'].includes(key) ||
+      if (valueStart >= stop) return;
+      let quantity, bareQuantity;
+      let remaining = valueStart;
+      if (frame.role === 'purpose' && frame.form === 'nominal') {
+        const comma = keys.indexOf(',', valueStart);
+        const operandEnd = comma >= valueStart && comma < stop ? comma : stop;
+        if (operandEnd > valueStart) {
+          quantity = span(valueStart, operandEnd);
+          bareQuantity = resolveWrittenMeasurement(quantity, worlds)?.value !== undefined;
+          if (bareQuantity) remaining = operandEnd;
+        }
+      }
+      if (keys.slice(remaining, stop).some(key => !key || ['.', '?', '!', ';'].includes(key) ||
           worlds.scopeGrammar.conditionals.has(key))) return;
       const value = span(valueStart, stop);
-      return crossesRequest(value) ? undefined : {...frame, value, words: span(start, stop)};
+      return crossesRequest(value) ? undefined : {...frame, value, quantity, bareQuantity, words: span(start, stop)};
     });
     if (!intents.every(Boolean)) return [];
     const body = span(0,first.boundary);
@@ -125,7 +136,7 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
   });
 }
 
-export function withRequestIntents(text, plan, candidate) {
+export function withRequestIntents(text, plan, candidate, worlds) {
   const wires = parse(candidate.sop);
   const requests = wires.filter(wire => wire.type === requestType);
   const owner = requests.findLast(request => {
@@ -135,9 +146,9 @@ export function withRequestIntents(text, plan, candidate) {
   if (!owner || !one(owner, 'predicate') || plan.intents.some(intent => intent.owner === 'answer') &&
       !(one(owner, 'act') === 'ask' && one(owner, 'question'))) return;
   const ref = '$' + owner.id;
-  const keepsMeaning = wires.some(wire => one(wire, 'request') === ref && wire.type === 'w.request.target') ||
-    one(owner, 'asked_words');
-  if (!keepsMeaning) return;
+  const families = new Set(wires.filter(wire => one(wire, 'request') === ref && wire.type === 'w.request.target')
+    .map(wire => one(wire, 'family')));
+  if (!families.size && !one(owner, 'asked_words')) return;
   const scope = one(owner, 'words') ?? plan.body;
   const scopeStart = plan.body.length - scope.length;
   if (plan.continuation && (scopeStart >= plan.seam || !wires.some(wire=>
@@ -149,13 +160,17 @@ export function withRequestIntents(text, plan, candidate) {
   const ids = new Set(wires.map(wire => wire.id));
   let n = 0;
   let hasUnresolved = false;
-  for (const {role, value, words, want, resolution} of plan.intents) {
+  for (const {role, value, words, want, resolution, quantity, bareQuantity} of plan.intents) {
     while (ids.has('intent.' + n)) n++;
     const id = 'intent.' + n++;
-    if (resolution === 'unresolved') {
+    const measured = !bareQuantity && quantity && families.size && [...worlds.ownerPropertyUnits.keys()].some(binding => {
+      const [family,key] = JSON.parse(binding);
+      return families.has(family) && resolveWrittenMeasurement(quantity, worlds, family, key)?.measurement;
+    });
+    if (resolution === 'unresolved' || bareQuantity || measured) {
       hasUnresolved = true;
       wires.push({id, type: 'w.request.unread', attrs: {
-        request: [ref], text: [quote(words)], note: [quote('unresolved ' + role)],
+        request: [ref], text: [quote(words)], note: [quote('unresolved ' + (bareQuantity || measured ? 'quantity' : role))],
       }});
     } else {
       wires.push({id, type: 'w.request.intent', attrs: {
