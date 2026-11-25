@@ -505,3 +505,7 @@
 ## Removal expressed as a wish
 - A bounded native wish frame now proposes removal when the whole phrase contains a declared cessation cue and a known object description.
 - Five positive and five contrast inputs checked on the default-model CLI. All 489 release tests passed.
+
+## Literal objects of short commands
+- Native verb frames now retain the exact pronoun in a generic lookup, including when the verb is split by its object.
+- Six default-model cases gained clean readings and four contrast outputs compared equal before and after. All 492 release tests passed.

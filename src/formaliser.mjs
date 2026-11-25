@@ -63,6 +63,7 @@ import { catalogIssues } from './catalog.mjs';
 import { frameSupport } from './language-frames.mjs';
 import { closedRequestReadings } from './closed-requests.mjs';
 import { removalWishReadings } from './removal-wishes.mjs';
+import { referenceCommandReadings } from './reference-commands.mjs';
 import { contextScores } from './context.mjs';
 import { prologWorker } from './prolog-worker.mjs';
 import { requestScope } from './request-scope.mjs';
@@ -334,6 +335,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       retain(reading,{restricted:false});
     }
     if (!scope.restricted && !quotes.length) {
+      for (const reading of referenceCommandReadings(text,ts,worlds,politeness)) retain(reading);
+      // The exact verb frame accounts for the whole utterance. A fallback
+      // cannot supply a family or reassign any of its words to a property.
+      if (candidates.some(candidate=>candidate.source==='reference-command')) {
+        const [first,...alternatives]=candidates;
+        return {...first,alternatives,[conditionalScope]:false};
+      }
       for (const reading of ellipticalPropertyReadings(text,ts,worlds,politeness)) retain(reading);
       for (const {nominalWords,...reading} of ellipticalNominals(text,ts,worlds,politeness)) {
         const {missing,counts}=evidenceReport(text,parse(reading.sop),worlds.evidenceVocabulary);

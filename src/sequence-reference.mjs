@@ -69,19 +69,33 @@ function ownedNumber(text,target,worlds) {
   }
 }
 
-function pronounAfterPredicate(scope,request,worlds) {
+function objectPronoun(scope,request,worlds,reference) {
   const predicate=field(request,'predicate');
   if (!predicate) return;
   const hit=interval(scope,predicate);
   if (!hit) return;
   const quoteRanges=quotedSpans(scope), chars=Array.from(scope), ts=tokens(scope);
   const point=i=>chars.slice(0,i).join('').length;
-  const pos=ts.findIndex(([, ,start])=>point(start)>=hit[1]);
-  if (pos<0 || quoteRanges.some(q=>point(q.start)<hit[1] && point(q.end)>hit[0])) return;
+  if (quoteRanges.some(q=>point(q.start)<hit[1] && point(q.end)>hit[0])) return;
   const intro=scope.slice(0,hit[0]);
   const lead=forms(intro);
   if (lead && !connective(intro,worlds) && !worlds.literalGrammar.leads.has(lead) &&
       !worlds.fillerPhrases.has(lead)) return;
+  if (reference) {
+    const where=interval(scope,reference);
+    const number=worlds.sequenceObjectPronouns.get(forms(reference));
+    if (where && ['sg','pl'].includes(number) && where[0]>hit[0] && where[1]<hit[1]) {
+      const [start,stop]=where;
+      const before=forms(scope.slice(hit[0],start));
+      const after=forms(scope.slice(stop,hit[1]));
+      const acts=worlds.referenceCommands.verbs.get(JSON.stringify([before,after]));
+      if (acts?.has(field(request,'act'))) {
+        return {raw:reference,start,stop,number,intro,predicate:before+' '+after};
+      }
+    }
+  }
+  const pos=ts.findIndex(([, ,start])=>point(start)>=hit[1]);
+  if (pos<0) return;
   const options=[];
   for (let end=pos+1;end<=Math.min(pos+5,ts.length);end++) {
     const start=point(ts[pos][2]), stop=point(ts[end-1][3]);
@@ -164,8 +178,12 @@ export function sequenceReferenceReadings(text,candidate,worlds,permit) {
     const priorAct=field(prior,'act');
     const creates=priorAct==='make' || field(source,'mode')==='new' &&
       declaresArgumentRoles(worlds,priorAct,source,localEffects(wires,prior));
+    const unresolvedLookups=wires.filter(wire=>wire.type===type('lookup') &&
+      field(wire,'request')==='$'+request.id && field(wire,'key')==='thing' && field(wire,'words') &&
+      !wire.attrs.target && !wire.attrs.constraint && !wire.attrs.from && !wire.attrs.antecedent);
+    const referenceWords=unresolvedLookups.length===1 ? field(unresolvedLookups[0],'words') : undefined;
     const fresh=creates ? freshTarget(scope,request,target,source,priorText,worlds) : undefined;
-    const pronoun=fresh ?? pronounAfterPredicate(scope,request,worlds);
+    const pronoun=fresh ?? objectPronoun(scope,request,worlds,referenceWords);
     if (!pronoun || !fresh && !liveActions.has(field(prior,'act'))) continue;
     const gap=text.slice(priorAt[1],where[0]);
     if (!connective(gap,worlds) && !(/^\s*[,;.?!]*\s*$/u.test(gap) &&
@@ -197,7 +215,8 @@ export function sequenceReferenceReadings(text,candidate,worlds,permit) {
     while (!target && ids.has(id)) id+='_';
     const replaced={id,type:type('target'),attrs:{request:[reference],family:[JSON.stringify(family)],
       mode:['bound'],family_words:[JSON.stringify(pronoun.raw)]}};
-    const oldLookups=wires.filter(w=>w.type===type('lookup') && field(w,'target')==='$'+id);
+    const oldLookups=wires.filter(w=>w.type===type('lookup') && (field(w,'target')==='$'+id ||
+      referenceWords===pronoun.raw && w===unresolvedLookups[0]));
     if (oldLookups.some(w=>field(w,'request')!==reference || field(w,'key')!=='thing' ||
         !['page','any',undefined].includes(field(w,'from')))) continue;
     if (wires.some(w=>!oldLookups.includes(w) && Object.values(w.attrs).flat().some(raw=>
