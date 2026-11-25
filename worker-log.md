@@ -533,3 +533,7 @@
 ## Demonstrative noun phrases and copy sources
 - Prolog separates written noun phrases from standalone references and retains the exact lookup words.
 - The 137-text default replay removed nine false reference readings. The optional copy target declarations produced nine complete source readings. All 503 tests passed.
+
+## Destination of a repeated setting
+- The reader binds the explicit destination of a settings copy and preserves the exact unresolved operand.
+- The default reader replay added readings for all 33 settings copies in its 120-text corpus slice. All 505 release tests passed.

@@ -1,7 +1,7 @@
 import {measuredMotionReadings} from './measured-motion.mjs';
 import {landmarkPairReadings} from './landmark-pairs.mjs';
 import {coordinatedRequestReadings,sentenceRequestReadings} from './sentence-requests.mjs';
-import {requestIntentPlans,resultRequestReading,withRequestIntents} from './request-intents.mjs';
+import {requestIntentPlans,resultRequestReading,unresolvedDestinationReadings,withRequestIntents} from './request-intents.mjs';
 import {namedTupleReading,tupleAssignments,tupleTargetNames} from './tuple-assignments.mjs';
 import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
@@ -370,6 +370,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     if (assignment) for (const reading of numericAssignmentReadings(text,assignment)) retain(reading);
     for (const candidate of namedArgumentCandidates(text,ts,quotes,worlds,sequenceOptions)) retain(candidate);
     for (const candidate of literalRoleCandidates(text,ts,quotes,worlds)) retain(candidate);
+    if (!scope.restricted) {
+      for (const candidate of unresolvedDestinationReadings(text,ts,worlds)) retain(candidate);
+    }
     if (!scope.restricted && !quotes.length) {
       const result = resultRequestReading(text,ts,worlds);
       if (result) retain(result);

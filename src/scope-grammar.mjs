@@ -7,6 +7,8 @@ const phrase=text=>tokens(text).map(token=>token[0]).join(' ');
 
 export function scopeGrammar(facts) {
   const conditionals=new Map();
+  const choices=new Set(facts('w.lang.en.closed')
+    .filter(w=>all(w,'from').includes('w.lang.en.choice')).flatMap(w=>all(w,'text').map(phrase)));
   const questions=new Map(), setCounts=new Map(), collectionQuestions=new Map();
   const auxiliary=new Set(), modals=new Set(), copulas=new Set(), plainImperatives=new Set();
   const subjects=new Set(), addressees=new Set(), existentialSubjects=new Set(), singularReferents=new Set();
@@ -88,7 +90,7 @@ export function scopeGrammar(facts) {
   for (const form of copulas) auxiliary.add(form);
   const endings=new Set(facts('w.lang.en.neg').flatMap(wire=>all(wire,'ending')).map(text=>text.toLowerCase().replaceAll('’',"'")));
   return {
-    conditionals, questions, setCounts, collectionQuestions, auxiliary, modals, copulas, plainImperatives, subjects,
+    conditionals, choices, questions, setCounts, collectionQuestions, auxiliary, modals, copulas, plainImperatives, subjects,
     addressees, existentialSubjects, singularReferents, courtesy, courtesyLeads, universals, countedUniversals,
     universalHeads:new Set([...universals].map(form=>form.split(" ")[0])), negatives, proposals, rejections, removals, presentSingularCopulas, predicateNegators, endings,
   };

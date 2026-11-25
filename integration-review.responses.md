@@ -735,3 +735,13 @@ The default-model before/after replay used 137 texts. Nine stopped offering the 
 The proposal adds copy applicability to the existing drawing object and group declarations and uses the native object inventory for existing sources. Route those additions through coordinator/data and preserve any other canonical acts at merge. Bare-pronoun alignment can still offer a context family without a written family, and the direct grammar does not yet handle every compound copy/paste or destination. The separate 120-text copy diagnosis found many settings-transfer requests such as “copy the same grid lines treatment over to the sales chart”. They require a typed transferable setting and unresolved source, distinct from copying a drawing object. No aggregate benchmark was run. [Copy target proposal](sop-worlds/copy-target-pilot/README.md) · [Role regressions](test/roles.test.mjs)
 
 All 503 isolated release tests passed.
+
+## Bulk findings fixed — written destination for repeated settings
+
+The reader now combines a declared repetition phrase and operand head with the owning action's native place role. “Copy the same grid lines treatment over to the sales chart” yields a copy request, an owned destination with exact value “the sales chart” and exact marker evidence, and the unread source phrase “the same grid lines treatment”. The same mechanism works for document, diagram and quoted destinations. It preserves the ordinary alternatives and supplies no source instance or setting value.
+
+The actual default-model before/after run used 138 texts. All 33 repeated-settings requests in the 120-text corpus slice gained the partial destination reading. Across the entire run there were 41 direct additions, one polite wrapper and one composed alternative in which the destination stays owned by the copy clause while the second removal remains separate. The other 95 texts returned identical ordered SOP candidates. Native catalogue and evidence checks passed for the new direct and wrapped readings. No aggregate benchmark ran.
+
+The installed `w.request.intent` schema suffices for the destination. The copied setting still needs its own contract. The existing shared-property relation has symmetric members, and the numeric scaled relation requires two written endpoints and a factor. A transfer such as grid-line visibility needs a directed property role and an open source with its literal words. Retain the unread operand pending that binding. Route the declared repetition-head and destination-marker shapes through coordinator/data. [Regression cases](test/unresolved-destination.test.mjs)
+
+All 505 isolated release tests passed.

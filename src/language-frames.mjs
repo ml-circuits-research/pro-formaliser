@@ -25,8 +25,6 @@ export function languageFrames(facts) {
   }
   const fixedFrames=new Set(facts('w.lang.en.fixed').map(w=>one(w,'frame')));
   const phraseBank=new Map(facts('w.lang.en.phrase').map(w=>[one(w,'name'),all(w,'item')]));
-  const choices=new Set(facts('w.lang.en.closed')
-    .filter(w=>all(w,'from').includes('w.lang.en.choice')).flatMap(w=>all(w,'text').map(surface)));
   for (const w of facts('w.lang.en.frame')) {
     const name=one(w,'name'),act=one(w,'act');
     if (!act || fixedFrames.has(name) || w.attrs.needs || w.attrs.mode || w.attrs.mood || w.attrs.polarity) continue;
@@ -81,7 +79,7 @@ export function languageFrames(facts) {
           const [t,,s,e]=ts[j];
           if (quotes.some(q=>s<q.end && e>q.start)) break;
           key+=(j===i?'':' ')+t;
-          if (worlds.negatives.has(key) || worlds.joiners[key] || choices.has(key) || ['?',';'].includes(t))
+          if (worlds.negatives.has(key) || worlds.joiners[key] || worlds.scopeGrammar.choices.has(key) || ['?',';'].includes(t))
             return {frames:[],events:[],length};
           for (const [kind,value] of lexicon.get(key) ?? []) {
             events.push([i,j+1,kind,value]);

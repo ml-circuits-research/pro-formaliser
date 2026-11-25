@@ -1,6 +1,7 @@
 import { parse, serialize, str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { visibleTokens } from './composition.mjs';
 import { literalRanges } from './evidence.mjs';
+import { quotedSpans } from './literal-roles.mjs';
 import { tokens } from './lexicon.mjs';
 import { resolveWrittenMeasurement } from './owner-property.mjs';
 import { tupleAssignments } from './tuple-assignments.mjs';
@@ -12,6 +13,62 @@ const one = (wire, key) => str(wire.attrs[key]?.[0]);
 const terms = text => tokens(text).map(([key]) => key);
 const matches = (keys, at, sequence) => sequence.every((key, i) => key === keys[at + i]);
 const quote = JSON.stringify;
+
+function unresolvedDestinationFrames(facts) {
+  const list=(wire,key)=>(wire.attrs[key] ?? []).map(value=>terms(str(value)));
+  const repetition=new Set(facts('w.lang.en.ellipsis.repeat').flatMap(wire=>list(wire,'text'))
+    .map(words=>words.join(' ')));
+  return facts('pro.reader.unresolved_destination').flatMap(wire=>{
+    const act=one(wire,'act'), lead=terms(one(wire,'lead') ?? '');
+    if (!repetition.has(lead.join(' '))) return [];
+    const verbs=facts('k.actions.verb').filter(verb=>one(verb,'act')===act && one(verb,'object')==='thing')
+      .flatMap(verb=>list(verb,'text')).filter(keys=>keys.length).sort((a,b)=>b.length-a.length);
+    const places=facts('k.actions.role').filter(role=>one(role,'act')===act && one(role,'name')==='place' &&
+      one(role,'holds')==='place').flatMap(role=>list(role,'marker')).filter(keys=>keys.length);
+    const markers=list(wire,'marker').filter(keys=>places.some(place=>matches(keys,keys.length-place.length,place)));
+    const heads=list(wire,'head').filter(keys=>keys.length);
+    return verbs.length && markers.length && heads.length ? [{act,lead,verbs,markers,heads}] : [];
+  });
+}
+
+export function unresolvedDestinationReadings(text,ts,worlds) {
+  const frames=worlds.requestIntents.unresolvedDestinations;
+  if (!frames.length) return [];
+  const chars=Array.from(text), quotes=quotedSpans(text);
+  const keys=ts.map(([key,,start,stop])=>quotes.some(quote=>quote.start<stop && start<quote.end) ? '' : key);
+  const end=keys.length-Number(['.','?','!'].includes(keys.at(-1)));
+  if (end<5 || end>72 || keys.slice(0,end).some(key=>worlds.joiners[key] ||
+      worlds.scopeGrammar.choices.has(key) || worlds.negatives.has(key) || worlds.scopeGrammar.conditionals.has(key) ||
+      (key && !word.test(key)))) return [];
+  const span=(start,stop)=>chars.slice(ts[start][2],ts[stop-1][3]).join('');
+  const candidates=[];
+  for (const {act,lead,verbs,markers,heads} of frames) {
+    const verb=verbs.find(words=>matches(keys,0,words) && matches(keys,words.length,lead));
+    if (!verb) continue;
+    for (let i=verb.length+lead.length;i<end;i++) {
+      for (const head of heads) {
+        const markerStart=i+head.length;
+        if (!matches(keys,i,head)) continue;
+        for (const marker of markers) {
+          const destination=markerStart+marker.length;
+          if (destination>=end || !matches(keys,markerStart,marker) ||
+              (!['definite','demonstrative','possessive'].includes(worlds.determiners[keys[destination]]) &&
+               !quotes.some(quote=>quote.start===ts[destination][2])) ||
+              destination+1>=end ||
+              keys.slice(destination+1,end).some((_,offset)=>
+                markers.some(other=>matches(keys,destination+offset+1,other)))) continue;
+          const words=span(markerStart,end), value=span(destination,end);
+          candidates.push({source:'unresolved-destination',status:'partial',sop:serialize([
+            {id:'r',type:requestType,attrs:{act:[act],mood:['do'],predicate:[quote(span(0,verb.length))],words:[quote(text)]}},
+            {id:'destination',type:'w.request.intent',attrs:{request:['$r'],role:['destination'],value:[quote(value)],words:[quote(words)]}},
+            {id:'operand',type:'w.request.unread',attrs:{request:['$r'],text:[quote(span(verb.length,markerStart))]}},
+          ])});
+        }
+      }
+    }
+  }
+  return candidates;
+}
 
 export function compileRequestIntents(facts, argumentSequences) {
   const frames = (type, fields) => facts(type).flatMap(wire =>
@@ -34,6 +91,7 @@ export function compileRequestIntents(facts, argumentSequences) {
   }
   return {
     results,
+    unresolvedDestinations:unresolvedDestinationFrames(facts),
     predicates: new Set(results.map(frame => frame.cue.join(' '))),
     intents: frames('pro.reader.request_intent_frame', ['role', 'form', 'owner', 'want', 'resolution'])
       .sort((a, b) => b.cue.length - a.cue.length),
