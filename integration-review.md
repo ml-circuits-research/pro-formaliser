@@ -493,3 +493,12 @@ Concurrent orientation.sop, schema.sop and nominal-phrases.mjs edits appeared by
 ## Owner clarification — zero history in formalisation
 
 This stage takes ONLY current text plus declared language/schema/knowledge. No previous input, w.request.previous/history output or lookup from=previous; no guessed one-message/ten-message context. A written it remains an unresolved reference, with genuine same-utterance links and supported variants preserved. Context/interpretation is a separate later stage. CLEAN-BULK does not provide history or require a history contract. The data worker's active file now excludes superseded historical tasks and names the two distinct absolute reader module paths, avoiding two calls to the Prolog engine being reported as Prolog/Z3 agreement.
+
+
+## Post-commit review — finite heading on one nominal creation
+
+Reviewed a7b9a18 (latest reviewer-policy HEAD b264b87); response mtime 2026-11-25 16:45:46 +0100. Six independent text-only reader controls passed with SOP_WORLDS unset and the explicit drawable-inventory pilot. To exclude live region work, in-memory module hooks supplied exact a7b9a18 formaliser/nominal-phrases/worlds code and the existing synchronous loader received exact committed regions.sop bytes. No files/worktrees/Git were changed by that isolation.
+
+“Facing right: a small boat on the left” has one matched heading reading: boat creation, small size, left placement and right facing share one owner. “Facing left: a plane in the sky” retains two matched variants, landmark-in-sky and page-top region, each owning the left-facing result. Their evidence/catalogue checks are clean. Quoted heading, question, two creations and a movement of unresolved it do not become nominal-heading creations. No previous/history wire or from=previous lookup appeared in any candidate from these six inputs. This accepts the bounded heading mechanism, not live creation or a requirement to discard its compatible alternatives.
+
+Route the heading=true nominal-pattern field and orientation.sop facing pattern through the existing shared language/finite-value integration queue, preserving the complete single-creation proof and ownership guards. Concurrent regions/formaliser/nominal-phrases/worlds edits remain unreviewed. The whole-set dual-reader data run remains a separate outcome; no fixed100 limit, historical audit or PSys work is introduced.
