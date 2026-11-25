@@ -28,12 +28,12 @@ export function analyticalArgumentFacts(facts) {
     if (![take('family'),take('tab'),take('owner_key'),take('owner_value')].every(Boolean) ||
         !attrs.prefix?.length || !attrs.owner?.length) continue;
     const scope=['tab','family'].map(key=>str(take(key)));
-    const isClosedField=field=>field==='$predicate' || closedFields.has(JSON.stringify([...scope,field]));
+    const isClosedField=field=>field.startsWith('=') || field==='$predicate' || closedFields.has(JSON.stringify([...scope,field]));
     const parts=layout==='ordered_fields' ? (attrs.pattern ?? []).flatMap(pattern=>{
       // Braces name typed catalog slots. The text between slots is one
       // authored connector. A closed value between open slots also separates
       // them, as in a threshold operator between a subject and its bound.
-      const split=str(pattern).split(/\{(\$(?:owner|predicate)|[\p{L}][\p{L}\p{N}_-]*\.[\p{L}\p{N}_.-]+)\}/u);
+      const split=str(pattern).split(/\{(\$(?:owner|predicate)|=?[\p{L}][\p{L}\p{N}_-]*\.[\p{L}\p{N}_.-]+)\}/u);
       if (split.length<5 || split.some((item,i)=>i%2===0 &&
           (/[{}]/u.test(item) || i>0 && i<split.length-1 && !item.trim() &&
             !isClosedField(split[i-1]) && !isClosedField(split[i+1])))) return [];
@@ -58,6 +58,7 @@ export function analyticalArgumentFacts(facts) {
           ['predicate_surface',bindsPredicate ? attrs.prefix : []],
           ['act',['make']],['mode',['new']],['part',bindsPredicate ? part.slice(1) : part],
           ['tail',bindsPredicate ? [] : attrs.tail ?? []],
+          ['scope_literal_slot',attrs.scope_literal_slot ?? []],['scope_literal',attrs.scope_literal ?? []],
           ['open_boundary',[...inherited?.open_boundary ?? [],...attrs.open_boundary ?? []]],
           ['numeric_modifier',inherited?.numeric_modifier ?? []]
         ])

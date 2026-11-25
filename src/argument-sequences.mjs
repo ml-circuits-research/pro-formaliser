@@ -61,7 +61,12 @@ export function argumentSequences(facts,catalog) {
     const owned=owners.length>0;
     const predicateBank=many(w,'predicate_surface').map(keys).filter(words=>words.length);
     if (Boolean(ownerKey)!==Boolean(ownerValue) || ownerKey && (mode!=='new' || !props.get(ownerKey)?.values.includes(ownerValue))) continue;
+    const openFields=new Set();
     const parts=many(w,'part').map(p=>{
+      if (p.startsWith('=')) {
+        const field=p.slice(1);
+        return owned && openFields.has(field) ? {repeat:field} : null;
+      }
       if (p===ownerPart) return owned ? (mode==='existing' ? {key:p,nominal:owners} :
         {key:p,bank:owners.map(words=>[words,''])}) : null;
       if (p===predicatePart) return owned && predicateBank.length ? {key:p,bank:predicateBank.map(words=>[words,''])} : null;
@@ -76,12 +81,19 @@ export function argumentSequences(facts,catalog) {
         for (const [alias,v] of forms.get(prop.name) ?? []) if (prop.values.includes(v)) bank.push([alias,v]);
         return {key:p,bank};
       }
-      return prop.head.split('+').includes('span') && !prop.values.length ? {key:p} : null;
+      if (!prop.head.split('+').includes('span') || prop.values.length) return null;
+      openFields.add(p);
+      return {key:p};
     });
     if (parts.some(p=>!p)) continue;
     const slots=parts.filter(p=>p.key && p.key!==unreadPart).map(p=>p.key);
     if (slots.length<2 || new Set(slots).size!==slots.length ||
         owned && (!slots.includes(ownerPart) || slots.includes(ownerKey))) continue;
+    const scopeLiteralSlot=one(w,'scope_literal_slot');
+    const scopeLiterals=many(w,'scope_literal').map(keys);
+    const closedSlot=parts.find(part=>part.key===scopeLiteralSlot)?.bank;
+    if (scopeLiteralSlot && (!owned || !closedSlot || !scopeLiterals.length ||
+        scopeLiterals.some(form=>!closedSlot.some(([words])=>words.join(' ')===form.join(' '))))) continue;
     const tails=owned ? many(w,'tail').map(keys).filter(words=>words.length) : [];
     const bindsPredicate=slots.includes(predicatePart);
     const boundaries=[...many(w,'open_boundary').map(keys),...bindsPredicate ? conjunctions : []].filter(words=>words.length);
@@ -89,7 +101,7 @@ export function argumentSequences(facts,catalog) {
     for (const prefix of many(w,'prefix').map(keys).filter(prefix=>prefix.length)) {
       const entries=index.get(prefix[0]) ?? [];
       entries.push({prefix,parts,family,act,mode,owned,ownerKey,ownerValue,tails,boundaries,numericModifiers,
-        bindsPredicate});index.set(prefix[0],entries);
+        bindsPredicate,scopeLiteralSlot,scopeLiterals});index.set(prefix[0],entries);
     }
   }
   for (const frames of index.values()) {
@@ -102,13 +114,13 @@ export function argumentSequences(facts,catalog) {
   return index;
 }
 
-export function sequencePacket(ts,worlds) {
+export function sequencePacket(ts,worlds,restricted=false) {
   const packets=[];
   let stop=ts.length;
   while (stop && ['.','!','?'].includes(ts[stop-1][0])) stop--;
   if (!stop) return packets;
   for (let i=0;i<stop;i++) for (const f of worlds.argumentSequences?.get(ts[i][0]) ?? []) {
-    if (!matchesAt(ts,i,f.prefix)) continue;
+    if (!matchesAt(ts,i,f.prefix) || restricted && !f.scopeLiteralSlot) continue;
     const start=i+f.prefix.length;
     if (start>=stop) continue;
     const addressed=f.owned && !f.bindsPredicate && addressedLead(ts,i,worlds);
@@ -156,6 +168,7 @@ export function sequencePacket(ts,worlds) {
         const boundary=f.prefix.findLastIndex(word=>[',',':'].includes(word));
         packet.owned={...addressed,ownerKey:f.ownerKey ?? '',ownerValue:f.ownerValue ?? '',
           utteranceEnd:ts[stop-1][3]};
+        if (f.scopeLiteralSlot) Object.assign(packet.owned,{scopeLiteralSlot:f.scopeLiteralSlot,scopeLiterals:f.scopeLiterals});
         if (f.bindsPredicate) packet.owned.bindsPredicate=true;
         else Object.assign(packet.owned,{predicateStart:ts[i+boundary+1][2],predicateEnd:ts[start-1][3]});
       }
@@ -194,6 +207,20 @@ export function sequenceReading(text,candidate,proof) {
   return {sop:serialize([...consumeUnread(wires,text,start,end),...additions]),source:'argument-sequence',status:candidate.status};
 }
 
+// Recheck speech scope after a full proof has assigned the closed cue to
+// a value slot. Keep all other tokens, including any independent negation.
+export function sequenceScopeText(text,proof) {
+  const slot=proof.owned?.scopeLiteralSlot;
+  if (!slot || proof.end!==proof.owned.utteranceEnd) return;
+  const binding=proof.bindings.find(([key])=>key===slot);
+  if (!binding?.[1]) return;
+  const [, ,start,end]=binding, chars=Array.from(text);
+  const surface=keys(chars.slice(start,end).join('')).join(' ');
+  if (!proof.owned.scopeLiterals.some(words=>words.join(' ')===surface)) return;
+  chars.fill(' ',start,end);
+  return chars.join('');
+}
+
 export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
   if (!proof.owned) return;
   const chars=Array.from(text), span=(start,end)=>chars.slice(start,end).join('');
@@ -209,7 +236,7 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
   ];
   if (proof.mode==='existing') lines.push('@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page');
   const bindings=proof.bindings.flatMap(binding=>binding===owner ?
-    (ownerKey ? [[ownerKey,ownerValue,start,end]] : []) : binding[0]===unreadPart ? [] : [binding]);
+    (ownerKey ? [[ownerKey,ownerValue,start,end]] : []) : binding[0]===unreadPart || binding[0].startsWith('=') ? [] : [binding]);
   for (const [i,[key,canonical,a,b]] of [...bindings,...extraBindings].entries()) {
     const words=span(a,b),value=canonical || words;
     let keyWords='';
@@ -217,14 +244,18 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
       // A role label must be in an adjacent connector. A fronted role may
       // have a label after its value and before the command delimiter.
       const previous=Math.max(proof.start,...proof.bindings.map(binding=>binding[3]).filter(end=>end<=a));
-      const connector=tokens(span(previous,a));
+      const beforeRepeat=proof.bindings.find(([slot,,x,y])=>slot.startsWith('=') && y===previous);
+      const leadToRepeat=beforeRepeat && Math.max(proof.start,...proof.bindings.map(binding=>binding[3])
+        .filter(end=>end<=beforeRepeat[2]));
+      const connectors=[[previous,tokens(span(previous,a))]];
+      if (beforeRepeat && !span(previous,a).trim()) connectors.push([leadToRepeat,tokens(span(leadToRepeat,beforeRepeat[2]))]);
       const following=proof.owned.bindsPredicate && b<predicateStart ?
         tokens(span(b,Math.min(predicateStart,...proof.bindings.map(binding=>binding[2]).filter(start=>start>=b)))) : [];
       for (const label of labels.get(key)) {
-        const suffix=connector.slice(-label.words.length);
         const prefix=following.slice(0,label.words.length);
         const matches=parts=>label.words.every((word,i)=>word===parts[i]?.[0]);
-        const [offset,matched]=matches(suffix) ? [previous,suffix] : matches(prefix) ? [b,prefix] : [];
+        const [offset,matched]=connectors.map(([from,connector])=>[from,connector.slice(-label.words.length)])
+          .find(([,suffix])=>matches(suffix)) ?? (matches(prefix) ? [b,prefix] : []);
         if (!matched) continue;
         const written=span(offset+matched[0][2],offset+matched.at(-1)[3]);
         if (written.length>keyWords.length) keyWords=written;

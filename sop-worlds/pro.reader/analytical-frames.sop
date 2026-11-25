@@ -16,6 +16,8 @@
 @pro.reader.analytical_frame.operation_marker core.slot of=pro.reader.analytical_frame key=operation_marker kind=string many=true
 
 @pro.reader.analytical_frame.pattern core.slot of=pro.reader.analytical_frame key=pattern kind=string many=true
+@pro.reader.analytical_frame.scope_literal_slot core.slot of=pro.reader.analytical_frame key=scope_literal_slot kind=atom
+@pro.reader.analytical_frame.scope_literal core.slot of=pro.reader.analytical_frame key=scope_literal kind=string many=true
 @pro.reader.analytical_frame.tail core.slot of=pro.reader.analytical_frame key=tail kind=string many=true
 @pro.reader.analytical_frame.open_boundary core.slot of=pro.reader.analytical_frame key=open_boundary kind=string many=true
 

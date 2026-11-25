@@ -278,3 +278,43 @@ test('binds the primary dimension and series dimension to separate data roles',a
     assert.ok(candidates.every(c=>c.source!=='argument-frame' || !c.sop.includes('chart.seriesDimension')),text);
   }
 });
+
+test('preserves either grouping order for a bare coordination and respects explicit roles',async t=>{
+  const path=fileURLToPath(new URL('../sop-worlds/chart-series-pilot/',import.meta.url));
+  const reader=createReader(undefined,loadWorlds({paths:[path]}));
+  t.after(()=>reader.close());
+  const orders=async text=>{
+    const {candidates}=await reader.propose(text);
+    return candidates.filter(c=>c.source==='argument-frame').map(c=>properties(parse(c.sop)))
+      .filter(p=>p['chart.dimension'] && p['chart.seriesDimension'])
+      .map(p=>[p['chart.dimension'],p['chart.seriesDimension']]);
+  };
+  assert.deepEqual(await orders('Draw a stacked bar chart of claims by province and sector.'),
+    [['province','sector'],['sector','province']]);
+  assert.deepEqual(await orders('Draw a stacked bar chart of claims across sector for each province.'),
+    [['province','sector']]);
+});
+
+test('binds a share qualification only when it repeats the same fields',async t=>{
+  const path=fileURLToPath(new URL('../sop-worlds/chart-series-pilot/',import.meta.url));
+  const reader=createReader(undefined,loadWorlds({paths:[path]}));
+  t.after(()=>reader.close());
+  const lead='Draw a stacked column chart of donations across payment method for each province';
+  const text=lead+', so the stacks show payment method share rather than absolute donations.';
+  const result=await proves(reader,text,{
+    'chart.type':'bar','chart.measure':'donations','chart.dimension':'province',
+    'chart.seriesDimension':'payment method','chart.stacking':'percent','chart.orientation':'vertical'
+  });
+  assert.equal(result.evidence.counts.uncovered,undefined);
+  for (const alternative of [
+    lead+', so the stacks show district share rather than absolute donations.',
+    lead+', so the stacks show payment method share rather than absolute revenue.',
+    'Do not '+text,
+    'If the data is final, '+text,
+    text.slice(0,-1)+' or add a second chart.',
+  ]) {
+    const {candidates}=await reader.propose(alternative);
+    assert.ok(candidates.every(c=>c.source!=='argument-frame' ||
+      properties(parse(c.sop))['chart.stacking']!=='percent'),alternative);
+  }
+});

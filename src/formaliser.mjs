@@ -36,7 +36,7 @@ import { evidenceReport } from './evidence.mjs';
 import {createEndpointReferenceReader} from './endpoint-reference.mjs';
 import {createCompoundReferenceReader} from './compound-reference.mjs';
 import {nominalScaleReading} from './nominal-scales.mjs';
-import { sequencePacket,sequenceReading,sequenceFrameReading } from './argument-sequences.mjs';
+import { sequencePacket,sequenceReading,sequenceFrameReading,sequenceScopeText } from './argument-sequences.mjs';
 import { propertyCommandPacket } from './property-commands.mjs';
 import { createPredicateTransfer } from './predicate-transfer.mjs';
 import { fixedPropertyReadings } from './fixed-properties.mjs';
@@ -260,7 +260,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
     const topicCommands=scope.restricted ? undefined : topicCommandPacket(text,ts,quotes,worlds,topicGrammar);
     const propertyCommands=scope.restricted || quotes.length ? undefined : propertyCommandPacket(text,ts,model.propertyCommands);
-    const argumentSequences=scope.restricted || quotes.length ? [] : sequencePacket(ts,worlds);
+    const argumentSequences=quotes.length ? [] : sequencePacket(ts,worlds,scope.restricted);
     const memberActions=scope.restricted ? [] : memberActionPackets(text,ts,quotes,worlds);
     const coordinatedEffects=scope.restricted || quotes.length ? undefined : coordinatedPacket(ts,worlds,model.lexicon);
     const verbEffects=scope.restricted || quotes.length ? [] : [...new Set(ts.map(t=>t[0]))].flatMap(head=>verbIndex.get(head) ?? []);
@@ -280,9 +280,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       } : undefined;
     const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
-    function retain(answer) {
+    function retain(answer,readingScope=scope) {
       const key = admissibleKey(text,answer.sop);
-      if (key && scope.restricted && !scope.permits(parse(answer.sop))) return;
+      if (key && readingScope.restricted && !readingScope.permits(parse(answer.sop))) return;
       if (key && !seen.has(key)) { seen.add(key); candidates.push(answer); }
     }
     for (const candidate of namedArgumentCandidates(text,ts,quotes,worlds,sequenceOptions)) retain(candidate);
@@ -443,7 +443,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     for (const proof of response.sequences ?? []) {
       if (proof.owned) {
         const reading=sequenceFrameReading(text,proof,analyticalOwnerBindings(text,proof,worlds),worlds.argumentLabels);
-        if (reading) retain(reading);
+        if (reading) {
+          const reparsed=scope.restricted && sequenceScopeText(text,proof);
+          if (reparsed) {
+            const checked=requestScope(text,reparsed,worlds,hits);
+            if (!checked.restricted) retain(reading,checked);
+          } else retain(reading);
+        }
         continue;
       }
       for (const candidate of [...candidates]) {

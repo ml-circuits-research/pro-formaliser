@@ -6,7 +6,7 @@
 argument_sequences(Q,Proofs) :-
     ( get_dict(argumentSequences,Q,Frames) ->
       findall(Proof,
-        (member(F,Frames), once(findnsols(2,B,distinct(B,sequence(F.parts,F.input,B)),Answers)),Answers=[Slots],
+        (member(F,Frames), once(findnsols(2,B,distinct(B,sequence(F.parts,F.input,[],B)),Answers)),Answers=[Slots],
          predicate_binding(F,Slots,Bindings,Owned),
          Base=_{family:F.family,act:F.act,mode:F.mode,anchor:F.anchor,start:F.start,end:F.end,bindings:Bindings},
          ( nonvar(Owned) -> put_dict(owned,Base,Owned,Proof) ; Proof=Base )), Proofs)
@@ -20,14 +20,24 @@ predicate_binding(F,Slots,Bindings,Owned) :-
       ; Bindings=Slots, Owned=Frame )
     ; Bindings=Slots ).
 
-sequence([],[],[]).
-sequence([Part|Tail],Tokens,Bindings) :-
-    ( get_dict(literal,Part,Words) -> eat(Words,Tokens,Rest), Bs=Bindings
+sequence([],[],_,[]).
+sequence([Part|Tail],Tokens,Seen,Bindings) :-
+    ( get_dict(literal,Part,Words) ->
+      eat(Words,Tokens,Rest), Bs=Bindings, Next=Seen
+    ; get_dict(repeat,Part,Key) ->
+      memberchk(Key-Words,Seen), eat(Words,Tokens,Rest), Next=Seen,
+      Tokens=[[_,From,_,_]|_], append(Matched,Rest,Tokens), last(Matched,[_,_,To,_]),
+      string_concat("=",Key,Repeat), Bindings=[[Repeat,"",From,To]|Bs]
     ; Tokens=[[_,Start,_,_]|_],
       slot(Part,Tokens,Rest,Canonical),
-      append(Consumed,Rest,Tokens),last(Consumed,[_,_,End,_]),
-      Bindings=[[Part.key,Canonical,Start,End]|Bs] ),
-    sequence(Tail,Rest,Bs).
+      append(Consumed,Rest,Tokens), last(Consumed,[_,_,End,_]),
+      Key=Part.key,
+      Bindings=[[Key,Canonical,Start,End]|Bs],
+      ( get_dict(bank,Part,_) -> Next=Seen
+      ; maplist(token_key,Consumed,Keys), Next=[Key-Keys|Seen] ) ),
+    sequence(Tail,Rest,Next,Bs).
+
+token_key([Key,_,_,_],Key).
 
 slot(Part,Tokens,Rest,Canonical) :-
     ( get_dict(bank,Part,Bank) ->
