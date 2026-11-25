@@ -311,3 +311,7 @@
 ## INTEGRATE-2 canonical chart fields
 - Installed `f48e08f7` and removed the three duplicate field declarations. Preserved optional grouping, scatter syntax and intended-use coverage.
 - Verified all three source fields and both axis titles in the default reader. All 397 isolated release tests passed.
+
+## Grouped effects on one owner
+- The public worlds-only reader retained both fog and morning on one existing scene, with separate written evidence.
+- A test world verified three unrelated property values with the same grammar. All 398 isolated release tests passed.
