@@ -360,3 +360,7 @@
 - The frozen model produced complete proposals in controls 1000 and 387. Control 76 now grounds the preset and preserves the pending retention request verbatim.
 - A novel schema overlay verifies the same verb-free frame and multiword alias grounding. Canonical routing is documented in integration-review.responses.md.
 - All 433 isolated release tests passed. The benchmark remains paused.
+
+## Scoped retention
+- Frozen control 76 now formalizes the requested appearance and bound retention with the exact next-launch and device scope. The same grammar works for a diagram node.
+- All 434 isolated release tests passed. The declaration and downstream scope dependency are recorded for integration.

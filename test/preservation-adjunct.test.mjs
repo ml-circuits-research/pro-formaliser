@@ -54,6 +54,48 @@ test('requires a complete local preservation frame outside quotations and condit
   ]) assert.equal((await read(reader,text)).length,0,text);
 });
 
+test('binds a scoped keep request to the single written owner of its preceding change',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [body,family,effect,result,scope] of [
+    ['If you can, set my avatar to an elderly lady','drawn','drawn.preset','old woman',
+      'for the next time I open the app on this machine'],
+    ['Set the node height to 40,','node','node.height','40','until the next time I sign in'],
+  ]) {
+    const text=`${body} and keep it ${scope}.`;
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const candidate=candidates.find(c=>{
+      if (c.source!=='preservation-adjunct') return false;
+      const wires=parse(c.sop), requests=wires.filter(w=>w.type==='w.request.request');
+      const [change,keep]=requests;
+      const owns=(w,r)=>value(w,'request')==='$'+r.id;
+      const scoped=(r,key,expected)=>wires.some(w=>owns(w,r) && value(w,'attribute')===key &&
+        value(w,'phase')==='result' && value(w,'value')===expected);
+      return requests.length===2 && value(keep,'predicate')==='keep' &&
+        wires.some(w=>owns(w,keep) && w.type==='w.request.target' && value(w,'family')===family &&
+          value(w,'mode')==='bound' && value(w,'family_words')==='it') &&
+        wires.every(w=>!owns(w,keep) || w.type!=='w.request.lookup') &&
+        scoped(change,effect,result) && scoped(keep,family+'.keep','all') && scoped(keep,'preference.scope',scope);
+    });
+    assert.ok(candidate,text);
+    assert.equal(candidate.status,'matched');
+    assert.deepEqual(candidate.catalog.issues,[]);
+    assert.deepEqual(candidate.evidence.missing,[]);
+    assert.ok(!candidate.evidence.counts.unread && !candidate.evidence.counts.uncovered);
+  }
+  for (const text of [
+    'Set my avatar to robot and keep it for five minutes.',
+    'Set my avatar to robot and keep it for the demo.',
+    'Set my avatar to robot and keep it for the next time.',
+    'Set my avatar to robot and keep them for the next time I sign in.',
+    'Set my avatar to robot and keep it for the next time I sign in and delete the box.',
+    'Set my avatar to robot and keep it for the next time I sign in if possible.',
+    'If approved, set my avatar to robot and keep it for the next time I sign in.',
+    'Do not set my avatar to robot and keep it for the next time I sign in.',
+    'Set the node label to "and keep it for the next time I sign in".',
+  ]) assert.equal((await read(reader,text)).length,0,text);
+});
+
 const ownedText='Draw a kite under the bridge facing the moon';
 const retentionText='keeping everything else where it is';
 const fullText=ownedText+', '+retentionText+'.';
