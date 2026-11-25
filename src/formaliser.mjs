@@ -1,6 +1,7 @@
 import {measuredMotionReadings} from './measured-motion.mjs';
 import {landmarkPairReadings} from './landmark-pairs.mjs';
 import {coordinatedRequestReadings,sentenceRequestReadings} from './sentence-requests.mjs';
+import {requestIntentPlans,resultRequestReading,withRequestIntents} from './request-intents.mjs';
 import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
 import {universalInventoryPacket} from './universal-inventory.mjs';
@@ -171,8 +172,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   const endpoints=createEndpointReferenceReader(worlds);
   const instanceReferences = createInstanceReferenceReader(worlds);
   const preservation = createPreservation(model.examples,worlds,model.lexicon);
+  const ordinaryAct = coordinationActs(worlds,model.lexicon);
   const sequenceOptions = {
-    isAct:coordinationActs(worlds,model.lexicon),
+    isAct:(surface,context)=>worlds.requestIntents.predicates.has(surface) || ordinaryAct(surface,context),
     isPreservation:preservation.recognises,
     prefixes:clausePrefixes([...(worlds.literalGrammar?.leads ?? []),
       ...(worlds.discourse ?? []).filter(({class:kind})=>kind==='politeness' || kind==='interjection').map(({text})=>text)]),
@@ -289,6 +291,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     for (const candidate of namedArgumentCandidates(text,ts,quotes,worlds,sequenceOptions)) retain(candidate);
     for (const candidate of literalRoleCandidates(text,ts,quotes,worlds)) retain(candidate);
+    if (!scope.restricted && !quotes.length) {
+      const result = resultRequestReading(text,ts,worlds);
+      if (result) retain(result);
+    }
     const contextualTargets = [];
     const response = await worker.request(request);
     for (const answer of response.candidates) {
@@ -625,7 +631,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     return mergeReadings(base,readings,base.status==='matched');
   }
-  async function formalise(text) {
+  async function formaliseBase(text) {
     const base = await read(text);
     if (base[conditionalScope]) {
       const guarded = await guardedPropertyReadings(text,worlds,read);
@@ -643,7 +649,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const plain = [], results = [];
     for (const [index,part] of parts.entries()) {
       const ordinary = await read(part);
-      const result = await readEnumeration(part,ordinary,plans[index]);
+      const enumerated = await readEnumeration(part,ordinary,plans[index]);
+      const result = await attachIntents(part,enumerated,read);
       if (!result.sop) return base;
       plain.push(ordinary);
       results.push(result);
@@ -657,6 +664,24 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     if (results.some((result,index)=>result!==plain[index])) readings.push(...combine(text,parts,plain));
     return mergeReadings(base,readings,
       complete || base.status==='matched' && results.some(r=>r.status!=='matched'));
+  }
+  async function attachIntents(text,base,readBody) {
+    const readings = [];
+    const crossesRequest = value => sequenceParts(value,tokens(value),worlds.joiners,
+      {...sequenceOptions,requireLeftAct:false}).length > 0;
+    for (const plan of requestIntentPlans(text,worlds,crossesRequest)) {
+      const body = await readBody(plan.body);
+      if (body[conditionalScope]) continue;
+      for (const candidate of [body,...body.alternatives]) {
+        if (!candidate.sop) continue;
+        const reading = withRequestIntents(text,plan,candidate);
+        if (reading && admissibleKey(text,reading.sop)) readings.push(reading);
+      }
+    }
+    return mergeReadings(base,readings,base.status==='matched');
+  }
+  async function formalise(text) {
+    return attachIntents(text,await formaliseBase(text),formaliseBase);
   }
   async function wrapped(text) {
     const base=await formalise(text);

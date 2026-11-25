@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 version=9.0.4+dfsg-3.1ubuntu4
-knowledge=f48e08f7a285e23534228eb8a6b6f07e78cd64a3
+knowledge=ae80c054199849d4918058b10a165618be38c2df
 mkdir -p .cache/debs .cache/swi .cache/knowledge .cache/node
 node_version=v22.23.2
 case "$(dpkg --print-architecture)" in

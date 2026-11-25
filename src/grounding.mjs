@@ -113,6 +113,8 @@ export function evidenceInText(text, sop, worlds) {
       if (literalField(key) && vs.some(v => !catalogReference(worlds?.evidenceVocabulary,{type},key,v) && !literalRanges(key === 'words' && type==='w.request.request' ? text : scope,decode(v)).length)) return false;
     }
     if (type === 'w.request.constraint' && attrs.value?.some(v => (!attrs.words || v.startsWith('"')) && !present(decode(v)))) return false;
+    if (type === 'w.request.intent' && (!attrs.words?.length || attrs.value?.some(v =>
+      !literalRanges(decode(attrs.words[0]),decode(v)).length))) return false;
   }
   return true;
 }

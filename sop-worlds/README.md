@@ -31,6 +31,8 @@ Vocabularul pentru trasee, stiluri de linie și alinierea textului, precum și c
 
 Revizia oficială `f48e08f7a285e23534228eb8a6b6f07e78cd64a3` adaugă cheile `chart.xField`, `chart.yField` și `chart.seriesDimension`, mapate la `w.diagram.group.x_field`, `w.diagram.group.y_field` și respectiv `w.diagram.group.series_field`. Cititorul încarcă aceste definiții implicit. Regulile locale pentru sintaxa specifică piloților se pot încărca prin `SOP_WORLDS`. `chart.intendedUse` rămâne o propunere opțională. [Revizia canonică](https://github.com/ml-circuits-research/sop-knowledge-worlds/commit/f48e08f7a285e23534228eb8a6b6f07e78cd64a3)
 
+Scopul și destinația unei cereri se pot reprezenta prin `w.request.intent` din schema oficială `ae80c054`. Cadrele de limbă declară marcajul, rolul și polaritatea. Fiecare fir păstrează expresia scrisă și referința la cererea căreia îi aparține. O destinație care menționează explicit răspunsul se leagă de cererea care produce acel răspuns. [Cadrele de limbă](pro.reader/request-intents.sop) · [Teste](../test/request-intents.test.mjs)
+
 Pentru integrare în depozitul de lumi, declarațiile `core.word` pot intra în shardurile de vocabular ale domeniilor respective, iar cadrele în shardurile `w.lang.en`. Directorul `w.relational/` urmează structura unui modul separat, cu `schema.sop` și `shards/`. Modulul importă `w.request`. Testul încarcă atât schema, cât și cheile de catalog la care se referă un graf.
 
 ## Ce reprezintă modulul propus

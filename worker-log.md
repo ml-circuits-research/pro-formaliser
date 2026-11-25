@@ -315,3 +315,7 @@
 ## Grouped effects on one owner
 - The public worlds-only reader retained both fog and morning on one existing scene, with separate written evidence.
 - A test world verified three unrelated property values with the same grammar. All 398 isolated release tests passed.
+
+## INTEGRATE-3 request intents
+- Installed `ae80c054`. The public reader emits request-owned purpose and destination, keeps negative intent and preserves separate calculation ownership.
+- The exact chart control leaves `a sales` unread on the chart. All 402 isolated release tests passed. See integration-review.responses.md.

@@ -292,3 +292,15 @@ The optional grammar replay preserved `against` operand swaps, both plausible or
 With `SOP_WORLDS` unset, the worlds-only public reader produced one matched candidate for “Could you set the entire picture to a foggy morning?” with an existing page target and page lookup. The same request owns `page.weather=fog` and `page.time=morning`, with the written “foggy” and “morning” evidence. That candidate has no unread spans, uncovered words or catalogue issues.
 
 An independent test world supplied three unrelated properties and a new object. The same grammar read both adjacent values and a comma-separated list with a conjunction. The regressions retain the original two-effect reading and reject disjunction, conflicting values for one key and trailing unrelated clauses in the grouped-effects reader. All 398 tests passed in the isolated release snapshot. The benchmark remains paused and this result covers candidate generation. [Focused regressions](test/coordinated-effects.test.mjs) · [Grammar declarations](sop-worlds/pro.reader/grouped-effects.sop)
+
+## INTEGRATE-3 reader generation ready for review
+
+Setup installs canonical revision `ae80c054199849d4918058b10a165618be38c2df`. The default public reader now generates native request intents from installed role frames. In the chart-then-calculation control it produced separate requests for the chart and the calculation, with the following wires on the calculation. The delivery evidence includes the explicit reference to the answer.
+
+```sop
+@s2.r w.request.request act=ask mood=do question=total predicate="calculate" asked_words="total revenue" words="calculate total revenue to explain the change to the board and put that answer on the summary slide"
+@intent.0 w.request.intent request=$s2.r role=purpose value="explain the change to the board" words="to explain the change to the board" want=yes
+@intent.1 w.request.intent request=$s2.r role=destination value="the summary slide" words="and put that answer on the summary slide" want=yes
+```
+
+The candidate retains `a sales` as unread on the chart request. The calculation, roles, ownership and literal evidence pass native and reader checks. Separate controls retain intents on two different requests, preserve negative purpose and delivery, exclude the quantified `for each` control, and install a new purpose cue through an overlay without code changes. The independent grouped-effects and chart controls passed. All 402 tests passed in the isolated release snapshot. The existing chart intended-use pilot is still available. PSys2 codec verification and application execution are separate pending work. The benchmark remains paused. [Reader controls](test/request-intents.test.mjs) · [Declared grammar](sop-worlds/pro.reader/request-intents.sop)
