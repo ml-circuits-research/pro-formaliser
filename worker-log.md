@@ -281,3 +281,6 @@
 ## Addressed placement requests
 - Allow the terminal question mark when speech scope already recognizes an addressed placement request. Genuine questions remain outside the mutation proposal. Native tests also check landmark ownership across requests.
 - All 384 tests passed. Replayed every question-ending request in the affected benchmark profiles.
+
+## Landmark-pair replay
+- All 1,000 primary and 1,000 independent inputs replayed. All-staged coverage 55.0% including spelling and 45.8% on independent originals. See eval/RESULTS.md for grades and limitations.

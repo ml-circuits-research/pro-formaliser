@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Placement between two landmarks at 59dd222
+
+Original-text coverage is **45.8%** with all staged worlds and **45.2%** with default worlds. [Changed sets](LANDMARK-PAIR-REPLAY.tsv)
+
 ## Repeated operands and grouping alternatives at bf65865
 
 Original-text coverage is **45.7%** with all staged worlds and **45.2%** with default worlds. [Changed sets](REPEATED-OPERAND-REPLAY.tsv)

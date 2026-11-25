@@ -2,6 +2,37 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Placement between two landmarks
+
+Reader `59dd222` reaches **55.0% L3 + L4** on the primary 1,000 requests including spelling. The independent 1,000 original texts reach **45.8%**. The comparison uses the same held-out requests, trained models and judging rules. After the punctuation-only revision, every question-ending input was replayed in the affected profiles and matched against the full results. The reader receives text only, with no active tab or discussion history. [Changed proposal sets and semantic judgments](LANDMARK-PAIR-REPLAY.tsv)
+
+| Profile | Primary original | Primary including spelling | Independent original |
+| --- | ---: | ---: | ---: |
+| Default | 51.6% | 53.1% | 45.2% |
+| All staged worlds | 53.6% | **55.0%** | **45.8%** |
+
+| Grade | All staged worlds, original or corrected |
+| --- | ---: |
+| L0 – Fail | 1.3% |
+| L1 – Wrong | 9.3% |
+| L1a – Wrong intent | 1.9% |
+| L1b – Wrong target | 2.2% |
+| L1c – Wrong detail or role | 3.6% |
+| L1d – Invented instruction | 1.6% |
+| L2 – Incomplete | 34.4% |
+| L2a – Missing action, question or step | 6.0% |
+| L2b – Missing object, endpoint or reference | 8.3% |
+| L2c – Missing value, property, placement, scope or condition | 20.1% |
+| L3 – Identical and reasonable | 20.5% |
+| L4 – Reasonable alternative | 34.5% |
+| **L3 + L4 – Reasonable** | **55.0%** |
+
+The new circuit for “next move it halfway between Deploy and Plan” preserves one contextual target, independently resolvable landmarks, and a midpoint operation. This is the newly reasonable request on the independent sample. The optional `w.relational.landmark_pair` also distinguishes “between” from “halfway between”. Validation checks the owner of each referenced wire and rejects duplicate selector references and result-phase landmarks. [Module schema and reproduction](../sop-worlds/README.md)
+
+The current PSys2 dataset converter retains both anchor words and the surface “halfway between”. It drops the relation that expresses the midpoint and the references that connect lookups to their anchors. The replay measures the emitted formalization. The consumer still needs the two lookups and geometric operation before applying the move. [Integration check](../integration-review.responses.md)
+
+The reference audit identifies **24.6%** of primary requests with a material issue. **4.1%** of all primary requests have both a material reference issue and a reasonable proposal.
+
 ## Repeated operands and grouping alternatives
 
 Reader `bf65865` reaches **55.0% L3 + L4** on the primary 1,000 requests including spelling. The independent 1,000 original texts reach **45.7%**. The comparison uses the same held-out requests, trained models and judging rules. The reader receives text only, with no active tab or discussion history. [Changed proposal sets and semantic judgments](REPEATED-OPERAND-REPLAY.tsv)
