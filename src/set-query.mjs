@@ -12,6 +12,17 @@ const keyOf=items=>items.map(([key])=>key).join(' ');
 const quotation=JSON.stringify;
 const nominal=/^[\p{L}\p{M}\p{N}_]+$/u;
 
+function closedNominalRegion(ts,worlds,phrase,start,end) {
+  return ts.slice(start,end).every(([term],i)=>nominal.test(term) && !worlds.negatives.has(term) &&
+    !worlds.joiners[term] && !Array.from({length:Math.min(5,end-start-i)},(_unused,n)=>phrase(start+i,start+i+n+1))
+      .some(surface=>worlds.scopeGrammar.conditionals.has(surface) || worlds.scopeGrammar.negatives.has(surface)));
+}
+
+function matchingContainers(worlds,ts,phrase,start,end) {
+  if (!['definite','demonstrative','possessive'].includes(worlds.determiners[ts[start]?.[0]])) return [];
+  return worlds.sourceContainers.aliases.filter(({label})=>phrase(start+1,end)===label);
+}
+
 function countScope(form,ts,worlds,phrase,start,end) {
   if (start===end) return {neutral:false,containers:[]};
   const suffix=phrase(start,end);
@@ -20,14 +31,12 @@ function countScope(form,ts,worlds,phrase,start,end) {
   for (const marker of form.scopes) {
     const at=start+marker.split(' ').length;
     if (at>=end || phrase(start,at)!==marker) continue;
-    const determiner=worlds.determiners[ts[at][0]];
-    const containers=form.membership.has(marker) && ['definite','demonstrative','possessive'].includes(determiner) ?
-      worlds.sourceContainers.aliases.filter(({label})=>phrase(at+1,end)===label) : [];
+    const containers=form.membership.has(marker) ? matchingContainers(worlds,ts,phrase,at,end) : [];
     return {neutral:false,containers};
   }
 }
 
-function countTargets(ts,worlds,hits,phrase,span,start,end) {
+function nominalSetTargets(ts,worlds,hits,phrase,span,start,end) {
   const native=surface=>(worlds.ownerInventory?.get(JSON.stringify(['change',surface])) ?? [])
     .map(({family,sort})=>['target','change',family,'existing',sort]);
   const noun=phrase(start,end);
@@ -66,13 +75,11 @@ export function* prefixSetQuestions(text,ts,worlds,hits,quotes) {
     const stop=at<0 ? end : at;
     if (at>=0 && !form.closers.has(phrase(at+1,end))) return;
     const start=head+Number(worlds.determiners[ts[head]?.[0]]==='definite');
-    if (start>=stop || ts.slice(start,stop).some(([term],i)=>!nominal.test(term) || worlds.negatives.has(term) ||
-        worlds.joiners[term] || Array.from({length:Math.min(5,stop-start-i)},(_unused,n)=>phrase(start+i,start+i+n+1))
-          .some(surface=>worlds.scopeGrammar.conditionals.has(surface) || worlds.scopeGrammar.negatives.has(surface)))) return;
+    if (start>=stop || !closedNominalRegion(ts,worlds,phrase,start,stop)) return;
     for (let nounEnd=stop;nounEnd>start;nounEnd--) {
       const scope=countScope(form,ts,worlds,phrase,nounEnd,stop);
       if (!scope) continue;
-      const targets=countTargets(ts,worlds,hits,phrase,span,start,nounEnd);
+      const targets=nominalSetTargets(ts,worlds,hits,phrase,span,start,nounEnd);
       if (form.genericNouns.has(phrase(start,nounEnd))) {
         for (const {population,affected} of scope.containers) {
           if (affected.includes(population)) targets.unshift({family:population,words:span(start,nounEnd)});
@@ -96,6 +103,69 @@ export function* prefixSetQuestions(text,ts,worlds,hits,quotes) {
         ].join('\n')};
       }
       return;
+    }
+    return;
+  }
+}
+
+function* collectionArguments(form,ts,worlds,phrase,head,end) {
+  if (form.layout==='nominal') yield {nounStart:head,nounEnd:end};
+  for (let split=head;split<end;split++) {
+    for (const marker of form.markers) {
+      const after=split+marker.split(' ').length;
+      if (after>=end || phrase(split,after)!==marker) continue;
+      if (form.layout==='container_first') {
+        const containers=matchingContainers(worlds,ts,phrase,head,split);
+        if (containers.length) yield {nounStart:after,nounEnd:end,containers};
+        continue;
+      }
+      if ((form.layout==='population') !== (split===head)) continue;
+      for (let anchorEnd=end;anchorEnd>after;anchorEnd--) {
+        if (anchorEnd!==end && !form.anchorTails.has(phrase(anchorEnd,end))) continue;
+        const containers=matchingContainers(worlds,ts,phrase,after,anchorEnd);
+        if (containers.length) yield {nounStart:head,nounEnd:split,containers};
+      }
+    }
+  }
+}
+
+export function* collectionQuestions(text,ts,worlds,hits,quotes) {
+  const forms=worlds.scopeGrammar.collectionQuestions;
+  if (!forms?.size || quotes.length || ts.length<3 || ts.length>45) return;
+  const end=ts.length-Number(['.','!','?'].includes(ts.at(-1)?.[0]));
+  const phrase=(a,b)=>keyOf(ts.slice(a,b));
+  const chars=Array.from(text);
+  const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
+  for (let head=Math.min(12,end-1);head>0;head--) {
+    const form=forms.get(phrase(0,head));
+    if (!form || (form.requireQuestionMark && ts.at(-1)?.[0]!=='?')) continue;
+    if (!closedNominalRegion(ts,worlds,phrase,head,end)) return;
+    const emitted=new Set();
+    for (const {nounStart,nounEnd,containers} of collectionArguments(form,ts,worlds,phrase,head,end)) {
+      const lead=ts[nounStart][0];
+      const declared=worlds.determiners[lead];
+      if (form.question==='list' && declared==='indefinite') continue;
+      const determiner=form.existentialDeterminers.has(lead) ? 'quantified' :
+        ['indefinite','definite'].includes(declared) ? declared : undefined;
+      const start=nounStart+Number(Boolean(determiner));
+      const options=form.layout==='population' ?
+        containers.filter(({population,affected})=>affected.includes(population)).map(({population})=>({family:population})) :
+        start<nounEnd ? nominalSetTargets(ts,worlds,hits,phrase,span,start,nounEnd) : [];
+      for (const {family,sort,words,selector} of options) {
+        if (!worlds.literalGrammar.licenses(family,'ask') ||
+            (containers && !containers.some(({affected})=>affected.includes(family)))) continue;
+        const sop=[
+          '@r1 w.request.request act=ask mood=ask question='+form.question+' predicate='+quotation(span(0,head))+' words='+quotation(text),
+          '@r1.t w.request.target request=$r1 family='+quotation(family)+' mode=existing'+
+            (form.question==='exists' ? ' fill=description' : ' fill=all quantifier=all')+
+            (words ? (sort ? ' sort='+quotation(sort)+' sort_words=' : ' family_words=')+quotation(words) : '')+
+            (words && determiner ? ' determiner='+determiner : '')+' description='+quotation(span(head,end)),
+          ...nominalSelectorLines(selector),
+        ].join('\n');
+        if (emitted.has(sop)) continue;
+        emitted.add(sop);
+        yield {source:'collection-question',status:'matched',sop};
+      }
     }
     return;
   }

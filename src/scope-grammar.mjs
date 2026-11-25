@@ -7,7 +7,7 @@ const phrase=text=>tokens(text).map(token=>token[0]).join(' ');
 
 export function scopeGrammar(facts) {
   const conditionals=new Map();
-  const questions=new Map(), setCounts=new Map();
+  const questions=new Map(), setCounts=new Map(), collectionQuestions=new Map();
   const auxiliary=new Set(), modals=new Set(), copulas=new Set(), plainImperatives=new Set();
   const subjects=new Set(), addressees=new Set(), existentialSubjects=new Set(), singularReferents=new Set();
   const presentSingularCopulas=new Set(), predicateNegators=new Set();
@@ -61,6 +61,20 @@ export function scopeGrammar(facts) {
       if (surface) setCounts.set(surface,{scopes,closers,neutralTails,scopedTails,membership,genericNouns});
     }
   }
+  for (const wire of facts('pro.reader.collection_question')) {
+    const form={
+      question:one(wire,'question'),
+      layout:one(wire,'layout'),
+      markers:new Set(all(wire,'marker').map(phrase)),
+      anchorTails:new Set(all(wire,'anchor_tail').map(phrase)),
+      existentialDeterminers:new Set(all(wire,'existential_det').map(phrase)),
+      requireQuestionMark:one(wire,'require_question_mark')==='true',
+    };
+    for (const text of all(wire,'text')) {
+      const surface=phrase(text);
+      if (surface && form.question && form.layout) collectionQuestions.set(surface,form);
+    }
+  }
   const vocabulary={auxiliary,modals,copulas,subjects,addressees,courtesy,courtesyLeads,universals,countedUniversals,negatives,proposals,rejections,removals,predicateNegators};
   for (const wire of facts('pro.reader.scope_cue')) {
     const kind=one(wire,'kind'), type=one(wire,'question');
@@ -74,7 +88,7 @@ export function scopeGrammar(facts) {
   for (const form of copulas) auxiliary.add(form);
   const endings=new Set(facts('w.lang.en.neg').flatMap(wire=>all(wire,'ending')).map(text=>text.toLowerCase().replaceAll('’',"'")));
   return {
-    conditionals, questions, setCounts, auxiliary, modals, copulas, plainImperatives, subjects,
+    conditionals, questions, setCounts, collectionQuestions, auxiliary, modals, copulas, plainImperatives, subjects,
     addressees, existentialSubjects, singularReferents, courtesy, courtesyLeads, universals, countedUniversals,
     universalHeads:new Set([...universals].map(form=>form.split(" ")[0])), negatives, proposals, rejections, removals, presentSingularCopulas, predicateNegators, endings,
   };

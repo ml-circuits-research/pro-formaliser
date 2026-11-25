@@ -517,3 +517,7 @@
 ## Questions about the size of a collection
 - Count frames preserve nominal colours, count wording and supported written container descriptions. Other scopes remain explicitly unread.
 - The real default-model before/after batch covered 14 messages. All 496 release tests passed.
+
+## Existence, listing and description of written collections
+- Declared frames now keep the question type, grounded member selectors and exact written collection descriptions.
+- The default reader added six matched readings on 106 existing warning texts. Ten contrast outputs compared equal. All 498 release tests passed.

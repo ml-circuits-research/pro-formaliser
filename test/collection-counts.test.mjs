@@ -81,3 +81,61 @@ test('does not match collection counts through unsupported nouns, qualifiers or 
     assert.deepEqual(await propose(reader, text), [], text);
   }
 });
+
+test('reads existence and listing questions about explicitly written collections', async t => {
+  const reader = await createReader({ worldsOnly: true, evidence: true });
+  t.after(() => reader.close());
+  for (const [text, question, family, description, sort, colour] of [
+    ['Does my picture have a house?', 'exists', 'drawn', 'my picture have a house', 'house'],
+    ['Got a house in the drawing?', 'exists', 'drawn', 'a house in the drawing', 'house'],
+    ['Are there any blue flowers on the canvas?', 'exists', 'drawn', 'any blue flowers on the canvas', 'flower', 'blue'],
+    ['Does the document contain a paragraph?', 'exists', 'paragraph', 'the document contain a paragraph'],
+    ['What can u see in my picture?', 'list', 'drawn', 'in my picture'],
+    ["What's in the picture right now?", 'list', 'drawn', 'in the picture right now'],
+    ['List the blue flowers on the canvas.', 'list', 'drawn', 'the blue flowers on the canvas', 'flower', 'blue'],
+    ["Explain what's on the page.", 'describe', 'drawn', 'on the page'],
+  ]) {
+    const result = await reader.propose(text);
+    assert.equal(result.error, null, text);
+    const candidate = result.candidates.find(({ source, sop }) => source === 'collection-question' && parse(sop).some(wire =>
+      wire.type === 'w.request.target' && field(wire, 'family') === family &&
+      field(wire, 'sort') === sort));
+    assert.ok(candidate, text);
+    const wires = parse(candidate.sop);
+    const [request, target] = wires;
+    assert.deepEqual(['act', 'mood', 'question', 'words'].map(key => field(request, key)),
+      ['ask', 'ask', question, text], text);
+    assert.deepEqual(['request', 'mode', 'description', 'quantifier'].map(key => field(target, key)),
+      ['$' + request.id, 'existing', description, question === 'exists' ? undefined : 'all'], text);
+    const constraints = wires.filter(wire => wire.type === 'w.request.constraint');
+    assert.deepEqual(constraints.map(wire => ['request', 'attribute', 'phase', 'value'].map(key => field(wire, key))),
+      colour ? [['$' + request.id, 'drawn.colour', 'selector', colour]] : [], text);
+    assert.equal(wires.length, 2 + constraints.length, text);
+    assert.equal(candidate.status, 'matched', text);
+    assert.deepEqual(candidate.catalog.issues, [], text);
+    assert.deepEqual(candidate.evidence.missing, [], text);
+    assert.equal(candidate.evidence.counts.uncovered ?? 0, 0, text);
+  }
+});
+
+test('requires a licensed noun or population and rejects other speech constructions', async t => {
+  const reader = await createReader({ worldsOnly: true });
+  t.after(() => reader.close());
+  for (const text of [
+    'Can I have a fresh sheet of paper?',
+    'Do I have a house?',
+    'Got a house in the drawing.',
+    'Is there a house in the garden?',
+    'Are there many houses in the drawing?',
+    'What is in the document?',
+    'What is on the page if it rains?',
+    'What can you see?',
+    'List a tree in the picture.',
+    'List the items in the picture and move the house.',
+    'Write "What is on the canvas?"',
+  ]) {
+    const result = await reader.propose(text);
+    assert.equal(result.error, null, text);
+    assert.ok(!result.candidates.some(({ source }) => source === 'collection-question'), text);
+  }
+});
