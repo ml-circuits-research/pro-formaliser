@@ -14,8 +14,8 @@ const boundary=new Set([',',';','.','!','?','—','–']);
 
 export function compileSourceContainers(facts) {
   const aliases=facts('pro.reader.source_container').flatMap(wire=>{
-    const family=get(wire,'family'), affected=fields(wire,'affected_family');
-    return family && affected.length ? fields(wire,'text').map(label=>({family,affected,label:normalized(label)})) : [];
+    const family=get(wire,'family'), affected=fields(wire,'affected_family'), population=get(wire,'population');
+    return family && affected.length ? fields(wire,'text').map(label=>({family,affected,population,label:normalized(label)})) : [];
   });
   const markers=new Map();
   for (const wire of facts('k.actions.role')) {

@@ -513,3 +513,7 @@
 ## Closed undo and redo controls
 - Native phrase frames now handle direct undo/redo, shortcuts, correction cues and undoing an undo. Written pronouns stay unresolved.
 - The real default-model batch covered 13 inputs. All 494 release tests passed.
+
+## Questions about the size of a collection
+- Count frames preserve nominal colours, count wording and supported written container descriptions. Other scopes remain explicitly unread.
+- The real default-model before/after batch covered 14 messages. All 496 release tests passed.

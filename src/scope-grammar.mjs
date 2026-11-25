@@ -52,9 +52,13 @@ export function scopeGrammar(facts) {
   for (const wire of facts('pro.reader.set_count')) {
     const scopes=new Set(all(wire,'scope_lead').map(phrase));
     const closers=new Set(all(wire,'closer').map(phrase));
+    const neutralTails=new Set(all(wire,'neutral_tail').map(phrase));
+    const scopedTails=new Set(all(wire,'scope_tail').map(phrase));
+    const membership=new Set(all(wire,'membership').map(phrase));
+    const genericNouns=new Set(all(wire,'generic_noun').map(phrase));
     for (const text of all(wire,'text')) {
       const surface=phrase(text);
-      if (surface) setCounts.set(surface,{scopes,closers});
+      if (surface) setCounts.set(surface,{scopes,closers,neutralTails,scopedTails,membership,genericNouns});
     }
   }
   const vocabulary={auxiliary,modals,copulas,subjects,addressees,courtesy,courtesyLeads,universals,countedUniversals,negatives,proposals,rejections,removals,predicateNegators};

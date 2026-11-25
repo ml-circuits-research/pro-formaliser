@@ -1,5 +1,6 @@
 import { consumeUnread } from './nominal-evidence.mjs';
 import { tokens } from './lexicon.mjs';
+import { directHead, nominalSelectors, nominalSelectorLines } from './nominal-selectors.mjs';
 import { parse } from './schema.mjs';
 import { serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 
@@ -10,6 +11,46 @@ const value=(wire,key)=>{
 const keyOf=items=>items.map(([key])=>key).join(' ');
 const quotation=JSON.stringify;
 const nominal=/^[\p{L}\p{M}\p{N}_]+$/u;
+
+function countScope(form,ts,worlds,phrase,start,end) {
+  if (start===end) return {neutral:false,containers:[]};
+  const suffix=phrase(start,end);
+  if (form.neutralTails.has(suffix)) return {neutral:true,containers:[]};
+  if (form.scopedTails.has(suffix)) return {neutral:false,containers:[]};
+  for (const marker of form.scopes) {
+    const at=start+marker.split(' ').length;
+    if (at>=end || phrase(start,at)!==marker) continue;
+    const determiner=worlds.determiners[ts[at][0]];
+    const containers=form.membership.has(marker) && ['definite','demonstrative','possessive'].includes(determiner) ?
+      worlds.sourceContainers.aliases.filter(({label})=>phrase(at+1,end)===label) : [];
+    return {neutral:false,containers};
+  }
+}
+
+function countTargets(ts,worlds,hits,phrase,span,start,end) {
+  const native=surface=>(worlds.ownerInventory?.get(JSON.stringify(['change',surface])) ?? [])
+    .map(({family,sort})=>['target','change',family,'existing',sort]);
+  const noun=phrase(start,end);
+  const matching=hits.filter(([a,b])=>a===ts[start][2] && b===ts[end-1][3]).map(([, ,hit])=>hit);
+  const plural=worlds.nominalInflection(noun,lemma=>[...worlds.lookup(lemma),...native(lemma)]);
+  const words=span(start,end);
+  const targets=[...matching,...native(noun),...plural].flatMap(([role,act,family,mode,sort])=>
+    role==='target' && mode==='existing' && ['ask','pick','change','place'].includes(act) ?
+      [{family,sort,words}] : []);
+  for (const binding of worlds.nominalSelectorRules) {
+    const resolveHead=surface=>{
+      const direct=directHead(surface,binding);
+      if (direct?.size) return direct;
+      const inflected=worlds.nominalInflection(surface,lemma=>[...(directHead(lemma,binding) ?? [])]
+        .map(sort=>['target','ask',binding.family,'existing',sort]));
+      return new Set(inflected.map(entry=>entry[4]));
+    };
+    for (const {sort,sortWords,selector} of nominalSelectors([binding],start,end,phrase,span,resolveHead)) {
+      targets.push({family:binding.family,sort,words:sortWords,selector});
+    }
+  }
+  return targets;
+}
 
 export function* prefixSetQuestions(text,ts,worlds,hits,quotes) {
   const forms=worlds.scopeGrammar.setCounts;
@@ -29,26 +70,28 @@ export function* prefixSetQuestions(text,ts,worlds,hits,quotes) {
         worlds.joiners[term] || Array.from({length:Math.min(5,stop-start-i)},(_unused,n)=>phrase(start+i,start+i+n+1))
           .some(surface=>worlds.scopeGrammar.conditionals.has(surface) || worlds.scopeGrammar.negatives.has(surface)))) return;
     for (let nounEnd=stop;nounEnd>start;nounEnd--) {
-      const scoped=nounEnd<stop;
-      if (scoped && ![...form.scopes].some(scope=>nounEnd+scope.split(' ').length<stop &&
-          phrase(nounEnd,nounEnd+scope.split(' ').length)===scope)) continue;
-      const noun=phrase(start,nounEnd);
-      const native=surface=>(worlds.ownerInventory?.get(JSON.stringify(['change',surface])) ?? [])
-        .map(({family,sort})=>['target','change',family,'existing',sort]);
-      const matching=hits.filter(([a,b])=>a===ts[start][2] && b===ts[nounEnd-1][3]).map(([, ,hit])=>hit);
-      const plural=worlds.nominalInflection(noun,lemma=>[...worlds.lookup(lemma),...native(lemma)]);
-      const options=new Map([...matching,...native(noun),...plural]
-        .flatMap(([role,act,family,mode,sort])=>role==='target' && mode==='existing' &&
-          ['ask','pick','change','place'].includes(act) && worlds.literalGrammar.licenses(family,'ask') ?
-          [[JSON.stringify([family,sort]),{family,sort}]] : []));
+      const scope=countScope(form,ts,worlds,phrase,nounEnd,stop);
+      if (!scope) continue;
+      const targets=countTargets(ts,worlds,hits,phrase,span,start,nounEnd);
+      if (form.genericNouns.has(phrase(start,nounEnd))) {
+        for (const {population,affected} of scope.containers) {
+          if (affected.includes(population)) targets.unshift({family:population,words:span(start,nounEnd)});
+        }
+      }
+      const options=new Map(targets.filter(({family})=>worlds.literalGrammar.licenses(family,'ask'))
+        .map(option=>[JSON.stringify(option),option]));
       if (!options.size) continue;
-      for (const {family,sort} of options.values()) {
-        const nounWords=span(start,nounEnd);
-        yield {source:'prefix-set-query',status:scoped?'partial':'matched',sop:[
-          '@r1 w.request.request act=ask mood=ask question=count predicate='+quotation(span(0,head))+' words='+quotation(text),
+      for (const {family,sort,words,selector} of options.values()) {
+        const described=scope.containers.some(({affected})=>affected.includes(family));
+        const unread=nounEnd<stop && !scope.neutral && !described;
+        const predicate=span(0,scope.neutral ? stop : head);
+        yield {source:'prefix-set-query',status:unread?'partial':'matched',sop:[
+          '@r1 w.request.request act=ask mood=ask question=count predicate='+quotation(predicate)+' words='+quotation(text),
           '@r1.t w.request.target request=$r1 family='+quotation(family)+' mode=existing fill=all quantifier=all'+
-            (sort ? ' sort='+quotation(sort)+' sort_words='+quotation(nounWords) : ' family_words='+quotation(nounWords)),
-          ...(scoped ? ['@r1.u w.request.unread request=$r1 text='+quotation(span(nounEnd,stop))+' note="unresolved counting scope"'] : []),
+            (sort ? ' sort='+quotation(sort)+' sort_words='+quotation(words) : ' family_words='+quotation(words))+
+            (described ? ' description='+quotation(span(start,stop)) : ''),
+          ...nominalSelectorLines(selector),
+          ...(unread ? ['@r1.u w.request.unread request=$r1 text='+quotation(span(nounEnd,stop))+' note="unresolved counting scope"'] : []),
           ...(at>=0 ? ['@f1 w.request.filler text='+quotation(span(at+1,end))] : []),
         ].join('\n')};
       }
