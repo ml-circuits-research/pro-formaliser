@@ -829,3 +829,9 @@ The reader now retains both the count and the full ordinal phrase in “the last
 The default-model replay processed 242 distinct WebMeet requests selected for ordinal constructions. In 61, a new circuit captured both the ordering phrase and count. Nine received a new circuit with those fields and no unread or uncovered words. These nine include “reverse the last three figures” and “make the first three boxes green”. Some other circuits have complete written evidence while still lacking the correct action or reference in a compound request. For “last two steps, undo those”, the existing single undo with the written journal selector remains available. The previous two-command variants that treated “last two steps” as its own command changed. All 519 release tests passed. [Ordered group regressions](test/nominal-qualifiers.test.mjs)
 
 The word “figures” is supported by the learned noun inventory in the default model. The installed worlds lack that target alias. A canonical generic figure/object-kind alias would improve the worlds-only reader if its scope is declared without selecting a live domain. The aggregate benchmark remains paused.
+
+## Reviewer correction — visible cardinality in every native split proposal
+
+Prolog flags a declared numeral before the matched noun even if the noun parser consumed the number as a determiner. The reader now waits for the nominal proof before publishing that native circuit. The worlds-only controls verify that every native proposal for “Take two dogs out”, “Take the two dogs out” and “Take 2 dogs out” keeps `count=2`. The mechanism also checks the written number inside an ordered group. [Cardinality regressions](test/reference-commands.test.mjs)
+
+The 242-request default-model replay returned identical ordered SOP lists to the initial ordered-group run. All 520 release tests passed.

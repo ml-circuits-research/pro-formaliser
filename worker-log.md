@@ -575,3 +575,7 @@
 ## Nominal ordered groups
 - Existing plural targets now retain both the explicit count and the full first/last group phrase.
 - The default reader added ordered-group readings for 61 of 242 targeted WebMeet inputs. All 519 tests passed.
+
+## Split cardinality review
+- Every native split proposal now requires proof for a written number preceding its target noun.
+- The 242-request replay preserved its SOP lists. All 520 tests passed.

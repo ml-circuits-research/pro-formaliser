@@ -110,7 +110,8 @@ split_target_candidate(Q, Clean) :-
     lexical_candidate(Scope,_,Candidate), clean_candidate(Candidate,Base),
     findall(Filler,(nth1(I,Plan.fillers,Words), encode(Words,Encoded),
       format(string(Filler),'@r1.f~d w.request.filler text=~s',[I,Encoded])),Fillers),
-    atomics_to_string([Base.sop|Fillers],"\n",Sop), Clean=Base.put(sop,Sop).
+    ( once((member([A,B],Q.splitNumbers), A>=Plan.nounStart, B=<Start)) -> NeedsNumber=true ; NeedsNumber=false ),
+    atomics_to_string([Base.sop|Fillers],"\n",Sop), Clean=Base.put(_{sop:Sop,needsNumber:NeedsNumber}).
 
 clean_candidate(C, Clean) :- (del_dict(binding,C,_,Clean) -> true ; Clean=C).
 

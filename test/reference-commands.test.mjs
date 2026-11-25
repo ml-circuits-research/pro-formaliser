@@ -164,6 +164,22 @@ test('an ordered group inside a split command has a written noun, endpoint and c
   }
 });
 
+test('every native split reading keeps an explicit written cardinal',async t=>{
+  const reader=await createReader({worldsOnly:true,evidence:true});
+  t.after(()=>reader.close());
+  for (const text of ['Take two dogs out.', 'Take the two dogs out.', 'Take 2 dogs out.']) {
+    const result=await reader.propose(text);
+    assert.equal(result.error,null,text);
+    const readings=result.candidates.filter(candidate=>candidate.source==='split-target-frame');
+    assert.ok(readings.length,text);
+    for (const {sop,evidence} of readings) {
+      const target=parse(sop).find(wire=>wire.type==='w.request.target');
+      assert.deepEqual(values(target,'count'),['2'],text);
+      assert.equal(evidence.counts.unread ?? 0,0,text);
+    }
+  }
+});
+
 test('an ordinal within a split command qualifies its existing nominal target',async t=>{
   const reader=await createReader({worldsOnly:true,evidence:true});
   t.after(()=>reader.close());

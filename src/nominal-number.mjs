@@ -209,7 +209,8 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
       quantity:[JSON.stringify(order?.countWords ?? surface)],count_words:[JSON.stringify(order?.countWords ?? surface)],
       ...(order ? {ordinal:[JSON.stringify(surface)]} : {})};
   let consumeFrom=start;
-  if (ordered) {
+  const split=candidate.source==='split-target-frame';
+  if (ordered || split && number.kind==='cardinal') {
     const before=input.findIndex(token=>token.start===start);
     let determiner;
     for (let i=Math.max(0,before-4);i<before;i++) {
@@ -224,8 +225,8 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
     const relative=Number(order?.value ?? number.value)<0;
     if ((relative || order) && !determiner && !literalRanges(text,predicate,left,start)
       .some(([,finish])=>!text.slice(finish,start).trim())) return;
-    const onlyQuantityDeterminer=order && fields(target,'determiner').every(mode=>mode==='quantified');
-    if ((relative || order || candidate.source==='split-target-frame') && determiner &&
+    const onlyQuantityDeterminer=number.kind==='cardinal' && fields(target,'determiner').every(mode=>mode==='quantified');
+    if ((relative || order || split) && determiner &&
         first(target,'mode')==='existing' && (!target.attrs.determiner || onlyQuantityDeterminer)) {
       additions.determiner=[determiner.mode];
       consumeFrom=determiner.start;

@@ -441,12 +441,12 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
     }
     const incompleteSplitTargets=[];
-    for (const answer of response.splitTargets ?? []) {
+    for (const {needsNumber,...answer} of response.splitTargets ?? []) {
       const sop=resolveRelationKeys(answer.sop);
       const reading={...answer,sop,source:'split-target-frame'};
       // An exact contiguous predicate encloses the nominal. Publish it only
       // after the enclosed words have an interpretation of their own.
-      if (parse(sop).some(wire=>wire.type==='w.request.unread')) incompleteSplitTargets.push(reading);
+      if (needsNumber || parse(sop).some(wire=>wire.type==='w.request.unread')) incompleteSplitTargets.push(reading);
       else retain({...reading,status:'matched'},scope,true);
     }
     for (const answer of response.frameTargets ?? []) {
