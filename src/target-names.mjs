@@ -1,7 +1,7 @@
 // Recover a literal qualifier adjacent to an existing target's typed noun.
 import { literalRanges, sortRanges } from './evidence.mjs';
 import { tokens } from './lexicon.mjs';
-import { quotedSpans } from './literal-roles.mjs';
+import { maskQuoted, quotedSpans } from './literal-roles.mjs';
 import { consumeUnread } from './nominal-evidence.mjs';
 import { parse } from './schema.mjs';
 import { serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
@@ -13,6 +13,61 @@ const value = (wire,key) => {
 const proper = /^(?:\p{Lu}[\p{L}\p{N}_'’-]*|\p{L}+[0-9][\p{L}\p{N}_-]*)$/u;
 const number = /^\d+$/u;
 const gap = /^\s+$/u;
+
+export function compileCodeSelectors(facts,requestKeys) {
+  const codeSlots=new Set(facts('core.slot').filter(wire=>value(wire,'key')==='code').map(wire=>wire.id));
+  const keys=Map.groupBy(requestKeys.filter(key=>codeSlots.has(key.means) &&
+    key.head.split('+').includes('candidate')),key=>key.name);
+  const labels=facts('core.word').filter(wire=>(wire.attrs.means ?? []).some(raw=>
+    codeSlots.has(raw.startsWith('"') ? JSON.parse(raw) : raw)))
+    .flatMap(wire=>(wire.attrs.text ?? []).map(raw=>tokens(raw.startsWith('"') ? JSON.parse(raw) : raw).map(([word])=>word)))
+    .filter(words=>words.length);
+  return {keys,labels:[...new Map(labels.map(words=>[words.join(' '),words])).values()]};
+}
+
+function hasCodeMarker(scope,name,labels) {
+  const visible=Array.from(maskQuoted(scope,quotedSpans(scope)));
+  return literalRanges(scope,name).some(([start])=>{
+    const offset=Array.from(scope.slice(0,start)).length;
+    const lead=tokens(visible.slice(0,offset).join('').replace(/[\s"'‘“:=()]+$/u,'')).map(([term])=>term);
+    if (lead.at(-1)==='is') lead.pop();
+    return labels.some(words=>words.every((term,i)=>term===lead[lead.length-words.length+i]));
+  });
+}
+
+// A name already identifies the written designation. Promoting the same
+// multiword span to a machine code requires independent wording.
+function duplicateDesignationSelectors(text,wires,worlds) {
+  const {keys,labels}=worlds.codeSelectors ?? {};
+  if (!keys?.size || !wires.some(wire=>wire.type==='w.request.constraint' && keys.has(value(wire,'attribute')))) return [];
+  const requests=wires.filter(wire=>wire.type==='w.request.request');
+  const owned=Map.groupBy(wires.filter(wire=>wire.attrs.request?.length),wire=>wire.attrs.request[0]);
+  return requests.flatMap(request=>{
+    const scope=value(request,'words') ?? (requests.length===1 ? text : undefined);
+    if (!scope) return [];
+    const local=owned.get('$'+request.id) ?? [];
+    const targets=local.filter(wire=>wire.type==='w.request.target');
+    if (targets.length!==1) return [];
+    const [target]=targets, name=value(target,'name'), family=value(target,'family');
+    if (value(target,'mode')!=='existing' || !name || !/\S\s+\S/u.test(name) ||
+        target.attrs.ids?.length || target.attrs.code_words?.length ||
+        !literalRanges(scope,name).length || hasCodeMarker(scope,name,labels)) return [];
+    return local.filter(wire=>wire.type==='w.request.constraint' && value(wire,'on')==='attribute' &&
+      value(wire,'phase')==='selector' && [undefined,'yes'].includes(value(wire,'want')) &&
+      [undefined,'eq'].includes(value(wire,'operator')) && wire.attrs.value?.length===1 &&
+      value(wire,'value')===name && keys.get(value(wire,'attribute'))?.some(key=>key.family===family));
+  });
+}
+
+export function keepWrittenDesignations(text,reading,worlds) {
+  if (!reading.sop?.includes(' name=') ||
+      ![...worlds.codeSelectors?.keys.keys() ?? []].some(key=>reading.sop.includes(key))) return reading;
+  const wires=parse(reading.sop), removed=duplicateDesignationSelectors(text,wires,worlds);
+  if (!removed.length) return reading;
+  const ids=new Set(removed.map(wire=>'$'+wire.id));
+  if (wires.some(wire=>Object.values(wire.attrs).some(values=>values.some(raw=>ids.has(raw))))) return reading;
+  return {...reading,sop:serialize(wires.filter(wire=>!removed.includes(wire))).trimEnd()};
+}
 
 function followsPlaceMarker(text, at, worlds) {
   const tail = tokens(text.slice(at)).slice(0, 4).map(([key])=>key);

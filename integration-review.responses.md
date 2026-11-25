@@ -937,3 +937,13 @@ An existing-owner argument sequence can now bind two numeric values to the same 
 The paired default-reader replay covered 158 selected WebMeet texts and nine controls. On the 17 texts with two written limits of the same kind, proposals with both roles on one owner rose from 52.9% to 88.2%. No previously evidence-complete alternative was lost across the replay. An independent spot-check confirmed the six new two-value readings. Legacy bare-title readings can still map a title such as “Revenue by region” to a machine identifier. A separate title binding needs to preserve that written evidence. All 532 release tests passed. The aggregate benchmark was not rerun.
 
 The reviewer accepted both scoped reference corrections, PROLOG-GOLD-001 and PROLOG-GOLD-002, for coordinator-to-data routing. A new entry, PROLOG-GOLD-003, records the chart code issue on its exact published record and proposes preserving the written designation alone. [WebMeet reference error report](report-errors-prolog.md)
+
+## Preserve a written designation without asserting a code
+
+The reader now follows catalog keys that are explicitly linked to native code slots. A copied equality selector is redundant when it repeats an existing target's multiword name and the owning request supplies no separate code wording. The repair preserves the target and the rest of the request. Explicit code wording, a different code value or a short code remains available. This applies to chart, room and other declared code bindings without a family-specific list in reader code.
+
+The paired default-reader replay used 185 selected WebMeet texts. Of these, 79 (42.7%) lost a duplicate code assertion. The 45 controls selected for written code wording or short-code forms returned identical ordered SOP lists. The independent semantic review checked 14 affected texts across chart names and descriptions and a room name. Applying the repair after composition retained independent evidence-complete alternatives, including the proposal grounding ten bins and the right-side axis in “the bin count on Order values should be ten. y axis on the right”.
+
+The behavior consumes existing canonical links. To extend this proof to additional code keys, the schema owner can review catalog bindings such as `drawn.id` to `w.drawing.object.code` and `block.id` to `w.document.block.code`. The aggregate benchmark remains paused.
+
+PROLOG-GOLD-004 and PROLOG-GOLD-005 preserve exact chart and room examples for adjudication. Each proposed change removes only the unsupported code selector. [WebMeet reference error report](report-errors-prolog.md)

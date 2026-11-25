@@ -630,3 +630,7 @@
 ## Numeric ranking transitions
 - The shared argument frame keeps old and new values on the same request with their distinct roles.
 - In the 158-text replay, coverage of both roles in the 17 explicit transitions rose from 52.9% to 88.2%. All 532 release tests passed.
+
+## Keep written designations distinct from codes
+- The final reader removes the duplicate code assertion in 79 of 185 selected texts and preserves all 45 code contrasts.
+- Two proposed reference corrections record the exact chart and room cases. All 534 release tests passed.

@@ -60,7 +60,7 @@ import { ellipticalNominals } from './nominal-selectors.mjs';
 import { keepOwnedQuotesLiteral, literalAttachments, numericSettingsInOwnedQuotes, quotedLiteralCleanup } from './literal-attachment.mjs';
 import { createNearExample } from './near-example.mjs';
 import { nominalNumberReading } from './nominal-number.mjs';
-import { namedTargetReading } from './target-names.mjs';
+import { keepWrittenDesignations,namedTargetReading } from './target-names.mjs';
 import { catalogIssues } from './catalog.mjs';
 import { frameSupport } from './language-frames.mjs';
 import { closedRequestReadings } from './closed-requests.mjs';
@@ -1269,7 +1269,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
           if (!seen.has(key)) {seen.add(key);separated.push(reading);}
         }
       }
-      const output=groundedCause ? [...candidates.filter(c=>!readsCauseAsCommand(text,cause,c)),...separated] : candidates;
+      const composed=groundedCause ? [...candidates.filter(c=>!readsCauseAsCommand(text,cause,c)),...separated] : candidates;
+      // Do this after composition so a repaired template cannot displace an
+      // independent reading with fuller evidence during semantic deduplication.
+      const repaired=composed.map(candidate=>keepWrittenDesignations(text,candidate,worlds));
+      const unique=new Map();
+      for (const candidate of repaired) if (!unique.has(candidate.sop)) unique.set(candidate.sop,candidate);
+      const output=repaired.some((candidate,index)=>candidate!==composed[index]) ? [...unique.values()] : repaired;
       return {candidates:output,candidateCount:output.length,multipleInterpretations:output.length>1,
         ...(!output.length ? {unread:text} : {})};
     },

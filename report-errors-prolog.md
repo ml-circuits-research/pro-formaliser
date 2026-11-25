@@ -126,3 +126,69 @@ The canonical `chart.id` key designates a chart code, as in “change chart c1.�
 **Evidence and reproduction.** Parse `git -C ../webmeet-dataset show d1c15c5857365a82358b4a324f2611088026cc9b:diagram/charts-06.csv` as CSV to locate the record. The `chart.id` declaration in `docs/worlds/w.request/shards/keys.sop` in the knowledge repository maps the key to `w.diagram.group.code`. The exact text appears at zero-based index 160 in `.cache/rank-transition-before.jsonl`. That recorded run used reader baseline `1199ad9b15767d0a56e2dc28e26191aba7874039` and returned 30 candidates with `error=null`, including the current circuit as an `example` candidate.
 
 The scoped proposed circuit passes `node bin/check-reading.mjs` for native schema and literal evidence, with no catalogue issues or quote conflicts.
+
+
+## PROLOG-GOLD-004 — Written chart designation also imposed as a code during title and font edits
+
+**Record.** `diagram/charts-06.csv`, data record **2637** (header excluded, ending on CSV line 18021), column `sop`, at WebMeet revision `d1c15c5857365a82358b4a324f2611088026cc9b`.
+
+**Exact text.** `Set the title of Revenue by region to "Revenue review", and make the font bigger.`
+
+**Current circuit**
+
+```sop
+@r1 w.request.request act=change mood=do words="Set the title of Revenue by region to \"Revenue review\"" predicate=Set
+@r1.t w.request.target request=$r1 family=chart mode=existing determiner=definite fill=written name="Revenue by region"
+@r1.c1 w.request.constraint request=$r1 on=attribute attribute=chart.id value="Revenue by region" operator=eq phase=selector
+@r1.c2 w.request.constraint request=$r1 on=attribute attribute=chart.title value="Revenue review" operator=eq phase=result key_words=title
+@r2 w.request.request act=change mood=do words="and make the font bigger" predicate=make
+@r2.t w.request.target request=$r2 family=chart mode=existing determiner=definite fill=context
+@r2.l1 w.request.lookup request=$r2 target=$r2.t key=thing from=page
+@r2.c1 w.request.constraint request=$r2 on=attribute attribute=chart.fontSize words=bigger operator=delta phase=result step=more key_words=font
+```
+
+The target already preserves the written chart designation “Revenue by region” in `name`. The request supplies no machine code for the chart. The canonical `chart.id` key maps to `w.diagram.group.code`. Remove `@r1.c1` to keep the written designation, title replacement, and font increase.
+
+**Proposed circuit**
+
+```sop
+@r1 w.request.request act=change mood=do words="Set the title of Revenue by region to \"Revenue review\"" predicate=Set
+@r1.t w.request.target request=$r1 family=chart mode=existing determiner=definite fill=written name="Revenue by region"
+@r1.c2 w.request.constraint request=$r1 on=attribute attribute=chart.title value="Revenue review" operator=eq phase=result key_words=title
+@r2 w.request.request act=change mood=do words="and make the font bigger" predicate=make
+@r2.t w.request.target request=$r2 family=chart mode=existing determiner=definite fill=context
+@r2.l1 w.request.lookup request=$r2 target=$r2.t key=thing from=page
+@r2.c1 w.request.constraint request=$r2 on=attribute attribute=chart.fontSize words=bigger operator=delta phase=result step=more key_words=font
+```
+
+**Evidence and reproduction.** Parse `git -C ../webmeet-dataset show d1c15c5857365a82358b4a324f2611088026cc9b:diagram/charts-06.csv` as CSV to locate the record. The request key is declared in `docs/worlds/w.request/shards/keys.sop` in the knowledge repository. The paired Prolog artifacts `.cache/designation-code-before.jsonl` and `.cache/designation-code-final.jsonl` contain the exact text at zero-based index 7. The baseline returned 36 candidates and the final reader returned 38, with `error=null` in both runs. The baseline reader at `59727b8ed82d766c4502ebee322d412211198299` reproduced the published cell as its first `example` candidate. The updated reader returned the exact proposed circuit in the same candidate position. Passing the exact text and proposed circuit to `node bin/check-reading.mjs` validated the native schema and literal evidence and returned no catalogue issues or quote conflicts.
+
+
+## PROLOG-GOLD-005 — Written room designation also imposed as a room code
+
+**Record.** `calendar/meetings-07.csv`, data record **210** (header excluded, ending on CSV line 903), column `sop`, at WebMeet revision `d1c15c5857365a82358b4a324f2611088026cc9b`.
+
+**Exact text.** `focus pod, capacity 2 please`
+
+**Current circuit**
+
+```sop
+@f1 w.request.filler text=please
+@r1 w.request.request act=change mood=do
+@r1.t w.request.target request=$r1 family=room mode=existing determiner=definite fill=written name="focus pod"
+@r1.c1 w.request.constraint request=$r1 on=attribute attribute=room.id value="focus pod" operator=eq phase=selector
+@r1.c2 w.request.constraint request=$r1 on=attribute attribute=room.seats value="2" words="capacity 2" operator=eq phase=result key_words=capacity
+```
+
+The target already preserves the written room designation “focus pod” in `name`. The request supplies no machine code for the room. The canonical `room.id` key maps to `w.meetings.room.code`. Remove `@r1.c1` to keep the written designation and the requested capacity of two seats.
+
+**Proposed circuit**
+
+```sop
+@f1 w.request.filler text=please
+@r1 w.request.request act=change mood=do
+@r1.t w.request.target request=$r1 family=room mode=existing determiner=definite fill=written name="focus pod"
+@r1.c2 w.request.constraint request=$r1 on=attribute attribute=room.seats value="2" words="capacity 2" operator=eq phase=result key_words=capacity
+```
+
+**Evidence and reproduction.** Parse `git -C ../webmeet-dataset show d1c15c5857365a82358b4a324f2611088026cc9b:calendar/meetings-07.csv` as CSV to locate the record. The request key is declared in `docs/worlds/w.request/shards/keys.sop` in the knowledge repository. The paired Prolog artifacts `.cache/designation-code-before.jsonl` and `.cache/designation-code-final.jsonl` contain the exact text at zero-based index 179. Both runs returned 21 candidates and `error=null`. The baseline reader at `59727b8ed82d766c4502ebee322d412211198299` reproduced the published cell as its first `example` candidate. The updated reader returned the exact proposed circuit in the same candidate position. Passing the exact text and proposed circuit to `node bin/check-reading.mjs` validated the native schema and literal evidence and returned no catalogue issues or quote conflicts.
