@@ -20,17 +20,17 @@ export function compileAppositiveSelectors(facts,requestKeys,words=facts('core.w
   const proforms=new Set(facts('w.lang.en.phrase').filter(wire=>value(wire,'name')==='elide.noun')
     .flatMap(wire=>values(wire,'item').map(form)).filter(Boolean));
   const bindings=facts('pro.reader.appositive_selector').flatMap(wire=>{
-    const [tab,family,attribute,itemType,itemField]=
-      ['tab','family','attribute','item_type','item_field'].map(key=>value(wire,key));
+    const [family,attribute,itemType,itemField]=
+      ['family','attribute','item_type','item_field'].map(key=>value(wire,key));
     const markers=values(wire,'text').map(form).filter(Boolean);
     const classes=new Set(values(wire,'item_value'));
     if (!markers.length || !itemType || Boolean(itemField)!==Boolean(classes.size) ||
-        !requestKeys.some(row=>row.tab===tab && row.family===family && row.name===attribute &&
+        !requestKeys.some(row=>row.family===family && row.name===attribute &&
           !row.values.length && row.head.split('+').some(head=>['span','candidate'].includes(head)))) return [];
     const items=nativeInventory(type=>type===itemType && itemField
       ? facts(type).filter(item=>values(item,itemField).some(label=>classes.has(label))) : facts(type),itemType,words);
     const subjects=values(wire,'subject_type').map(type=>nativeInventory(facts,type,words));
-    return items.size ? [{tab,family,attribute,markers,items,subjects}] : [];
+    return items.size ? [{family,attribute,markers,items,subjects}] : [];
   });
   const adjacentHeads=new Set(bindings.filter(binding=>binding.subjects.length)
     .flatMap(binding=>binding.markers.map(marker=>marker.split(' ')[0])));
@@ -279,7 +279,7 @@ function qualifiedLandmark(ts,start,end,binding,spatial,worlds,span) {
   const regionEnd=ts.findIndex(([term],i)=>i>=start && i<end && term===',');
   const stop=regionEnd<0 ? end : regionEnd;
   if (stop<end && !exactRegion(ts.slice(stop+1,end),binding.family,spatial,worlds)) return;
-  const keys=worlds.requestKeys.filter(key=>key.tab===binding.tab && key.family===binding.family);
+  const keys=worlds.requestKeys.filter(key=>key.family===binding.family);
   const bank=keys.find(key=>key.name===spatial.relationKey)?.values ?? [];
   if (!keys.some(key=>key.name===spatial.anchorKey && key.head==='fill+span' && !key.values.length)) return;
   const local=ts.slice(0,stop);
@@ -328,7 +328,7 @@ export function adjacentSelectorReading(text,candidate,worlds,permit,ts=tokens(t
   const clause=ts.slice(0,end);
   for (const binding of worlds.appositiveSelectors.bindings) {
     if (binding.family!==family || !binding.subjects.length) continue;
-    const spatial=worlds.spatialBindings.find(row=>row.tab===binding.tab && row.family===family);
+    const spatial=worlds.spatialBindings.find(row=>row.family===family);
     if (!spatial) continue;
     const subject=typedSubject(clause,first,binding,worlds,expected);
     if (!subject) continue;

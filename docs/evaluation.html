@@ -16,7 +16,6 @@
       <li><a href="language.html">Linguistic evidence</a></li>
       <li><a href="worlds.html">Extend with SOP worlds</a></li>
       <li><a href="spelling.html">Spelling</a></li>
-      <li><a href="context.html">Contextual estimator</a></li>
       <li><a class="active" aria-current="page" href="evaluation.html">Evaluation and reproduction</a></li>
       <li><a href="diagnosis.html">Failure diagnosis</a></li>
       <li><a href="decisions.html">Design history</a></li>
@@ -38,22 +37,22 @@
       <p>Pe lotul independent, fiecare mutare păstrează culoarea care identifică femeia și direcția ei. Cele două mutări apar într-o singură propunere. <a href="../eval/RESULTS.md">Rezultate și reproducere</a> · <a href="../eval/QUALIFIED-MOTION-REPLAY.tsv">Verdicte pentru propunerile modificate</a></p>
     </section>
     <h2>Holdout and metrics</h2>
-    <p>The results on this page use committed WebMeet blobs from revision <code>a85de79de826f983855aa2dafc6de7548978fbff</code> and knowledge revision <code>ba7cbcf2ab78b8b99d077e8958013d52618c6d04</code>. The current setup installs <code>f3cb28bd</code> for the canonical property vocabulary and grammar. The benchmark groups texts globally using Unicode NFKC, lowercase and collapsed whitespace. A SHA-256 bucket determines whether the whole group is held out. Reported counts are row-weighted, so multiple annotations of the same text can contribute multiple rows. Related templates and paraphrases can straddle partitions. <a href="../src/corpus.mjs">Corpus input</a> · <a href="../eval/RESULTS.md">Benchmark methodology and tables</a> · <a href="../tools/setup">Installed knowledge revision</a></p>
+    <p>The historical results on this page use committed WebMeet blobs from revision <code>a85de79de826f983855aa2dafc6de7548978fbff</code> and knowledge revision <code>ba7cbcf2ab78b8b99d077e8958013d52618c6d04</code>. The benchmark groups texts globally using Unicode NFKC, lowercase and collapsed whitespace. A SHA-256 bucket determines whether the whole group is held out. Reported counts are row-weighted, so multiple annotations of the same text can contribute multiple rows. Related templates and paraphrases can straddle partitions. <a href="../src/corpus.mjs">Corpus input</a> · <a href="../eval/RESULTS.md">Benchmark methodology and tables</a> · <a href="../tools/setup">Installed knowledge revision</a></p>
     <ul>
     <li><strong>Exact</strong> compares trimmed SOP with normalized line endings.</li>
     <li><strong>Full wires</strong> canonicalizes slot order and local references and compares all wires and evidence.</li>
     <li><strong>Semantic wires</strong> compares the complete graph after omitting filler, unread wires and selected evidence fields. It retains request order, act, mood, target and relevant constraints and links.</li>
     <li><strong>Act/mood</strong> checks the sequence of acts and moods. Micro-averaged wire F1 gives credit for partial structural agreement.</li>
-    <li><strong>Checker errors</strong> count invalid emitted circuits under WebMeet family/key checks using the gold tab after inference. The text-only reader receives no gold tab. Warnings and unresolved outputs have separate counts.</li>
+    <li><strong>Checker errors</strong> count circuits rejected by native SOP schema, the declared family and property catalogue or the literal evidence check. The benchmark counts unresolved outputs separately.</li>
     </ul>
-    <p>Reports distinguish the selected circuit from matches found anywhere in the proposal set. Text-only generation and scoring with the actual tab are measured separately. Tests change live entities and prior turns while holding candidates fixed. The tab benchmark measures the actual tab signal on held-out rows. <a href="../eval/RESULTS.md">Formalisation results</a> · <a href="../src/signatures.mjs">Signature computation</a></p>
+    <p>Reports distinguish the selected circuit from matches found anywhere in the proposal set. The current runner supplies only the written utterance. Historical reports use the validation and sampling settings recorded for each run. <a href="../eval/RESULTS.md">Formalisation results</a> · <a href="../src/signatures.mjs">Signature computation</a></p>
     <p>The frame-matching ablation compares semantic matches and checker errors with the grammatical evidence enabled or disabled. The diagnosis workflow uses scoped, reviewed test cases to investigate why individual readings differ. <a href="language.html">Linguistic benchmark</a> · <a href="diagnosis.html">Failure diagnosis</a></p>
     <h2>Independent adjudication</h2>
     <p>For a proposal-set grade, reviewers assess meaning and essential details against the request before considering exact SOP text. L3 requires a reasonable exact match after line-ending normalization and trimming. L4 covers another reasonable representation or interpretation. When no complete proposal is reasonable, the closest usable reading determines the error grade. Findings about annotation defects are recorded separately. A downstream selector is evaluated on its selected reading. <a href="../eval/THOUSAND-AUDIT.md">Random-sample protocol and results</a></p>
     <p>The random-sample reviewers inspected the reference along with the proposals. Earlier blind reviews used anonymized pairs sampled from model–reference disagreements and describe failure modes within those disagreements. These samples answer different questions. <a href="../eval/SEMANTIC-AUDIT.md">Blind semantic audit</a> · <a href="../eval/ROLE-AUDIT.md">Role audit</a> · <a href="../eval/sample-disagreements.mjs">Disagreement sampler</a></p>
     <h2 id="spelling">Spelling measurements</h2>
     <p>The spelling benchmark injects a deterministic deletion, insertion or substitution into an eligible word and counts restored words, wrong replacements and unchanged words. A separate challenge uses dictionary-valid corruptions. The audit also reviews edits on original requests. <a href="../eval/RESULTS.md">Spelling benchmark counts</a> · <a href="../eval/spelling.mjs">Spelling benchmark runner</a> · <a href="../eval/SPELL-AUDIT.md">Spelling audit</a></p>
-    <h2 id="reproduction">Reproduce the experiments</h2>
+    <h2 id="reproduction">Run the evaluation</h2>
     <p>Run the commands from the repository root on Ubuntu 24.04 with signed APT repositories including Universe, Bash, Git, curl and dpkg. The setup provides Node 22.23.2 and SWI-Prolog 9.0.4 in <code>.cache/</code>. Place a sibling <code>webmeet-dataset</code> checkout with the pinned revision available in Git. The benchmark writes defaults to <code>.cache/model.json</code> and <code>.cache/benchmark.json</code>. Alternate outputs keep the primary model available to the CLI. <a href="../tools/setup">Setup script</a> · <a href="../eval/benchmark.mjs">Benchmark runner</a></p>
     <pre><code>tools/setup
 export PATH="$PWD/.cache/node/bin:$PATH"
@@ -64,10 +63,9 @@ node eval/spelling.mjs --legacy-context
 node eval/spelling.mjs --all-changes
 node eval/benchmark.mjs --details .cache/primary.jsonl
 node eval/benchmark.mjs --bucket 1 --model .cache/replication-model.json   --report .cache/replication.json --details .cache/replication.jsonl
-node eval/benchmark.mjs --context tab --model .cache/tab-model.json --report .cache/tab.json
 node eval/sample-disagreements.mjs .cache/replication.jsonl .cache/blind</code></pre>
     <h2>Evaluate argument and word preservation</h2>
-    <p>The benchmark reports kept, omitted and added annotation obligations for actions, target families and modes, target details, selectors and results. A constraint key, phase and value must agree within the same request position. These structural counts are sensitive to alternative encodings. They do not attribute an added wire to invented words. A separate ledger counts grounded, unread, uncovered, grammatical, filler and ambiguous source occurrences. The upstream checker also reports its own warning categories for gold and predictions. <a href="../eval/requirements.mjs">Requirement comparison</a> · <a href="../eval/RESULTS.md">Measured outcomes</a></p>
+    <p>The benchmark reports kept, omitted and added annotation obligations for actions, target families and modes, target details, selectors and results. A constraint key, phase and value must agree within the same request position. These structural counts are sensitive to alternative encodings. They do not attribute an added wire to invented words. A separate ledger counts grounded, unread, uncovered, grammatical, filler and ambiguous source occurrences. The current checker reports native schema, catalogue and source evidence errors for gold and emitted predictions. <a href="../eval/requirements.mjs">Requirement comparison</a> · <a href="../eval/RESULTS.md">Measured outcomes</a></p>
     <pre><code>node eval/requirements.mjs .cache/primary.jsonl
 node eval/requirements.mjs .cache/primary.jsonl document/text-01.csv 1398
 node eval/benchmark.mjs --language off --model .cache/control.json --report .cache/control-results.json</code></pre>

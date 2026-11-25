@@ -14,8 +14,8 @@ const boundary=new Set([',',';','.','!','?','—','–']);
 
 export function compileSourceContainers(facts) {
   const aliases=facts('pro.reader.source_container').flatMap(wire=>{
-    const tab=get(wire,'tab'),family=get(wire,'family');
-    return tab && family ? fields(wire,'text').map(label=>({tab,family,label:normalized(label)})) : [];
+    const family=get(wire,'family'), affected=fields(wire,'affected_family');
+    return family && affected.length ? fields(wire,'text').map(label=>({family,affected,label:normalized(label)})) : [];
   });
   const markers=new Map();
   for (const wire of facts('k.actions.role')) {
@@ -78,7 +78,7 @@ export function sourceContainerReading(text,candidate,worlds,matches=sourceConta
     const targets=local.filter(w=>w.type===type('target'));
     const [target]=targets;
     if (targets.length!==1 || get(target,'mode')!=='existing' || local.some(w=>w.type===sourceScope)) continue;
-    const family=get(target,'family'), tabs=worlds.familyTabs[family] ?? [];
+    const family=get(target,'family');
     const sources=new Map();
     for (const wire of local) {
       if (wire.type!==type('unread')) continue;
@@ -88,8 +88,8 @@ export function sourceContainerReading(text,candidate,worlds,matches=sourceConta
       if (hit.length!==1) continue;
       const [[from,to]]=hit;
       for (const source of matches) {
-        if (source.from!==from || source.to!==to || source.family===family || !tabs.includes(source.tab) ||
-            !worlds.familyTabs[source.family]?.includes(source.tab) ||
+        if (source.from!==from || source.to!==to || source.family===family || !source.affected.includes(family) ||
+            !worlds.semanticFamilies.has(source.family) ||
             !worlds.sourceContainers.markers.get(act).has(source.marker)) continue;
         sources.set(JSON.stringify([wire.id,source.family]),{...source,wire,start:from});
       }

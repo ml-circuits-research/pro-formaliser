@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createReader } from '../src/runtime.mjs';
+import { createEstimator } from '../src/estimate.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
 import { spellingReadings } from '../src/spelling-readings.mjs';
 
@@ -43,7 +44,7 @@ test('reader retains originals and corrected lexical evidence through ranking',a
   assert.ok(baseline.candidates.every(c=>!Object.hasOwn(c,'spellingReading')));
   const ordered=await reader.formalise(original,{spell:true});
   assert.equal(ordered.sop,revised.candidates[0].sop);
-  const ranked=await reader.formalise(original,{spell:true,evidence:true,tab:'diagram'});
+  const ranked=await reader.formalise(original,{spell:true,evidence:true,rank:true});
   assert.match(ranked.sop,/attribute="link\.route"[^\n]*value=curved/u);
   assert.equal(ranked.spellingReading,'corrected');
   assert.ok(ranked.estimation.ranking[0].reasons.some(r=>
@@ -67,14 +68,18 @@ test('reader retains originals and corrected lexical evidence through ranking',a
 
 test('spelling CLI retains both readings for batch and pipeline modes',()=>{
   const cli=fileURLToPath(new URL('../bin/formalise.mjs',import.meta.url));
-  for (const mode of [[],['--pipeline','--tab','diagram']]) {
+  for (const mode of [[],['--pipeline']]) {
     const result=spawnSync(process.execPath,[cli,'--worlds-only','--batch','--spell','--evidence',...mode],{
-      encoding:'utf8',input:JSON.stringify({text:original})+'\n',
+      encoding:'utf8',input:[{text:original},{text:original,tab:'diagram'},{text:corrected}].map(row=>JSON.stringify(row)).join('\n')+'\n',
       env:{...process.env,SOP_WORLDS:'sop-worlds'},
     });
     assert.equal(result.status,0,result.stderr);
-    const output=JSON.parse(result.stdout);
+    const [output,rejected,last]=result.stdout.trimEnd().split('\n').map(line=>JSON.parse(line));
     const candidates=output.candidates ?? [output,...output.alternatives];
+    assert.equal(output.engine,'prolog');
+    assert.equal(output.text,original);
+    assert.equal(rejected.error,'Batch input accepts current text only');
+    assert.equal(last.text,corrected);
     assert.equal(output.original,original);
     assert.equal(output.spelling.text,corrected);
     assert.ok(candidates.some(c=>c.spellingReading==='original'));
@@ -87,15 +92,18 @@ test('a selected original name can outrank a spelling correction',async t=>{
   const examples=['Stormm','Storm'].map(name=>({text:'Remove '+name,count:1,sop:
     '@r w.request.request act=remove mood=do predicate=Remove\n'+
     '@t w.request.target request=$r family=drawn mode=existing determiner=definite fill=written name='+name}));
-  const reader=createReader({version:1,templates:[],lexicon:{},examples},loadWorlds({paths:['sop-worlds']}));
+  const worlds=loadWorlds({paths:['sop-worlds']});
+  const reader=createReader({version:1,templates:[],lexicon:{},examples},worlds);
+  const estimator=createEstimator(worlds);
   t.after(()=>reader.close());
-  const ranked=await reader.formalise('Remove Stormm',{spell:true,context:{
-    tab:'drawing',entities:[{family:'drawn',name:'Stormm',selected:true}],
-  }});
-  assert.equal(ranked.spelling.text,'Remove Storm');
+  t.after(()=>estimator.close());
+  const {candidates,spelling}=await reader.propose('Remove Stormm',{spell:true});
+  const estimation=await estimator.estimate(candidates,{entities:[{family:'drawn',name:'Stormm',selected:true}]});
+  const ranked=candidates[estimation.selectedIndex];
+  assert.equal(spelling.text,'Remove Storm');
   assert.equal(ranked.spellingReading,'original');
   assert.match(ranked.sop,/name=Stormm/u);
-  assert.ok(ranked.estimation.ranking[0].reasons.some(r=>r.signal==='entity_identity'));
-  assert.ok(ranked.alternatives.some(candidate=>candidate.spellingReading==='corrected' &&
+  assert.ok(estimation.ranking[0].reasons.some(r=>r.signal==='entity_identity'));
+  assert.ok(candidates.some(candidate=>candidate.spellingReading==='corrected' &&
     /name=Storm(?:\s|$)/u.test(candidate.sop)));
 });

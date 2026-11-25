@@ -17,9 +17,9 @@ const native = ['frames-acts-data','closed-classes'].flatMap(shard=>parse(readFi
 const property = [
   '@signal core.slot of=w.lab.observer key=signal kind=boolean',
   '@display core.word text="pilot lamp" text="pilot lamps" means=signal',
-  '@binding pro.reader.fixed_property tab=lab family=observer attribute=observer.metadata slot=signal on_value=active off_value=idle',
+  '@binding pro.reader.fixed_property family=observer attribute=observer.metadata slot=signal on_value=active off_value=idle',
 ].join('\n');
-const key = {tab:'lab',family:'observer',name:'observer.metadata',head:'class',values:['active','idle']};
+const key = {family:'observer',name:'observer.metadata',head:'class',values:['active','idle']};
 function configured(fixture, keys) {
   const facts=[...native,...parse(fixture)];
   return {...base,fixedProperties:compileFixedProperties(type=>facts.filter(wire=>wire.type===type),keys)};
@@ -84,7 +84,7 @@ test('loads a fixed-value property overlay through the normal reader without a m
   writeFileSync(join(dir,'property.sop'), [
     '@lab std.schema.world name=w.lab',
     '@observer std.schema.kind of=w.lab.observer world=w.lab acts=change',
-    '@metadata w.request.key tab=lab family=observer name=observer.metadata head=class value=active value=idle',
+    '@metadata w.request.key family=observer name=observer.metadata head=class value=active value=idle',
     property,
   ].join('\n'));
   const reader = createReader(undefined,loadWorlds({paths:[dir]}));

@@ -16,7 +16,6 @@
       <li><a class="active" aria-current="page" href="language.html">Linguistic evidence</a></li>
       <li><a href="worlds.html">Extend with SOP worlds</a></li>
       <li><a href="spelling.html">Spelling</a></li>
-      <li><a href="context.html">Contextual estimator</a></li>
       <li><a href="evaluation.html">Evaluation and reproduction</a></li>
       <li><a href="diagnosis.html">Failure diagnosis</a></li>
       <li><a href="decisions.html">Design history</a></li>
@@ -45,7 +44,7 @@
     <h2>Inspect a reading and its evidence ledger</h2>
     <pre><code>node bin/formalise.mjs --worlds-only --evidence "create an object"</code></pre>
     <p><code>--evidence</code> adds a ledger and a catalogue report to the selected interpretation. The ledger lists whole-token literal matches within each request's source range, preserving all matching occurrences. It reports missing required literal fields and assigns each text token one of <code>grounded</code>, <code>unread</code>, <code>filler</code>, <code>ambiguous_occurrence</code>, <code>grammar</code>, or <code>uncovered</code>. Its ranges use UTF-16 offsets with an exclusive end. With <code>--spell</code>, those offsets refer to the corrected utterance. Frame proofs use token indices internally.</p>
-    <p><code>bin/check-reading.mjs</code> takes a JSON object with <code>text</code>, <code>sop</code>, and an optional <code>tab</code> from stdin. It emits native schema validity, literal evidence validity, the ledger, catalogue issues, quotation conflicts, and frame support for the supplied circuit. <a href="../bin/check-reading.mjs">Reading checker</a> · <a href="../src/evidence.mjs">Evidence ledger</a></p>
+    <p><code>bin/check-reading.mjs</code> takes a JSON object with <code>text</code> and <code>sop</code> from stdin. It emits native schema validity, literal evidence validity, the ledger, catalogue issues, quotation conflicts, and frame support for the supplied circuit. <a href="../bin/check-reading.mjs">Reading checker</a> · <a href="../src/evidence.mjs">Evidence ledger</a></p>
 
     <h2>Try a new verb and a two-role frame</h2>
     <p>Save the overlay as <code>language.sop</code>. The new act and verb feed the same frame compiler as the pinned world. The required two-token delimiter <code>with tag</code> separates the object from the label.</p>
@@ -59,7 +58,6 @@
     <pre><code>SOP_WORLDS=./language.sop node bin/check-reading.mjs &lt;&lt;'JSON'
 {
   "text": "tagstamp Gauge with tag Reference",
-  "tab": "drawing",
   "sop": "@r w.request.request act=apply_tag predicate=tagstamp\n@t w.request.target request=$r family=drawn mode=existing fill=written name=Gauge\n@c w.request.constraint request=$r on=attribute attribute=drawn.label value=Reference operator=eq phase=result"
 }
 JSON</code></pre>

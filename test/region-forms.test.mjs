@@ -87,10 +87,10 @@ test('compiles a custom family region from overlay slots with no trainable examp
     '@device std.schema.kind of=w.workbench.device world=w.workbench acts=make',
     '@noun core.word text=quilloscope means=w.workbench.device',
     '@ground core.word text="polar alcove zone" means=w.workbench.device',
-    '@zone w.request.key tab=workbench family=device name=device.zone head=class value=north_bay',
-    '@anchor w.request.key tab=workbench family=device name=device.anchor head="fill+span"',
-    '@relation w.request.key tab=workbench family=device name=device.relation head=class value=in',
-    '@spatial pro.reader.spatial tab=workbench family=device relation_key=device.relation anchor_key=device.anchor region_key=device.zone',
+    '@zone w.request.key family=device name=device.zone head=class value=north_bay',
+    '@anchor w.request.key family=device name=device.anchor head="fill+span"',
+    '@relation w.request.key family=device name=device.relation head=class value=in',
+    '@spatial pro.reader.spatial family=device relation_key=device.relation anchor_key=device.anchor region_key=device.zone',
     '@bay k.layouts.slot layout=workbench_grid name=north_bay count=one x=0 y=0 w=10 h=10',
     '@reader.region pro.reader.region_form layout=workbench_grid value=north_bay alias="polar alcove" prefix="in the" head=zone'
   ].join('\n'));

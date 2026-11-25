@@ -6,4 +6,4 @@
 @reader.count.nominal pro.reader.set_count text="give us a headcount of" text="give me a headcount of" text="give us a count of" text="give me a count of" text="what is the headcount of" scope_lead=on scope_lead=in scope_lead=from closer="would you" closer="please"
 
 # A calendar count can name humans as the people being counted.
-@reader.count.calendar.humans pro.reader.target tab=calendar family=person mode=existing act=ask text=humans
+@reader.count.calendar.humans pro.reader.target family=person mode=existing act=ask text=humans

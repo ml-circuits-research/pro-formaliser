@@ -60,8 +60,8 @@ test('accepts an independently installed creation role and guards unsupported ta
     '@bench std.schema.world name=w.workbench',
     '@device std.schema.kind of=w.workbench.device world=w.workbench acts=make',
     '@device.word core.word text="optical quilloscope" means=w.workbench.device',
-    '@label w.request.key tab=workbench family=device name=device.label head=span',
-    '@role pro.reader.creation_role tab=workbench family=device attribute=device.label text=engraved'
+    '@label w.request.key family=device name=device.label head=span',
+    '@role pro.reader.creation_role family=device attribute=device.label text=engraved'
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[dir]}));
   try {

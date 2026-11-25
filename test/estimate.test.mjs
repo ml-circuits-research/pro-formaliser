@@ -12,9 +12,7 @@ test('discussion ranks accepted circuits by current identity and discounts older
   try {
     assert.equal((await rank({})).decision,'underdetermined');
     for (const [context,expected] of [
-      [{tab:'diagram'},1],[{tab:'drawing'},0],
       [{entities:[{name:'Mercury',family:'node',selected:true}]},1],
-      [{tab:'drawing',entities:[{name:'Mercury',family:'node',selected:true}]},1],
       [{turns:[a,b]},1],[{turns:[b,a]},0],
       [{turns:[{text:'Open Mercury please'}]},1],
       [{turns:[{text:'Open Mercuryville please'}]},0],
@@ -31,19 +29,18 @@ test('discussion ranks accepted circuits by current identity and discounts older
   } finally { await estimator.close(); }
 });
 
-test('context changes only the ordering of the generated candidates',async()=>{
+test('the text pipeline preserves all generated circuits and reports global catalog validation',async()=>{
   const reader=createReader();
   try {
     const text='create an object';
-    const generated=await reader.formalise(text);
+    const generated=await reader.propose(text);
     assert.equal(generated.multipleInterpretations,true);
-    const pool=[generated,...generated.alternatives].map(c=>c.sop);
-    for(const tab of ['drawing','diagram']) {
-      const ranked=await reader.formalise(text,{context:{tab}});
-      for(const candidate of [ranked,...ranked.alternatives]) assert.equal(candidate.sop,pool[candidate.generatorIndex]);
-      assert.equal(ranked.candidateCount,pool.length);
-      assert.match(ranked.sop,tab==='diagram'?/family=node/:/family=drawn/);
-    }
+    const pool=generated.candidates.map(c=>c.sop);
+    const ranked=await reader.formalise(text,{rank:true,evidence:true});
+    for (const candidate of [ranked,...ranked.alternatives]) assert.equal(candidate.sop,pool[candidate.generatorIndex]);
+    assert.equal(ranked.candidateCount,pool.length);
+    assert.deepEqual(ranked.catalog,{issues:[]});
+    for (const family of ['drawn','node']) assert.ok(pool.some(sop=>sop.includes('family='+family)));
   } finally { await reader.close(); }
 });
 
@@ -62,14 +59,17 @@ test('sequence alternatives retain ambiguous readings of individual clauses',asy
   const examples=['drawn','node'].map((family,i)=>({text:'change Mercury',...candidate(family,'Mercury'),count:2-i}));
   examples.push({text:'change Pluto',...candidate('node','Pluto'),count:1});
   const reader=createReader({version:1,examples,lexicon:{},templates:[]});
+  const estimator=createEstimator();
   try {
     const text='change Mercury then change Pluto';
     const generated=await reader.formalise(text);
     assert.equal(generated.source,'sequence');
     assert.match(generated.sop,/family=drawn/);
-    const ranked=await reader.formalise(text,{context:{tab:'diagram'}});
+    const candidates=[generated,...generated.alternatives];
+    const estimation=await estimator.estimate(candidates,{entities:[{name:'Mercury',family:'node',selected:true}]});
+    const ranked=candidates[estimation.selectedIndex];
     assert.equal(ranked.source,'sequence');
     assert.doesNotMatch(ranked.sop,/family=drawn/);
     assert.match(ranked.sop,/name="Pluto"/);
-  } finally { await reader.close(); }
+  } finally { await Promise.all([reader.close(),estimator.close()]); }
 });

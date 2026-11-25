@@ -27,12 +27,11 @@ function unusedId(usedIds, stem) {
 }
 
 export function createRelationKeyResolver(worlds) {
-  const pairs = new Map(), keysByFamilyTab = new Map();
-  const group = ({ family, tab }) => JSON.stringify([family, tab]);
+  const pairs = new Map(), keysByFamily = new Map();
   for (const key of worlds.requestKeys) {
-    const familyKeys = keysByFamilyTab.get(group(key)) ?? [];
+    const familyKeys = keysByFamily.get(key.family) ?? [];
     familyKeys.push(key);
-    keysByFamilyTab.set(group(key), familyKeys);
+    keysByFamily.set(key.family, familyKeys);
   }
   function addPair(key, anchor, namedActs) {
     for (const value of key.values) {
@@ -47,8 +46,8 @@ export function createRelationKeyResolver(worlds) {
     }
   }
   for (const binding of worlds.spatialBindings ?? []) {
-    const signature = group(binding);
-    const keys = keysByFamilyTab.get(signature) ?? [];
+    const signature = binding.family;
+    const keys = keysByFamily.get(signature) ?? [];
     const relations = keys.filter(key => key.name === binding.relationKey && key.head === 'class');
     const anchors = keys.filter(key => key.name === binding.anchorKey &&
       key.head === 'fill+span' && !key.values.length);

@@ -89,7 +89,7 @@ test('reads an unrelated declaration with its own authorized object, markers, an
   writeFileSync(overlay,`
 @weave std.schema.world name=w.weave
 @loom std.schema.kind of=w.weave.loom world=w.weave acts=change
-@flux w.request.key tab=weave family=loom name=loom.flux head=number
+@flux w.request.key family=loom name=loom.flux head=number
 @quantitative pro.reader.quantified_verb family=loom key=loom.flux step=less text=relax
 @relative pro.reader.quantified_marker operator=delta text=via
 @exact pro.reader.quantified_marker operator=eq text=at

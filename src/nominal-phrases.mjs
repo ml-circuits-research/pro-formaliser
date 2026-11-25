@@ -334,8 +334,8 @@ export function nominalPositionForms(facts, requestKeys, words=facts('core.word'
     add(family,heading || subjects ? [...entry,subjects,field(wire,'strict_subject')==='true',heading] : entry);
   };
   for (const wire of facts('pro.reader.nominal_pattern')) {
-    const family=field(wire,'family'), tab=field(wire,'tab'), key=field(wire,'key');
-    const bank=requestKeys.find(prop=>prop.family===family && prop.tab===tab && prop.name===key &&
+    const family=field(wire,'family'), key=field(wire,'key');
+    const bank=requestKeys.find(prop=>prop.family===family && prop.name===key &&
       prop.head==='class' && prop.values.length);
     if (!bank) continue;
     for (const surface of wire.attrs.pattern ?? []) {
@@ -348,10 +348,10 @@ export function nominalPositionForms(facts, requestKeys, words=facts('core.word'
     }
   }
   for (const wire of facts('pro.reader.nominal_value')) {
-    const family=field(wire,'family'), tab=field(wire,'tab');
+    const family=field(wire,'family');
     const key=field(wire,'key'), value=field(wire,'value');
-    if (!family || !tab || !key || !value || !requestKeys.some(prop=>prop.family===family &&
-      prop.tab===tab && prop.name===key && prop.head.split('+').includes('class') &&
+    if (!family || !key || !value || !requestKeys.some(prop=>prop.family===family &&
+      prop.name===key && prop.head.split('+').includes('class') &&
       prop.values.includes(value))) continue;
     for (const text of wire.attrs.text ?? []) {
       const words=lexicalWords(decode(text));
@@ -359,12 +359,12 @@ export function nominalPositionForms(facts, requestKeys, words=facts('core.word'
     }
   }
   for (const wire of facts('pro.reader.spatial')) {
-    const family=field(wire,'family'), tab=field(wire,'tab');
+    const family=field(wire,'family');
     const roles={region:field(wire,'region_key'),arrangement:field(wire,'arrangement_key')};
     for (const [kind,surface,values] of cues) {
       const key=roles[kind];
       if (!key) continue;
-      const property=requestKeys.find(prop=>prop.family===family && prop.tab===tab && prop.name===key &&
+      const property=requestKeys.find(prop=>prop.family===family && prop.name===key &&
         prop.head.split('+').some(h=>h==='class' || h==='candidate'));
       const value=values.find(value=>property?.values.includes(value));
       const words=normalize(surface).split(' ');

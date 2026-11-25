@@ -60,10 +60,10 @@ test('a context-only scene header requires corroborated local training evidence'
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
   const overlay=join(dir,'gallery.sop');
   writeFileSync(overlay,`
-@gallery.location w.request.key tab=gallery family=gallery name=gallery.location head=span
-@gallery.light w.request.key tab=gallery family=gallery name=gallery.light head=class value=dusk value=noon
-@gallery.plaque pro.reader.target tab=gallery family=artifact sort=plaque text=plaque act=make
-@gallery.lantern pro.reader.target tab=gallery family=artifact sort=lantern text=lantern act=make
+@gallery.location w.request.key family=gallery name=gallery.location head=span
+@gallery.light w.request.key family=gallery name=gallery.light head=class value=dusk value=noon
+@gallery.plaque pro.reader.target family=artifact sort=plaque text=plaque act=make
+@gallery.lantern pro.reader.target family=artifact sort=lantern text=lantern act=make
 `);
   const worlds=loadWorlds({paths:[overlay]});
   const header='An atrium at dusk';

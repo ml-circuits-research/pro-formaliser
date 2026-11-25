@@ -4,8 +4,8 @@
 @reader.value.result pro.reader.evidence_role role=value type=w.request.constraint slot=value phase=result
 
 # Role assignments for the supported example worlds.
-@reader.drawing.spatial pro.reader.spatial tab=drawing family=drawn relation_key=drawn.relation anchor_key=drawn.anchor region_key=drawn.at arrangement_key=drawn.arrangement named_act=place
-@reader.diagram.spatial pro.reader.spatial tab=diagram family=node relation_key=node.position anchor_key=node.anchor region_key=node.at named_act=place
+@reader.drawing.spatial pro.reader.spatial family=drawn relation_key=drawn.relation anchor_key=drawn.anchor region_key=drawn.at arrangement_key=drawn.arrangement named_act=place
+@reader.diagram.spatial pro.reader.spatial family=node relation_key=node.position anchor_key=node.anchor region_key=node.at named_act=place
 @reader.drawing.object.code pro.reader.instance_code family=drawn prefix=o core.source="w.drawing/schema.sop: object.code"
 @reader.diagram.node.code pro.reader.instance_code family=node prefix=n core.source="w.diagram/schema.sop: node.code"
 @reader.diagram.edge.code pro.reader.instance_code family=link prefix=e core.source="w.diagram/schema.sop: edge.code"
@@ -29,16 +29,16 @@
 @reader.calendar.room.name pro.reader.literal family=room attribute=room.name role=name
 
 # Named arguments of a new connection. Either endpoint may be a quoted span.
-@reader.diagram.link.endpoints pro.reader.arguments tab=diagram family=link act=connect mode=new first_key=link.from second_key=link.to prefix=from separator=to
+@reader.diagram.link.endpoints pro.reader.arguments family=link act=connect mode=new first_key=link.from second_key=link.to prefix=from separator=to
 # A chart noun anchors the measure before the grouping connector and the dimension after it.
-@reader.diagram.chart.measure_dimension pro.reader.arguments tab=diagram family=chart act=make mode=new anchor=nominal first_key=chart.measure second_key=chart.dimension prefix="chart of" prefix="chart showing" separator=by separator=per separator="grouped by" separator="for each" separator="split by"
+@reader.diagram.chart.measure_dimension pro.reader.arguments family=chart act=make mode=new anchor=nominal first_key=chart.measure second_key=chart.dimension prefix="chart of" prefix="chart showing" separator=by separator=per separator="grouped by" separator="for each" separator="split by"
 
 # Ordered page coordinates.
-@reader.drawing.drawn.coordinates pro.reader.tuple tab=drawing family=drawn first_key=drawn.x second_key=drawn.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
-@reader.drawing.part.coordinates pro.reader.tuple tab=drawing family=part first_key=part.x second_key=part.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
-@reader.diagram.node.coordinates pro.reader.tuple tab=diagram family=node first_key=node.x second_key=node.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
-@reader.diagram.chart.coordinates pro.reader.tuple tab=diagram family=chart first_key=chart.x second_key=chart.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
-@reader.diagram.group.coordinates pro.reader.tuple tab=diagram family=group first_key=group.x second_key=group.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
+@reader.drawing.drawn.coordinates pro.reader.tuple family=drawn first_key=drawn.x second_key=drawn.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
+@reader.drawing.part.coordinates pro.reader.tuple family=part first_key=part.x second_key=part.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
+@reader.diagram.node.coordinates pro.reader.tuple family=node first_key=node.x second_key=node.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
+@reader.diagram.chart.coordinates pro.reader.tuple family=chart first_key=chart.x second_key=chart.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
+@reader.diagram.group.coordinates pro.reader.tuple family=group first_key=group.x second_key=group.y act=place act=make act=copy text=at text=to text="at coordinates" first_label=x second_label=y text="to position" text="at position"
 
 # Measured adjectives attach to compatible numeric properties in any loaded family.
 @reader.measure.width w.lang.en.cue name=reader.measure.width on=attribute attribute=width trail=wide takes=number priority=2
@@ -83,26 +83,26 @@
 @reader.scope.counted_set pro.reader.scope_cue kind=countedUniversals text=all text="all the" text="all of the"
 
 # The catalog describes these keys as codes of the objects the request selects.
-@reader.drawing.drawn.identity pro.reader.identity tab=drawing family=drawn attribute=drawn.ids
-@reader.drawing.part.identity pro.reader.identity tab=drawing family=part attribute=part.ids
-@reader.diagram.chart.identity pro.reader.identity tab=diagram family=chart attribute=chart.ids
-@reader.diagram.group.identity pro.reader.identity tab=diagram family=group attribute=group.ids
-@reader.diagram.link.identity pro.reader.identity tab=diagram family=link attribute=link.ids
-@reader.diagram.node.identity pro.reader.identity tab=diagram family=node attribute=node.ids
-@reader.document.block.identity pro.reader.identity tab=document family=block attribute=block.ids
-@reader.document.section.identity pro.reader.identity tab=document family=section attribute=section.ids
+@reader.drawing.drawn.identity pro.reader.identity family=drawn attribute=drawn.ids
+@reader.drawing.part.identity pro.reader.identity family=part attribute=part.ids
+@reader.diagram.chart.identity pro.reader.identity family=chart attribute=chart.ids
+@reader.diagram.group.identity pro.reader.identity family=group attribute=group.ids
+@reader.diagram.link.identity pro.reader.identity family=link attribute=link.ids
+@reader.diagram.node.identity pro.reader.identity family=node attribute=node.ids
+@reader.document.block.identity pro.reader.identity family=block attribute=block.ids
+@reader.document.section.identity pro.reader.identity family=section attribute=section.ids
 
-@reader.diagram.chart.grid.visibility pro.reader.fixed_property tab=diagram family=chart attribute=chart.grid on_value=show off_value=hide
-@reader.diagram.chart.values.visibility pro.reader.fixed_property tab=diagram family=chart attribute=chart.show_values on_value=show off_value=hide
-@reader.diagram.chart.kind pro.reader.nominal_class tab=diagram family=chart attribute=chart.type noun="chart" noun="plot" noun="graph"
+@reader.diagram.chart.grid.visibility pro.reader.fixed_property family=chart attribute=chart.grid on_value=show off_value=hide
+@reader.diagram.chart.values.visibility pro.reader.fixed_property family=chart attribute=chart.show_values on_value=show off_value=hide
+@reader.diagram.chart.kind pro.reader.nominal_class family=chart attribute=chart.type noun="chart" noun="plot" noun="graph"
 
-@reader.drawing.extent pro.reader.nominal_scale tab=drawing family=drawn attribute=drawn.size scale=size on=size
+@reader.drawing.extent pro.reader.nominal_scale family=drawn attribute=drawn.size scale=size on=size
 @reader.diagram.termini pro.reader.compound_reference family=link first_key=link.from second_key=link.to delimiter="-"
 @reader.region.left_side w.lang.en.cue name=place.left_side on=place relation=at value=left takes=none lead="on the left-hand side" lead="on the left hand side"
 @reader.region.right_side w.lang.en.cue name=place.right_side on=place relation=at value=right takes=none lead="on the right-hand side" lead="on the right hand side"
-@reader.diagram.chart.grouped_totals pro.reader.argument_sequence tab=diagram family=chart act=make mode=new prefix="chart of" prefix="chart of the" part=chart.aggregate part=by part=chart.dimension part=for part=chart.measure
-@reader.diagram.chart.grouped_measure pro.reader.argument_sequence tab=diagram family=chart act=make mode=new prefix="chart of" prefix="chart of the" part=chart.aggregate part=chart.measure part=by part=chart.dimension
-@reader.diagram.chart.grouped_measure_of pro.reader.argument_sequence tab=diagram family=chart act=make mode=new prefix="chart of" prefix="chart of the" part=chart.aggregate part=of part=chart.measure part=by part=chart.dimension
+@reader.diagram.chart.grouped_totals pro.reader.argument_sequence family=chart act=make mode=new prefix="chart of" prefix="chart of the" part=chart.aggregate part=by part=chart.dimension part=for part=chart.measure
+@reader.diagram.chart.grouped_measure pro.reader.argument_sequence family=chart act=make mode=new prefix="chart of" prefix="chart of the" part=chart.aggregate part=chart.measure part=by part=chart.dimension
+@reader.diagram.chart.grouped_measure_of pro.reader.argument_sequence family=chart act=make mode=new prefix="chart of" prefix="chart of the" part=chart.aggregate part=of part=chart.measure part=by part=chart.dimension
 @reader.diagram.chart.sum_alias core.word text=totals means=sum of=chart.aggregate
 @reader.diagram.chart.avg_alias core.word text=average means=avg of=chart.aggregate
 @reader.diagram.chart.total_alias core.word text=total means=sum of=chart.aggregate
@@ -118,7 +118,7 @@
 @reader.calendar.meeting_source pro.reader.affected_source act=remove family=meeting marker=from keyword=calendar attribute=meeting.calendar
 @reader.calendar.schedule_source pro.reader.affected_source act=remove family=meeting marker=from keyword=schedule attribute=meeting.calendar
 
-@reader.diagram.group.members pro.reader.member_action tab=diagram family=group act=group mode=new key=group.ids phase=result separator=and separator=with suffix=together
+@reader.diagram.group.members pro.reader.member_action family=group act=group mode=new key=group.ids phase=result member_family=node member_family=link separator=and separator=with suffix=together
 
 # Two independently licensed properties of one explicit existing object.
 @reader.effects.suggestion pro.reader.coordinated_effects part="how about" part=effect part=join part=effect part=on part=owner

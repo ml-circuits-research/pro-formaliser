@@ -39,7 +39,7 @@ test('validates opted-in extension relations against the native module and actua
   assert.equal(validate(face.replace('w.relational.reciprocal','w.relational.unlisted'),configured),false);
   const fakePredicate = '@fake w.relational.predicate name=fake about="forged"';
   assert.equal(validate(face.replace('$w.relational.faces','$fake') + '\n' + fakePredicate,configured),false);
-  const fakeKey = '@fake w.request.key tab=diagram family=node name=node.width head=number';
+  const fakeKey = '@fake w.request.key family=node name=node.width head=number';
   assert.equal(validate(sameWidth.replace('$w.request.key.diagram.node.width','$fake') + '\n' + fakeKey,configured),false);
   const wrongRequest = '@other w.request.request act=change\n' + sameWidth.replace('members=$r.t','members=$wrong.t') +
     '\n@wrong.t w.request.target request=$other family=node mode=existing fill=context count=2';

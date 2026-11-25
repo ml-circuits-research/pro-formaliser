@@ -12,7 +12,7 @@ const field = (wire,key) => decode(wire.attrs[key]?.[0]);
 const values = (wire,key) => (wire.attrs[key] ?? []).map(decode);
 const phrase = text => tokens(text).map(token=>token[0]);
 const atom = value => /^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u.test(value) ? value : JSON.stringify(value);
-const keyOf = (tab,family,attribute) => JSON.stringify([tab,family,attribute]);
+const keyOf = (family,attribute) => JSON.stringify([family,attribute]);
 const terminal = /^[.!。！]$/u;
 const word = /[\p{L}\p{N}]/u;
 
@@ -47,10 +47,10 @@ function mappings(facts,requestKeys) {
     }
   }
   const explicit = Map.groupBy(facts('pro.reader.fixed_property'), wire =>
-    keyOf(field(wire,'tab'),field(wire,'family'),field(wire,'attribute')));
+    keyOf(field(wire,'family'),field(wire,'attribute')));
   return requestKeys.flatMap(key => {
     if (!key.head.split('+').some(head=>['class','candidate'].includes(head)) || !key.values.length) return [];
-    const bindings = explicit.get(keyOf(key.tab,key.family,key.name));
+    const bindings = explicit.get(keyOf(key.family,key.name));
     return (bindings ?? [undefined]).flatMap(binding => {
       const namedSlot = binding && field(binding,'slot');
       const native = slots.get(key.means), slot = slots.get(namedSlot ?? key.means);

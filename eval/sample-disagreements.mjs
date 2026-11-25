@@ -7,26 +7,22 @@ import { normalizeText } from '../src/corpus.mjs';
 const [input,prefix,edition = '1'] = process.argv.slice(2);
 if (!input || !prefix) throw Error('Expected a benchmark details JSONL and output prefix');
 const digest = (salt, text) => createHash('sha256').update(salt + '\0' + text).digest('hex');
-const families = new Map();
+const disagreements = new Map();
 for (const line of readFileSync(input,'utf8').trimEnd().split('\n')) {
   const row = JSON.parse(line);
   if (row.semanticWireMatch) continue;
   const text = normalizeText(row.text);
-  if (!families.has(row.family)) families.set(row.family,new Map());
-  const group = families.get(row.family);
-  if (!group.has(text)) group.set(text,row);
+  if (!disagreements.has(text)) disagreements.set(text,row);
 }
 const blind = [], key = [];
-for (const [family,group] of [...families].sort()) {
-  const ranked = [...group].sort(([a],[b]) => digest('audit-'+edition,a).localeCompare(digest('audit-'+edition,b)));
-  for (const [,row] of ranked.slice(0,6)) {
-    const id = blind.length+1;
-    const aIsModel = (parseInt(digest('side-'+edition,row.text).slice(0,2),16) % 2) === 0;
-    const pair = [row.prediction.sop,row.sop];
-    if (!aIsModel) pair.reverse();
-    blind.push({id,text:row.text,A:pair[0],B:pair[1]});
-    key.push({id,family,model:aIsModel?'A':'B',source:row.source,row:row.row});
-  }
+const ranked = [...disagreements].sort(([a],[b]) => digest('audit-'+edition,a).localeCompare(digest('audit-'+edition,b)));
+for (const [,row] of ranked.slice(0,24)) {
+  const id = blind.length+1;
+  const aIsModel = (parseInt(digest('side-'+edition,row.text).slice(0,2),16) % 2) === 0;
+  const pair = [row.prediction.sop,row.sop];
+  if (!aIsModel) pair.reverse();
+  blind.push({id,text:row.text,A:pair[0],B:pair[1]});
+  key.push({id,model:aIsModel?'A':'B',source:row.source,row:row.row});
 }
 writeFileSync(prefix+'.json', JSON.stringify(blind,null,2));
 writeFileSync(prefix+'-key.json', JSON.stringify(key,null,2));

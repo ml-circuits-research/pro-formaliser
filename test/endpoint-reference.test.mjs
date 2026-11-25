@@ -16,14 +16,14 @@ const field=(wire,key)=>{
   return value?.startsWith('"') ? JSON.parse(value) : value;
 };
 
-async function find(reader,text,worlds,tab) {
+async function find(reader,text,worlds) {
   const {candidates}=await reader.propose(text);
   const reading=candidates.find(item=>item.source==='endpoint-reference');
   assert.ok(reading,text);
   assert.ok(validate(reading.sop,worlds),reading.sop);
   assert.ok(evidenceInText(text,reading.sop,worlds),reading.sop);
   const wires=parse(reading.sop);
-  assert.deepEqual(catalogIssues(wires,worlds,tab),[]);
+  assert.deepEqual(catalogIssues(wires,worlds),[]);
   return {reading,wires};
 }
 
@@ -83,11 +83,11 @@ test('uses independently declared ordered keys and connector in an unrelated wor
     '@yard std.schema.world name=w.shipyard',
     '@conduit std.schema.kind of=w.shipyard.conduit world=w.shipyard acts=change',
     '@noun core.word text="cargo conduit" means=w.shipyard.conduit',
-    '@first w.request.key tab=shipyard family=conduit name=conduit.origin head="fill+span"',
-    '@second w.request.key tab=shipyard family=conduit name=conduit.destination head="fill+span"',
-    '@grade w.request.key tab=shipyard family=conduit name=conduit.grade head=class value=taut',
+    '@first w.request.key family=conduit name=conduit.origin head="fill+span"',
+    '@second w.request.key family=conduit name=conduit.destination head="fill+span"',
+    '@grade w.request.key family=conduit name=conduit.grade head=class value=taut',
     '@pair pro.reader.compound_reference family=conduit first_key=conduit.origin second_key=conduit.destination delimiter="|"',
-    '@sequence pro.reader.arguments tab=shipyard family=conduit act=change mode=existing first_key=conduit.origin second_key=conduit.destination prefix=from separator=through'
+    '@sequence pro.reader.arguments family=conduit act=change mode=existing first_key=conduit.origin second_key=conduit.destination prefix=from separator=through'
   ].join('\n'));
   const worlds=loadWorlds({paths:[path]});
   const reader=createReader(undefined,worlds);

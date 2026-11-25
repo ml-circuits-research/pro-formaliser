@@ -15,12 +15,12 @@ const field=(wire,slot)=>{
   const raw=wire?.attrs[slot]?.[0];
   return raw?.startsWith('"') ? JSON.parse(raw) : raw;
 };
-const valid=(candidate,text,worlds,tab)=>{
+const valid=(candidate,text,worlds)=>{
   assert.ok(candidate,text);
   assert.ok(validate(candidate.sop,worlds));
   assert.ok(evidenceInText(text,candidate.sop,worlds));
   const wires=parse(candidate.sop);
-  assert.deepEqual(catalogIssues(wires,worlds,tab),[]);
+  assert.deepEqual(catalogIssues(wires,worlds),[]);
   return wires;
 };
 const fixture=({family,sort,predicate,place,effect,value,act='change',extra=''})=>[
@@ -49,10 +49,10 @@ test('public reader binds native typed hosts before independently supported effe
   const examples=cases.map(([text,donor])=>({text,sop:fixture(donor),count:1}));
   const reader=createReader({version:1,examples,templates:[]},worlds);
   t.after(()=>reader.close());
-  for (const [text,donor,attribute,operand,phase,status,tab] of cases) {
+  for (const [text,donor,attribute,operand,phase,status] of cases) {
     const {candidates}=await reader.propose(text);
     const reading=candidates.find(item=>item.source==='dependent-operand');
-    const wires=valid(reading,text,worlds,tab);
+    const wires=valid(reading,text,worlds);
     const related=wires.find(wire=>field(wire,'attribute')===attribute);
     assert.equal(field(related,'value'),operand,text);
     assert.equal(field(related,'phase'),phase,text);
@@ -87,12 +87,12 @@ test('uses a third-party typed slot, item/host facts and independently bound eff
     '@bench std.schema.world name=w.workbench',
     '@kind std.schema.kind of=w.workbench.hatch world=w.workbench acts=change',
     '@native.host core.slot of=w.workbench.hatch key=host type=w.workbench.cabinet',
-    '@selector w.request.key tab=workbench family=hatch name=hatch.host head=span means=native.host',
-    '@finish w.request.key tab=workbench family=hatch name=hatch.finish head=class value=satin value=glossy',
+    '@selector w.request.key family=hatch name=hatch.host head=span means=native.host',
+    '@finish w.request.key family=hatch name=hatch.finish head=class value=satin value=glossy',
     '@pair w.workbench.structure child=hatch parent=cabinet',
-    '@rule pro.reader.dependent_operand tab=workbench family=hatch act=change attribute=hatch.host range=w.workbench.cabinet phase=selector marker=of item_type=w.workbench.structure item_field=child peer_field=parent',
-    '@wrong w.request.key tab=workbench family=hatch name=hatch.incompatible head=span means=native.host',
-    '@bad pro.reader.dependent_operand tab=workbench family=hatch act=change attribute=hatch.incompatible range=w.workbench.desk phase=selector marker=of item_type=w.workbench.structure item_field=child peer_field=parent',
+    '@rule pro.reader.dependent_operand family=hatch act=change attribute=hatch.host range=w.workbench.cabinet phase=selector marker=of item_type=w.workbench.structure item_field=child peer_field=parent',
+    '@wrong w.request.key family=hatch name=hatch.incompatible head=span means=native.host',
+    '@bad pro.reader.dependent_operand family=hatch act=change attribute=hatch.incompatible range=w.workbench.desk phase=selector marker=of item_type=w.workbench.structure item_field=child peer_field=parent',
   ].join('\n'));
   const worlds=loadWorlds({paths:[dir]});
   assert.equal(worlds.dependentOperands.filter(rule=>rule.family==='hatch').length,1);

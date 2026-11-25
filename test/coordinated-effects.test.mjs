@@ -23,9 +23,9 @@ test('new properties and wording can be installed in a world',async t=>{
     '@work std.schema.world name=w.bench',
     '@kind std.schema.kind of=w.bench.device world=w.bench acts=change',
     '@noun core.word text=quilloscope means=w.bench.device',
-    '@gain w.request.key tab=bench family=device name=device.gain head=class value=loud value=quiet',
-    '@temp w.request.key tab=bench family=device name=device.power head=class value=cool value=hot',
-    '@finish w.request.key tab=bench family=device name=device.finish head=class value=striped',
+    '@gain w.request.key family=device name=device.gain head=class value=loud value=quiet',
+    '@temp w.request.key family=device name=device.power head=class value=cool value=hot',
+    '@finish w.request.key family=device name=device.finish head=class value=striped',
     '@form pro.reader.coordinated_effects part=adjust part=owner part=to part=effect part=join part=effect'
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[dir]})); t.after(()=>reader.close());

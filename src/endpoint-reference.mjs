@@ -19,7 +19,7 @@ function pairFrames(worlds) {
     if (!family || !firstKey || !secondKey || firstKey===secondKey) continue;
     const keys = worlds.requestKeys.filter(key=>key.family===family && key.head.split('+').includes('span') &&
       !key.values.length);
-    if (!keys.some(left=>left.name===firstKey && keys.some(right=>right.tab===left.tab && right.name===secondKey))) continue;
+    if (!keys.some(left=>left.name===firstKey && keys.some(right=>right.family===left.family && right.name===secondKey))) continue;
     const options = new Map();
     for (const separator of patterns.filter(pattern=>pattern.family===family && pattern.keys?.[0]===firstKey &&
         pattern.keys[1]===secondKey).map(pattern=>pattern.separator)) {

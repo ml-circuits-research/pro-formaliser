@@ -7,7 +7,7 @@ import { createEstimator } from '../src/estimate.mjs';
 import { createReader } from '../src/runtime.mjs';
 import { loadWorlds } from '../src/worlds.mjs';
 
-test('ranks both integration-review properties without changing the proposal set',async t=>{
+test('ranks grounded link properties within compatible interpretations and preserves the proposal set',async t=>{
   const worlds=loadWorlds({paths:['sop-worlds']});
   const reader=createReader(undefined,worlds);
   t.after(()=>reader.close());
@@ -16,12 +16,15 @@ test('ranks both integration-review properties without changing the proposal set
     ['Set the route on the link to curvy',/attribute="link\.route"[^\n]*value=curved/u,/link\.end/u],
   ]) {
     const {candidates}=await reader.propose(input);
-    const ranked=await reader.formalise(input,{tab:'diagram'});
-    assert.match(ranked.sop,expected);
-    assert.doesNotMatch(ranked.sop,bad);
-    assert.ok(ranked.alternatives.some(c=>bad.test(c.sop)));
-    assert.deepEqual([ranked,...ranked.alternatives].map(c=>c.sop).sort(),candidates.map(c=>c.sop).sort());
-    assert.ok(ranked.estimation.ranking[0].reasons.some(r=>r.signal==='written_property_evidence'));
+    const ranked=await reader.formalise(input,{rank:true});
+    const ordered=[ranked,...ranked.alternatives];
+    const links=ordered.filter(c=>/\bfamily="?link"?(?=\s|$)/u.test(c.sop));
+    assert.match(links[0].sop,expected);
+    assert.doesNotMatch(links[0].sop,bad);
+    assert.ok(links.slice(1).some(c=>bad.test(c.sop)));
+    assert.deepEqual(ordered.map(c=>c.sop).sort(),candidates.map(c=>c.sop).sort());
+    const reading=ranked.estimation.ranking.find(r=>r.index===links[0].generatorIndex);
+    assert.ok(reading.reasons.some(r=>r.signal==='written_property_evidence'));
   }
 });
 
@@ -32,8 +35,8 @@ test('supports installed property roles, rejects unsupported polarity, and prese
   writeFileSync(path,`
 @bench std.schema.world name=w.workbench
 @fixture std.schema.kind of=w.workbench.fixture world=w.workbench acts=change
-@finish w.request.key tab=workbench family=fixture name=fixture.finish head=class value=matte value=gloss
-@edge w.request.key tab=workbench family=fixture name=fixture.edge head=candidate value=to
+@finish w.request.key family=fixture name=fixture.finish head=class value=matte value=gloss
+@edge w.request.key family=fixture name=fixture.edge head=candidate value=to
 `);
   const estimator=createEstimator(loadWorlds({paths:[path]}));
   t.after(()=>estimator.close());
@@ -45,13 +48,13 @@ test('supports installed property roles, rejects unsupported polarity, and prese
   const extra={sop:good.sop+
     '\n@extra w.request.constraint request=$r on=attribute phase=result operator=eq attribute=fixture.edge value=to'};
   const identity={sop:base+'fill=written name=Anchor'+before};
-  assert.equal((await estimator.estimate([negated,extra,good],{tab:'workbench'})).selectedIndex,0);
-  const ranked=await estimator.estimate([negated,extra,good],{tab:'workbench'},{utterance});
+  assert.equal((await estimator.estimate([negated,extra,good])).selectedIndex,0);
+  const ranked=await estimator.estimate([negated,extra,good],{},{utterance});
   assert.equal(ranked.selectedIndex,2);
   assert.ok(ranked.ranking.find(r=>r.index===1).reasons.some(r=>r.unsupportedEffects===1));
   assert.ok(ranked.ranking.find(r=>r.index===0).reasons.some(r=>r.unsupportedEffects===1));
   const live=await estimator.estimate([negated,good,identity],{
-    tab:'workbench',entities:[{family:'fixture',name:'Anchor',selected:true}],
+    entities:[{family:'fixture',name:'Anchor',selected:true}],
   },{utterance});
   assert.equal(live.selectedIndex,2);
   assert.ok(live.ranking[0].reasons.some(r=>r.signal==='entity_identity'));
@@ -79,12 +82,12 @@ test('promotes the grounded pilot relation without losing preceding effects or t
   model.examples.push({text:spokenPhoto,count:1,sop:model.examples[0].sop.replace('6.5 inches','six inches')});
   const reader=createReader(model,worlds);
   t.after(()=>reader.close());
-  for (const [utterance,tab,relation,preserved] of [
-    [photo,'diagram','scaled','node.width'],[spokenPhoto,'diagram','scaled','node.width'],
-    [kids,'drawing','reciprocal','the lawn'],
+  for (const [utterance,relation,preserved] of [
+    [photo,'scaled','node.width'],[spokenPhoto,'scaled','node.width'],
+    [kids,'reciprocal','the lawn'],
   ]) {
     const {candidates}=await reader.propose(utterance);
-    const ranked=await reader.formalise(utterance,{tab});
+    const ranked=await reader.formalise(utterance,{rank:true});
     assert.ok(ranked.sop.includes('w.relational.'+relation),ranked.sop);
     if (utterance===spokenPhoto) {
       assert.match(ranked.sop,/measure=6(?:\s|$)/u);
@@ -105,18 +108,18 @@ test('promotes the grounded pilot relation without losing preceding effects or t
   const wrongUnit={sop:typed.sop.replace(/unit="?inch"?(?=\s|$)/u,'unit="second"')};
   assert.notEqual(wrongUnit.sop,typed.sop);
   for (const competing of [fabricated,removed,wrongUnit]) {
-    const result=await estimator.estimate([partial,competing],{tab:'diagram'},{utterance:photo});
+    const result=await estimator.estimate([partial,competing],{},{utterance:photo});
     assert.equal(result.selectedIndex,0);
     assert.ok(result.ranking.every(row=>row.reasons.every(r=>r.signal!=='grounded_relation_extension')));
   }
-  const separateReadings=await estimator.estimate([partial,typed],{tab:'diagram'},
+  const separateReadings=await estimator.estimate([partial,typed],{},
     {utterances:[photo+' now',photo]});
   assert.ok(separateReadings.ranking.every(row=>
     row.reasons.every(r=>r.signal!=='grounded_relation_extension')));
   const conflictingPartial={sop:partial.sop.replace('value="6.5 inches"','value="6.5 inches" measure=6.5 unit="second"')};
-  const conflicting=await estimator.estimate([conflictingPartial,typed],{tab:'diagram'},{utterance:photo});
+  const conflicting=await estimator.estimate([conflictingPartial,typed],{},{utterance:photo});
   assert.ok(conflicting.ranking.every(row=>row.reasons.every(r=>r.signal!=='grounded_relation_extension')));
   const different={sop:partial.sop.replace('description="the product photo"','name=Backdrop')};
-  const context={tab:'diagram',entities:[{family:'node',sort:'picture',name:'Backdrop',selected:true}]};
+  const context={entities:[{family:'node',sort:'picture',name:'Backdrop',selected:true}]};
   assert.equal((await estimator.estimate([partial,typed,different],context,{utterance:photo})).selectedIndex,2);
 });

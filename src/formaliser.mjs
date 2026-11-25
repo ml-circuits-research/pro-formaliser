@@ -22,7 +22,7 @@ import {incidentalModifier,withIncidentalModifier} from './incidental-modifiers.
 import {analyticalAdjunctBindings,analyticalOwnerBindings} from './analytical-frames.mjs';
 import {orientationLandmarkReadings} from './orientation-landmark.mjs';
 import {reciprocalReading} from './reciprocal-reading.mjs';
-import {spatialAnchorReadings} from './spatial-anchor.mjs';
+import {spatialAnchorEvidence,spatialAnchorReadings} from './spatial-anchor.mjs';
 import {discourseReason,discourseReasonReading} from './discourse-reason.mjs';
 import {sequenceReferenceReadings} from './sequence-reference.mjs';
 import {nativePropertyPacket,nativePropertyReadings} from './native-property-frames.mjs';
@@ -170,6 +170,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   const targetRoles=[...new Set(worlds.languageFrames.bindings.filter(b=>b.type==='w.request.target').map(b=>b.role))];
   const verbIndex=verbEffectIndex(worlds,model.verbEffects);
   const ground = constraintGrounder();
+  const spatialHeads=spatialAnchorEvidence(model.spatialAnchorHeads);
   const resolveRelationKeys = createRelationKeyResolver(worlds);
   const compounds=createCompoundReferenceReader(worlds);
   const endpoints=createEndpointReferenceReader(worlds);
@@ -921,7 +922,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
       }
       for (const candidate of [...candidates,...additional.values()]) {
-        for (const reading of spatialAnchorReadings(text,candidate,worlds,permit,model.spatialAnchorHeads)) {
+        for (const reading of spatialAnchorReadings(text,candidate,worlds,permit,spatialHeads)) {
           const key=admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
         }

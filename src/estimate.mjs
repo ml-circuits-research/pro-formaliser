@@ -248,21 +248,13 @@ function targets(wires) {
 }
 
 export function createEstimator(worlds = loadWorlds()) {
-  const attrTabs = new Map();
-  for (const {name,tab} of worlds.requestKeys) {
-    if (!attrTabs.has(name)) attrTabs.set(name,new Set());
-    attrTabs.get(name).add(tab);
-  }
   function describe(c,index,utterance) {
     if (!c || typeof c.sop !== 'string' || !validate(c.sop,worlds)) return null;
     const wires = parse(c.sop);
     if (!wires.some(w=>w.type === 'w.request.request')) return null;
     const mentions = targets(wires);
     const families = unique(mentions.map(t => t.family));
-    const attributes = unique(wires.flatMap(w=>values(w,'attribute')));
-    const tabSets = [...families.map(f=>worlds.familyTabs[f]),...attributes.map(a=>[...(attrTabs.get(a) ?? [])])]
-      .filter(tabs=>Array.isArray(tabs) && tabs.length);
-    return {wires,packet:{index,targets:mentions,families,tabSets,
+    return {wires,packet:{index,targets:mentions,families,
       ...(utterance ? {textEvidence:textEvidence(utterance,wires,worlds)} : {})}};
   }
   function cues(text) {
@@ -277,9 +269,12 @@ export function createEstimator(worlds = loadWorlds()) {
     }
     return [...found];
   }
-  function discussion({tab='',entities=[],turns=[]}) {
-    if (typeof tab!=='string' || !Array.isArray(entities) || !Array.isArray(turns)) throw Error('Invalid discussion context');
-    return {tab:norm(tab),entities:entities.map(e => {
+  function discussion(context) {
+    if (!context || typeof context!=='object' || Array.isArray(context) ||
+        Object.keys(context).some(key=>key!=='entities' && key!=='turns')) throw Error('Invalid discussion context');
+    const {entities=[],turns=[]}=context;
+    if (!Array.isArray(entities) || !Array.isArray(turns)) throw Error('Invalid discussion context');
+    return {entities:entities.map(e => {
       if (!e || typeof e.family!=='string' || !e.family.trim()) throw Error('Context entity requires a family');
       const properties = Object.entries(e.properties ?? {}).flatMap(([key,value]) =>
         (Array.isArray(value) ? value : [value]).filter(v=>['string','number','boolean'].includes(typeof v))
@@ -296,6 +291,7 @@ export function createEstimator(worlds = loadWorlds()) {
   return {
     async estimate(candidates, context = {}, {utterance,utterances} = {}) {
       if (!Array.isArray(candidates)) throw Error('Expected an array of candidates');
+      const instanceEvidence=discussion(context);
       const descriptions = [], invalidIndices = [];
       const byUtterance = new Map();
       candidates.forEach((c,i)=>{
@@ -314,7 +310,7 @@ export function createEstimator(worlds = loadWorlds()) {
       });
       for (const [surface,group] of byUtterance) relationPeers(group,surface,worlds);
       worker ??= prologWorker(new URL('../prolog/estimate.pl',import.meta.url));
-      const result = await worker.request({candidates:descriptions.map(d=>d.packet),context:discussion(context)});
+      const result = await worker.request({candidates:descriptions.map(d=>d.packet),context:instanceEvidence});
       return {...result,invalidIndices};
     },
     async close() { if (worker) await worker.close(); }

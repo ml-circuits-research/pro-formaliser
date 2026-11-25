@@ -41,13 +41,12 @@ function readPair(scope,family,worlds,exceptionWords,chars) {
     const firstAct=nominal.findIndex(([key])=>worlds.lookup(key).some(([role])=>role==='act'));
     const nouns=nominal.slice(0,firstAct===-1 ? nominal.length : firstAct+1).map((_,j)=>norm(i+1+j));
     for (const binding of worlds.spatialBindings.filter(b=>b.family===family)) {
-      const bank=worlds.requestKeys.find(k=>k.name===binding.relationKey && k.tab===binding.tab && k.family===family);
-      if (!bank || !worlds.requestKeys.some(k=>k.name===binding.anchorKey && k.tab===binding.tab && k.family===family &&
+      const bank=worlds.requestKeys.find(k=>k.name===binding.relationKey && k.family===family);
+      if (!bank || !worlds.requestKeys.some(k=>k.name===binding.anchorKey && k.family===family &&
           k.head==='fill+span' && !k.values.length)) continue;
-      if (det && !nouns.some(noun=>worlds.lookup(noun).some(([role,,owner])=>role==='target' &&
-          worlds.familyTabs[owner]?.includes(binding.tab)) ||
+      if (det && !nouns.some(noun=>worlds.lookup(noun).some(([role])=>role==='target') ||
           ['change','place','pick'].some(act=>worlds.ownerInventory?.get(JSON.stringify([act,noun]))
-            ?.some(({family:owner})=>worlds.familyTabs[owner]?.includes(binding.tab))))) continue;
+            ?.length))) continue;
       for (const [,,,value] of relations) {
         if (!bank.values.includes(value)) continue;
         if ((worlds.nominalPositions.get(family)?.get(scope[0][0]) ?? []).some(

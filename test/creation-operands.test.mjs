@@ -28,14 +28,14 @@ test('grounds a written name before a typed kind and a title after an implicit c
   assert.ok(!await creation(r,'hexagon labelled Charter if approved','node.label','Charter if approved'));
 });
 
-test('reads named operands from an installed inventory with no instance or tab input',async t=>{
+test('reads named operands from an installed inventory without a supplied instance',async t=>{
   const dir=mkdtempSync('.cache/named-operand-');t.after(()=>rmSync(dir,{recursive:true,force:true}));
   writeFileSync(join(dir,'work.sop'),[
     '@w std.schema.world name=w.workbench',
     '@m std.schema.kind of=w.workbench.module world=w.workbench acts=make',
-    '@k w.request.key tab=workbench family=module name=module.name head=span',
+    '@k w.request.key family=module name=module.name head=span',
     '@p k.workbench.register name=Velarium',
-    '@r pro.reader.creation_role tab=workbench family=module attribute=module.name value_type=k.workbench.register'
+    '@r pro.reader.creation_role family=module attribute=module.name value_type=k.workbench.register'
   ].join('\n'));
   const r=createReader(undefined,loadWorlds({paths:[dir]}));t.after(()=>r.close());
   assert.ok(await creation(r,'Create Velarium','module.name','Velarium'));

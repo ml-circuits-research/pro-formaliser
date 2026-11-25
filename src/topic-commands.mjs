@@ -126,8 +126,8 @@ export function topicCommandLearner(worlds) {
 
 export function compileTopicCommandDeclarations(facts,requestKeys) {
   return facts('pro.reader.topic_command').flatMap(wire=>{
-    const [tab,family,act,attribute]=['tab','family','act','attribute'].map(k=>value(wire,k));
-    if (!act || !requestKeys.some(key=>key.tab===tab && key.family===family && key.name===attribute &&
+    const [family,act,attribute]=['family','act','attribute'].map(k=>value(wire,k));
+    if (!act || !requestKeys.some(key=>key.family===family && key.name===attribute &&
         key.values.length)) return [];
     return (wire.attrs.predicate ?? []).map(str).map(form).filter(Boolean)
       .map(predicate=>({family,act,attribute,predicate}));

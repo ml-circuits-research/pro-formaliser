@@ -244,8 +244,8 @@ test('binds a compatible catalog preservation key in another family',async t=>{
   writeFileSync(overlay,`
 @bench std.schema.world name=w.workbench
 @fixture std.schema.kind of=w.workbench.fixture world=w.workbench acts=make acts=change
-@stand pro.reader.target family=fixture sort=stand text=stand act=make tab=workbench mode=new
-@stay w.request.key tab=workbench family=fixture name=fixture.statePreserved head=class value=place
+@stand pro.reader.target family=fixture sort=stand text=stand act=make mode=new
+@stay w.request.key family=fixture name=fixture.statePreserved head=class value=place
 @retention pro.reader.preservation family=fixture attribute=fixture.statePreserved
 `);
   const reader=createReader(undefined,loadWorlds({paths:[overlay]}));

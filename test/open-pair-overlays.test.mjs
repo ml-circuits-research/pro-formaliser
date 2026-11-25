@@ -34,9 +34,9 @@ test('loads a nominal pair from an overlay and preserves its arbitrary text argu
     '@bench std.schema.world name=w.workbench',
     '@device std.schema.kind of=w.workbench.device world=w.workbench acts=make',
     '@specimen core.word text=quilloscope means=w.workbench.device',
-    '@material w.request.key tab=workbench family=device name=device.specimen head=span',
-    '@calibration w.request.key tab=workbench family=device name=device.reference head=span',
-    '@frame pro.reader.arguments tab=workbench family=device act=make mode=new anchor=nominal first_key=device.specimen second_key=device.reference prefix="quilloscope for" separator="calibrated against"',
+    '@material w.request.key family=device name=device.specimen head=span',
+    '@calibration w.request.key family=device name=device.reference head=span',
+    '@frame pro.reader.arguments family=device act=make mode=new anchor=nominal first_key=device.specimen second_key=device.reference prefix="quilloscope for" separator="calibrated against"',
   ].join('\n'));
   const reader = createReader(undefined, loadWorlds({paths:[dir]}));
   try {

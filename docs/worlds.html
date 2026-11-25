@@ -15,7 +15,6 @@
       <li><a href="architecture.html">Architecture</a></li>
       <li><a class="active" aria-current="page" href="worlds.html">Extend with SOP worlds</a></li>
       <li><a href="spelling.html">Spelling</a></li>
-      <li><a href="context.html">Contextual estimator</a></li>
       <li><a href="evaluation.html">Evaluation and reproduction</a></li>
       <li><a href="decisions.html">Design history</a></li>
     </ul>
@@ -28,9 +27,9 @@
     <thead><tr><th scope="col">Declaration</th><th scope="col">Behavior</th></tr></thead>
     <tbody>
     <tr><th scope="row"><code>k.actions.act</code>, verb aliases and <code>core.word</code></th><td>Introduce predicates and surface forms. Known words also enter the spelling vocabulary.</td></tr>
-    <tr><th scope="row"><code>std.schema.kind</code> and optional <code>pro.reader.target</code></th><td>Supply target families and allowed acts. Explicit target bindings can specify family, sort, tab and target mode.</td></tr>
+    <tr><th scope="row"><code>std.schema.kind</code> and optional <code>pro.reader.target</code></th><td>Supply target families and allowed acts. Explicit target bindings can specify family, sort and target mode.</td></tr>
     <tr><th scope="row"><code>k.actions.role</code>, verb value frames and <code>w.lang.en.prep</code></th><td>Describe supported role markers and spatial relations. The lexical fallback uses these declarations to distinguish direct targets from nominal spatial anchors and to produce grounded selector or result constraints for supported attachments.</td></tr>
-    <tr><th scope="row"><code>pro.reader.spatial</code></th><td>Matches a family and tab to a class key for canonical spatial relations and a <code>fill+span</code> key for grounded anchor phrases.</td></tr>
+    <tr><th scope="row"><code>pro.reader.spatial</code></th><td>Matches a family to a class key for canonical spatial relations and a <code>fill+span</code> key for grounded anchor phrases.</td></tr>
     <tr><th scope="row"><code>w.request.key</code> and declared values</th><td>Supply typed properties within a target family. Key/value aliases can name a closed value. Explicit labels can also ground new decimal numbers or quoted spans for corresponding key types.</td></tr>
     <tr><th scope="row"><code>w.reader.en.binding</code>, <code>filter</code> and <code>feature</code></th><td>Select facts by type, filter them and project a spelling and canonical interpretation from fields or a wire ID. For equality constraints the projected value must resolve to a compatible key in the target family.</td></tr>
     </tbody>

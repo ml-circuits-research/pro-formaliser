@@ -32,10 +32,10 @@ test('selects existing compound objects from compact ordered labels and the nati
 });
 
 test('declared ordered slots and a compact delimiter work for an unrelated family', () => {
-  const family='route', firstKey='route.start',secondKey='route.end',tab='transport';
+  const family='route', firstKey='route.start',secondKey='route.end';
   const overlay={...worlds,
     lookup:text=>text==='route' ? [['target','pick',family,'existing','']] : worlds.lookup(text),
-    requestKeys:[...worlds.requestKeys,...[firstKey,secondKey].map(name=>({name,family,tab,head:'fill+span',values:[]}))],
+    requestKeys:[...worlds.requestKeys,...[firstKey,secondKey].map(name=>({name,family,head:'fill+span',values:[]}))],
     compoundReferences:[{family,firstKey,secondKey,delimiter:'-to-'}]};
   const readOverlay=createCompoundReferenceReader(overlay);
   const [candidate]=read('Pick North-to-South route',readOverlay);

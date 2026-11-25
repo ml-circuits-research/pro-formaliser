@@ -81,8 +81,8 @@ export function argumentSequences(facts,catalog,formats=compileStructuredArgumen
   }
   const index=new Map();
   for (const w of facts('pro.reader.argument_sequence')) {
-    const family=one(w,'family'),act=one(w,'act'),mode=one(w,'mode'),tab=one(w,'tab');
-    const props=new Map(catalog.filter(k=>k.family===family && k.tab===tab).map(k=>[k.name,k]));
+    const family=one(w,'family'),act=one(w,'act'),mode=one(w,'mode');
+    const props=new Map(catalog.filter(k=>k.family===family).map(k=>[k.name,k]));
     const owners=many(w,'owner').map(keys).filter(words=>words.length), ownerKey=one(w,'owner_key'),ownerValue=one(w,'owner_value');
     const inferred=one(w,'inferred_owner')==='true', contextual=one(w,'contextual_owner')==='true';
     if (inferred && (owners.length || mode!=='new' || ownerKey || contextual) ||
@@ -93,7 +93,7 @@ export function argumentSequences(facts,catalog,formats=compileStructuredArgumen
     const modeMarker=one(w,'mode_marker');
     const predicateBank=many(w,'predicate_surface').map(keys).filter(words=>words.length);
     const scopeAttribute=one(w,'scope_attribute');
-    if (scopeAttribute && !catalog.some(key=>key.tab===tab && key.family==='preference' &&
+    if (scopeAttribute && !catalog.some(key=>key.family==='preference' &&
         key.name===scopeAttribute && key.head==='span' && !key.values.length)) continue;
     const lexicalParts=new Set(many(w,'lexical_part'));
     const structuredParts=new Set(many(w,'structured_part'));
@@ -116,7 +116,7 @@ export function argumentSequences(facts,catalog,formats=compileStructuredArgumen
         return p.includes('.') || !literal.length ? null : {literal};
       }
       if (structuredParts.has(p)) {
-        const format=formats.get(JSON.stringify([tab,family,p]));
+        const format=formats.get(JSON.stringify([family,p]));
         return format && !lexicalParts.has(p) ? {key:p,format} : null;
       }
       if (lexicalParts.has(p)) {

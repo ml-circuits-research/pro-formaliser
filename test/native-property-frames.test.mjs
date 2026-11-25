@@ -120,12 +120,12 @@ test('reads fresh native frame and catalog roles in an overlay',async t=>{
     '@studio std.schema.world name=w.studio',
     '@module std.schema.kind of=w.studio.module world=w.studio acts=change acts=ask',
     '@fixture core.word text=goniometer means=w.studio.module',
-    '@sampling w.request.key tab=studio family=module name=module.samples head=number',
+    '@sampling w.request.key family=module name=module.samples head=number',
     '@w.studio.module.response core.slot of=w.studio.module key=response enum=linear enum=logarithmic',
-    '@response w.request.key tab=studio family=module name=module.response head=class value=linear value=logarithmic means=w.studio.module.response',
+    '@response w.request.key family=module name=module.response head=class value=linear value=logarithmic means=w.studio.module.response',
     '@alias core.word text=log means=logarithmic of=w.studio.module.response',
     '@w.studio.module.feed core.slot of=w.studio.module key=feed enum=logscale enum=fixed',
-    '@feed w.request.key tab=studio family=module name=module.feed head=class value=logscale value=fixed means=w.studio.module.feed',
+    '@feed w.request.key family=module name=module.feed head=class value=logscale value=fixed means=w.studio.module.feed',
     '@feedAlias core.word text=log means=logscale of=w.studio.module.feed',
     '@affect k.actions.verb text=reassign act=change complement=value',
     '@frame w.lang.en.frame name=lab.assign act=change mode=set needs=attrs role=attribute role=thing role=value',
@@ -216,9 +216,9 @@ test('keeps compatible property aliases in an unrelated world and accepts a boun
   writeFileSync(join(dir,'sensors.sop'),[
     '@lab std.schema.world name=w.lab',
     '@sense std.schema.kind of=w.lab.receiver world=w.lab acts=change',
-    '@mode w.request.key tab=lab family=receiver name=receiver.displayMode head=class value=dim value=bright',
-    '@filter w.request.key tab=lab family=receiver name=receiver.filterMode head=class value=dim value=clear',
-    '@memo w.request.key tab=lab family=receiver name=receiver.sideNote head=span',
+    '@mode w.request.key family=receiver name=receiver.displayMode head=class value=dim value=bright',
+    '@filter w.request.key family=receiver name=receiver.filterMode head=class value=dim value=clear',
+    '@memo w.request.key family=receiver name=receiver.sideNote head=span',
     '@alias core.word text="operating mode" means=receiver.displayMode means=receiver.filterMode',
   ].join('\n'));
   const worlds=loadWorlds({paths:[dir]});

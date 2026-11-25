@@ -35,7 +35,7 @@ test('grounds the orientation operand separately from subject placement and pres
   assert.ok(validate(alternative.sop,worlds));
   assert.ok(evidenceInText(text,alternative.sop,worlds));
   const wires=parse(alternative.sop);
-  assert.deepEqual(catalogIssues(wires,worlds,'drawing'),[]);
+  assert.deepEqual(catalogIssues(wires,worlds),[]);
   const orientation=wires.find(wire=>wire.attrs.attribute?.[0]==='drawn.facingTarget');
   assert.deepEqual(orientation.attrs.value,['"the house"']);
   assert.deepEqual(orientation.attrs.phase,['result']);
@@ -82,10 +82,10 @@ test('uses another world’s declared direction key, operand, marker and landmar
   writeFileSync(join(path,'fleet.sop'),[
     '@fleet std.schema.world name=w.fleet',
     '@turret std.schema.kind of=w.fleet.turret world=w.fleet acts=change',
-    '@dir w.request.key tab=fleet family=turret name=turret.direction head=class value=left value=right',
-    '@ref w.request.key tab=fleet family=turret name=turret.sightline head="fill+span"',
+    '@dir w.request.key family=turret name=turret.direction head=class value=left value=right',
+    '@ref w.request.key family=turret name=turret.sightline head="fill+span"',
     '@beacon w.fleet.marker name="wind marker"',
-    '@aim pro.reader.orientation tab=fleet family=turret act=change attribute=turret.sightline source_attribute=turret.direction landmark_type=w.fleet.marker text="align towards"',
+    '@aim pro.reader.orientation family=turret act=change attribute=turret.sightline source_attribute=turret.direction landmark_type=w.fleet.marker text="align towards"',
   ].join('\n'));
   const configured=loadWorlds({paths:[path]});
   const text='make the turret align towards the wind marker';
@@ -100,6 +100,6 @@ test('uses another world’s declared direction key, operand, marker and landmar
   const found=candidates.find(c=>c.source==='orientation-landmark');
   assert.ok(found);
   assert.ok(validate(found.sop,configured));
-  assert.deepEqual(catalogIssues(parse(found.sop),configured,'fleet'),[]);
+  assert.deepEqual(catalogIssues(parse(found.sop),configured),[]);
   assert.match(found.sop,/attribute=turret.sightline value="the wind marker" key_words="align towards"/);
 });

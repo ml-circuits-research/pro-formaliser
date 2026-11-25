@@ -1,2 +1,2 @@
 # Opt-in pilot catalog key for a page-resolved orientation operand.
-@overlay.key.drawing.drawn.facingTarget w.request.key tab=drawing family=drawn name=drawn.facingTarget head="fill+span" about="the instance toward which the drawn object must face"
+@overlay.key.drawing.drawn.facingTarget w.request.key family=drawn name=drawn.facingTarget head="fill+span" about="the instance toward which the drawn object must face"

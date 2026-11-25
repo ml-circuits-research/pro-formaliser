@@ -11,8 +11,8 @@ main :-
     ; atom_json_dict(Line, Q, []), estimate(Q, Result),
       json_write_dict(current_output, Result, [width(0)]), nl, flush_output, fail ).
 
-% Schema compatibility is a soft prior. Instance identity and accepted recent
-% discourse supply separate evidence, using only values present in the input.
+% Instance identity and accepted recent discourse supply evidence using only
+% values supplied to the standalone estimator.
 estimate(Q, Result) :-
     findall(Key-Row,
         ( member(C,Q.candidates), evidence(Q.context,C,Reasons),
@@ -90,10 +90,9 @@ decision([R,S|Rest],Decision,R.index) :-
     ; Decision = "context_favors" ).
 
 evidence(Context,C,Reasons) :-
-    findall(R,tab_evidence(Context.tab,C,R),Tab),
     best_signal(entity_evidence(Context.entities,C),Entity),
     best_signal(history_evidence(Context.turns,C),History),
-    append([Tab,Entity,History],Reasons).
+    append(Entity,History,Reasons).
 
 % A long circuit, duplicated entity or repeated historical mention should
 % not win just because it repeats the same signal.
@@ -101,14 +100,6 @@ best_signal(Goal,Result) :-
     findall(W-R,(call(Goal,R),W=R.weight),Pairs),
     ( Pairs=[] -> Result=[] ; keysort(Pairs,Sorted), last(Sorted,_-Best), Result=[Best] ).
 
-tab_evidence(Tab,C,R) :-
-    Tab \== "", C.tabSets \== [],
-    include(member_of(Tab),C.tabSets,Matches), length(Matches,Yes),
-    length(C.tabSets,All), No is All-Yes,
-    W is (Yes-2*No)/All*2,
-    R=_{signal:"schema_tab",tab:Tab,matches:Yes,conflicts:No,weight:W}.
-
-member_of(Item,Items) :- memberchk(Item,Items).
 same(A,B) :- A \== "", B \== "", A == B.
 identity(T,E) :- member(Name,T.names), (same(Name,E.name);same(Name,E.id)), !.
 compatible(T,E) :- same(T.family,E.family), (T.sort == ""; E.sort == ""; T.sort == E.sort).

@@ -107,20 +107,20 @@ test('loads a distinct analytical layout through a normal reader overlay', async
   writeFileSync(path,[
     '@audit std.schema.world name=w.audit',
     '@screen std.schema.kind of=w.audit.screen world=w.audit acts=make',
-    '@view w.request.key tab=audit family=screen name=screen.view head=class value=weekly',
-    '@operation w.request.key tab=audit family=screen name=screen.combine head=class value=union',
-    '@subject w.request.key tab=audit family=screen name=screen.subject head=span',
-    '@partition w.request.key tab=audit family=screen name=screen.partition head=span',
-    '@window w.request.key tab=audit family=screen name=screen.window head=span',
-    '@style w.request.key tab=audit family=screen name=screen.style head=class value=grid',
-    '@screen.limit w.request.key tab=audit family=screen name=screen.limit head=number',
-    '@frame pro.reader.analytical_frame tab=audit family=screen layout=trailing_owner prefix=build owner="a weekly matrix" owner_key=screen.view owner_value=weekly owner_marker=as measure=screen.subject grouping=screen.partition group_marker=across operation=screen.combine operation_marker=of',
-    '@ordered pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly tail="," pattern="{$owner} for {screen.subject}, partitioned across {screen.partition}, combined by {screen.combine}"',
-    '@fronted pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="during {screen.window}, {$predicate} {$owner} for {screen.subject} across {screen.partition}"',
-    '@adjacent pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=merge owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="{$owner} for {screen.subject} {screen.partition}"',
-    '@boundary pro.reader.analytical_boundary tab=audit family=screen text="capped at" numeric_modifier=deep',
-    '@matrix.style pro.reader.analytical_owner_property tab=audit family=screen owner_key=screen.view owner_value=weekly text="a weekly matrix" key=screen.style value=grid',
-    '@matrix.limit pro.reader.analytical_adjunct tab=audit family=screen key=screen.limit pattern="capped at {number} rows"',
+    '@view w.request.key family=screen name=screen.view head=class value=weekly',
+    '@operation w.request.key family=screen name=screen.combine head=class value=union',
+    '@subject w.request.key family=screen name=screen.subject head=span',
+    '@partition w.request.key family=screen name=screen.partition head=span',
+    '@window w.request.key family=screen name=screen.window head=span',
+    '@style w.request.key family=screen name=screen.style head=class value=grid',
+    '@screen.limit w.request.key family=screen name=screen.limit head=number',
+    '@frame pro.reader.analytical_frame family=screen layout=trailing_owner prefix=build owner="a weekly matrix" owner_key=screen.view owner_value=weekly owner_marker=as measure=screen.subject grouping=screen.partition group_marker=across operation=screen.combine operation_marker=of',
+    '@ordered pro.reader.analytical_frame family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly tail="," pattern="{$owner} for {screen.subject}, partitioned across {screen.partition}, combined by {screen.combine}"',
+    '@fronted pro.reader.analytical_frame family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="during {screen.window}, {$predicate} {$owner} for {screen.subject} across {screen.partition}"',
+    '@adjacent pro.reader.analytical_frame family=screen layout=ordered_fields prefix=merge owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="{$owner} for {screen.subject} {screen.partition}"',
+    '@boundary pro.reader.analytical_boundary family=screen text="capped at" numeric_modifier=deep',
+    '@matrix.style pro.reader.analytical_owner_property family=screen owner_key=screen.view owner_value=weekly text="a weekly matrix" key=screen.style value=grid',
+    '@matrix.limit pro.reader.analytical_adjunct family=screen key=screen.limit pattern="capped at {number} rows"',
     '@union core.word text=unioned means=union of=screen.combine'
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[path]}));
@@ -205,7 +205,7 @@ test('default reader distinguishes canonical source fields and axis titles', asy
     ['chart.yField', 'y_field'],
     ['chart.seriesDimension', 'series_field'],
   ]) {
-    const definitions = worlds.requestKeys.filter(key => key.tab === 'diagram' && key.family === 'chart' &&
+    const definitions = worlds.requestKeys.filter(key => key.family === 'chart' &&
       key.name === name);
     assert.deepEqual(definitions.map(({head, means}) => [head, means]), [['span', 'w.diagram.group.' + role]]);
   }
@@ -427,13 +427,13 @@ test('installs a closed contrast and repeated field in an unrelated world',async
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
   const file=join(dir,'calibration.sop');
   writeFileSync(file,`
-@fixture.calibration pro.reader.target tab=workbench family=calibration act=make sort=calibration text=calibration
-@fixture.kind w.request.key tab=workbench family=calibration name=calibration.kind head=class value=record
-@fixture.sensor w.request.key tab=workbench family=calibration name=calibration.sensor head=span
-@fixture.reference w.request.key tab=workbench family=calibration name=calibration.reference head=span
-@fixture.mode w.request.key tab=workbench family=calibration name=calibration.mode head=class value=ratio
+@fixture.calibration pro.reader.target family=calibration act=make sort=calibration text=calibration
+@fixture.kind w.request.key family=calibration name=calibration.kind head=class value=record
+@fixture.sensor w.request.key family=calibration name=calibration.sensor head=span
+@fixture.reference w.request.key family=calibration name=calibration.reference head=span
+@fixture.mode w.request.key family=calibration name=calibration.mode head=class value=ratio
 @fixture.ratio core.word of=calibration.mode means=ratio text="relative rather than absolute"
-@fixture.frame pro.reader.analytical_frame tab=workbench family=calibration layout=ordered_fields owner_key=calibration.kind owner_value=record owner="a calibration" prefix=make pattern="{$owner} of {calibration.sensor} against {calibration.reference}, reporting {=calibration.sensor} {calibration.mode}" scope_literal_slot=calibration.mode scope_literal="relative rather than absolute"
+@fixture.frame pro.reader.analytical_frame family=calibration layout=ordered_fields owner_key=calibration.kind owner_value=record owner="a calibration" prefix=make pattern="{$owner} of {calibration.sensor} against {calibration.reference}, reporting {=calibration.sensor} {calibration.mode}" scope_literal_slot=calibration.mode scope_literal="relative rather than absolute"
 `);
   const reader=createReader(undefined,loadWorlds({paths:[file]}));
   t.after(()=>reader.close());

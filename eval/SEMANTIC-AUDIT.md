@@ -1,5 +1,7 @@
 # Blind semantic review
 
+Historical run record. Commands and sampling settings below belong to the recorded reader revisions. For the current text-only runner and validation, see [Evaluation and reproduction](../docs/evaluation.html).
+
 Two independent Sol LLM reviewers compared the first-ranked circuit with the annotation, using the utterance as evidence. Candidate identity and the tab were hidden. Each reviewer recorded a preference and rated whether each candidate preserved all salient requirements. A preferred candidate could still be incomplete. The review uses one judgment per pair and has no human adjudication.
 
 The final review samples six distinct normalized utterances per WebMeet area from disagreements on the text-only replication split (bucket 1). `eval/sample-disagreements.mjs` selects inputs by salted hash and assigns the two circuits to A and B by a second hash. The evaluation keeps the mapping separate until the verdicts are recorded. For pairs affected by changes to quoting or slot interpretation the reviewer saw and judged the updated pair blind. These are failure-focused counts and do not estimate accuracy across the full corpus.

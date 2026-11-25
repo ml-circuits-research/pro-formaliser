@@ -26,7 +26,7 @@ test('grounded guards select the same object without changing the positive resul
     ['If the object is red, then make the object blue.','red',undefined],
     ['Unless it is green, make the object blue.','green','no'],
   ]) {
-    const result=await reader.formalise(text,{tab:'drawing'});
+    const result=await reader.formalise(text,{});
     assert.equal(result.source,'guarded',text);
     assert.ok(validate(result.sop,worlds) && evidenceInText(text,result.sop,worlds),text);
     const wires=parse(result.sop);
@@ -65,8 +65,8 @@ test('a closed scalar guard and result use a newly declared family',async t=>{
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
   const file = join(dir,'overlay.sop');
   writeFileSync(file,`
-@fixture.head pro.reader.target family=fixture tab=workbench sort=fluxometer text=fluxometer act=change mode=existing
-@fixture.finish w.request.key tab=workbench family=fixture name=fixture.finish head=class value=polished value=frosted
+@fixture.head pro.reader.target family=fixture sort=fluxometer text=fluxometer act=change mode=existing
+@fixture.finish w.request.key family=fixture name=fixture.finish head=class value=polished value=frosted
 @fixture.scope pro.reader.scope_cue kind=condition polarity=positive text="in case"
 `);
   const worlds=loadWorlds({paths:[file]}), reader=createReader(undefined,worlds);

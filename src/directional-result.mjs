@@ -36,12 +36,12 @@ export function compileDirectionalResults(facts,requestKeys,words=facts('core.wo
     .flatMap(wire=>values(wire,'text').map(normal)));
   const bindings=[];
   for (const wire of facts('pro.reader.motion')) {
-    const [tab,family,act,directionKey,degreeKey,offsetKey,targetType]=
-      ['tab','family','act','direction_key','degree_key','offset_key','target_type'].map(key=>one(wire,key));
-    const keys=requestKeys.filter(key=>key.tab===tab && key.family===family);
+    const [family,act,directionKey,degreeKey,offsetKey,targetType]=
+      ['family','act','direction_key','degree_key','offset_key','target_type'].map(key=>one(wire,key));
+    const keys=requestKeys.filter(key=>key.family===family);
     const direction=keys.find(key=>key.name===directionKey && key.head.split('+').includes('class'));
     if (!act || !direction?.values.length) continue;
-    bindings.push({tab,family,act,directionKey,selectorRules:selectorRules.filter(rule=>rule.tab===tab && rule.family===family),
+    bindings.push({family,act,directionKey,selectorRules:selectorRules.filter(rule=>rule.family===family),
       directions:new Map([...directions].flatMap(([form,names])=>{
       const allowed=[...names].filter(name=>atom.test(name) && direction.values.includes(name));
       return allowed.length===1 ? [[form,allowed[0]]] : [];

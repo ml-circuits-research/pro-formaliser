@@ -16,9 +16,9 @@ export function compileParticipantAdjuncts(facts,catalog) {
     one(wire,'case')==='locative' && one(wire,'refers')==='place')
     .flatMap(wire=>all(wire,'text').map(surface)));
   return facts('pro.reader.participant_adjunct').flatMap(wire=>{
-    const [tab,family,subjectKey,attribute,destination]=
-      ['tab','family','subject_key','attribute','destination'].map(key=>one(wire,key));
-    const key=name=>catalog.find(row=>row.tab===tab && row.family===family && row.name===name);
+    const [family,subjectKey,attribute,destination]=
+      ['family','subject_key','attribute','destination'].map(key=>one(wire,key));
+    const key=name=>catalog.find(row=>row.family===family && row.name===name);
     const subject=key(subjectKey), operand=key(attribute), location=key(destination);
     if (!subject?.values.length || !operand || operand.values.length ||
         !operand.head.split('+').some(head=>head==='candidate' || head==='span') ||

@@ -1,5 +1,7 @@
 # WebMeet held-out benchmark
 
+Historical run record. Commands and sampling settings below belong to the recorded reader revisions. For the current text-only runner and validation, see [Evaluation and reproduction](../docs/evaluation.html).
+
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
 ## Published reader replay at 16:54

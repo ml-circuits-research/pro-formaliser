@@ -109,10 +109,10 @@ test('requires a real catalog key and supports a separately loaded owner family'
 @rig std.schema.world name=w.rig
 @modulator std.schema.kind of=w.rig.modulator world=w.rig acts=change
 @target pro.reader.target of=w.rig.modulator family=rig mode=existing act=change text=modulator
-@tag w.request.key tab=rig family=rig name=rig.tag head=span
-@rate w.request.key tab=rig family=rig name=rig.rate head=number
+@tag w.request.key family=rig name=rig.tag head=span
+@rate w.request.key family=rig name=rig.rate head=number
 @w.rig.modulator.level core.slot of=w.rig.modulator key=level kind=number
-@level w.request.key tab=rig family=rig name=rig.level head=span means=w.rig.modulator.level
+@level w.request.key family=rig name=rig.level head=span means=w.rig.modulator.level
 `;
   const newSenses=`
 @signal pro.reader.effect_sense family=rig key=rig.tag text=stamp property_command=true

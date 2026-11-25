@@ -15,7 +15,8 @@ test('the pose pilot appends values to the pinned catalog without replacing its 
   const original=parse(readFileSync(new URL('../.cache/knowledge/docs/worlds/w.request/shards/keys.sop',import.meta.url),'utf8'))
     .find(w=>w.id==='w.request.key.drawing.drawn.pose');
   const replacement=parse(readFileSync(pilot,'utf8')).find(w=>w.id===original.id);
-  assert.deepEqual({...replacement.attrs,value:replacement.attrs.value.slice(0,original.attrs.value.length)},original.attrs);
+  const {tab: _retiredMetadata,...semanticAttributes}=original.attrs;
+  assert.deepEqual({...replacement.attrs,value:replacement.attrs.value.slice(0,original.attrs.value.length)},semanticAttributes);
   const worlds=loadWorlds({paths:[pilot]});
   assert.ok(worlds.nominalPositions.get('drawn').get('kneeling')
     .some(entry=>entry[1]==='drawn.pose' && entry[2]==='kneeling'));
@@ -26,10 +27,10 @@ test('an independently declared node value attaches to its local nominal with ve
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
   const file=join(dir,'surface.sop');
   writeFileSync(file,`
-@fixture.node.phase w.request.key tab=diagram family=node name=node.fixturePhase head=class value=ready
-@fixture.node.surface pro.reader.nominal_value tab=diagram family=node key=node.fixturePhase value=ready text="standing by"
-@fixture.node.absent pro.reader.nominal_value tab=diagram family=node key=node.fixturePhase value=missing text=idle
-@fixture.node.wrong_tab pro.reader.nominal_value tab=drawing family=node key=node.fixturePhase value=ready text=attentive
+@fixture.node.phase w.request.key family=node name=node.fixturePhase head=class value=ready
+@fixture.node.surface pro.reader.nominal_value family=node key=node.fixturePhase value=ready text="standing by"
+@fixture.node.absent pro.reader.nominal_value family=node key=node.fixturePhase value=missing text=idle
+@fixture.node.wrong_owner pro.reader.nominal_value family=chart key=node.fixturePhase value=ready text=attentive
 `);
   const worlds=loadWorlds({paths:[file]});
   const model={version:1,examples:[],templates:[],lexicon:{}};
@@ -57,8 +58,8 @@ test('a postnominal frame reads current members of an independently installed fi
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
   const file=join(dir,'pattern.sop');
   writeFileSync(file,[
-    '@fixture.state w.request.key tab=diagram family=node name=node.fixtureState head=class value=active value=idle',
-    '@fixture.frame pro.reader.nominal_pattern tab=diagram family=node key=node.fixtureState pattern="with an {value} indicator"',
+    '@fixture.state w.request.key family=node name=node.fixtureState head=class value=active value=idle',
+    '@fixture.frame pro.reader.nominal_pattern family=node key=node.fixtureState pattern="with an {value} indicator"',
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[file]}));
   t.after(()=>reader.close());
@@ -76,8 +77,8 @@ test('a declared heading supplies a property of the following single creation',a
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
   const file=join(dir,'heading.sop');
   writeFileSync(file,[
-    '@fixture.heading.state w.request.key tab=diagram family=node name=node.fixtureState head=class value=active value=idle',
-    '@fixture.heading.frame pro.reader.nominal_pattern tab=diagram family=node key=node.fixtureState pattern="status {value}" heading=true',
+    '@fixture.heading.state w.request.key family=node name=node.fixtureState head=class value=active value=idle',
+    '@fixture.heading.frame pro.reader.nominal_pattern family=node key=node.fixtureState pattern="status {value}" heading=true',
   ].join('\n'));
   const inventory=fileURLToPath(new URL('../sop-worlds/drawable-inventory-pilot/',import.meta.url));
   const reader=createReader(undefined,loadWorlds({paths:[file,inventory]}));

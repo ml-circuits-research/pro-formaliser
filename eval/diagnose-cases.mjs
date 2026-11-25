@@ -41,16 +41,10 @@ export const releaseCases = [
     },
   },
   {
-    source: 'diagram/diagrams-04.csv', row: 226, category: 'ambiguous_context',
-    scope: 'Resolve which object family the name Kickoff identifies.',
+    source: 'diagram/diagrams-04.csv', row: 226, category: 'unknown',
+    scope: 'Determine which object family the name Kickoff identifies from the written request.',
     review: 'ROLE-AUDIT.md #9. The name and color edit are explicit, while the text does not identify the family.',
     witness: 'annotation',
-    probes: {
-      contexts: [
-        { context: { entities: [{ family: 'node', name: 'Kickoff', selected: true }] }, family: 'node' },
-        { context: { entities: [{ family: 'drawn', name: 'Kickoff', selected: true }] }, family: 'drawn' },
-      ],
-    },
   },
   {
     source: 'document/text-03.csv', row: 1585, category: 'annotation',
@@ -64,28 +58,8 @@ export const releaseCases = [
   },
   {
     source: 'diagram/charts-04.csv', row: 4044, category: 'unknown',
-    scope: 'Determine what “outward the same” carries from the previous chart adjustment.',
-    review: 'ROLE-AUDIT.md #7. The supplied turn cannot establish the previous change, and the annotation’s value same does not bind a previous delta. A missing structural capability has not been demonstrated.',
+    scope: 'Retain the written reference “outward the same”.',
+    review: 'ROLE-AUDIT.md #7. The current text leaves the intended comparison unresolved.',
     witness: 'annotation',
-    schema: {
-      type: 'w.request.constraint',
-      slot: 'antecedent',
-      extension: '@diagnosis.antecedent core.slot of=w.request.constraint key=antecedent type=w.request.constraint',
-      witness: [
-        '@prior w.request.request act=change',
-        '@prior.c w.request.constraint request=$prior on=attribute attribute=chart.pieLabelDistance value=further',
-        '@next w.request.request act=change',
-        '@next.c w.request.constraint request=$next on=attribute attribute=chart.pieLabelDistance value=same antecedent=$prior.c',
-      ].join('\n'),
-      alternatives: [{
-        sop: [
-          '@next w.request.request act=change',
-          '@next.c w.request.constraint request=$next on=attribute attribute=chart.pieLabelDistance value=same',
-          '@next.l w.request.lookup request=$next constraint=$next.c key=value from=previous',
-        ].join('\n'),
-        nativeValid: true,
-        rationale: 'A previous-value lookup is legal and leaves the specific antecedent constraint implicit.',
-      }],
-    },
   },
 ];

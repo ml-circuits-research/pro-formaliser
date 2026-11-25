@@ -70,7 +70,7 @@ test('uses an independent native predicate, family and motivation vocabulary fro
   writeFileSync(path,`
 @bench std.schema.world name=w.workbench
 @fixture std.schema.kind of=w.workbench.fixture world=w.workbench acts=remove
-@stand pro.reader.target family=fixture sort=stand text=stand act=remove tab=workbench mode=existing
+@stand pro.reader.target family=fixture sort=stand text=stand act=remove mode=existing
 @unmount k.actions.verb act=remove text=unmount
 @require w.lang.en.skip class=desire text=require
 `);

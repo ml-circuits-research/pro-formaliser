@@ -59,9 +59,9 @@ test('licenses an existing-object member role in an unrelated overlay', async t=
     '@bench std.schema.world name=w.workbench',
     '@device std.schema.kind of=w.workbench.device world=w.workbench acts=pick',
     '@noun core.word text=quilloscope means=w.workbench.device',
-    '@ids w.request.key tab=workbench family=device name=device.ids head=candidate',
+    '@ids w.request.key family=device name=device.ids head=candidate',
     '@verb k.actions.verb text=highlight act=pick',
-    '@frame pro.reader.member_action tab=workbench family=device act=pick mode=existing key=device.ids phase=selector separator=plus'
+    '@frame pro.reader.member_action family=device act=pick mode=existing key=device.ids phase=selector separator=plus'
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[dir]}));
   try {

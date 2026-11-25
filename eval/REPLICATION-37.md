@@ -1,5 +1,7 @@
 # Independent bucket 37 replication
 
+Historical run record. Commands and sampling settings below belong to the recorded reader revisions. For the current text-only runner and validation, see [Evaluation and reproduction](../docs/evaluation.html).
+
 ## Target qualifiers and movement
 
 Original-text coverage reaches **46.0%** with all staged worlds and **45.3%** with default worlds. The new complete reading keeps two separately selected people and their backward movements in the same circuit. [Changed sets and judgments](QUALIFIED-MOTION-REPLAY.tsv)

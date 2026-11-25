@@ -1,5 +1,7 @@
 # Blind semantic audit of the release
 
+Historical run record. Commands and sampling settings below belong to the recorded reader revisions. For the current text-only runner and validation, see [Evaluation and reproduction](../docs/evaluation.html).
+
 An LLM judge assessed the utterance and two anonymized SOP wires before opening the side key. The judge rated relative preference and whether each wire independently preserved the requested action, target, and salient constraints. An uncertain rating means that a material part of the interpretation could not be resolved from the supplied information.
 
 Run `node eval/sample-disagreements.mjs .cache/release-primary.jsonl .cache/release-blind role-release` against the release benchmark details. The sampler retains semantic wire mismatches, deduplicates normalized utterances within each family, orders them by a salted hash, and assigns model and fixture to A/B by a separate salted hash. The audit selected the first three previously unreviewed utterances per family in sampler order (IDs 1–3, 7–9, 13–15, 19–21). All 12 selected utterances were absent from the prior review. The selection covers disagreements only and provides no estimate of overall accuracy.

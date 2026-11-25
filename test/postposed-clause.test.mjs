@@ -30,7 +30,7 @@ test('grounds the native expression and keeps its event separately on the same r
   assert.ok(validate(candidate.sop,worlds));
   assert.ok(evidenceInText(frown+'.',candidate.sop,worlds));
   const wires=parse(candidate.sop);
-  assert.deepEqual(catalogIssues(wires,worlds,'drawing'),[]);
+  assert.deepEqual(catalogIssues(wires,worlds),[]);
   assert.equal(wires.find(wire=>wire.id==='c').attrs.value[0],'frowning');
   assert.equal(wires.find(wire=>wire.id==='c').attrs.words[0],'"frown"');
   const cause=wires.find(wire=>wire.attrs.attribute?.[0]==='drawn.cause');
@@ -135,9 +135,9 @@ test('applies the grammar to another domain while preserving a clause’s own ne
   writeFileSync(join(dir,'lighting.sop'),[
     '@lab std.schema.world name=w.lighting',
     '@lamp std.schema.kind of=w.lighting.lamp world=w.lighting acts=change',
-    '@mode w.request.key tab=lighting family=lamp name=lamp.mode head=class value=dim',
-    '@reason w.request.key tab=lighting family=lamp name=lamp.reason head=span',
-    '@grammar pro.reader.postposed_clause kind=causal tab=lighting family=lamp attribute=lamp.mode reason_key=lamp.reason text=because',
+    '@mode w.request.key family=lamp name=lamp.mode head=class value=dim',
+    '@reason w.request.key family=lamp name=lamp.reason head=span',
+    '@grammar pro.reader.postposed_clause kind=causal family=lamp attribute=lamp.mode reason_key=lamp.reason text=because',
   ].join('\n'));
   const worlds=loadWorlds({paths:[dir]});
   const text='make the lamp dim because the sensor did not respond';
@@ -150,6 +150,6 @@ test('applies the grammar to another domain while preserving a clause’s own ne
   assert.ok(reading);
   assert.ok(validate(reading.sop,worlds));
   assert.ok(evidenceInText(text,reading.sop,worlds));
-  assert.deepEqual(catalogIssues(parse(reading.sop),worlds,'lighting'),[]);
+  assert.deepEqual(catalogIssues(parse(reading.sop),worlds),[]);
   assert.match(reading.sop,/attribute=lamp.reason value="the sensor did not respond"/);
 });

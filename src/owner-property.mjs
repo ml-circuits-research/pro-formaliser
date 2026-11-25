@@ -91,16 +91,16 @@ export function compileOwnerPropertyOperands(facts,requestKeys,words) {
     ownerInventory.set(lookup,entries);
   };
   for (const binding of facts('pro.reader.owner_inventory')) {
-    const [tab,family,act,provider]=['tab','family','act','provider'].map(key=>valuesOf(binding,key)[0]);
-    if (!tab || !family || !act || !provider || !requestKeys.some(key=>key.tab===tab && key.family===family)) continue;
+    const [family,act,provider]=['family','act','provider'].map(key=>valuesOf(binding,key)[0]);
+    if (!family || !act || !provider || !requestKeys.some(key=>key.family===family)) continue;
     if (!cache.has(provider)) cache.set(provider,nativeInventory(facts,provider,words));
     for (const [surface,sorts] of cache.get(provider)) {
       for (const sort of sorts) addOwner(act,surface,family,sort);
     }
   }
   for (const binding of facts('pro.reader.owner_sort')) {
-    const [tab,family,act,slot]=['tab','family','act','slot'].map(key=>valuesOf(binding,key)[0]);
-    if (!act || !slot || !requestKeys.some(key=>key.tab===tab && key.family===family && key.means===slot)) continue;
+    const [family,act,slot]=['family','act','slot'].map(key=>valuesOf(binding,key)[0]);
+    if (!act || !slot || !requestKeys.some(key=>key.family===family && key.means===slot)) continue;
     const allowed=new Set(slots.filter(w=>w.id===slot).flatMap(w=>valuesOf(w,'enum')));
     for (const wire of words) {
       if (!valuesOf(wire,'of').includes(slot)) continue;
@@ -456,7 +456,7 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
             const name=span(det.next,valueAt);
             if (!knownOwner && (det.mode==='definite' || /^\p{Lu}/u.test(name)) &&
                 !worlds.scopeGrammar.universalHeads.has(keys[start]) && !worlds.isReference(before(det.next,valueAt))) {
-              const matching=Object.keys(worlds.familyTabs).flatMap(family=>
+              const matching=[...worlds.semanticFamilies].flatMap(family=>
                 worlds.literalGrammar.licenses(family,act) ? catalogProperties(worlds,family,label)
                   .filter(key=>measuredProperty(worlds,key,operand)) : []);
               if (matching.length===1) {

@@ -37,7 +37,7 @@ export function* spatialModifierReadings(text,candidate,worlds) {
     const direction=relations.find(w=>field(w,'attribute')===binding.relationKey);
     const anchor=relations.find(w=>field(w,'attribute')===binding.anchorKey);
     if (!direction || !anchor || direction.attrs.want || anchor.attrs.want) continue;
-    const bank=worlds.requestKeys.find(k=>k.family===binding.family && k.tab===binding.tab && k.name===binding.relationKey);
+    const bank=worlds.requestKeys.find(k=>k.family===binding.family && k.name===binding.relationKey);
     const base=field(direction,'value'), marker=field(direction,'words') ?? base;
     for (const unread of markers) {
       const prefix=field(unread,'text');

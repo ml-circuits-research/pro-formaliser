@@ -22,7 +22,7 @@ For example, save these facts to `workbench.sop`.
 @workbench.word.fluxometer core.word text=fluxometer means=w.workbench.instrument
 @workbench.word.finish core.word text="surface finish" means=w.workbench.instrument.finish
 @workbench.word.frosted core.word text="fine texture" means=frosted of=w.workbench.instrument.finish
-@workbench.instrument.finish_key w.request.key tab=workbench family=instrument name=instrument.finish head=class value=frosted means=w.workbench.instrument.finish
+@workbench.instrument.finish_key w.request.key family=instrument name=instrument.finish head=class value=frosted means=w.workbench.instrument.finish
 @workbench.act.calibrate k.actions.act name=calibrate about="check against a reference" role=thing
 @workbench.verb.calibrate k.actions.verb text=calibrate text="trim the scale" act=calibrate
 @workbench.target.fluxometer pro.reader.target of=w.workbench.instrument family=instrument sort=fluxometer mode=existing
@@ -37,8 +37,7 @@ slots can associate the kind with request families.
 Use a `pro.reader.target` declaration when the reader needs an explicit
 family, sort or mode. `of` links to the meaning of the kind’s word aliases.
 Repeat `text` for further forms and `act` to list applicable actions. When
-omitted, actions come from the linked kind. `tab` defaults to the kind’s
-world name without the `w.` prefix. Targets use `new` for `make` and
+omitted, actions come from the linked kind. Targets use `new` for `make` and
 `existing` for other acts unless the binding supplies a mode.
 
 A `w.request.key` class or candidate value bank supplies equality
@@ -83,8 +82,8 @@ values for the selected family, it stays unread.
 Number and span keys can read new values after an explicit property label.
 
 ```sop
-@workbench.aperture w.request.key tab=workbench family=instrument name=instrument.aperture head=number
-@workbench.inscription w.request.key tab=workbench family=instrument name=instrument.inscription head=span
+@workbench.aperture w.request.key family=instrument name=instrument.aperture head=number
+@workbench.inscription w.request.key family=instrument name=instrument.inscription head=span
 ```
 
 With those keys, “calibrate the fluxometer aperture: -19.36 inscription
@@ -106,15 +105,15 @@ The optional [target binding schema](../sop-worlds/pro.reader/schema.sop) declar
 The lexical reader can attach a grounded nominal anchor to the direct
 target using supported English spatial prepositions. Declare a
 `pro.reader.spatial` fact to assign the relation and anchor keys for a
-target family and tab. The relation key must have a `class` head and
+target family. The relation key must have a `class` head and
 list the canonical relations it accepts. The anchor key must have a
 `fill+span` head with no closed value bank. Both keys must belong to the
-declared family in the same tab.
+declared family.
 
 ```sop
-@workbench.instrument.direction w.request.key tab=workbench family=instrument name=instrument.direction head=class value=near
-@workbench.instrument.landmark w.request.key tab=workbench family=instrument name=instrument.landmark head="fill+span"
-@workbench.instrument.spatial pro.reader.spatial tab=workbench family=instrument relation_key=instrument.direction anchor_key=instrument.landmark
+@workbench.instrument.direction w.request.key family=instrument name=instrument.direction head=class value=near
+@workbench.instrument.landmark w.request.key family=instrument name=instrument.landmark head="fill+span"
+@workbench.instrument.spatial pro.reader.spatial family=instrument relation_key=instrument.direction anchor_key=instrument.landmark
 ```
 
 The relation constraint carries the canonical value and retains the words
@@ -149,7 +148,7 @@ for a target family. The attribute must name a `w.request.key` in that
 family with a `class` head and a closed value bank.
 
 ```sop
-@workbench.baseline w.request.key tab=workbench family=instrument name=instrument.baseline head=class value=registration
+@workbench.baseline w.request.key family=instrument name=instrument.baseline head=class value=registration
 @workbench.preserve pro.reader.preservation family=instrument attribute=instrument.baseline
 ```
 
@@ -170,8 +169,8 @@ a request to an open span key in its target family. Optional repeated
 named property keys also work through the ordinary property lexicon.
 
 ```sop
-@workbench.impression w.request.key tab=workbench family=stamp name=stamp.impression head=span
-@workbench.serial w.request.key tab=workbench family=stamp name=stamp.serial head=span
+@workbench.impression w.request.key family=stamp name=stamp.impression head=span
+@workbench.serial w.request.key family=stamp name=stamp.serial head=span
 @workbench.impression.role pro.reader.literal family=stamp attribute=stamp.impression role=payload
 @workbench.serial.role pro.reader.literal family=stamp attribute=stamp.serial role=name text=marked
 ```
@@ -188,9 +187,9 @@ request family. Set the act, target mode, and separating phrase. Optional
 the result phase, with `first_phase` and `second_phase` available for selectors.
 
 ```sop
-@workbench.origin w.request.key tab=workbench family=shuttle name=shuttle.origin head=span
-@workbench.terminus w.request.key tab=workbench family=shuttle name=shuttle.terminus head=span
-@workbench.routing pro.reader.arguments tab=workbench family=shuttle act=route mode=existing first_key=shuttle.origin first_phase=selector second_key=shuttle.terminus prefix=from separator="in favor of"
+@workbench.origin w.request.key family=shuttle name=shuttle.origin head=span
+@workbench.terminus w.request.key family=shuttle name=shuttle.terminus head=span
+@workbench.routing pro.reader.arguments family=shuttle act=route mode=existing first_key=shuttle.origin first_phase=selector second_key=shuttle.terminus prefix=from separator="in favor of"
 ```
 
 With a declared `route` act and the verb “reroute”, this overlay reads
@@ -205,9 +204,9 @@ relation key. The first name selects the existing target. The second
 name binds the anchor through the declared open `fill+span` anchor key.
 
 ```sop
-@workbench.bearing w.request.key tab=workbench family=shuttle name=shuttle.bearing head=class value=left_of
-@workbench.landmark w.request.key tab=workbench family=shuttle name=shuttle.landmark head="fill+span"
-@workbench.spatial pro.reader.spatial tab=workbench family=shuttle relation_key=shuttle.bearing anchor_key=shuttle.landmark named_act=place
+@workbench.bearing w.request.key family=shuttle name=shuttle.bearing head=class value=left_of
+@workbench.landmark w.request.key family=shuttle name=shuttle.landmark head="fill+span"
+@workbench.spatial pro.reader.spatial family=shuttle relation_key=shuttle.bearing anchor_key=shuttle.landmark named_act=place
 ```
 
 If `shuttle` licenses `place`, “Move West Annex to the left of Upper
@@ -217,17 +216,17 @@ Terminal” produces a proposal with that named shuttle and anchor.
 
 Set `anchor=nominal` in `pro.reader.arguments` and declare a `prefix`
 when the two operands attach to an independently grounded target through a
-nominal cue. Both keys must be distinct open span keys in the stated family
-and tab. Each operand defaults to the result phase. Repeat `prefix` or
+nominal cue. Both keys must be distinct open span keys in the stated family.
+Each operand defaults to the result phase. Repeat `prefix` or
 `separator` to provide aliases.
 
 ```sop
 @workbench std.schema.world name=w.workbench
 @workbench.device std.schema.kind of=w.workbench.device world=w.workbench acts=make
 @workbench.word core.word text=quilloscope means=w.workbench.device
-@workbench.specimen w.request.key tab=workbench family=device name=device.specimen head=span
-@workbench.reference w.request.key tab=workbench family=device name=device.reference head=span
-@workbench.pair pro.reader.arguments tab=workbench family=device act=make mode=new anchor=nominal first_key=device.specimen second_key=device.reference prefix="quilloscope for" separator="calibrated against"
+@workbench.specimen w.request.key family=device name=device.specimen head=span
+@workbench.reference w.request.key family=device name=device.reference head=span
+@workbench.pair pro.reader.arguments family=device act=make mode=new anchor=nominal first_key=device.specimen second_key=device.reference prefix="quilloscope for" separator="calibrated against"
 ```
 
 “Make a quilloscope for ‘Quartz calibrated against Basalt’ calibrated against
@@ -245,8 +244,8 @@ With neither field, the role applies to an independently recognized family
 noun.
 
 ```sop
-@reader.creation.node.label pro.reader.creation_role tab=diagram family=node attribute=node.label sort_key=node.kind text=labelled text=labeled
-@reader.creation.section.heading pro.reader.creation_role tab=document family=section attribute=section.content sort=heading text=called text=titled
+@reader.creation.node.label pro.reader.creation_role family=node attribute=node.label sort_key=node.kind text=labelled text=labeled
+@reader.creation.section.heading pro.reader.creation_role family=section attribute=section.content sort=heading text=called text=titled
 ```
 
 The cue and full complement must occur in the same creation clause. Quoted
@@ -283,7 +282,7 @@ span instead needs a declared `value_head`. Optional `extent` terms qualify
 the owner.
 
 ```sop
-@reader.art.render pro.reader.transformation tab=drawing family=page act=change predicate=render marker=as owner=drawing value_head=painting attribute=page.style
+@reader.art.render pro.reader.transformation family=page act=change predicate=render marker=as owner=drawing value_head=painting attribute=page.style
 ```
 
 The reader matches the local clause and copies observed evidence. A modifier
@@ -324,7 +323,7 @@ For charts, `chart.xLabel` and `chart.yLabel` carry displayed axis titles.
 Use catalog data keys such as `chart.measure` and `chart.dimension` for
 data arguments when the frame licenses those roles.
 
-Use `pro.reader.owner_inventory` with `tab`, `family`, `act` and `provider`
+Use `pro.reader.owner_inventory` with `family`, `act` and `provider`
 to license owner nouns from a native fact type. A candidate key with an empty
 value bank can accept written content when its `means` resolves to a native
 slot of kind `string` with no value restrictions.
@@ -375,17 +374,17 @@ declaration stays unread when the affected target is grounded independently.
 
 A `pro.reader.member_action` frame declares the role that a complete list of
 named members plays under a native action. Its key must be an open
-`candidate` or `span` in the declared tab and family. Use `phase=result` for
+`candidate` or `span` in the declared family. Use `phase=result` for
 a new target or `phase=selector` for an existing one. Declare each accepted
 `separator` and any optional final `suffix`.
 
 ```sop
-@reader.diagram.group.members pro.reader.member_action tab=diagram family=group act=group mode=new key=group.ids phase=result separator=and separator=with suffix=together
+@reader.diagram.group.members pro.reader.member_action family=group act=group mode=new key=group.ids phase=result separator=and separator=with suffix=together
 ```
 
 Prolog requires a unique full list with at least two distinct members.
-Members can be quoted names, capitalized labels or codes licensed in
-the tab. Each member keeps its written value.
+Members can be quoted names, capitalized labels or codes licensed for
+the target family. Each member keeps its written value.
 
 ## Coordinated effects
 
@@ -412,13 +411,13 @@ families can carry a page lookup on separate alternatives.
 
 Declare a native nominal prefix and its argument order with
 `pro.reader.argument_sequence`. Each repeated `part` names a request key in the
-declared tab and family or provides a literal separator. A key can use an
+declared family or provides a literal separator. A key can use an
 enumerated `class` or `candidate` bank, or capture an open `span`. At least two
 different keys are required. A `core.word` with `of` referring to the key and
 `means` naming a bank value adds a surface alias.
 
 ```sop
-@reader.chart.grouped pro.reader.argument_sequence tab=diagram family=chart act=make mode=new prefix="chart of" part=chart.aggregate part=chart.measure part=by part=chart.dimension
+@reader.chart.grouped pro.reader.argument_sequence family=chart act=make mode=new prefix="chart of" part=chart.aggregate part=chart.measure part=by part=chart.dimension
 @reader.chart.avg core.word text=average means=avg of=chart.aggregate
 ```
 
@@ -451,7 +450,7 @@ phrase inventory. With no compatible degree key, that wording stays unread.
 An optional numeric `offset_key` identifies the property it could qualify.
 
 ```sop
-@reader.drawing.motion pro.reader.motion tab=drawing family=drawn act=change direction_key=drawn.direction degree_key=drawn.distanceGrade offset_key=drawn.offset target_type=k.objects.object
+@reader.drawing.motion pro.reader.motion family=drawn act=change direction_key=drawn.direction degree_key=drawn.distanceGrade offset_key=drawn.offset target_type=k.objects.object
 ```
 
 ## Nominal scales
@@ -460,7 +459,7 @@ Declare `pro.reader.nominal_scale` to associate a class or step request key with
 a `k.values.scale` in the same target context.
 
 ```sop
-@reader.drawing.extent pro.reader.nominal_scale tab=drawing family=drawn attribute=drawn.size scale=size on=size
+@reader.drawing.extent pro.reader.nominal_scale family=drawn attribute=drawn.size scale=size on=size
 ```
 
 The reader gets canonical values from `k.values.step` and English aliases
@@ -472,7 +471,7 @@ The same adjective on an existing object forms a selector.
 
 Use `pro.reader.compound_reference` to give an existing target two ordered
 identity keys and a literal delimiter. The keys must both be open `fill+span`
-slots on the same family and tab. A native action and noun supply the target
+slots on the same family. A native action and noun supply the target
 family while the two adjacent labels supply the selectors.
 
 ```sop
@@ -510,13 +509,13 @@ The reading keeps the source phrase in `count_words` and records both
 
 A `pro.reader.tuple` declaration assigns two ordered numeric result keys
 to a cue for particular acts. Both keys must be open number keys declared
-for the same family and tab. For example, a workbench can map a placement
+for the same family. For example, a workbench can map a placement
 phrase to its own two axes.
 
 ```sop
-@workbench.rise w.request.key tab=workbench family=instrument name=instrument.rise head=number
-@workbench.arc w.request.key tab=workbench family=instrument name=instrument.arc head=number
-@workbench.axes pro.reader.tuple tab=workbench family=instrument first_key=instrument.rise second_key=instrument.arc act=place text="at fixed offsets"
+@workbench.rise w.request.key family=instrument name=instrument.rise head=number
+@workbench.arc w.request.key family=instrument name=instrument.arc head=number
+@workbench.axes pro.reader.tuple family=instrument first_key=instrument.rise second_key=instrument.arc act=place text="at fixed offsets"
 ```
 
 With a grounded instrument target, “put the fluxometer at fixed offsets
@@ -539,8 +538,8 @@ this declaration licenses both “quartz quilloscope” and “silicon quillosco
 when the existing vocabulary identifies a quilloscope as a device.
 
 ```sop
-@medium w.request.key tab=workbench family=device name=device.medium head=candidate value=quartz value=silicon
-@kind pro.reader.nominal_class tab=workbench family=device attribute=device.medium noun="quilloscope"
+@medium w.request.key family=device name=device.medium head=candidate value=quartz value=silicon
+@kind pro.reader.nominal_class family=device attribute=device.medium noun="quilloscope"
 ```
 
 The request retains the original target and copies the compound into the
@@ -555,7 +554,7 @@ value. When the request and language worlds use different symbols for
 the same state, declare the two values explicitly.
 
 ```sop
-@visible pro.reader.fixed_property tab=diagram family=chart attribute=chart.show_values on_value=show off_value=hide
+@visible pro.reader.fixed_property family=chart attribute=chart.show_values on_value=show off_value=hide
 ```
 
 The catalog's `means` identifies the backing slot. An explicit `slot`

@@ -18,16 +18,15 @@ const separators=new Set([',','—','–']);
 export function compileStandingPositions(facts,catalog) {
   return facts('pro.reader.standing_position').flatMap(wire=>{
     const [scopeKey]=values(wire,'scope_attribute');
-    const tabs=new Set(catalog.filter(key=>key.name===scopeKey && key.family==='preference' &&
-      key.head==='span' && !key.values.length).map(key=>key.tab));
-    if (!tabs.size) return [];
+    if (!catalog.some(key=>key.name===scopeKey && key.family==='preference' &&
+      key.head==='span' && !key.values.length)) return [];
     const scopes=values(wire,'scope').map(terms).filter(words=>words.length);
     const trailingScopes=values(wire,'trailing_scope').map(terms).filter(words=>words.length);
     const wrappers=[[],...values(wire,'wrapper').map(terms)];
     const predicates=values(wire,'predicate').map(terms).filter(words=>words.length);
     const bodyLeads=[[],...values(wire,'body_lead').map(terms)];
     const exclusions=values(wire,'exclusion').map(terms).filter(words=>words.length);
-    return [{tabs,scopeKey,scopes,trailingScopes,wrappers,predicates,bodyLeads,exclusions}];
+    return [{scopeKey,scopes,trailingScopes,wrappers,predicates,bodyLeads,exclusions}];
   });
 }
 
@@ -98,7 +97,7 @@ function scopedPosition(plan,candidate,worlds) {
   if (effects.some(w=>one(w,'attribute')===plan.frame.scopeKey || one(w,'want')==='no')) return;
   const position=terms(plan.body.slice(after)).join(' ');
   const licensed=new Set();
-  for (const bind of worlds.spatialBindings.filter(b=>b.family===family && plan.frame.tabs.has(b.tab))) {
+  for (const bind of worlds.spatialBindings.filter(b=>b.family===family)) {
     for (const effect of effects) {
       const words=one(effect,'words') ?? one(effect,'value');
       if (one(effect,'attribute')===bind.regionKey && words && terms(words).join(' ')===position &&
@@ -178,10 +177,10 @@ function owners(input,from,to,worlds,learned) {
   return [...families].map(family=>({family,determiner}));
 }
 
-function regions(input,at,end,worlds,family,tabs) {
+function regions(input,at,end,worlds,family) {
   return (worlds.nominalPositions.get(family)?.get(input[at]) ?? []).filter(([surface,attribute,, ,operator])=>
     operator==='region' && at+surface.length===end && matches(input,at,surface) &&
-    worlds.requestKeys.some(key=>key.name===attribute && key.family===family && tabs.has(key.tab)));
+    worlds.requestKeys.some(key=>key.name===attribute && key.family===family));
 }
 
 function* standingHeads(input,stop,frames) {
@@ -203,7 +202,7 @@ function* standingHeads(input,stop,frames) {
 
 function regionConstraints(input,at,stop,worlds,family,frame,span) {
   const comma=input.indexOf(',',at), end=comma<0 ? stop : comma;
-  const placement=regions(input,at,end,worlds,family,frame.tabs);
+  const placement=regions(input,at,end,worlds,family);
   if (placement.length!==1) return;
   const [,attribute,value]=placement[0];
   const records=[{id:'placement',type:type('constraint'),attrs:{request:['$r'],on:['attribute'],
@@ -212,7 +211,7 @@ function regionConstraints(input,at,stop,worlds,family,frame,span) {
   if (pending<stop) {
     const cue=frame.exclusions.find(words=>matches(input,pending,words));
     const next=input.indexOf(',',pending), denialEnd=next<0 ? stop : next;
-    const excluded=cue ? regions(input,pending+cue.length,denialEnd,worlds,family,frame.tabs) : [];
+    const excluded=cue ? regions(input,pending+cue.length,denialEnd,worlds,family) : [];
     if (excluded.length!==1 || excluded[0][1]!==attribute || excluded[0][2]===value) return;
     records.push({id:'excluded',type:type('constraint'),attrs:{...records[0].attrs,
       value:[excluded[0][2]],want:['no'],words:[quote(span(pending,denialEnd))]}});

@@ -13,9 +13,23 @@ const quote=JSON.stringify;
 const word=/^[\p{L}\p{M}\p{N}_]+$/u;
 const boundary=/^[,;.!?—–，。！？；]$/u;
 const forms=text=>tokens(text).map(t=>t[0]).join(' ');
-const bindingId=({tab,family,relationKey,anchorKey})=>JSON.stringify([tab,family,relationKey,anchorKey]);
+const bindingId=({family,relationKey,anchorKey})=>JSON.stringify([family,relationKey,anchorKey]);
+
+export function spatialAnchorEvidence(stored={}) {
+  // Older model versions stored a four-part ID. Import the same evidence by
+  // its semantic family and keys, dropping conflicting duplicates.
+  const families=new Map();
+  for (const [id,evidence] of Object.entries(stored)) {
+    let parts;
+    try { parts=JSON.parse(id); } catch { continue; }
+    if (!Array.isArray(parts) || ![3,4].includes(parts.length)) continue;
+    const signature=JSON.stringify(parts.slice(-3)), prior=families.get(signature);
+    families.set(signature,families.has(signature) && JSON.stringify(prior)!==JSON.stringify(evidence) ? null : evidence);
+  }
+  return Object.fromEntries([...families].filter(([,evidence])=>evidence));
+}
 const relationValues=(worlds,binding)=>worlds.requestKeys.find(key=>key.family===binding.family &&
-  key.tab===binding.tab && key.name===binding.relationKey)?.values ?? [];
+  key.name===binding.relationKey)?.values ?? [];
 const definite=(worlds,key)=>['definite','demonstrative'].includes(worlds.determiners[key]);
 
 export function createSpatialAnchorLearner(worlds) {
@@ -91,13 +105,13 @@ function scopedMarkers(worlds,binding) {
   if (!landmarkSurfaces.has(worlds)) {
     const map=new Map();
     for (const wire of worlds.landmarkSurfaceFacts ?? []) {
-      const tab=field(wire,'tab'),family=field(wire,'family'),value=field(wire,'relation');
+      const family=field(wire,'family'),value=field(wire,'relation');
       const base=field(wire,'base');
-      if (!tab || !family || !value || !base) continue;
+      if (!family || !value || !base) continue;
       const senses=new Set(worlds.lookup(forms(base)).flatMap(([role,act,slot,sense])=>
         role==='marker' && act==='*' && slot==='spatial' ? [sense] : []));
       if (senses.size!==1 || !senses.has(value)) continue;
-      const id=JSON.stringify([tab,family]);
+      const id=family;
       const surfaces=map.get(id) ?? new Map();
       for (const raw of wire.attrs.text ?? []) {
         const words=forms(raw.startsWith('"') ? JSON.parse(raw) : raw);
@@ -110,7 +124,7 @@ function scopedMarkers(worlds,binding) {
     }
     landmarkSurfaces.set(worlds,map);
   }
-  return landmarkSurfaces.get(worlds).get(JSON.stringify([binding.tab,binding.family]));
+  return landmarkSurfaces.get(worlds).get(binding.family);
 }
 
 const triggers=new WeakMap();
@@ -200,7 +214,7 @@ function shape(scope,target,request,binding,relation,worlds,permit,learned,sibli
           const inventory=(worlds.ownerInventory?.get(JSON.stringify(['change',surface])) ?? [])
             .map(({family})=>family);
           if ([...local,...inventory].some(family=>alias ? family===binding.family :
-            worlds.familyTabs[family]?.includes(binding.tab)) || !alias &&
+            worlds.semanticFamilies.has(family)) || !alias &&
             (learned?.heads?.includes(surface) || siblings.has(surface))) break;
         }
         if (headAt>=end) continue;
@@ -238,7 +252,7 @@ function shape(scope,target,request,binding,relation,worlds,permit,learned,sibli
 }
 
 export function writtenSpatialAnchor(text,target,request,binding,worlds,permit) {
-  if (!worlds.requestKeys.some(key=>key.family===binding.family && key.tab===binding.tab &&
+  if (!worlds.requestKeys.some(key=>key.family===binding.family &&
       key.name===binding.anchorKey && key.head==='fill+span' && !key.values.length)) return;
   return shape(text,target,request,binding,undefined,worlds,permit,undefined,new Set());
 }
@@ -248,7 +262,7 @@ export function spatialAnchorReadings(text,candidate,worlds,permit,learned) {
       !candidate.sop.includes(' '+type('target')+' ') || !hasAnchorTail(text,worlds)) return [];
   const wires=parse(candidate.sop), requests=wires.filter(w=>w.type===type('request'));
   const targets=wires.filter(w=>w.type===type('target'));
-  const placements=new Map();
+  const placements=[];
   const scopes=new Map();
   let next=0;
   for (const request of requests) {
@@ -271,7 +285,7 @@ export function spatialAnchorReadings(text,candidate,worlds,permit,learned) {
     const unread=local.filter(w=>w.type===type('unread')).map(w=>owned(scope,field(w,'text'))).filter(Boolean);
     if (!unread.length) continue;
     for (const binding of worlds.spatialBindings.filter(b=>b.family===family)) {
-      if (!worlds.requestKeys.some(key=>key.family===family && key.tab===binding.tab &&
+      if (!worlds.requestKeys.some(key=>key.family===family &&
           key.name===binding.anchorKey && key.head==='fill+span' && !key.values.length)) continue;
       const relations=local.filter(w=>field(w,'attribute')===binding.relationKey);
       const anchors=local.filter(w=>field(w,'attribute')===binding.anchorKey);
@@ -288,7 +302,7 @@ export function spatialAnchorReadings(text,candidate,worlds,permit,learned) {
         const source=scopes.get(owner);
         const noun=field(w,'sort_words') ?? field(w,'family_words') ?? field(w,'sort');
         return owner!==request.id && source?.bounds[1]<=bounds[0] && field(w,'mode')==='new' &&
-          worlds.familyTabs[field(w,'family')]?.includes(binding.tab) && owned(source.scope,noun) ? [forms(noun)] : [];
+          worlds.semanticFamilies.has(field(w,'family')) && owned(source.scope,noun) ? [forms(noun)] : [];
       }));
       const placement=shape(scope,target,request,binding,relation,worlds,permit,learned?.[bindingId(binding)],siblings);
       if (!placement) continue;
@@ -309,9 +323,7 @@ export function spatialAnchorReadings(text,candidate,worlds,permit,learned) {
       if (anchor && (Object.keys(anchor.attrs).some(key=>
           !['request','on','attribute','value','operator','phase'].includes(key)) ||
         wires.some(w=>!existingLookups.includes(w) && Object.values(w.attrs).flat().includes('$'+anchor.id)))) continue;
-      const tab=placements.get(binding.tab) ?? [];
-      placements.set(binding.tab,tab);
-      tab.push({ref,apply(related) {
+      placements.push({ref,apply(related) {
         const used=new Set(related.map(w=>w.id));
         function id(suffix) {
           const base=request.id+suffix;
@@ -337,15 +349,14 @@ export function spatialAnchorReadings(text,candidate,worlds,permit,learned) {
       }});
     }
   }
-  return [...placements.values()].flatMap(options=>{
-    const groups=[...Map.groupBy(options,option=>option.ref).values()];
-    const compatible=groups.filter(group=>group.length===1).flat();
-    const competing=groups.filter(group=>group.length>1).flat();
-    const combined=compatible.reduce((current,option)=>option.apply(current),wires);
-    // Independent placements compose within their tab. A competing binding
-    // gets its own candidate with the unambiguous placements.
-    const circuits=competing.length ? competing.map(option=>option.apply(combined)) : [combined];
-    return circuits.map(circuit=>({sop:serialize(circuit),source:'spatial-anchor',
-      status:circuit.some(w=>w.type===type('unread')) ? 'partial' : 'matched'}));
-  });
+  if (!placements.length) return [];
+  const groups=[...Map.groupBy(placements,option=>option.ref).values()];
+  const compatible=groups.filter(group=>group.length===1).flat();
+  const competing=groups.filter(group=>group.length>1).flat();
+  const combined=compatible.reduce((current,option)=>option.apply(current),wires);
+  // Independent placements compose across request owners. A competing binding
+  // gets its own candidate with the unambiguous placements.
+  const circuits=competing.length ? competing.map(option=>option.apply(combined)) : [combined];
+  return circuits.map(circuit=>({sop:serialize(circuit),source:'spatial-anchor',
+    status:circuit.some(w=>w.type===type('unread')) ? 'partial' : 'matched'}));
 }

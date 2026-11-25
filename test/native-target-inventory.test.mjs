@@ -64,11 +64,11 @@ test('joins only registered inventory identities and preserves homonymous famili
 @device.derived k.workbench.device name=inferred profile=standard derived=true
 @device.label core.word of=k.workbench.device.name means=quilloscope text=box text=quilloscopes
 @unrelated.label core.word of=k.workbench.template.name means=quilloscope text=polished
-@other.box pro.reader.target tab=workbench family=instrument act=make sort=container text=box
-@inventory pro.reader.target_inventory tab=workbench family=device act=make mode=new provider=k.workbench.device identity=name requires=profile
-@untyped pro.reader.target_inventory tab=workbench family=device act=make mode=new provider=k.workbench.descriptor identity=name
-@unlicensed-act pro.reader.target_inventory tab=workbench family=device act=remove mode=existing provider=k.workbench.device identity=name requires=profile
-@unlicensed-mode pro.reader.target_inventory tab=workbench family=device act=change mode=new provider=k.workbench.device identity=name requires=profile
+@other.box pro.reader.target family=instrument act=make sort=container text=box
+@inventory pro.reader.target_inventory family=device act=make mode=new provider=k.workbench.device identity=name requires=profile
+@untyped pro.reader.target_inventory family=device act=make mode=new provider=k.workbench.descriptor identity=name
+@unlicensed-act pro.reader.target_inventory family=device act=remove mode=existing provider=k.workbench.device identity=name requires=profile
+@unlicensed-mode pro.reader.target_inventory family=device act=change mode=new provider=k.workbench.device identity=name requires=profile
 `);
   const worlds=loadWorlds({paths:[dir]});
   const reader=createReader(undefined,worlds);t.after(()=>reader.close());

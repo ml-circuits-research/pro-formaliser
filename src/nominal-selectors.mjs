@@ -18,8 +18,8 @@ export function compileNominalSelectors(facts,requestKeys,words) {
     return inventories.get(type);
   };
   return facts(nominalSelectorType).flatMap(wire=>{
-    const [tab,family,key,position,type]=['tab','family','key','position','value_type'].map(slot=>one(wire,slot));
-    const keys=requestKeys.filter(declaration=>declaration.tab===tab && declaration.family===family && declaration.name===key);
+    const [family,key,position,type]=['family','key','position','value_type'].map(slot=>one(wire,slot));
+    const keys=requestKeys.filter(declaration=>declaration.family===family && declaration.name===key);
     const markers=values(wire,'marker').map(normalize);
     if (!keys.length || !type || !['before','after'].includes(position) || position==='after' && !markers.length) return [];
     const compatible=name=>keys.some(declaration=>!declaration.values.length || declaration.values.includes(name));
@@ -28,7 +28,7 @@ export function compileNominalSelectors(facts,requestKeys,words) {
       return possible.length===1 ? [[surface,possible[0]]] : [];
     }));
     const heads=values(wire,'head_type').map(inventory);
-    return bank.size && heads.length ? [{tab,family,key,position,markers,bank,heads}] : [];
+    return bank.size && heads.length ? [{family,key,position,markers,bank,heads}] : [];
   });
 }
 

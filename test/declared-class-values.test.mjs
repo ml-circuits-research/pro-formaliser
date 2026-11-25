@@ -17,8 +17,8 @@ test('binds declared values of a bankless class through exact key and slot ident
 @sample_word core.word text=quillometer means=w.workbench.specimen
 @sample_size core.slot of=w.workbench.specimen key=size kind=number
 @neighbor_size core.slot of=w.workbench.neighbor key=size kind=number
-@mix_key w.request.key tab=workbench family=specimen name=specimen.size head="number+class+step" means=sample_size
-@other_key w.request.key tab=workbench family=neighbor name=neighbor.size head="number+class+step" means=neighbor_size
+@mix_key w.request.key family=specimen name=specimen.size head="number+class+step" means=sample_size
+@other_key w.request.key family=neighbor name=neighbor.size head="number+class+step" means=neighbor_size
 @slot_value core.word text="hand held" means=pocket of=sample_size
 @bare_size core.word text="size label" means=sample_size
 @special_example demo.class text="table top" value=bench

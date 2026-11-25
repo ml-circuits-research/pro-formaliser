@@ -38,7 +38,7 @@ export function compilePreservationAdjuncts(facts,requestKeys) {
       const family=one(binding,'family'), name=one(binding,'attribute');
       if (!requestKeys.some(key=>key.family===family && key.name===name &&
         key.head==='class' && key.values.includes(value) && (!scopeKey || requestKeys.some(scope=>
-          scope.name===scopeKey && scope.tab===key.tab && scope.head==='span' && !scope.values.length)))) continue;
+          scope.name===scopeKey && scope.head==='span' && !scope.values.length)))) continue;
       const options=keys.get(family) ?? new Set();
       options.add(name);
       keys.set(family,options);

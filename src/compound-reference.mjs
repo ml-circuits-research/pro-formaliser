@@ -15,7 +15,7 @@ export function createCompoundReferenceReader(worlds) {
         !delimiter.endsWith('-')) continue;
     const keys = worlds.requestKeys.filter(k => k.family === family && k.head === 'fill+span' && !k.values.length);
     if (!keys.some(first => first.name === firstKey &&
-        keys.some(second => second.name === secondKey && second.tab === first.tab))) continue;
+        keys.some(second => second.name === secondKey && second.family === first.family))) continue;
     const frames = framesByFamily.get(family) ?? [];
     framesByFamily.set(family,frames);
     frames.push({...frame,markers:tokens(delimiter).map(t=>t[0])});

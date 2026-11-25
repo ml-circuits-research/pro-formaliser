@@ -149,7 +149,7 @@ test('keeps competing spatial binding alternatives on separate circuits',async()
   const binding=worlds.spatialBindings.find(b=>b.family==='drawn');
   const alternate={...binding,relationKey:'drawn.alternateRelation',anchorKey:'drawn.alternateAnchor'};
   const keyAlias={[binding.relationKey]:alternate.relationKey,[binding.anchorKey]:alternate.anchorKey};
-  const requestKeys=worlds.requestKeys.flatMap(k=>k.family===binding.family && k.tab===binding.tab &&
+  const requestKeys=worlds.requestKeys.flatMap(k=>k.family===binding.family &&
     Object.hasOwn(keyAlias,k.name) ? [k,{...k,name:keyAlias[k.name]}] : [k]);
   const text='Draw a seal behind the house';
   const candidate={sop:

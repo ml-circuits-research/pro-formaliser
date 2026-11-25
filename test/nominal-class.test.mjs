@@ -29,8 +29,8 @@ test('an installed world can classify a new target noun without a training model
     '@bench std.schema.world name=w.workbench',
     '@device std.schema.kind of=w.workbench.device world=w.workbench acts=make',
     '@probe core.word text=quilloscope means=w.workbench.device',
-    '@key w.request.key tab=workbench family=device name=device.medium head=candidate value=quartz value=silicon',
-    '@kind pro.reader.nominal_class tab=workbench family=device attribute=device.medium noun="quilloscope"',
+    '@key w.request.key family=device name=device.medium head=candidate value=quartz value=silicon',
+    '@kind pro.reader.nominal_class family=device attribute=device.medium noun="quilloscope"',
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[dir]}));
   try {

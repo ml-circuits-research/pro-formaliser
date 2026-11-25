@@ -477,3 +477,7 @@
 ## Numeric property assignment roles
 - Removed the reported command-as-point-name proposals and kept possessive requests explicitly unresolved. Verified contrasts with named, described and quoted operands.
 - Four frozen inputs checked; all 469 isolated release tests passed. No aggregate rerun.
+
+## Global semantic catalogue
+- Removed UI-area input/selection from the reader, estimator, catalogue, local declarations and live evaluation. Native mixed-family smoke and all 471 release tests passed.
+- Pinned schema metadata is stripped on import pending canonical removal. Historical benchmark retained.

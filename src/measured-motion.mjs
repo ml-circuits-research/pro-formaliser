@@ -17,9 +17,9 @@ export function compileMeasuredMotion(facts,catalog) {
   const fractions=new Map(facts('w.lang.en.number').filter(w=>field(w,'kind')==='fraction' &&
     positive.test(field(w,'value') ?? '')).map(w=>[form(field(w,'text')),field(w,'value')]));
   return facts('pro.reader.measured_motion').flatMap(w=>{
-    const [tab,family,offsetKey,shiftKey,anchorKey,precisionKey]=
-      ['tab','family','offset_key','shift_key','anchor_key','precision_key'].map(k=>field(w,k));
-    const bank=catalog.filter(k=>k.tab===tab && k.family===family);
+    const [family,offsetKey,shiftKey,anchorKey,precisionKey]=
+      ['family','offset_key','shift_key','anchor_key','precision_key'].map(k=>field(w,k));
+    const bank=catalog.filter(k=>k.family===family);
     if (!bank.some(k=>k.name===offsetKey && k.head.split('+').includes('number')) ||
         shiftKey && !bank.some(k=>k.name===shiftKey && k.head.split('+').includes('number')) ||
         precisionKey && !bank.some(k=>k.name===precisionKey && ['approximate','exact'].every(v=>k.values.includes(v))) ||
@@ -29,7 +29,7 @@ export function compileMeasuredMotion(facts,catalog) {
       const at=spec.indexOf('=');
       if (at>0) units.set(form(spec.slice(0,at)),spec.slice(at+1));
     }
-    return [{tab,family,offsetKey,shiftKey,anchorKey,precisionKey,units,fractions,
+    return [{family,offsetKey,shiftKey,anchorKey,precisionKey,units,fractions,
       prepositions:new Set(fields(w,'from').map(form)),borders:new Set(fields(w,'border').map(form)),
       approximation:new Set(fields(w,'approximation').map(form)),
       exact:new Set(fields(w,'exact').map(form)),
@@ -154,7 +154,7 @@ export async function measuredMotionReadings(text,worlds,read,permit) {
     return reads.get(body);
   };
   for (const config of configs) {
-    const locations=worlds.directionalResults.bindings.filter(b=>b.tab===config.tab && b.family===config.family);
+    const locations=worlds.directionalResults.bindings.filter(b=>b.family===config.family);
     const shifts=config.shiftKey ? locations : [];
     const plans=[];
     for (let split=2;split<stop-1;split++) {

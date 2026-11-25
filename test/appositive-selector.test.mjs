@@ -35,7 +35,7 @@ test('rephases only the typed appositive and keeps the written selection and fin
   assert.ok(reading);
   assert.ok(validate(reading.sop,worlds));
   assert.ok(evidenceInText(text,reading.sop,worlds));
-  assert.deepEqual(catalogIssues(parse(reading.sop),worlds,'drawing'),[]);
+  assert.deepEqual(catalogIssues(parse(reading.sop),worlds),[]);
   const wires=parse(reading.sop);
   assert.equal(wires.find(wire=>wire.id==='t').attrs.description[0],'"the tall boy, the one in the red hat"');
   assert.equal(wires.find(wire=>wire.id==='c').attrs.phase[0],'selector');
@@ -72,11 +72,11 @@ test('supports a separately declared owner family, appositive, and finite action
   writeFileSync(join(dir,'sensor.sop'),[
     '@lab std.schema.world name=w.lab',
     '@sensor std.schema.kind of=w.lab.sensor world=w.lab acts=change',
-    '@mode w.request.key tab=lab family=sensor name=sensor.mode head=class value=quiet value=bright',
-    '@filter w.request.key tab=lab family=sensor name=sensor.filter head=span',
+    '@mode w.request.key family=sensor name=sensor.mode head=class value=quiet value=bright',
+    '@filter w.request.key family=sensor name=sensor.filter head=span',
     '@shade w.lab.accessory name="mesh cover" class=filter',
-    '@app pro.reader.appositive_selector tab=lab family=sensor attribute=sensor.filter text=fitted item_type=w.lab.accessory item_field=class item_value=filter',
-    '@pred pro.reader.topic_command tab=lab family=sensor act=change attribute=sensor.mode predicate=runs',
+    '@app pro.reader.appositive_selector family=sensor attribute=sensor.filter text=fitted item_type=w.lab.accessory item_field=class item_value=filter',
+    '@pred pro.reader.topic_command family=sensor act=change attribute=sensor.mode predicate=runs',
   ].join('\n'));
   const worlds=loadWorlds({paths:[dir]});
   const text='the sensor, the one fitted the mesh cover, runs quiet';
@@ -89,7 +89,7 @@ test('supports a separately declared owner family, appositive, and finite action
   assert.ok(reading);
   assert.ok(validate(reading.sop,worlds));
   assert.ok(evidenceInText(text,reading.sop,worlds));
-  assert.deepEqual(catalogIssues(parse(reading.sop),worlds,'lab'),[]);
+  assert.deepEqual(catalogIssues(parse(reading.sop),worlds),[]);
 });
 
 const placementLexicon={
@@ -157,7 +157,7 @@ test('an installed item provider can extend the adjacent selector vocabulary',as
   t.after(()=>rmSync(dir,{recursive:true,force:true}));
   writeFileSync(join(dir,'accessory.sop'),[
     '@visor w.lab.accessory name=visorplate',
-    '@adjacent pro.reader.appositive_selector tab=drawing family=drawn attribute=drawn.wear text=fitted subject_type=k.people.kind item_type=w.lab.accessory',
+    '@adjacent pro.reader.appositive_selector family=drawn attribute=drawn.wear text=fitted subject_type=k.people.kind item_type=w.lab.accessory',
   ].join('\n'));
   const worlds=loadWorlds({paths:[dir]});
   const reader=createReader({version:1,examples:[],templates:[],lexicon:placementLexicon},worlds);

@@ -214,7 +214,7 @@ function compile(facts) {
   const senses=lexicalSenses(facts);
   const knownWords = new Set();
   const acts = new Map(), targets = new Map(), constraints = new Map(), markers = new Map();
-  const familyTabs = new Map(), familyActs = new Map();
+  const semanticFamilies = new Set(), familyActs = new Map();
   const determiners = new Map(), joiners = new Map(), negatives = new Set(), fillerPhrases = new Set(), discourse = [];
   const actFacts = facts('k.actions.act');
   const actNames = new Set(actFacts.map(wire => one(wire, 'name')).filter(Boolean));
@@ -223,10 +223,13 @@ function compile(facts) {
     .flatMap(wire=>values(wire,'text').map(phrase)));
   const targetNameWords = new Set(facts('w.lang.en.lex').filter(wire=>one(wire,'name')==='name.letter.after')
     .flatMap(wire=>values(wire,'item').map(phrase)).filter(marker=>targetNameLabels.has(marker)));
-  const requestKeys = facts('w.request.key').map(wire => ({
-    id: wire.id, tab: one(wire, 'tab'), family: one(wire, 'family'), name: one(wire, 'name'),
+  const declarations = facts('w.request.key').map(wire => ({
+    id: wire.id, family: one(wire, 'family'), name: one(wire, 'name'),
     head: one(wire, 'head'), values: values(wire, 'value'), means: one(wire, 'means'),
-  })).filter(key => key.tab && key.family && key.name && key.head);
+  })).filter(key => key.family && key.name && key.head);
+  const requestKeys=[...new Map(declarations.map(key=>[
+    JSON.stringify([key.family,key.name,key.head,[...key.values].sort(),key.means]),key,
+  ])).values()];
   const literalBindings = facts('pro.reader.literal').map(wire => ({
     family: one(wire,'family'), attribute: one(wire,'attribute'), role: one(wire,'role'),
     containerSort: one(wire,'container_sort')==='true', surfaces: values(wire,'text').map(phrase),
@@ -234,11 +237,11 @@ function compile(facts) {
     key.head.split('+').includes('span') && !key.values.length));
   const tuples = new Map();
   for (const wire of facts('pro.reader.tuple')) {
-    const family = one(wire,'family'), tab = one(wire,'tab');
+    const family = one(wire,'family');
     const keys = [one(wire,'first_key'),one(wire,'second_key')];
     const labels = [one(wire,'first_label'),one(wire,'second_label')].map(label=>label && phrase(label));
-    if (!family || !tab || keys[0] === keys[1] || !keys.every(name => requestKeys.some(key =>
-      key.family === family && key.tab === tab && key.name === name && key.head.split('+').includes('number') &&
+    if (!family || keys[0] === keys[1] || !keys.every(name => requestKeys.some(key =>
+      key.family === family && key.name === name && key.head.split('+').includes('number') &&
       !key.values.length))) continue;
     for (const act of values(wire,'act').filter(act => actNames.has(act))) {
       for (const cue of values(wire,'text')) {
@@ -249,13 +252,13 @@ function compile(facts) {
   }
   const argumentPatterns = new Map(), openPairs=new Map();
   for (const wire of facts('pro.reader.arguments')) {
-    const family = one(wire,'family'), tab = one(wire,'tab');
+    const family = one(wire,'family');
     const act = one(wire,'act'), mode = one(wire,'mode');
     const keys = [one(wire,'first_key'),one(wire,'second_key')];
     const phases = [one(wire,'first_phase') ?? 'result',one(wire,'second_phase') ?? 'result'];
     if (!actNames.has(act) || !['new','existing'].includes(mode) ||
         keys[0] === keys[1] || !phases.every(phase => ['selector','result'].includes(phase)) ||
-        !keys.every(name => requestKeys.some(key => key.family === family && key.tab === tab &&
+        !keys.every(name => requestKeys.some(key => key.family === family &&
           key.name === name && key.head.split('+').includes('span') && !key.values.length))) continue;
     const prefixes = values(wire,'prefix').map(phrase).filter(Boolean);
     for (const separator of values(wire,'separator').map(phrase).filter(Boolean)) {
@@ -286,8 +289,8 @@ function compile(facts) {
     for (const word of text.toLowerCase().match(/[\p{L}\p{M}]+/gu) ?? []) knownWords.add(word);
   }
 
-  function bind({ of, family, sort = '', tab, acts, mode, surfaces }) {
-    if (tab) index(familyTabs, family, tab);
+  function bind({ of, family, sort = '', acts, mode, surfaces }) {
+    semanticFamilies.add(family);
     const binding = { family, sort, acts: [...new Set(acts.filter(act => actNames.has(act)))], mode };
     for (const act of binding.acts) index(familyActs, family, act);
     for (const text of new Set([...surfaces, ...(aliases.get(of) ?? [])])) {
@@ -398,7 +401,7 @@ function compile(facts) {
   }
 
   for (const key of requestKeys) {
-    index(familyTabs, key.family, key.tab);
+    semanticFamilies.add(key.family);
     if (slotOwners.has(key.means)) index(keysByOwner, slotOwners.get(key.means), key);
     spell(label(key.name.split('.').at(-1)));
     for (const value of key.values) spell(label(value));
@@ -410,13 +413,13 @@ function compile(facts) {
     if (!of) continue;
     const local = of.split('.').at(-1);
     for (const world of values(wire, 'world').filter(id => schemas.has(id) && id !== 'w.request')) {
-      const tab = world.split('.').slice(1).join('.');
+      const schemaName = world.slice('w.'.length);
       const keys = keysByOwner.get(of) ?? [];
       const families = new Set(keys.map(key => key.family));
       if (!families.size) families.add(local);
-      const surfaces = [label(local), ...(local === tab ? aliases.get(world) ?? [] : [])];
+      const surfaces = [label(local), ...(local === schemaName ? aliases.get(world) ?? [] : [])];
       for (const family of families) {
-        kindBindings.push({ of, family, tab, surfaces, acts: values(wire, 'acts') });
+        kindBindings.push({ of, family, surfaces, acts: values(wire, 'acts') });
       }
     }
   }
@@ -439,7 +442,7 @@ function compile(facts) {
     const surfaces = values(wire, 'text');
     const actionNames = values(wire, 'act');
     const binding={
-      of, family, sort, mode, tab: one(wire, 'tab') ?? kind?.tab,
+      of, family, sort, mode,
       acts: actionNames.length ? actionNames : kind?.acts ?? [],
       surfaces: surfaces.length ? surfaces : sort ? [label(sort)] : kind?.surfaces ?? [],
     };
@@ -578,8 +581,8 @@ function compile(facts) {
 
   const nominalClasses = new Map();
   for (const wire of facts('pro.reader.nominal_class')) {
-    const family=one(wire,'family'), tab=one(wire,'tab'), attribute=one(wire,'attribute');
-    const key=requestKeys.find(k => k.tab===tab && k.family===family && k.name===attribute);
+    const family=one(wire,'family'), attribute=one(wire,'attribute');
+    const key=requestKeys.find(k => k.family===family && k.name===attribute);
     if (!key?.head.split('+').some(h=>h==='class' || h==='candidate')) continue;
     const forms=nominalClasses.get(family) ?? new Map();
     nominalClasses.set(family,forms);
@@ -592,20 +595,20 @@ function compile(facts) {
   }
   const selectorKeys = new Map();
   for (const wire of facts('pro.reader.identity')) {
-    const family = one(wire,'family'), tab = one(wire,'tab'), name = one(wire,'attribute');
-    if (!requestKeys.some(key => key.family === family && key.tab === tab && key.name === name &&
+    const family = one(wire,'family'), name = one(wire,'attribute');
+    if (!requestKeys.some(key => key.family === family && key.name === name &&
         ['span','candidate'].includes(key.head))) continue;
     if (!selectorKeys.has(family)) selectorKeys.set(family,new Set());
     selectorKeys.get(family).add(name);
   }
   const spatialBindings = facts('pro.reader.spatial').map(wire => ({
     regionKey:one(wire,'region_key'),
-    tab: one(wire, 'tab'), family: one(wire, 'family'),
+    family: one(wire, 'family'),
     relationKey: one(wire, 'relation_key'), anchorKey: one(wire, 'anchor_key'),
     namedActs: values(wire,'named_act'),
   }));
-  for (const {tab,family,relationKey,anchorKey,namedActs} of spatialBindings) {
-    const keys = requestKeys.filter(key => key.tab === tab && key.family === family);
+  for (const {family,relationKey,anchorKey,namedActs} of spatialBindings) {
+    const keys = requestKeys.filter(key => key.family === family);
     const relation = keys.find(key => key.name === relationKey && key.head === 'class');
     const anchor = keys.find(key => key.name === anchorKey && key.head === 'fill+span' && !key.values.length);
     if (!relation || !anchor) continue;
@@ -623,7 +626,7 @@ function compile(facts) {
     .flatMap(w=>values(w,'text').map(phrase)));
   const argumentFormats=compileStructuredArguments(facts,requestKeys);
   const scalarArgumentKeys=new Set([...argumentFormats].filter(([,format])=>format==='scalar_number')
-    .map(([id])=>JSON.stringify(JSON.parse(id).slice(1))));
+    .map(([id])=>id));
   const frames=argumentSequences(type=>type==='pro.reader.argument_sequence' ?
     [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys,argumentFormats);
   const propertyOperands=compileOwnerPropertyOperands(facts,requestKeys,words);
@@ -694,9 +697,9 @@ function compile(facts) {
     transformations:compileTransformations(facts,requestKeys,words),
     trailingDiscourse:compileTrailingDiscourse(facts),
     memberActions:facts('pro.reader.member_action').map(w=>({
-      family:one(w,'family'),tab:one(w,'tab'),act:one(w,'act'),mode:one(w,'mode'),key:one(w,'key'),phase:one(w,'phase'),
+      family:one(w,'family'),act:one(w,'act'),mode:one(w,'mode'),key:one(w,'key'),phase:one(w,'phase'),
       separators:values(w,'separator'),suffixes:values(w,'suffix'),nouns:values(w,'noun'),
-      numericId:one(w,'numeric_id')==='true',effectKey:one(w,'effect_key'),
+      numericId:one(w,'numeric_id')==='true',effectKey:one(w,'effect_key'),memberFamilies:values(w,'member_family'),
     })),
     affectedParticiples:createAffectedParticiples(facts),
     affectedTargetLeads:new Set(facts('pro.reader.affected_lead').flatMap(w=>values(w,'text').map(phrase))),
@@ -731,7 +734,7 @@ function compile(facts) {
     })).filter(({family,prefix}) => familyActs.has(family) && /^\p{L}+$/u.test(prefix ?? '')),
     determiners: Object.fromEntries(determiners),
     joiners: Object.fromEntries(joiners),
-    familyTabs: Object.fromEntries([...familyTabs].map(([family, tabs]) => [family, [...new Set(tabs)]])),
+    semanticFamilies,
     lexicon: Object.fromEntries(acts),
     properties: surface => propertiesBySurface.get(surface) ?? [],
     tuples: surface => tuples.get(surface) ?? [],

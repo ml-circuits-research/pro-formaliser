@@ -10,7 +10,7 @@ const normalized=text=>tokens(text).map(([key])=>key);
 const word=/^[\p{L}\p{M}\p{N}_-]+$/u;
 const proper=/^\p{Lu}[\p{L}\p{M}\p{N}_-]*$/u;
 const quote=JSON.stringify;
-const writtenAnchorKey=(key,{tab,family,anchorKey})=>key.tab===tab && key.family===family &&
+const writtenAnchorKey=(key,{family,anchorKey})=>key.family===family &&
   key.name===anchorKey && key.head==='fill+span' && !key.values.length;
 
 export function landmarkSelectorsMatchCatalog(wires,worlds) {
@@ -36,7 +36,7 @@ export function compileLandmarkPairs(facts) {
     })).filter(entry=>entry.marker.length && entry.relation && entry.joiner && ['between','midpoint'].includes(entry.mode)));
 }
 
-function writtenLandmark(terms,tab,worlds) {
+function writtenLandmark(terms,worlds) {
   if (!terms.length) return false;
   if (terms.every(([,raw])=>proper.test(raw))) {
     return terms.length===1 || !terms.slice(0,-1).some(([key])=>worlds.lookup(key).some(([role])=>role==='act'));
@@ -48,7 +48,7 @@ function writtenLandmark(terms,tab,worlds) {
     if (modifiers.some(([key])=>worlds.determiners[key] || worlds.scopeGrammar.auxiliary.has(key) ||
         worlds.lookup(key).some(([role])=>role==='act' || role==='marker'))) return false;
     const head=terms.slice(i+1).map(([key])=>key).join(' ');
-    return worlds.lookup(head).some(([role,,family])=>role==='target' && worlds.familyTabs[family]?.includes(tab));
+    return worlds.lookup(head).some(([role])=>role==='target');
   });
 }
 
@@ -135,9 +135,9 @@ export async function landmarkPairReadings(text,worlds,read,permit,parseClause) 
   const plan={mode,marker:span(marker),first:span(first),second:span(second),words:span([marker[0],end]),relation:[...relation][0],
     leads:new Set(licensed.flatMap(frame=>[...frame.leads]))};
   const admissible=worlds.spatialBindings.filter(binding=>worlds.requestKeys.some(key=>writtenAnchorKey(key,binding)) &&
-    worlds.requestKeys.some(key=>key.tab===binding.tab &&
+    worlds.requestKeys.some(key=>
     key.family===binding.family && key.name===binding.relationKey && key.values.includes(plan.relation)) &&
-    writtenLandmark(ts.slice(...first),binding.tab,worlds) && writtenLandmark(ts.slice(...second),binding.tab,worlds));
+    writtenLandmark(ts.slice(...first),worlds) && writtenLandmark(ts.slice(...second),worlds));
   if (!admissible.length) return [];
   const candidates=await read(body);
   return candidates.flatMap(candidate=>admissible.map(binding=>attach(text,body,candidate,plan,binding,worlds)).filter(Boolean));

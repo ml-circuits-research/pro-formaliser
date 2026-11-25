@@ -1,4 +1,4 @@
 # The same-ID row appends proposed literals to the pinned catalog.
-@w.request.key.drawing.drawn.expression w.request.key tab=drawing family=drawn name=drawn.expression head=class value=angry value=crying value=frowning value=happy value=laughing value=sad value=scared value=shocked value=sleepy value=smiling value=surprised value=talking value=wink value=curious value=tired value=excited value=proud value=upset about="the face expression of a drawn person (\"a surprised face\")" core.source="hand-core 1"
+@w.request.key.drawing.drawn.expression w.request.key family=drawn name=drawn.expression head=class value=angry value=crying value=frowning value=happy value=laughing value=sad value=scared value=shocked value=sleepy value=smiling value=surprised value=talking value=wink value=curious value=tired value=excited value=proud value=upset about="the face expression of a drawn person (\"a surprised face\")" core.source="hand-core 1"
 
-@reader.nominal.figure.expression pro.reader.nominal_pattern tab=drawing family=drawn key=drawn.expression pattern="with a {value} face" pattern="with an {value} face"
+@reader.nominal.figure.expression pro.reader.nominal_pattern family=drawn key=drawn.expression pattern="with a {value} face" pattern="with an {value} face"

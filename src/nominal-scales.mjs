@@ -41,9 +41,9 @@ export function nominalScaleForms(facts,requestKeys) {
   const properties=new Map();
   for (const property of requestKeys) index(properties,JSON.stringify([property.family,property.name]),property);
   for (const wire of facts('pro.reader.nominal_scale')) {
-    const family=field(wire,'family'), tab=field(wire,'tab'), attribute=field(wire,'attribute');
+    const family=field(wire,'family'), attribute=field(wire,'attribute');
     const scale=field(wire,'scale'), on=field(wire,'on');
-    const keys=(properties.get(JSON.stringify([family,attribute])) ?? []).filter(key=>key.tab===tab &&
+    const keys=(properties.get(JSON.stringify([family,attribute])) ?? []).filter(key=>
       key.head.split('+').some(head=>head==='class' || head==='step'));
     if (keys.length!==1 || !scales.has(scale) || !on) continue;
     const [property]=keys;

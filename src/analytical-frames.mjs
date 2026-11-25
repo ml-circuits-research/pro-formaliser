@@ -13,9 +13,9 @@ export function analyticalArgumentFacts(facts) {
   const boundaries=new Map();
   const closedFields=new Set(facts('w.request.key').filter(({attrs})=>
     attrs.value?.length && str(attrs.head?.[0])?.split('+').some(head=>head==='class' || head==='candidate'))
-    .map(({attrs})=>JSON.stringify(['tab','family','name'].map(key=>str(attrs[key]?.[0])))));
+    .map(({attrs})=>JSON.stringify(['family','name'].map(key=>str(attrs[key]?.[0])))));
   for (const {attrs} of facts('pro.reader.analytical_boundary')) {
-    const id=JSON.stringify(['tab','family'].map(key=>str(attrs[key]?.[0])));
+    const id=str(attrs.family?.[0]);
     const accumulated=boundaries.get(id) ?? {open_boundary:[],numeric_modifier:[]};
     accumulated.open_boundary.push(...attrs.text ?? []);
     accumulated.numeric_modifier.push(...attrs.numeric_modifier ?? []);
@@ -26,10 +26,10 @@ export function analyticalArgumentFacts(facts) {
     const take=key=>attrs[key]?.[0];
     const [layout,ownerMarker,grouping,operation,measure]=
       ['layout','owner_marker','grouping','operation','measure'].map(take);
-    if (![take('family'),take('tab'),take('owner_key'),take('owner_value')].every(Boolean) ||
+    if (![take('family'),take('owner_key'),take('owner_value')].every(Boolean) ||
         !attrs.prefix?.length || !attrs.owner?.length) continue;
-    const scope=['tab','family'].map(key=>str(take(key)));
-    const isClosedField=field=>field.startsWith('=') || field==='$predicate' || closedFields.has(JSON.stringify([...scope,field]));
+    const family=str(take('family'));
+    const isClosedField=field=>field.startsWith('=') || field==='$predicate' || closedFields.has(JSON.stringify([family,field]));
     const parts=layout==='ordered_fields' ? (attrs.pattern ?? []).flatMap(pattern=>{
       // Braces name typed catalog slots. The text between slots is one
       // authored connector. A closed value between open slots also separates
@@ -44,7 +44,7 @@ export function analyticalArgumentFacts(facts) {
       })];
     }) : groupedParts(attrs,[layout,ownerMarker,grouping,operation,measure]);
     for (const [i,part] of parts.entries()) {
-      const inherited=boundaries.get(JSON.stringify(scope));
+      const inherited=boundaries.get(family);
       const bindsPredicate=part.includes('$predicate');
       // Reuse the authored command surfaces as a closed slot. The leading
       // literal indexes the packet while leaving the command at its written position.
@@ -54,7 +54,7 @@ export function analyticalArgumentFacts(facts) {
         id:wire.id+'.argument.'+(i+1),
         type:'pro.reader.argument_sequence',
         attrs:Object.fromEntries([
-          ...['tab','family','owner','owner_key','owner_value'].map(key=>[key,attrs[key]]),
+          ...['family','owner','owner_key','owner_value'].map(key=>[key,attrs[key]]),
           ['prefix',bindsPredicate ? part.slice(0,1) : attrs.prefix],
           ['predicate_surface',bindsPredicate ? attrs.prefix : []],
           ['act',['make']],['mode',['new']],['part',bindsPredicate ? part.slice(1) : part],
@@ -101,10 +101,10 @@ export function compileAnalyticalOwnerProperties(facts, requestKeys) {
   const index=new Map();
   for (const {attrs} of facts('pro.reader.analytical_owner_property')) {
     const get=key=>str(attrs[key]?.[0]);
-    const [tab,family,ownerKey,ownerValue,key,value]=
-      ['tab','family','owner_key','owner_value','key','value'].map(get);
+    const [family,ownerKey,ownerValue,key,value]=
+      ['family','owner_key','owner_value','key','value'].map(get);
     if (ownerKey===key || ![[ownerKey,ownerValue],[key,value]].every(([name,choice])=>
-      requestKeys.some(row=>row.tab===tab && row.family===family && row.name===name && row.values.includes(choice)))) continue;
+      requestKeys.some(row=>row.family===family && row.name===name && row.values.includes(choice)))) continue;
     for (const word of (attrs.text ?? []).map(str)) {
       const id=ownerId(family,ownerKey,ownerValue,word), fields=index.get(id) ?? new Map();
       const values=fields.get(key) ?? new Set();
@@ -130,8 +130,8 @@ export function analyticalOwnerBindings(text,proof,worlds) {
 export function compileAnalyticalAdjuncts(facts,catalog) {
   const frames=new Map();
   for (const {attrs} of facts('pro.reader.analytical_adjunct')) {
-    const [tab,family,key,value]=['tab','family','key','value'].map(name=>str(attrs[name]?.[0]));
-    const property=catalog.find(row=>row.tab===tab && row.family===family && row.name===key);
+    const [family,key,value]=['family','key','value'].map(name=>str(attrs[name]?.[0]));
+    const property=catalog.find(row=>row.family===family && row.name===key);
     if (!property) continue;
     for (const pattern of (attrs.pattern ?? []).map(str)) {
       const [before,after,...repeated]=pattern.split('{number}');

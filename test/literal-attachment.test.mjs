@@ -60,7 +60,7 @@ test('reads a literal cue and field contributed by an independently declared fam
   writeFileSync(overlay,`
 @smithwork std.schema.world name=w.smithwork
 @stamp std.schema.kind of=w.smithwork.stamp world=w.smithwork acts=make
-@serial w.request.key tab=diagram family=stamp name=stamp.serial head=span
+@serial w.request.key family=stamp name=stamp.serial head=span
 @serial.role pro.reader.literal family=stamp attribute=stamp.serial role=name text=marked
 `);
   const worlds = loadWorlds({paths:[overlay]});
@@ -112,7 +112,7 @@ test('requires a uniquely located authored quote, licensed introducer and bound 
   writeFileSync(overlay,`
 @press std.schema.world name=w.press
 @poster std.schema.kind of=w.press.poster world=w.press acts=make
-@title w.request.key tab=diagram family=poster name=poster.heading head=span
+@title w.request.key family=poster name=poster.heading head=span
 @title.role pro.reader.literal family=poster attribute=poster.heading role=payload text=headline
 `);
   const worlds=loadWorlds({paths:[overlay]});
@@ -206,9 +206,9 @@ test('uses an independent target inventory and preserves a separately requested 
   writeFileSync(overlay,`
 @press std.schema.world name=w.press
 @poster std.schema.kind of=w.press.poster world=w.press acts=make
-@title w.request.key tab=press family=poster name=poster.heading head=span
-@format w.request.key tab=press family=poster name=poster.format head=class value=standee value=boxed
-@standee pro.reader.target tab=press family=poster mode=new act=make sort=standee text="display board"
+@title w.request.key family=poster name=poster.heading head=span
+@format w.request.key family=poster name=poster.format head=class value=standee value=boxed
+@standee pro.reader.target family=poster mode=new act=make sort=standee text="display board"
 @binding pro.reader.literal family=poster attribute=poster.heading role=quoted container_sort=true text="displaying the caption"
 `);
   const worlds=loadWorlds({paths:[overlay]});

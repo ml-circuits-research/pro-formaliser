@@ -78,16 +78,16 @@ test('keeps each supported result interpretation within and across installed fam
     '@bench std.schema.world name=w.bench',
     '@device std.schema.kind of=w.bench.instrument world=w.bench acts=change',
     '@name core.word text="sound meter" means=w.bench.instrument',
-    '@state w.request.key tab=bench family=instrument name=instrument.state head=class value=ready value=silent',
-    '@mode w.request.key tab=bench family=instrument name=instrument.mode head=class value=ready value=silent',
-    '@setstate pro.reader.topic_command tab=bench family=instrument act=change predicate="hold in mode" attribute=instrument.state',
+    '@state w.request.key family=instrument name=instrument.state head=class value=ready value=silent',
+    '@mode w.request.key family=instrument name=instrument.mode head=class value=ready value=silent',
+    '@setstate pro.reader.topic_command family=instrument act=change predicate="hold in mode" attribute=instrument.state',
     '@screen std.schema.kind of=w.bench.screen world=w.bench acts=change',
     '@screen.name core.word text="sound meter" means=w.bench.screen',
-    '@display w.request.key tab=bench family=screen name=screen.display head=class value=ready value=silent',
-    '@setdisplay pro.reader.topic_command tab=bench family=screen act=change predicate="hold in mode" attribute=screen.display',
+    '@display w.request.key family=screen name=screen.display head=class value=ready value=silent',
+    '@setdisplay pro.reader.topic_command family=screen act=change predicate="hold in mode" attribute=screen.display',
   ];
   for (const conflicting of [false,true]) {
-    const lines=conflicting ? [...base,'@setmode pro.reader.topic_command tab=bench family=instrument act=change predicate="hold in mode" attribute=instrument.mode'] : base;
+    const lines=conflicting ? [...base,'@setmode pro.reader.topic_command family=instrument act=change predicate="hold in mode" attribute=instrument.mode'] : base;
     writeFileSync(file,lines.join('\n'));
     const worlds=loadWorlds({paths:[file]}),reader=createReader({...starter,examples:[]},worlds);
     t.after(()=>reader.close());

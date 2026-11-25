@@ -58,13 +58,13 @@ test('an unrelated world uses the same deferred owner and closed property gramma
     '@w.console std.schema.world name=w.console',
     '@instrument std.schema.kind of=w.console.instrument world=w.console acts=change',
     '@noun pro.reader.target of=w.console.instrument family=instrument act=change mode=existing text=instrument',
-    '@dial w.request.key tab=console family=instrument name=instrument.dialPosition head=class value=top value=bottom',
+    '@dial w.request.key family=instrument name=instrument.dialPosition head=class value=top value=bottom',
     '@dial_phrase pro.reader.effect_sense family=instrument key=instrument.dialPosition text=dial',
-    '@caption w.request.key tab=console family=instrument name=instrument.caption head=span',
+    '@caption w.request.key family=instrument name=instrument.caption head=span',
     '@caption_phrase pro.reader.effect_sense family=instrument key=instrument.caption text=caption property_command=true',
     '@panel std.schema.kind of=w.console.panel world=w.console acts=change',
     '@panel_noun pro.reader.target of=w.console.panel family=panel act=change mode=existing text=panel',
-    '@panel_dial w.request.key tab=console family=panel name=panel.dial head=class value=top value=bottom',
+    '@panel_dial w.request.key family=panel name=panel.dial head=class value=top value=bottom',
     '@panel_phrase pro.reader.effect_sense family=panel key=panel.dial text=dial',
   ].join('\n'));
   const worlds=loadWorlds({paths:[dir]}), reader=createReader(model,worlds);

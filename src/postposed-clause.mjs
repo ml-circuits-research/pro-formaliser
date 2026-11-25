@@ -28,10 +28,10 @@ export function compilePostposedClauses(facts,requestKeys,words,hasVerb) {
   const bindings=[];
   const inventories=new Map();
   for (const wire of facts('pro.reader.postposed_clause')) {
-    const [kind,tab,family,attribute,reasonKey,valueType]=
-      ['kind','tab','family','attribute','reason_key','value_type'].map(key=>get(wire,key));
+    const [kind,family,attribute,reasonKey,valueType]=
+      ['kind','family','attribute','reason_key','value_type'].map(key=>get(wire,key));
     const markers=fields(wire,'text').map(shape).filter(Boolean);
-    const catalog=requestKeys.filter(key=>key.family===family && key.tab===tab);
+    const catalog=requestKeys.filter(key=>key.family===family);
     const operand=catalog.find(key=>key.name===attribute);
     if (!markers.length || !operand || !['causal','report'].includes(kind)) continue;
     if (kind==='report' && (operand.values.length || !operand.head.split('+').includes('span'))) continue;

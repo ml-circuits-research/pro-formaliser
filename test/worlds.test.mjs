@@ -54,12 +54,12 @@ test('formalises new domain and key declarations from an overlay without retrain
 @finish_concept w.reader.en.feature binding=finish_bank key=concept value=sample_finish
 @finish_operator w.reader.en.feature binding=finish_bank key=operator value=eq
 @finish_value w.reader.en.feature binding=finish_bank key=value from_key=normalized
-@finish_key w.request.key tab=workbench family=sample name=sample.finish head=class value=frosted means=sample_finish
-@width_key w.request.key tab=workbench family=sample name=sample.aperture head=number means=sample_aperture
+@finish_key w.request.key family=sample name=sample.finish head=class value=frosted means=sample_finish
+@width_key w.request.key family=sample name=sample.aperture head=number means=sample_aperture
 @width_slot core.slot of=w.workbench.sample key=aperture kind=number
 @aperture_cue w.lang.en.cue name=specimen.aperture on=attribute attribute=aperture takes=number trail="ticks open" unit=tick
 @width_word core.word text="lens opening" means=sample_aperture
-@title_key w.request.key tab=workbench family=sample name=sample.inscription head=span
+@title_key w.request.key family=sample name=sample.inscription head=span
 @calibrate k.actions.act name=calibrate about="check against a reference" role=thing
 @trim k.actions.verb text="trim the scale" act=calibrate
 @sample_sort pro.reader.target of=w.workbench.sample family=sample sort=fluxmeter mode=existing
@@ -82,14 +82,12 @@ test('formalises new domain and key declarations from an overlay without retrain
     ['constraint', '*', 'sample',
       'on=attribute attribute="sample.finish" value="frosted" operator=eq phase=result key_words="surface finish" words="fine texture"', 0],
   ]);
-  assert.deepEqual(worlds.familyTabs.sample, ['workbench']);
+  assert.ok(worlds.semanticFamilies.has('sample'));
   const estimator = createEstimator(worlds);
   try {
     const candidates = ['drawn','sample'].map(family=>({sop:
       '@r w.request.request act=make predicate=create\n@t w.request.target request=$r family='+family+' mode=new'}));
-    for (const context of [{tab:'workbench'},{turns:[{text:'Let us discuss the fluxometer'}]}]) {
-      assert.equal((await estimator.estimate(candidates,context)).selectedIndex,1);
-    }
+    assert.equal((await estimator.estimate(candidates,{turns:[{text:'Let us discuss the fluxometer'}]})).selectedIndex,1);
   } finally { await estimator.close(); }
   assert.deepEqual(worlds.properties('lens opening'), [
     { family: 'sample', attribute: 'sample.aperture', kind: 'number' },
@@ -137,8 +135,8 @@ test('formalises new domain and key declarations from an overlay without retrain
     await reader.close();
   }
   writeFileSync(file, source.replace('text=fluxometer', 'text=fluxograph').replace(' source_id=surface_allowed', '') + `
-@other_number w.request.key tab=workbench family=sample name=sample.secondary head=number means=sample_aperture
-@finish_alternate w.request.key tab=workbench family=sample name=sample.finish_extra head=class value=frosted means=sample_finish
+@other_number w.request.key family=sample name=sample.secondary head=number means=sample_aperture
+@finish_alternate w.request.key family=sample name=sample.finish_extra head=class value=frosted means=sample_finish
 `);
   const reloaded = loadWorlds({ paths: [file] });
   assert.ok(!reloaded.knownWords.has('fluxometer'));

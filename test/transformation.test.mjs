@@ -65,7 +65,7 @@ test('does not assign a page style to an object, a document format, or a negated
 test('retains native material aliases through reader evidence checks',async ()=>{
   const reader=createReader();
   try {
-    const result=await reader.formalise('cover the house with timber',{tab:'drawing',evidence:true});
+    const result=await reader.formalise('cover the house with timber',{evidence:true});
     const candidate=[result,...result.alternatives].find(reading=>reading.source==='transformation');
     assert.ok(candidate);
     assert.deepEqual(data(candidate,'constraint').map(row=>[row.value,row.words]),[['wood','timber']]);
@@ -81,21 +81,21 @@ test('reads a new overlay owner and span property through the normal entry point
   writeFileSync(path,`@foreign core.word text=fremdwort means=wood of=k.styles.material.name lang=de
 @studio std.schema.world name=w.studio
 @panel std.schema.kind of=w.studio.panel world=w.studio acts=change
-@finish w.request.key tab=studio family=panel name=panel.finish head=span
-@surface w.request.key tab=studio family=panel name=panel.surface head=class value=matte value=reflective
-@transform pro.reader.transformation tab=studio family=panel act=change predicate=retexture marker=with owner=panel extent=entire value_head=finish attribute=panel.finish
-@tone pro.reader.transformation tab=studio family=panel act=change predicate=turn marker=into owner=panel attribute=panel.surface
+@finish w.request.key family=panel name=panel.finish head=span
+@surface w.request.key family=panel name=panel.surface head=class value=matte value=reflective
+@transform pro.reader.transformation family=panel act=change predicate=retexture marker=with owner=panel extent=entire value_head=finish attribute=panel.finish
+@tone pro.reader.transformation family=panel act=change predicate=turn marker=into owner=panel attribute=panel.surface
 `);
   const reader=createReader(undefined,loadWorlds({paths:[path]}));
   try {
-    const result=await reader.formalise('retexture the entire panel with satin finish',{tab:'studio'});
+    const result=await reader.formalise('retexture the entire panel with satin finish',{});
     const candidate=[result,...result.alternatives].find(reading=>reading.source==='transformation');
     assert.ok(candidate);
     assert.deepEqual(data(candidate,'target').map(row=>row.family),['panel']);
     assert.deepEqual(data(candidate,'constraint').map(row=>[row.attribute,row.value]),[['panel.finish','satin finish']]);
     const foreign=await reader.propose('coat the house in fremdwort');
     assert.ok(!foreign.candidates.some(reading=>reading.source==='transformation'));
-    const closed=await reader.formalise('turn the panel into matte',{tab:'studio'});
+    const closed=await reader.formalise('turn the panel into matte',{});
     const typed=[closed,...closed.alternatives].find(reading=>reading.source==='transformation');
     assert.ok(typed);
     assert.deepEqual(data(typed,'constraint').map(row=>[row.attribute,row.value]),[['panel.surface','matte']]);

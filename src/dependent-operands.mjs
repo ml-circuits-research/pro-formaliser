@@ -22,10 +22,10 @@ export function compileDependentOperands(facts,requestKeys) {
   const inventories=new Map();
   const frames=[];
   for (const wire of facts('pro.reader.dependent_operand')) {
-    const [tab,family,act,attribute,range,phase,itemType,itemField,peerField]=
-      ['tab','family','act','attribute','range','phase','item_type','item_field','peer_field'].map(key=>get(wire,key));
+    const [family,act,attribute,range,phase,itemType,itemField,peerField]=
+      ['family','act','attribute','range','phase','item_type','item_field','peer_field'].map(key=>get(wire,key));
     const markers=values(wire,'marker').map(text=>form(text).split(' ')).filter(parts=>parts.every(part=>word.test(part)));
-    const matching=requestKeys.filter(key=>key.tab===tab && key.family===family);
+    const matching=requestKeys.filter(key=>key.family===family);
     const key=matching.find(key=>key.name===attribute && !key.values.length && key.head.split('+').includes('span'));
     const slot=native.get(key?.means);
     if (!act || !range || !slot || !values(slot,'type').includes(range) || !markers.length ||

@@ -91,7 +91,7 @@ test('declines negated, quoted, ambiguously repeated, and unlicensed readings', 
 test('native family bindings read a row and an adjacent region without replacing the landmark',()=>{
   const byType=new Map();
   for (const wire of parse(`
-@spatial pro.reader.spatial tab=drawing family=drawn region_key=drawn.at arrangement_key=drawn.arrangement
+@spatial pro.reader.spatial family=drawn region_key=drawn.at arrangement_key=drawn.arrangement
 @row w.lang.en.arrangement text="in a row" layout=row
 @bottom w.lang.en.cue on=place value=bottom relation=at lead="at the bottom" takes=none
 @above w.lang.en.cue on=place value=top relation=at lead="above the bridge" takes=thing

@@ -17,7 +17,7 @@ function fields(sop, type) {
 test('attaches nominal modifiers and resultative complements to separate phases', async () => {
   const reader = createReader();
   try {
-    const change = await reader.formalise('make the red object blue', { tab: 'drawing' });
+    const change = await reader.formalise('make the red object blue', {});
     assert.equal(fields(change.sop, 'request')[0].act, 'change');
     const [target] = fields(change.sop, 'target');
     assert.equal(target.mode, 'existing');
@@ -28,7 +28,7 @@ test('attaches nominal modifiers and resultative complements to separate phases'
       ['drawn.colour', 'result', 'blue'],
     ]);
 
-    const create = await reader.formalise('make a red object', { tab: 'drawing' });
+    const create = await reader.formalise('make a red object', {});
     assert.equal(fields(create.sop, 'target')[0].mode, 'new');
     assert.equal(fields(create.sop, 'constraint')[0].phase, 'result');
   } finally {
@@ -39,7 +39,7 @@ test('attaches nominal modifiers and resultative complements to separate phases'
 test('anchors have their own lookup and their modifiers stay off the direct target', async () => {
   const reader = createReader();
   try {
-    const options = { tab: 'drawing' };
+    const options = {};
     const move = await reader.formalise('move the red object near the blue object', options);
     assert.equal(fields(move.sop, 'target').length, 1);
     const constraints = fields(move.sop, 'constraint');
@@ -92,7 +92,7 @@ test('an object pronoun cannot ground a learned nominal sort', async () => {
     assert.deepEqual(fields(result.sop, 'target'), []);
     assert.ok(fields(result.sop, 'unread').some(row => row.text === 'near the blue object'));
 
-    const named = await reader.formalise('move this red object near the blue object', { tab: 'drawing' });
+    const named = await reader.formalise('move this red object near the blue object', {});
     assert.equal(fields(named.sop, 'target')[0].determiner, 'demonstrative');
     assert.notEqual(fields(named.sop, 'request')[0].refers, 'thing');
   } finally {
@@ -104,7 +104,7 @@ test('collapses duplicate nominal paths through a long anchor description', asyn
   const reader = createReader();
   try {
     const anchor = 'the ' + 'blue '.repeat(12) + 'object';
-    const result = await reader.formalise('move the red object near ' + anchor, { tab: 'drawing' });
+    const result = await reader.formalise('move the red object near ' + anchor, {});
     const constraints = fields(result.sop, 'constraint');
     const relation = constraints.find(row => row.attribute === 'drawn.relation');
     assert.equal(constraints.find(row => row.attribute === 'drawn.anchor').value, anchor);
@@ -116,9 +116,9 @@ test('collapses duplicate nominal paths through a long anchor description', asyn
 
 test('resolves relation and anchor keys from matching family declarations', () => {
   const keys = [
-    { tab: 'demo', family: 'beacon', name: 'beacon.position', head: 'class', values: ['near'] },
-    { tab: 'demo', family: 'beacon', name: 'beacon.relation', head: 'candidate', values: [] },
-    { tab: 'demo', family: 'beacon', name: 'beacon.anchor', head: 'fill+span', values: [] },
+    { family: 'beacon', name: 'beacon.position', head: 'class', values: ['near'] },
+    { family: 'beacon', name: 'beacon.relation', head: 'candidate', values: [] },
+    { family: 'beacon', name: 'beacon.anchor', head: 'fill+span', values: [] },
   ];
   const input = [
     '@r w.request.request act=place predicate=move',
@@ -126,7 +126,7 @@ test('resolves relation and anchor keys from matching family declarations', () =
     '@c w.request.constraint request=$r on=place operator=relation phase=result relation="near" value="Base 3" words="close beside Base 3"',
     '@l w.request.lookup request=$r constraint=$c key=thing from=page',
   ].join('\n');
-  const placement = {tab:'demo',family:'beacon',relationKey:'beacon.position',anchorKey:'beacon.anchor'};
+  const placement = {family:'beacon',relationKey:'beacon.position',anchorKey:'beacon.anchor'};
   assert.deepEqual(fields(createRelationKeyResolver({requestKeys:keys})(input),'constraint'),[]);
   const resolved = createRelationKeyResolver({ requestKeys: keys, spatialBindings:[placement] })(input);
   assert.deepEqual(fields(resolved, 'constraint').map(row =>
@@ -152,9 +152,9 @@ test('reads a novel spatial family with explicitly declared non-conventional key
   writeFileSync(file, `@observatory std.schema.world name=w.observatory
 @beacon std.schema.kind of=w.observatory.beacon world=w.observatory acts=make
 @beacon_word core.word text=retroscope means=w.observatory.beacon
-@heading w.request.key tab=observatory family=beacon name=beacon.heading head=class value=near
-@landmark w.request.key tab=observatory family=beacon name=beacon.landmark head="fill+span"
-@spatial pro.reader.spatial tab=observatory family=beacon relation_key=beacon.heading anchor_key=beacon.landmark
+@heading w.request.key family=beacon name=beacon.heading head=class value=near
+@landmark w.request.key family=beacon name=beacon.landmark head="fill+span"
+@spatial pro.reader.spatial family=beacon relation_key=beacon.heading anchor_key=beacon.landmark
 `);
   const reader = createReader(undefined, loadWorlds({ paths: [file] }));
   try {
@@ -193,16 +193,8 @@ test('context reorders the same unbound spatial family hypotheses', async () => 
       assert.ok(fields(candidate.sop, 'lookup').some(row =>
         row.target === '$' + targetWire.id && row.key === 'thing' && row.from === 'any'));
     }
-    for (const [context, family] of [
-      [{ tab: 'drawing' }, 'drawn'],
-      [{ tab: 'diagram' }, 'node'],
-      [{ entities: [{ id: 'selected-node', family: 'node', selected: true }] }, 'node'],
-    ]) {
-      const ranked = await reader.formalise(text, { context });
-      assert.equal(fields(ranked.sop, 'target')[0].family, family);
-      assert.deepEqual([ranked, ...ranked.alternatives].sort((a, b) => a.generatorIndex - b.generatorIndex)
-        .map(candidate => candidate.sop), original.map(candidate => candidate.sop));
-    }
+    const {candidates}=await reader.propose(text);
+    assert.deepEqual(new Set(candidates.map(candidate=>candidate.sop)),new Set(original.map(candidate=>candidate.sop)));
   } finally {
     await reader.close();
   }

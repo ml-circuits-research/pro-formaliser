@@ -1,5 +1,7 @@
 # Final language audit
 
+Historical run record. Commands and sampling settings below belong to the recorded reader revisions. For the current text-only runner and validation, see [Evaluation and reproduction](../docs/evaluation.html).
+
 The judge compared the utterance and anonymized wires, recorded relative preference and full adequacy, then opened the side key. Full adequacy requires the requested action, target, and salient constraints. Uncertainty marks missing context or an unresolved interpretation.
 
 Reproduce with `node eval/sample-disagreements.mjs .cache/final-ling-primary.jsonl .cache/final-language-blind language-2026`. In each family select the first three sample rows after removing normalized utterances in the earlier v3 and release blind pools. The selected IDs were 3, 5, 6, 7, 8, 9, 16, 17, 18, 20, 21, and 22. Nine candidate pairs match the intermediate run byte for byte. The judge reassessed the three changed pairs (3, 8, and 20) before opening the final side key, with no changes in preference or adequacy. This judgment covers a small sample of benchmark disagreements only.

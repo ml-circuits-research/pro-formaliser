@@ -47,10 +47,10 @@ export function nativeTargetInventory(facts,words,licensed) {
   }
   const live=w=>one(w,'derived')!=='true';
   return declarations.flatMap(wire=>{
-    const tab=one(wire,'tab'),family=one(wire,'family'),act=one(wire,'act'),mode=one(wire,'mode');
+    const family=one(wire,'family'),act=one(wire,'act'),mode=one(wire,'mode');
     const provider=one(wire,'provider'),identity=one(wire,'identity'),requires=one(wire,'requires');
     if (!['new','existing'].includes(mode) || one(slot(provider,identity),'id')!=='true' ||
-        !licensed.some(binding=>binding.tab===tab && binding.family===family && binding.acts.includes(act) &&
+        !licensed.some(binding=>binding.family===family && binding.acts.includes(act) &&
           (binding.mode ?? (act==='make' ? 'new' : 'existing'))===mode)) return [];
     const relation=requires && slot(provider,requires);
     const destination=one(relation,'type'),by=one(relation,'by');
@@ -62,7 +62,7 @@ export function nativeTargetInventory(facts,words,licensed) {
       if (names.length!==1 || !noun.test(sort) ||
           requires && !values(fact,requires).some(value=>members.has(value))) return [];
       const surfaces=[sort,...(aliases.get(JSON.stringify([provider+'.'+identity,sort])) ?? [])];
-      return [{family,tab,sort,mode,acts:[act],surfaces}];
+      return [{family,sort,mode,acts:[act],surfaces}];
     });
   });
 }

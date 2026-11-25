@@ -16,10 +16,11 @@ const form = text => tokens(text).map(([key])=>key).join(' ');
 export function compileStructuredArguments(facts, catalog) {
   const formats = new Map();
   for (const wire of facts('pro.reader.argument_format')) {
-    const [tab,family,key,format] = ['tab','family','key','format'].map(field=>one(wire,field));
-    const prop = catalog.find(row=>row.tab===tab && row.family===family && row.name===key);
-    if (prop && !prop.values.length && shapeByFormat.get(format)?.some(head=>prop.head.split('+').includes(head))) {
-      const id=JSON.stringify([tab,family,key]), choices=formats.get(id) ?? new Set();
+    const [family,key,format] = ['family','key','format'].map(field=>one(wire,field));
+    const shape=shapeByFormat.get(format);
+    if (shape && catalog.some(row=>row.family===family && row.name===key &&
+        !row.values.length && row.head.split('+').some(head=>shape.includes(head)))) {
+      const id=JSON.stringify([family,key]), choices=formats.get(id) ?? new Set();
       choices.add(format);
       formats.set(id,choices);
     }

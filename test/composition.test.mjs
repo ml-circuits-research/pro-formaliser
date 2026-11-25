@@ -152,8 +152,8 @@ test('a declared custom preservation key requires matching family, value bank an
   writeFileSync(file,`
 @instrument.target pro.reader.target family=instrument sort=fluxometer text=fluxometer act=change mode=existing
 @fixture.target pro.reader.target family=fixture sort=bracket text=bracket act=change mode=existing
-@instrument.baseline w.request.key tab=workbench family=instrument name=instrument.baseline head=class value="angular registration" value=stability
-@fixture.baseline w.request.key tab=workbench family=fixture name=fixture.baseline head=class value="angular registration"
+@instrument.baseline w.request.key family=instrument name=instrument.baseline head=class value="angular registration" value=stability
+@fixture.baseline w.request.key family=fixture name=fixture.baseline head=class value="angular registration"
 @instrument.preservation pro.reader.preservation family=instrument attribute=instrument.baseline
 @fixture.preservation pro.reader.preservation family=fixture attribute=fixture.baseline
 `);
@@ -212,10 +212,10 @@ test('shares only the written creation predicate across explicit list items', as
   t.after(()=>rmSync(directory,{recursive:true,force:true}));
   const file = join(directory,'overlay.sop');
   writeFileSync(file,`
-@fixture.sprocket pro.reader.target family=fixture tab=workbench sort=sprocket text=sprocket act=make act=remove
-@fixture.valve pro.reader.target family=fixture tab=workbench sort=valve text=valve act=make act=remove
-@fixture.housing pro.reader.target family=fixture tab=workbench sort=housing text=housing act=make act=remove
-@fixture.finish w.request.key tab=workbench family=fixture name=fixture.finish head=class value=frosted value=polished value=bare
+@fixture.sprocket pro.reader.target family=fixture sort=sprocket text=sprocket act=make act=remove
+@fixture.valve pro.reader.target family=fixture sort=valve text=valve act=make act=remove
+@fixture.housing pro.reader.target family=fixture sort=housing text=housing act=make act=remove
+@fixture.finish w.request.key family=fixture name=fixture.finish head=class value=frosted value=polished value=bare
 `);
   const reader = createReader(undefined,loadWorlds({paths:[file]}));
   t.after(()=>reader.close());

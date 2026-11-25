@@ -74,7 +74,7 @@ export function createInstanceReferenceReader(worlds) {
     eligibleFamilies.add(family);
   }
   for (const binding of worlds.spatialBindings) {
-    const keys = worlds.requestKeys.filter(key => key.family === binding.family && key.tab === binding.tab);
+    const keys = worlds.requestKeys.filter(key => key.family === binding.family);
     const relation = keys.find(key => key.name === binding.relationKey && key.head === 'class');
     const anchor = keys.find(key => key.name === binding.anchorKey && key.head === 'fill+span' && !key.values.length);
     if (!relation || !anchor) continue;
@@ -144,8 +144,7 @@ export function createInstanceReferenceReader(worlds) {
         if (!markers.length) continue;
         const anchorAt = ['definite','demonstrative'].includes(worlds.determiners[visible[stop]]) ? stop+1 : stop;
         for (const anchor of member(anchorAt,act)) {
-          if ((!anchor.numbered && !anchor.coded) || ![...anchor.families].some(owner =>
-            worlds.familyTabs[owner]?.some(tab => worlds.familyTabs[family]?.includes(tab)))) continue;
+          if ((!anchor.numbered && !anchor.coded)) continue;
           for (const [,,,value] of markers) {
             const spatial = (spatialRoles.get(family) ?? []).filter(binding => binding.values.has(value));
             if (spatial.length === 1) return {...spatial[0],value,marker:span(at,stop),anchor:span(stop,anchor.next),next:anchor.next};

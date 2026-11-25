@@ -145,7 +145,7 @@ function ownerBindings(worlds,act,ts,words,span,plain,det,start,end) {
   const owners=new Map(), {next,mode}=det(start,end);
   if (worlds.universalAgreement?.heads.has(ts[start]?.[0])) {
     if (act!=='change' || !plain(start,end)) return owners;
-    for (const family of Object.keys(worlds.familyTabs)) {
+    for (const family of worlds.semanticFamilies) {
       if (!worlds.literalGrammar.licenses(family,act)) continue;
       const population=universalOwner(ts.slice(start,end),worlds,family,act,(a,b)=>span(start+a,start+b));
       if (population?.sort) owners.set(family,{act,family,fill:'all',description:span(start,end),...population});

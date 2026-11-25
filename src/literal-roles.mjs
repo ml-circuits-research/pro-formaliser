@@ -239,9 +239,9 @@ export function compileCreationRoles(facts,requestKeys,words) {
   const get = (wire,key) => (wire.attrs[key] ?? []).map(raw => raw.startsWith('"') ? JSON.parse(raw) : raw);
   const byCue=new Map(), preposed=[], named=[];
   for (const wire of facts('pro.reader.creation_role')) {
-    const [family]=get(wire,'family'), [tab]=get(wire,'tab'), [attribute]=get(wire,'attribute');
+    const [family]=get(wire,'family'), [attribute]=get(wire,'attribute');
     const sortKeys=get(wire,'sort_key'), sorts=get(wire,'sort');
-    const keys=requestKeys.filter(key=>key.family===family && key.tab===tab);
+    const keys=requestKeys.filter(key=>key.family===family);
     if (!keys.some(key=>key.name===attribute && key.head.split('+').includes('span') && !key.values.length)) continue;
     const banks=sortKeys.map(name=>keys.find(key=>key.name===name)?.values);
     if (banks.some(bank=>!bank?.length)) continue;

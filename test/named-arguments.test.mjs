@@ -60,12 +60,12 @@ test('loads custom acts, argument keys, argument phases, and markers', async t =
 @shuttle std.schema.kind of=w.workbench.shuttle world=w.workbench acts=route acts=place
 @route k.actions.act name=route
 @reroute k.actions.verb act=route text=reroute
-@origin w.request.key tab=workbench family=shuttle name=shuttle.origin head=span
-@terminus w.request.key tab=workbench family=shuttle name=shuttle.terminus head=span
-@routing pro.reader.arguments tab=workbench family=shuttle act=route mode=existing first_key=shuttle.origin first_phase=selector second_key=shuttle.terminus separator="in favor of" prefix=from
-@bearing w.request.key tab=workbench family=shuttle name=shuttle.bearing head=class value=left_of
-@landmark w.request.key tab=workbench family=shuttle name=shuttle.landmark head="fill+span"
-@spatial pro.reader.spatial tab=workbench family=shuttle relation_key=shuttle.bearing anchor_key=shuttle.landmark named_act=place
+@origin w.request.key family=shuttle name=shuttle.origin head=span
+@terminus w.request.key family=shuttle name=shuttle.terminus head=span
+@routing pro.reader.arguments family=shuttle act=route mode=existing first_key=shuttle.origin first_phase=selector second_key=shuttle.terminus separator="in favor of" prefix=from
+@bearing w.request.key family=shuttle name=shuttle.bearing head=class value=left_of
+@landmark w.request.key family=shuttle name=shuttle.landmark head="fill+span"
+@spatial pro.reader.spatial family=shuttle relation_key=shuttle.bearing anchor_key=shuttle.landmark named_act=place
 @prep w.lang.en.prep text="sunward of" rel=left_of space=horizontal arity=1
 @place-markers k.actions.role act=place name=place holds=place marker="sunward of"
 `);

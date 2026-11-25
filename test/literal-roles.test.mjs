@@ -16,7 +16,7 @@ test('grounds a whole named replacement before preserving its exact quoted resul
   const reader = createReader();
   t.after(() => reader.close());
   const input = String.raw`Please swap Lantern with an Amber Shade for "Wait, then add \"copper\".  Do not trim."`;
-  const answer = await reader.formalise(input, {tab:'document'});
+  const answer = await reader.formalise(input, {});
   assert.equal(rows(answer,'request')[0].act,'change');
   assert.equal(rows(answer,'target')[0].mode,'existing');
   assert.equal(rows(answer,'target')[0].name,'Lantern with an Amber Shade');
@@ -33,7 +33,7 @@ test('keeps a creation title separate from its literal content', async t => {
   const reader = createReader();
   t.after(() => reader.close());
   const input = 'Could you create a document titled Tide Almanac containing “Under the pier? At 04:30.”';
-  const answer = await reader.formalise(input,{tab:'document'});
+  const answer = await reader.formalise(input,{});
   assert.equal(rows(answer,'request')[0].act,'make');
   assert.equal(rows(answer,'target')[0].mode,'new');
   assert.deepEqual(rows(answer,'constraint').map(({attribute,value})=>[attribute,value]), [
@@ -46,7 +46,7 @@ test('reads a replacement-first verb with separate old and new quoted values', a
   const reader = createReader();
   t.after(() => reader.close());
   const input = "substitute 'Current text.' for 'Draft text?'";
-  const answer = await reader.formalise(input,{tab:'document'});
+  const answer = await reader.formalise(input,{});
   assert.equal(rows(answer,'request')[0].words,undefined);
   assert.deepEqual(rows(answer,'constraint').map(({phase,value})=>[phase,value]), [
     ['selector','Draft text?'],['result','Current text.'],
@@ -87,9 +87,9 @@ test('uses an explicitly named span key from a novel schema family', async t => 
   writeFileSync(file,`
 @smithwork std.schema.world name=w.smithwork
 @stamp std.schema.kind of=w.smithwork.stamp world=w.smithwork acts=change acts=make
-@inscription w.request.key tab=diagram family=stamp name=stamp.inscription head=span
-@impression w.request.key tab=diagram family=stamp name=stamp.impression head=span
-@serial w.request.key tab=diagram family=stamp name=stamp.serial head=span
+@inscription w.request.key family=stamp name=stamp.inscription head=span
+@impression w.request.key family=stamp name=stamp.impression head=span
+@serial w.request.key family=stamp name=stamp.serial head=span
 @impression.role pro.reader.literal family=stamp attribute=stamp.impression role=payload
 @serial.role pro.reader.literal family=stamp attribute=stamp.serial role=name text=marked
 `);

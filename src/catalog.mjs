@@ -1,5 +1,4 @@
 // The request catalog is evaluated separately from native SOP type validity.
-// With no tab, any loaded domain can license the reading.
 import {tokens} from './lexicon.mjs';
 
 const indexes=new WeakMap();
@@ -9,33 +8,39 @@ function keyIndex(worlds) {
     const index=new Map();
     for (const key of worlds.requestKeys) {
       if (!index.has(key.name)) index.set(key.name,[]);
-      index.get(key.name).push({tab:key.tab,family:key.family,values:new Set(key.values.map(s=>s.toLowerCase()))});
+      index.get(key.name).push({family:key.family,values:new Set(key.values.map(s=>s.toLowerCase()))});
     }
     indexes.set(worlds,index);
   }
   return indexes.get(worlds);
 }
 
-export function catalogIssues(wires,worlds,tab) {
+export function catalogIssues(wires,worlds) {
   const issues=[],index=keyIndex(worlds);
   const subjectRules=worlds.strictNominalSubjects;
-  const targets=subjectRules?.size ? Map.groupBy(wires.filter(wire=>wire.type==='w.request.target'),
-    wire=>value(wire.attrs.request?.[0])) : undefined;
+  const targets=Map.groupBy(wires.filter(wire=>wire.type==='w.request.target'),
+    wire=>value(wire.attrs.request?.[0]));
   for (const {id,type,attrs} of wires) {
     if (type==='w.request.target') {
       const family=value(attrs.family?.[0]);
-      const tabs=Object.hasOwn(worlds.familyTabs,family) ? worlds.familyTabs[family] : [];
-      if (!tabs.length || (tab && !tabs.includes(tab))) issues.push({wire:id,slot:'family',value:family,code:'unlicensed_family'});
+      if (!worlds.semanticFamilies.has(family)) issues.push({wire:id,slot:'family',value:family,code:'unlicensed_family'});
     }
     if (type!=='w.request.constraint') continue;
     const name=value(attrs.attribute?.[0]);
-    const declarations=(index.get(name) ?? []).filter(k=>!tab || tab===k.tab);
+    const group=targets.get(value(attrs.request?.[0])) ?? [];
+    const families=new Set(group.map(wire=>value(wire.attrs.family?.[0])));
+    const available=index.get(name) ?? [];
+    const owned=available.filter(key=>families.has(key.family));
+    const declarations=owned.length ? owned : available;
     if (!declarations.length) {
       issues.push({wire:id,slot:'attribute',value:name??null,code:'unlicensed_key'});
       continue;
     }
-    const group=targets?.get(value(attrs.request?.[0]));
-    if (group?.length===1) {
+    if (!owned.length && families.size && new Set(available.map(key=>key.family)).size>1) {
+      issues.push({wire:id,slot:'attribute',value:name,code:'ambiguous_property_owner'});
+      continue;
+    }
+    if (subjectRules?.size && group.length===1) {
       const family=value(group[0].attrs.family?.[0]), sort=value(group[0].attrs.sort?.[0]);
       if (sort) for (const raw of attrs.value ?? []) {
         const allowed=subjectRules.get(JSON.stringify([family,name,value(raw).toLowerCase()]));

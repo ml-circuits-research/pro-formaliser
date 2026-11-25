@@ -1,5 +1,4 @@
 @pro.reader.participant_adjunct core.type of=pro.reader.participant_adjunct closed=true
-@pro.reader.participant_adjunct.tab core.slot of=pro.reader.participant_adjunct key=tab kind=atom required=true
 @pro.reader.participant_adjunct.family core.slot of=pro.reader.participant_adjunct key=family kind=atom required=true
 @pro.reader.participant_adjunct.subject_key core.slot of=pro.reader.participant_adjunct key=subject_key kind=atom required=true
 @pro.reader.participant_adjunct.attribute core.slot of=pro.reader.participant_adjunct key=attribute kind=atom required=true
@@ -7,6 +6,6 @@
 @pro.reader.participant_adjunct.act core.slot of=pro.reader.participant_adjunct key=act kind=atom many=true required=true
 @pro.reader.participant_adjunct.destination core.slot of=pro.reader.participant_adjunct key=destination kind=atom
 
-@pilot.drawn.holds pro.reader.participant_adjunct tab=drawing family=drawn subject_key=drawn.base attribute=drawn.holds cue=carrying cue=holding act=make act=place destination=drawn.deicticDestination
-@pilot.drawn.wear pro.reader.participant_adjunct tab=drawing family=drawn subject_key=drawn.base attribute=drawn.wear cue=wearing act=make act=place destination=drawn.deicticDestination
-@pilot.drawn.deictic_destination w.request.key tab=drawing family=drawn name=drawn.deicticDestination head=span about="the written context-dependent destination for a drawn object's creation or placement"
+@pilot.drawn.holds pro.reader.participant_adjunct family=drawn subject_key=drawn.base attribute=drawn.holds cue=carrying cue=holding act=make act=place destination=drawn.deicticDestination
+@pilot.drawn.wear pro.reader.participant_adjunct family=drawn subject_key=drawn.base attribute=drawn.wear cue=wearing act=make act=place destination=drawn.deicticDestination
+@pilot.drawn.deictic_destination w.request.key family=drawn name=drawn.deicticDestination head=span about="the written context-dependent destination for a drawn object's creation or placement"

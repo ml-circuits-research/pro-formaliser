@@ -65,7 +65,7 @@ test('default batch works from another directory, loads one model and continues 
   const inputs=[
     JSON.stringify({text:positive}), JSON.stringify({text:pronoun}), '',
     JSON.stringify({text:unknown}), '{"text":',
-    ...['previous','history','context','clock'].map(key=>JSON.stringify({text:positive,[key]:'unsupported'})),
+    ...['previous','history','context','clock','tab'].map(key=>JSON.stringify({text:positive,[key]:'unsupported'})),
     JSON.stringify({text:final}),
   ];
   const env={...process.env};
@@ -76,7 +76,7 @@ test('default batch works from another directory, loads one model and continues 
   assert.equal(ran.status,0,ran.stderr);
   assert.equal(ran.stderr.trim(),'default-model-read');
   const results=ran.stdout.trimEnd().split('\n').map(line=>JSON.parse(line));
-  const expected=[positive,pronoun,unknown,null,positive,positive,positive,positive,final];
+  const expected=[positive,pronoun,unknown,null,positive,positive,positive,positive,positive,final];
   assert.equal(results.length,expected.length);
   for (const [i,text] of expected.entries()) assertResult(results[i],text);
   for (const result of results.slice(0,3)) assert.equal(result.error,null);

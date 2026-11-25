@@ -22,8 +22,9 @@ test('reads both signed coordinate components and keeps family alternatives', as
   for (const tuple of preferred) {
     assert.ok(proposal.candidates.some(candidate => JSON.stringify(pairs(candidate))===JSON.stringify(tuple)));
   }
-  const drawing = await reader.formalise('put the object at 260,180',{tab:'drawing'});
-  assert.deepEqual(pairs(drawing),[['drawn.x','260','result'],['drawn.y','180','result']]);
+  const placement = await reader.propose('put the object at 260,180');
+  assert.ok(placement.candidates.some(candidate=>
+    JSON.stringify(pairs(candidate))===JSON.stringify([['drawn.x','260','result'],['drawn.y','180','result']])));
 });
 
 test('leaves numeric lists or quoted coordinates outside the tuple reading', async t => {
@@ -91,10 +92,10 @@ test('binds an arbitrary pair and cue only to the declared act and keys', async 
   t.after(() => rmSync(dir,{recursive:true,force:true}));
   const file = join(dir,'overlay.sop');
   writeFileSync(file,`
-@calibrand pro.reader.target family=calibrand tab=workbench act=place sort=specimen text=specimen
-@rise w.request.key tab=workbench family=calibrand name=calibrand.rise head=number
-@span w.request.key tab=workbench family=calibrand name=calibrand.arc head=number
-@position pro.reader.tuple tab=workbench family=calibrand first_key=calibrand.rise second_key=calibrand.arc first_label=up second_label=across act=place text="at fixed offsets"
+@calibrand pro.reader.target family=calibrand act=place sort=specimen text=specimen
+@rise w.request.key family=calibrand name=calibrand.rise head=number
+@span w.request.key family=calibrand name=calibrand.arc head=number
+@position pro.reader.tuple family=calibrand first_key=calibrand.rise second_key=calibrand.arc first_label=up second_label=across act=place text="at fixed offsets"
 `);
   const reader = createReader(undefined,loadWorlds({paths:[file]}));
   t.after(() => reader.close());

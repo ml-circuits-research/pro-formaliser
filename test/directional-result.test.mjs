@@ -110,13 +110,13 @@ test('offers an independent directional result for an installed family and catal
   writeFileSync(path,`
 @bench std.schema.world name=w.workbench
 @device std.schema.kind of=w.workbench.device world=w.workbench acts=change
-@scanner pro.reader.target family=device sort=optical_scanner text="optical scanner" act=change tab=workbench mode=existing
-@deflection w.request.key tab=workbench family=device name=device.deflection head=class value=right
-@finish w.request.key tab=workbench family=device name=device.finish head=class value=striped
-@motion pro.reader.motion tab=workbench family=device act=change direction_key=device.deflection
+@scanner pro.reader.target family=device sort=optical_scanner text="optical scanner" act=change mode=existing
+@deflection w.request.key family=device name=device.deflection head=class value=right
+@finish w.request.key family=device name=device.finish head=class value=striped
+@motion pro.reader.motion family=device act=change direction_key=device.deflection
 @w.workbench.instrument core.type of=w.workbench.instrument
 @scanner.kind w.workbench.instrument name="optical scanner"
-@filter pro.reader.nominal_selector tab=workbench family=device key=device.finish position=after marker="with finish" value_type=k.values.fill head_type=w.workbench.instrument
+@filter pro.reader.nominal_selector family=device key=device.finish position=after marker="with finish" value_type=k.values.fill head_type=w.workbench.instrument
 `);
   const reader=createReader(undefined,loadWorlds({paths:[path]}));
   t.after(()=>reader.close());

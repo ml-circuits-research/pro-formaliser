@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 
 export const DATASET = fileURLToPath(new URL('../../webmeet-dataset/', import.meta.url));
 export const DATASET_REVISION = 'a85de79de826f983855aa2dafc6de7548978fbff';
-const TABS = /^[^/]+\/[^/]+\.csv$/;
 
 function* csvRows(text) {
   let row = [], start = 0, quoted = false;
@@ -38,11 +37,10 @@ export function loadCorpus({ dataset = DATASET, revision = DATASET_REVISION } = 
     maxBuffer: 64 * 1024 * 1024,
   });
   const commit = git('rev-parse', '--verify', '--end-of-options', revision + '^{commit}').trim();
-  const files = git('ls-tree', '-r', '-z', '--name-only', commit).split('\0').filter(path => TABS.test(path));
+  const files = git('ls-tree', '-r', '-z', '--name-only', commit).split('\0').filter(path => path.endsWith('.csv'));
   if (files.length === 0) throw new Error('No WebMeet CSVs found at ' + commit);
   const rows = [];
   for (const source of files) {
-    const family = source.split('/')[0];
     const cells = csvRows(git('show', commit + ':' + source));
     if (cells.next().value?.join(',') !== 'text,sop') throw new Error('Expected text,sop header in ' + source);
     let row = 1;
@@ -50,7 +48,7 @@ export function loadCorpus({ dataset = DATASET, revision = DATASET_REVISION } = 
       row++;
       const [text, sop] = fields;
       if (fields.length !== 2 || !text.trim()) throw new Error('Invalid CSV record ' + source + ':' + row);
-      rows.push({ text, sop, family, tab: family, source, row });
+      rows.push({ text, sop, source, row });
     }
   }
   return { revision: commit, rows };

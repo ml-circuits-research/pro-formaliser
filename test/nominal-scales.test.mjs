@@ -18,7 +18,7 @@ const worldText=path=>readFileSync(new URL('../.cache/knowledge/docs/worlds/'+pa
 const worlds=compile([
   worldText('k.values/shards/scales.sop'),
   worldText('w.lang.en/shards/hand-cues.sop'),
-  '@size pro.reader.nominal_scale tab=drawing family=drawn attribute=drawn.size scale=size on=size',
+  '@size pro.reader.nominal_scale family=drawn attribute=drawn.size scale=size on=size',
 ].join('\n'));
 const read=(text,sop,knowledge=worlds)=>nominalScaleReading(text,tokens(text),quotedSpans(text),{sop},knowledge);
 const request=act=>'@r w.request.request act='+act+' mood=do predicate='+({make:'draw',remove:'remove'}[act] ?? act);
@@ -67,20 +67,20 @@ test('grounds a selection and traverses an intact multiword colour',()=>{
   assert.equal(read('remove the Large dark red kite by the kite',base),undefined);
 });
 
-test('only projects scales authorized for their exact tab, family and qualitative property',()=>{
+test('only projects scales authorized for their exact family and qualitative property',()=>{
   const bindings=`
 @hardness k.values.scale name=hardness steps=2
 @soft k.values.step scale=hardness name=soft rank=1
 @hard k.values.step scale=hardness name=hard rank=2
 @squishy core.word of=k.values.step.name means=soft text=squishy
-@bridge pro.reader.nominal_scale tab=diagram family=stamp attribute=stamp.rigidity scale=hardness on=attribute
-@wrong_tab pro.reader.nominal_scale tab=drawing family=stamp attribute=stamp.unbound scale=hardness on=attribute
-@wrong_type pro.reader.nominal_scale tab=diagram family=stamp attribute=stamp.mass scale=hardness on=attribute
+@bridge pro.reader.nominal_scale family=stamp attribute=stamp.rigidity scale=hardness on=attribute
+@wrong_family pro.reader.nominal_scale family=other attribute=stamp.unbound scale=hardness on=attribute
+@wrong_type pro.reader.nominal_scale family=stamp attribute=stamp.mass scale=hardness on=attribute
 `;
   const properties=[
-    {tab:'diagram',family:'stamp',name:'stamp.rigidity',head:'class',values:['soft','hard']},
-    {tab:'diagram',family:'stamp',name:'stamp.unbound',head:'class',values:[]},
-    {tab:'diagram',family:'stamp',name:'stamp.mass',head:'number',values:[]},
+    {family:'stamp',name:'stamp.rigidity',head:'class',values:['soft','hard']},
+    {family:'stamp',name:'stamp.unbound',head:'class',values:[]},
+    {family:'stamp',name:'stamp.mass',head:'number',values:[]},
   ];
   const knowledge=compile(bindings,properties);
   const sop=[request('make'),target('stamp','stamp','new'),unread('squishy')].join('\n');

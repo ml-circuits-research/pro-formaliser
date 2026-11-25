@@ -12,17 +12,17 @@ const keysOf = text => tokens(text).map(t=>t[0]);
 const ground = constraintGrounder();
 
 function licensedFrame(frame,worlds) {
-  const {tab,family,key,act,mode,phase}=frame;
+  const {family,key,act,mode,phase}=frame;
   return atom.test(act) && atom.test(family) && atom.test(key) &&
     ((mode==='new' && phase==='result') || (mode==='existing' && phase==='selector')) &&
     (!(frame.numericId || frame.effectKey) || mode==='existing' && frame.nouns?.length) &&
-    worlds.requestKeys.some(row=>row.tab===tab && row.family===family && row.name===key &&
+    worlds.requestKeys.some(row=>row.family===family && row.name===key &&
       !row.values.length && row.head.split('+').some(type=>type==='candidate' || type==='span'));
 }
 
 function memberEffect(frame,predicate,worlds) {
-  const {tab,family,act,effectKey}=frame;
-  const key=worlds.requestKeys.find(row=>row.tab===tab && row.family===family && row.name===effectKey && row.values.length);
+  const {family,act,effectKey}=frame;
+  const key=worlds.requestKeys.find(row=>row.family===family && row.name===effectKey && row.values.length);
   if (!key || !worlds.literalGrammar.licenses(family,act)) return;
   const values=new Map();
   for (const entry of worlds.lookup(keysOf(predicate).join(' '))) {
@@ -67,7 +67,7 @@ export function memberActionPackets(text,ts,quotes,worlds) {
     const suffixes=(frame.suffixes ?? []).map(keysOf).filter(parts=>parts.length);
     const nouns=(frame.nouns ?? []).map(keysOf).filter(parts=>parts.length);
     const typedCodes=new Set((worlds.instanceBindings ?? []).filter(({family})=>
-      nouns.length && frame.mode==='existing' ? family===frame.family : worlds.familyTabs[family]?.includes(frame.tab))
+      frame.mode==='existing' ? family===frame.family : frame.memberFamilies.includes(family))
       .map(({prefix})=>prefix));
     const excluded=new Set([...separators,...suffixes].flat());
     const packetTokens=(start,stop)=>{

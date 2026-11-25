@@ -18,9 +18,9 @@ export function compileTransformations(facts,requestKeys,words) {
     return inventories.get(type);
   }
   for (const wire of facts('pro.reader.transformation')) {
-    const [tab,family,act,attribute,ownerType,valueType]=
-      ['tab','family','act','attribute','owner_type','value_type'].map(key=>field(wire,key));
-    const keys=requestKeys.filter(key=>key.tab===tab && key.family===family && key.name===attribute);
+    const [family,act,attribute,ownerType,valueType]=
+      ['family','act','attribute','owner_type','value_type'].map(key=>field(wire,key));
+    const keys=requestKeys.filter(key=>key.family===family && key.name===attribute);
     if (!act || !keys.length) continue;
     const ownerWords=new Set(strings(wire,'owner').map(normal).filter(Boolean));
     const ownerKinds=ownerType ? inventory(ownerType) : undefined;

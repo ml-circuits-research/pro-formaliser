@@ -45,7 +45,7 @@ test('grounds an installed family and native additive marker through the public 
   writeFileSync(path,`
 @bench std.schema.world name=w.workbench
 @prop std.schema.kind of=w.workbench.prop world=w.workbench acts=make
-@tile pro.reader.target family=prop sort=tile text=tile text=tiles act=make tab=workbench mode=new
+@tile pro.reader.target family=prop sort=tile text=tile text=tiles act=make mode=new
 @comparison w.lang.en.phrase name=cmp.more item="onward allotment"
 @more w.lang.en.det text=renewed kind=quantifier definite=no number=sg meaning=one-more in=acts
 `);
@@ -71,7 +71,7 @@ test('retains an installed qualitative quantity and its noun without generating 
   writeFileSync(file,`
 @bench std.schema.world name=w.bench
 @tiles std.schema.kind of=w.bench.tile world=w.bench acts=make
-@tile pro.reader.target family=tile sort=tile text=tile text=tiles act=make tab=bench mode=new
+@tile pro.reader.target family=tile sort=tile text=tile text=tiles act=make mode=new
 @abundance w.lang.en.cue name=count.abundance on=count amount=many lead="a heap of" takes=none
 `);
   const reader=createReader(undefined,loadWorlds({paths:[file]}));

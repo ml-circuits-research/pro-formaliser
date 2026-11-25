@@ -56,11 +56,11 @@ test('native arguments can be installed for an unrelated catalog through an over
     '@bench std.schema.world name=w.workbench',
     '@device std.schema.kind of=w.workbench.device world=w.workbench acts=make',
     '@noun core.word text="optical quilloscope" means=w.workbench.device',
-    '@scheme w.request.key tab=workbench family=device name=device.scheme head=class value=survey',
-    '@sample w.request.key tab=workbench family=device name=device.sample head=span',
-    '@reference w.request.key tab=workbench family=device name=device.reference head=span',
+    '@scheme w.request.key family=device name=device.scheme head=class value=survey',
+    '@sample w.request.key family=device name=device.sample head=span',
+    '@reference w.request.key family=device name=device.reference head=span',
     '@form core.word text=surveying means=survey of=device.scheme',
-    '@frame pro.reader.argument_sequence tab=workbench family=device act=make mode=new prefix="optical quilloscope for" part=device.scheme part=device.sample part=versus part=device.reference'
+    '@frame pro.reader.argument_sequence family=device act=make mode=new prefix="optical quilloscope for" part=device.scheme part=device.sample part=versus part=device.reference'
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[dir]}));
   try {
@@ -118,9 +118,9 @@ test('an overlay can install a verb-free result frame and a multiword closed ali
   writeFileSync(join(dir,'frame.sop'),[
     '@bench std.schema.world name=w.workbench',
     '@device std.schema.kind of=w.workbench.device world=w.workbench acts=change',
-    '@setting w.request.key tab=workbench family=device name=device.mode head=class value="high precision"',
+    '@setting w.request.key family=device name=device.mode head=class value="high precision"',
     '@alias core.word text="fine surveying" means="high precision" of=device.mode',
-    '@frame pro.reader.argument_sequence tab=workbench family=device act=change mode=existing owner=quilloscope part="$owner" part=into part=device.mode',
+    '@frame pro.reader.argument_sequence family=device act=change mode=existing owner=quilloscope part="$owner" part=into part=device.mode',
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[dir]}));
   t.after(()=>reader.close());
@@ -173,10 +173,10 @@ test('reads installed state and scope declarations for another catalog', async t
   writeFileSync(join(dir,'frame.sop'),[
     '@bench std.schema.world name=w.workbench',
     '@device std.schema.kind of=w.workbench.device world=w.workbench acts=change',
-    '@setting w.request.key tab=workbench family=device name=device.state head=span',
-    '@scope w.request.key tab=workbench family=preference name=preference.scope head=span',
-    '@format pro.reader.argument_format tab=workbench family=device key=device.state format=nominal_description',
-    '@frame pro.reader.argument_sequence tab=workbench family=device act=change mode=existing prefix="throughout work in" owner=quilloscope predicate_surface="must stay" scope_attribute=preference.scope part="$scope" part="," part="$owner" part="$predicate" part=device.state structured_part=device.state',
+    '@setting w.request.key family=device name=device.state head=span',
+    '@scope w.request.key family=preference name=preference.scope head=span',
+    '@format pro.reader.argument_format family=device key=device.state format=nominal_description',
+    '@frame pro.reader.argument_sequence family=device act=change mode=existing prefix="throughout work in" owner=quilloscope predicate_surface="must stay" scope_attribute=preference.scope part="$scope" part="," part="$owner" part="$predicate" part=device.state structured_part=device.state',
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[dir]}));
   t.after(()=>reader.close());
@@ -266,10 +266,10 @@ test('loads an unrelated trailing owner with a closed typed value from an overla
   writeFileSync(join(dir,'frames.sop'),[
     '@press std.schema.world name=w.press',
     '@report std.schema.kind of=w.press.report world=w.press acts=make',
-    '@audience w.request.key tab=press family=report name=report.audience head=span',
-    '@topic w.request.key tab=press family=report name=report.topic head=span',
-    '@kind w.request.key tab=press family=report name=report.kind head=class value=notice',
-    '@release pro.reader.argument_sequence tab=press family=report act=make mode=new prefix="prepare" owner="a public notice" owner_key=report.kind owner_value=notice part=report.topic part=for part=report.audience part=as part="$owner"',
+    '@audience w.request.key family=report name=report.audience head=span',
+    '@topic w.request.key family=report name=report.topic head=span',
+    '@kind w.request.key family=report name=report.kind head=class value=notice',
+    '@release pro.reader.argument_sequence family=report act=make mode=new prefix="prepare" owner="a public notice" owner_key=report.kind owner_value=notice part=report.topic part=for part=report.audience part=as part="$owner"',
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[dir]}));
   t.after(()=>reader.close());

@@ -6,6 +6,9 @@ const sources = new URL('../.cache/knowledge/docs/worlds/', import.meta.url);
 const read = path => readFileSync(new URL(path, sources), 'utf8');
 const library = Object.fromEntries(['k.named', 'k.actions', 'w.request'].map(id => [id, read(id + '/schema.sop')]));
 const one = (wire, key) => str(wire.attrs[key]?.[0]);
+// The pinned catalogue requires this retired UI field. Strip only its
+// metadata slot on import until the shared catalogue drops the requirement.
+library['w.request']=serialize(parse(library['w.request']).filter(wire=>wire.id!=='w.request.key.tab'));
 const requestTypes = new Set(parse(library['w.request']).filter(wire => wire.type === 'core.type')
   .map(wire => one(wire, 'of')).filter(type => type !== 'w.request.key'));
 
@@ -72,9 +75,12 @@ export function compileValidationModules(modules, requestKeyFacts = []) {
     for (const wire of records) catalogIds.add(wire.id);
   }
   for (const type of catalogTypes) types.delete(type);
-  const keys = requestKeyFacts.filter(wire => wire.type === 'w.request.key');
-  // The base reader also consumes private overlay keys outside w.request's
-  // closed tab vocabulary. Admit only facts valid as native foreign targets.
+  const keys = requestKeyFacts.filter(wire=>wire.type==='w.request.key').map(wire=>{
+    const attrs={...wire.attrs};
+    delete attrs.tab;
+    return {...wire,attrs};
+  });
+  // Admit only facts valid as native foreign targets.
   if (!extended.tell(keys, {factsOnly:true}).ok) {
     for (const key of keys) extended.tell([key], {factsOnly:true});
   }

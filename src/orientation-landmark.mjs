@@ -23,14 +23,14 @@ export function compileOrientationLandmarks(facts,requestKeys,words=facts('core.
     .filter(wire=>field(wire,'comma')==='yes').flatMap(wire=>all(wire,'text').map(form)));
   const bindings=[];
   for (const wire of facts('pro.reader.orientation')) {
-    const [tab,family,act,attribute,sourceAttribute,landmarkType]=
-      ['tab','family','act','attribute','source_attribute','landmark_type'].map(name=>field(wire,name));
+    const [family,act,attribute,sourceAttribute,landmarkType]=
+      ['family','act','attribute','source_attribute','landmark_type'].map(name=>field(wire,name));
     const markers=new Set(all(wire,'text').map(form).filter(Boolean));
-    const catalog=requestKeys.filter(key=>key.tab===tab && key.family===family);
+    const catalog=requestKeys.filter(key=>key.family===family);
     const result=catalog.find(key=>key.name===attribute && key.head==='fill+span' && !key.values.length);
     const direction=catalog.find(key=>key.name===sourceAttribute && key.head==='class' && key.values.length);
     if (!act || !result || !direction || !landmarkType || !markers.size) continue;
-    bindings.push({tab,family,act,attribute,sourceAttribute,markers,
+    bindings.push({family,act,attribute,sourceAttribute,markers,
       markerWidth:Math.max(...[...markers].map(marker=>marker.split(' ').length)),
       landmarks:nativeInventory(facts,landmarkType,words)});
   }
@@ -54,9 +54,7 @@ function landmark(contents,binding,worlds) {
   if (binding.landmarks.has(surface)) return true;
   return contents.slice(1).some((_,i)=>{
     const term=contents.slice(i+1).map(token=>token.key).join(' ');
-    const named=binding.landmarks.has(term) || worlds.lookup(term).some(([role,,family])=>
-      role==='target' && worlds.familyTabs[family]?.includes(binding.tab));
-    return named && !contents.slice(1,i+1).some(({key})=>
+    return binding.landmarks.has(term) && !contents.slice(1,i+1).some(({key})=>
       worlds.determiners[key] || worlds.evidenceVocabulary.grammar.has(key) ||
       worlds.lookup(key).some(([role])=>['act','marker','reference'].includes(role)));
   });

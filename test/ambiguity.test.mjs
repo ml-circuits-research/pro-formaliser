@@ -15,8 +15,8 @@ test('proposal preserves every declared family hypothesis before context ranks i
   t.after(() => rmSync(dir,{recursive:true,force:true}));
   const familyNames = Array.from({length:14},(_,i)=>'instrument_' + (i+1));
   const file = join(dir,'overlay.sop');
-  writeFileSync(file,familyNames.map((family,i) =>
-    '@fixture.'+family+' pro.reader.target family='+family+' tab=workbench_'+(i+1)+
+  writeFileSync(file,familyNames.map(family =>
+    '@fixture.'+family+' pro.reader.target family='+family +
     ' act=place mode=existing sort=calibrand text=calibrand',
   ).join('\n'));
   const worlds = loadWorlds({paths:[file]});
@@ -33,15 +33,13 @@ test('proposal preserves every declared family hypothesis before context ranks i
   // Give the old context model a large family weight for a lower-ranked reading.
   // The proposal generator must use the same utterance-only order.
   const promoted = families.at(-1);
-  const tab = 'workbench_' + (familyNames.indexOf(promoted)+1);
   const stale = createReader({...blank,context:{
     calibrand:[['family:'+promoted,1000],['family:removed_family',1000]],
   }},worlds);
   t.after(() => stale.close());
   assert.deepEqual(await stale.propose(text),proposal);
 
-  const pipeline = await stale.formalise(text,{tab});
-  assert.equal(familyOf(pipeline),promoted);
+  const pipeline = await stale.formalise(text);
   assert.deepEqual(new Set([pipeline,...pipeline.alternatives].map(c=>c.sop)),
     new Set(proposal.candidates.map(c=>c.sop)));
   assert.equal(pipeline.candidateCount,proposal.candidateCount);

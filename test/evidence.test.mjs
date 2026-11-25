@@ -49,7 +49,29 @@ test('catalog distinguishes unknown keys, domains, and explicitly open values',a
   assert.deepEqual(catalogIssues(sample,worlds).map(x=>x.code),['outside_value_bank']);
   sample[2].attrs.open_value=['true'];
   assert.equal(catalogIssues(sample,worlds).length,0);
-  assert.deepEqual(catalogIssues(sample,worlds,'calendar').map(x=>x.code),['unlicensed_family','unlicensed_key']);
+  sample[1].attrs.family=['unknown_family'];
+  sample[2].attrs.attribute=['unknown.attribute'];
+  assert.deepEqual(catalogIssues(sample,worlds).map(x=>x.code),['unlicensed_family','unlicensed_key']);
+});
+
+test('catalog accepts mixed semantic request families and does not merge same-name value banks',async()=>{
+  const {catalogIssues}=await import('../src/catalog.mjs');
+  const worlds=loadWorlds();
+  const configured={...worlds,requestKeys:[...worlds.requestKeys,
+    {family:'node',name:'fixture.state',values:['active']},
+    {family:'meeting',name:'fixture.state',values:['pending']},
+  ]};
+  const mixed=parse([
+    '@draw w.request.request act=change',
+    '@node w.request.target request=$draw family=node mode=existing',
+    '@state w.request.constraint request=$draw on=attribute attribute=fixture.state value=active',
+    '@plan w.request.request act=change',
+    '@meeting w.request.target request=$plan family=meeting mode=existing',
+    '@schedule w.request.constraint request=$plan on=attribute attribute=fixture.state value=pending',
+  ].join('\n'));
+  assert.deepEqual(catalogIssues(mixed,configured),[]);
+  mixed.find(wire=>wire.id==='state').attrs.value=['pending'];
+  assert.deepEqual(catalogIssues(mixed,configured).map(issue=>[issue.wire,issue.code]),[['state','outside_value_bank']]);
 });
 
 test('spelling retains evidence offsets into both original and corrected text',async()=>{

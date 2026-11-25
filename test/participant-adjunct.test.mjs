@@ -26,7 +26,7 @@ async function reading(reader,worlds,text,expected) {
   assert.ok(result,text);
   const wires=parse(result.sop);
   assert.ok(validate(result.sop,worlds));
-  assert.deepEqual(catalogIssues(wires,worlds,'drawing'),[]);
+  assert.deepEqual(catalogIssues(wires,worlds),[]);
   assert.deepEqual(result.evidence.missing,[]);
   assert.equal(wires.filter(wire=>wire.type==='w.request.request').length,1);
   assert.equal(wires.filter(wire=>wire.type==='w.request.target').length,1);

@@ -1,5 +1,4 @@
 @pro.reader.universal_inventory core.type of=pro.reader.universal_inventory closed=true
-@pro.reader.universal_inventory.tab core.slot of=pro.reader.universal_inventory key=tab kind=atom required=true
 @pro.reader.universal_inventory.family core.slot of=pro.reader.universal_inventory key=family kind=atom required=true
 @pro.reader.universal_inventory.act core.slot of=pro.reader.universal_inventory key=act kind=atom required=true
 @pro.reader.universal_inventory.mode core.slot of=pro.reader.universal_inventory key=mode enum=existing required=true
@@ -8,9 +7,9 @@
 @pro.reader.universal_inventory.requires core.slot of=pro.reader.universal_inventory key=requires kind=atom
 @pro.reader.universal_inventory.requires_result core.slot of=pro.reader.universal_inventory key=requires_result kind=boolean
 
-@reader.universal.drawing.objects.remove pro.reader.universal_inventory tab=drawing family=drawn act=remove mode=existing provider=k.objects.object identity=name
-@reader.universal.drawing.shapes.remove pro.reader.universal_inventory tab=drawing family=drawn act=remove mode=existing provider=k.shapes.shape identity=name
-@reader.universal.drawing.people.remove pro.reader.universal_inventory tab=drawing family=drawn act=remove mode=existing provider=k.people.kind identity=name requires=drawing
-@reader.universal.drawing.objects.change pro.reader.universal_inventory tab=drawing family=drawn act=change mode=existing provider=k.objects.object identity=name requires_result=true
-@reader.universal.drawing.shapes.change pro.reader.universal_inventory tab=drawing family=drawn act=change mode=existing provider=k.shapes.shape identity=name requires_result=true
-@reader.universal.drawing.people.change pro.reader.universal_inventory tab=drawing family=drawn act=change mode=existing provider=k.people.kind identity=name requires=drawing requires_result=true
+@reader.universal.drawing.objects.remove pro.reader.universal_inventory family=drawn act=remove mode=existing provider=k.objects.object identity=name
+@reader.universal.drawing.shapes.remove pro.reader.universal_inventory family=drawn act=remove mode=existing provider=k.shapes.shape identity=name
+@reader.universal.drawing.people.remove pro.reader.universal_inventory family=drawn act=remove mode=existing provider=k.people.kind identity=name requires=drawing
+@reader.universal.drawing.objects.change pro.reader.universal_inventory family=drawn act=change mode=existing provider=k.objects.object identity=name requires_result=true
+@reader.universal.drawing.shapes.change pro.reader.universal_inventory family=drawn act=change mode=existing provider=k.shapes.shape identity=name requires_result=true
+@reader.universal.drawing.people.change pro.reader.universal_inventory family=drawn act=change mode=existing provider=k.people.kind identity=name requires=drawing requires_result=true
