@@ -1,5 +1,5 @@
 # Proposed additive module for relationships explicitly stated in a request.
-@w.relational core.module name=w.relational version=1 imports=w.request exports=predicate exports=reciprocal exports=shared exports=scaled exports=source_scope exports=beneficiary
+@w.relational core.module name=w.relational version=1 imports=w.request exports=predicate exports=reciprocal exports=shared exports=scaled exports=source_scope exports=beneficiary exports=landmark_pair
 @w.relational.world std.schema.world name=w.relational doc="Explicit relationships among selected things and their properties"
 
 # A directed binary predicate with a known meaning. Both directions must hold
@@ -75,3 +75,29 @@
 @w.relational.beneficiary.kind core.slot of=w.relational.beneficiary key=kind enum=pronoun enum=name required=true present=true
 @w.relational.beneficiary.value core.slot of=w.relational.beneficiary key=value kind=string required=true present=true
 @w.relational.beneficiary.words core.slot of=w.relational.beneficiary key=words kind=string required=true present=true
+
+# The selector constraints are resolved independently. The first and second
+# fields record source order. Neither landmark is another affected target.
+@w.relational.landmark_pair core.type of=w.relational.landmark_pair closed=true
+@w.relational.landmark_pair.request core.slot of=w.relational.landmark_pair key=request type=w.request.request required=true present=true
+@w.relational.landmark_pair.affected core.slot of=w.relational.landmark_pair key=affected type=w.request.target required=true present=true
+@w.relational.landmark_pair.first core.slot of=w.relational.landmark_pair key=first type=w.request.constraint required=true present=true
+@w.relational.landmark_pair.second core.slot of=w.relational.landmark_pair key=second type=w.request.constraint required=true present=true
+@w.relational.landmark_pair.mode core.slot of=w.relational.landmark_pair key=mode enum=between enum=midpoint required=true present=true
+@w.relational.landmark_pair.words core.slot of=w.relational.landmark_pair key=words kind=string required=true present=true
+
+@w.relational.check.pair_first w.relational.landmark_pair request=?relation_request first=$w.relational.check.anchor
+@w.relational.check.pair_second w.relational.landmark_pair request=?relation_request second=$w.relational.check.anchor
+@w.relational.check.pair_affected w.relational.landmark_pair request=?relation_request affected=$w.relational.check.target
+@w.relational.check.anchor w.request.constraint request=?target_request
+@w.relational.check.pair_first.owner core.deny when=$w.relational.check.pair_first when=$w.relational.check.anchor if=$w.relational.check.different_request why="The first landmark belongs to a different request."
+@w.relational.check.pair_second.owner core.deny when=$w.relational.check.pair_second when=$w.relational.check.anchor if=$w.relational.check.different_request why="The second landmark belongs to a different request."
+@w.relational.check.pair_affected.owner core.deny when=$w.relational.check.pair_affected when=$w.relational.check.target if=$w.relational.check.different_request why="The affected target belongs to a different request."
+@w.relational.check.pair_duplicate w.relational.landmark_pair first=?anchor second=?anchor
+@w.relational.check.pair_duplicate.deny core.deny when=$w.relational.check.pair_duplicate why="A landmark pair requires two distinct selector wires."
+
+@w.relational.check.pair_nonselector w.request.constraint phase=result
+@w.relational.check.pair_first_result w.relational.landmark_pair first=$w.relational.check.pair_nonselector
+@w.relational.check.pair_second_result w.relational.landmark_pair second=$w.relational.check.pair_nonselector
+@w.relational.check.pair_first_selector core.deny when=$w.relational.check.pair_first_result when=$w.relational.check.pair_nonselector why="The first landmark must be a selector."
+@w.relational.check.pair_second_selector core.deny when=$w.relational.check.pair_second_result when=$w.relational.check.pair_nonselector why="The second landmark must be a selector."

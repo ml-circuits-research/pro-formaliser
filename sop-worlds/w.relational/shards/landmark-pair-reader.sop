@@ -1,0 +1,9 @@
+# The declared cue says how to locate an affected item relative to two written anchors.
+@pro.reader.landmark_pair core.type of=pro.reader.landmark_pair closed=true
+@pro.reader.landmark_pair.text core.slot of=pro.reader.landmark_pair key=text kind=string many=true required=true
+@pro.reader.landmark_pair.mode core.slot of=pro.reader.landmark_pair key=mode enum=between enum=midpoint required=true
+@pro.reader.landmark_pair.relation core.slot of=pro.reader.landmark_pair key=relation kind=atom required=true
+@pro.reader.landmark_pair.joiner core.slot of=pro.reader.landmark_pair key=joiner kind=atom required=true
+@pro.reader.landmark_pair.lead core.slot of=pro.reader.landmark_pair key=lead kind=string many=true
+@reader.landmark_pair.interval pro.reader.landmark_pair text=between mode=between relation=between joiner=and lead=next
+@reader.landmark_pair.midpoint pro.reader.landmark_pair text="halfway between" text="midway between" mode=midpoint relation=between joiner=and lead=next

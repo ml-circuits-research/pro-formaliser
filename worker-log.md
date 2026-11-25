@@ -273,3 +273,7 @@
 
 ## Repeated operands replay
 - All 1,000 primary and 1,000 independent inputs replayed. All-staged coverage 55.0% including spelling and 45.7% on independent originals. See eval/RESULTS.md for grades and limitations.
+
+## Placement between two written landmarks
+- Prolog separates a written landmark pair and preserves interval versus midpoint. The relational circuit validates one affected item, independent typed selector lookups, and common request ownership.
+- All 384 tests passed. The public checker accepted the actual Deploy and Plan request. The PSys2 converter retains both words and selectors while losing the typed relation and lookup associations.

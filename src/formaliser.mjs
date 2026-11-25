@@ -1,3 +1,4 @@
+import {landmarkPairReadings} from './landmark-pairs.mjs';
 import {sentenceRequestReadings} from './sentence-requests.mjs';
 import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
@@ -739,6 +740,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
+      for (const reading of await landmarkPairReadings(text,worlds,wrapped,permit,packet=>worker.request({landmarkPair:packet}))) {
+        const key=admissibleKey(text,reading.sop);
+        if (key) additional.set(key,reading);
+      }
       for (const reading of [...await benefactiveReadings(text,worlds,wrapped,permit), ...await participantAdjunctReadings(text,worlds,wrapped,permit), ...await effectSequence(text,read), ...await setExclusionReadings(text,worlds,read,permit,packet=>worker.request({setExclusion:packet}))]) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);

@@ -11,6 +11,7 @@
 :- use_module(argument_sequences).
 :- use_module(member_actions).
 :- use_module(universal_inventory).
+:- use_module(landmark_pairs).
 :- use_module(set_exclusion).
 :- use_module(verb_effects).
 :- use_module(coordinated_effects).
@@ -26,6 +27,7 @@ main :- repeat,
             E, (print_message(error, E), halt(1))),
       nl, flush_output, fail ).
 
+answer(Q, Plans) :- get_dict(landmarkPair,Q,Packet), !, landmark_pair_plans(Packet,Plans).
 answer(Q, Plans) :- get_dict(setExclusion,Q,Packet), !, exclusion_plans(Packet,Plans).
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
 answer(Q, _{candidates:Answers,frontedCandidates:Fronted,universalCandidates:Universal,proofs:Proofs,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
