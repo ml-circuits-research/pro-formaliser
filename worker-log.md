@@ -368,3 +368,8 @@
 ## Causal tails
 - Frozen 822 and 945 retain the main edit and the explanation separately. The typed cause in 942 still passes. The remaining appearance construction and staged vocabulary are recorded for review.
 - All 436 isolated release tests passed. The benchmark remains paused.
+
+## Specified state and written preference scope
+- The trained replay of frozen 73 grounds avatar, specified appearance and exact tab scope. Only the separately preserved reason is unread.
+- The workbench overlay verifies the same grammar with independent schema data. Canonical routing and scope limits are recorded for review.
+- All 438 isolated release tests passed. The benchmark remains paused.

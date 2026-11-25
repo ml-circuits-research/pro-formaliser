@@ -131,6 +131,65 @@ test('an overlay can install a verb-free result frame and a multiword closed ali
   assert.deepEqual(reading.catalog.issues,[]);
 });
 
+test('keeps the specified state, the written scope and its reason on one owner', async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  const scope='Whatever I do in the diagram tab';
+  const reason='because I do not want to change it every morning';
+  const {candidates}=await reader.propose(`${scope}, my avatar should remain a person with glasses, ${reason}.`,{evidence:true});
+  const reading=candidates.find(c=>hasBindings([c],{
+    'preference.scope':[scope,undefined], 'drawn.about':['a person with glasses',undefined],
+  }) && parse(c.sop).some(w=>w.type==='w.request.unread' && value(w.attrs.text[0])===reason));
+  assert.ok(reading);
+  const wires=parse(reading.sop), requests=wires.filter(w=>w.type==='w.request.request');
+  assert.equal(requests.length,1);
+  assert.equal(value(requests[0].attrs.predicate[0]),'should remain');
+  const target=wires.find(w=>w.type==='w.request.target');
+  assert.equal(value(target.attrs.description[0]),'my avatar');
+  assert.equal(value(target.attrs.mode[0]),'existing');
+  assert.ok(!('drawn.keep' in bindings(reading.sop)));
+  assert.ok(wires.every(w=>!w.attrs.request || w.attrs.request[0]==='$'+requests[0].id));
+  assert.deepEqual(reading.evidence.missing,[]);
+  assert.deepEqual(reading.catalog.issues,[]);
+  assert.ok(!reading.evidence.counts.uncovered);
+
+  for (const text of [
+    'If approved, my avatar should remain a person with glasses.',
+    'My avatar should not remain a person with glasses.',
+    'My avatar should remain as it is.',
+    'My avatar should remain a person and delete the chart.',
+    'My avatar should remain a person delete the chart.',
+    'Label the box "my avatar should remain a person".',
+    'Whatever I do in the diagram tab my avatar should remain a person.',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(c=>c.source!=='argument-frame'),text);
+  }
+});
+
+test('reads installed state and scope declarations for another catalog', async t=>{
+  const dir=mkdtempSync(fileURLToPath(new URL('../.cache/state-overlay-',import.meta.url)));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  writeFileSync(join(dir,'frame.sop'),[
+    '@bench std.schema.world name=w.workbench',
+    '@device std.schema.kind of=w.workbench.device world=w.workbench acts=change',
+    '@setting w.request.key tab=workbench family=device name=device.state head=span',
+    '@scope w.request.key tab=workbench family=preference name=preference.scope head=span',
+    '@format pro.reader.argument_format tab=workbench family=device key=device.state format=nominal_description',
+    '@frame pro.reader.argument_sequence tab=workbench family=device act=change mode=existing prefix="throughout work in" owner=quilloscope predicate_surface="must stay" scope_attribute=preference.scope part="$scope" part="," part="$owner" part="$predicate" part=device.state structured_part=device.state',
+  ].join('\n'));
+  const reader=createReader(undefined,loadWorlds({paths:[dir]}));
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose('Throughout work in the lab, my quilloscope must stay a portable device.',{evidence:true});
+  const reading=candidates.find(c=>hasBindings([c],{
+    'device.state':['a portable device',undefined], 'preference.scope':['Throughout work in the lab',undefined],
+  }));
+  assert.ok(reading);
+  assert.equal(reading.status,'matched');
+  assert.deepEqual(reading.evidence.missing,[]);
+  assert.deepEqual(reading.catalog.issues,[]);
+});
+
 test('an occupied result field and off-anchor target block sequence augmentation', () => {
   const text='Make chart of total Revenue by Account';
   const candidate={sop:[

@@ -8,6 +8,7 @@ const identifier = /^[\p{L}\p{N}][\p{L}\p{N}_-]*$/u;
 const shapeByFormat = new Map([
   ['identifier', ['candidate','span']], ['date', ['candidate','span']],
   ['clock', ['candidate','span']], ['zone', ['candidate','span']], ['measurement', ['number']],
+  ['nominal_description', ['span']],
 ]);
 const one = (wire,key) => str(wire.attrs[key]?.[0]);
 const form = text => tokens(text).map(([key])=>key).join(' ');
@@ -45,6 +46,16 @@ function operand(format,raw,worlds,family,key) {
     }
     case 'clock': return clock.test(raw) ? '' : undefined;
     case 'zone': return worlds.argumentZones.has(form(raw)) ? '' : undefined;
+    case 'nominal_description': {
+      const [article,...terms]=tokens(raw).map(([term])=>term);
+      if (!worlds.determiners[article] || !terms.length || terms.some(term=>
+        !/^[\p{L}\p{M}\p{N}_]+$/u.test(term) || worlds.joiners[term] || worlds.negatives.has(term) ||
+        worlds.scopeGrammar.conditionals.has(term) || worlds.scopeGrammar.modals.has(term))) return;
+      if (terms.some((term,i)=>worlds.determiners[terms[i+1]] &&
+          worlds.lookup(term).some(([role])=>role==='act'))) return;
+      return !worlds.evidenceVocabulary.grammar.has(terms[0]) &&
+        !worlds.evidenceVocabulary.grammar.has(terms.at(-1)) ? '' : undefined;
+    }
     case 'measurement': {
       if (!/^[\p{L}\p{N}.+\- ]+$/u.test(raw)) return;
       const result=resolveWrittenMeasurement(raw,worlds,family,key);

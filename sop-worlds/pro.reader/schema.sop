@@ -134,11 +134,12 @@
 @pro.reader.argument_format.tab core.slot of=pro.reader.argument_format key=tab kind=atom required=true
 @pro.reader.argument_format.family core.slot of=pro.reader.argument_format key=family kind=atom required=true
 @pro.reader.argument_format.key core.slot of=pro.reader.argument_format key=key kind=atom required=true
-@pro.reader.argument_format.format core.slot of=pro.reader.argument_format key=format enum=identifier enum=date enum=clock enum=zone enum=measurement required=true
+@pro.reader.argument_format.format core.slot of=pro.reader.argument_format key=format enum=identifier enum=date enum=clock enum=zone enum=measurement enum=nominal_description required=true
 
 @pro.reader.argument_sequence.owner core.slot of=pro.reader.argument_sequence key=owner kind=string many=true
 @pro.reader.argument_sequence.owner_key core.slot of=pro.reader.argument_sequence key=owner_key kind=atom
 @pro.reader.argument_sequence.owner_value core.slot of=pro.reader.argument_sequence key=owner_value kind=atom kind=string
+@pro.reader.argument_sequence.scope_attribute core.slot of=pro.reader.argument_sequence key=scope_attribute kind=atom
 @pro.reader.argument_sequence.scope_literal_slot core.slot of=pro.reader.argument_sequence key=scope_literal_slot kind=atom
 @pro.reader.argument_sequence.scope_literal core.slot of=pro.reader.argument_sequence key=scope_literal kind=string many=true
 @pro.reader.argument_sequence.tail core.slot of=pro.reader.argument_sequence key=tail kind=string many=true
