@@ -62,3 +62,7 @@
 @reader.chart.period_adjective.month core.word of=chart.period means=month text=monthly
 @reader.chart.period_adjective.quarter core.word of=chart.period means=quarter text=quarterly text=quarter-by-quarter
 @reader.chart.period_adjective.year core.word of=chart.period means=year text=annual text=yearly text=year-by-year
+
+# Alternate ordering of data arguments on a displayed chart.
+@reader.chart.dimension.contrast pro.reader.analytical_frame tab=diagram family=chart layout=ordered_fields owner_key=chart.type owner_value=bar owner="a bar chart" owner="a column chart" prefix="we want" prefix="we need" prefix="I want" prefix="show me" prefix="give me" prefix=plot pattern="the {chart.aggregate} {chart.measure} versus {chart.dimension} as {$owner}" pattern="{chart.aggregate} {chart.measure} versus {chart.dimension} as {$owner}" pattern="{$owner} of {chart.dimension} across and {chart.aggregate} {chart.measure} up" pattern="{$owner} of {chart.dimension} across and {chart.measure} up" open_boundary=or open_boundary="for the" open_boundary=except
+@reader.chart.period.per_group pro.reader.analytical_frame tab=diagram family=chart layout=ordered_fields owner_key=chart.type owner_value=line owner="a line chart" owner="a line graph" prefix="give me" prefix="show me" prefix=make prefix=build prefix=plot pattern="{$owner} of {chart.aggregate} for each {chart.period} of {chart.measure}" pattern="{$owner} of {chart.aggregate} of {chart.measure} for each {chart.period}" open_boundary=or open_boundary=and open_boundary=except

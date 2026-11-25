@@ -254,3 +254,27 @@ test('composes periodic summaries from catalogued periods and operations',async 
       !properties(parse(c.sop))['chart.aggregate']),input);
   }
 });
+
+test('binds the primary dimension and series dimension to separate data roles',async t=>{
+  const path=fileURLToPath(new URL('../sop-worlds/chart-series-pilot/',import.meta.url));
+  const reader=createReader(undefined,loadWorlds({paths:[path]}));
+  t.after(()=>reader.close());
+  await proves(reader,'Build a clustered column chart of donations by province, split by method, with the legend on the left.',{
+    'chart.type':'bar','chart.measure':'donations','chart.dimension':'province',
+    'chart.seriesDimension':'method','chart.orientation':'vertical','chart.stacking':'none','chart.legend':'left'
+  });
+  await proves(reader,'Give me a grouped bar chart of average donations broken down by month and method for the committee review, with the values printed on the marks.',{
+    'chart.type':'bar','chart.measure':'donations','chart.aggregate':'avg','chart.dimension':'month',
+    'chart.seriesDimension':'method','chart.intendedUse':'the committee review','chart.stacking':'none','chart.show_values':'show'
+  });
+  await proves(reader,'Draw a stacked column chart of donations by province and method for the annual review, and put the legend on the right.',{
+    'chart.type':'bar','chart.measure':'donations','chart.dimension':'province',
+    'chart.seriesDimension':'method','chart.intendedUse':'the annual review',
+    'chart.orientation':'vertical','chart.stacking':'stacked','chart.legend':'right'
+  });
+  for (const text of ['Build a stacked bar chart of donations by province or county, split by method.',
+    'Build a stacked bar chart of donations by province and do not split by method.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(c=>c.source!=='argument-frame' || !c.sop.includes('chart.seriesDimension')),text);
+  }
+});

@@ -259,3 +259,7 @@
 ## Sentence and visibility replay
 - Finished primary and independent 1,000-request replays. All-staged primary 54.4% with spelling and independent 45.6% on originals. The observed changes are additive.
 - All 378 tests passed. Per-level percentages and paired judgments are in eval/RESULTS.md and eval/SENTENCE-REPLAY.tsv.
+
+## Analytical arguments with multiple data roles
+- Protect complete connector phrases in the ordered argument parser. Data operands can now contain a word used elsewhere by a connector without absorbing the connector itself.
+- The chart overlay distinguishes primary categories, series categories, intended use and visible properties. Native checked the held-out stacked-column request and all 379 tests passed.

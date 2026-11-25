@@ -118,9 +118,11 @@ export function sequencePacket(ts,worlds) {
     } else if (!f.prefix.some((_,a)=>f.prefix.slice(a).some((_,b)=>
       worlds.lookup(f.prefix.slice(a,a+b+1).join(' ')).some(([role,act,family,mode])=>
         role==='target' && act===f.act && family===f.family && mode===f.mode)))) continue;
-    const literals=new Set(f.parts.flatMap(p=>p.literal ?? []));
+    // A connector reserves its complete phrase. An article inside that
+    // phrase can still belong to a different written operand.
+    const connectors=f.parts.flatMap(part=>part.literal ? [part.literal] : []);
     const protectedPositions=new Set();
-    for (const words of [...f.boundPhrases ?? [],...f.boundaries]) {
+    for (const words of [...connectors,...f.boundPhrases ?? [],...f.boundaries]) {
       for (let from=start;from+words.length<=stop;from++) {
         if (!matchesAt(ts,from,words)) continue;
         for (let at=from;at<from+words.length;at++) protectedPositions.add(at);
@@ -135,7 +137,7 @@ export function sequencePacket(ts,worlds) {
       }
     }
     const input=ts.slice(start,stop).map(([word,,a,b],j)=>{
-      const protectedWord=protectedPositions.has(start+j) || literals.has(word) ||
+      const protectedWord=protectedPositions.has(start+j) ||
         worlds.negatives.has(word) || worlds.scopeGrammar.conditionals.has(word) ||
         Boolean(worlds.joiners[word]) || worlds.scopeGrammar.auxiliary.has(word) ||
         worlds.lookup(word).some(([role])=>role==='marker') ||
