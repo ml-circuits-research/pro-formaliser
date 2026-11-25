@@ -2,6 +2,7 @@ import { tokens } from './lexicon.mjs';
 import { quotedSpans } from './literal-roles.mjs';
 import { resolveWrittenMeasurement } from './owner-property.mjs';
 import { parse } from './schema.mjs';
+import { universalOwner } from './universal-inventory.mjs';
 
 const quote=JSON.stringify;
 const decode=item=>item?.startsWith('"') ? JSON.parse(item) : item;
@@ -107,6 +108,13 @@ function resolveOwner(tokens,span,a,b,worlds,frame,heads) {
   const words=span(a,b);
   const normalized=names(tokens,a,b);
   if (normalized.split(' ').some(token=>worlds.negatives.has(token) || worlds.joiners[token])) return;
+  const population=universalOwner(tokens.slice(a,b),worlds,frame.family,'change');
+  if (population) {
+    if (!population.sort) return;
+    return {words,description:words,licensed:true,identity:normalized,population:{
+      sort:population.sort,sortWords:span(a+population.nounStart,b),
+    }};
+  }
   const determiner=worlds.determiners[tokens[a][0]];
   const headStart=determiner ? a+1 : a;
   if (headStart===b || ['indefinite','quantified'].includes(determiner) || worlds.isReference(normalized) ||
@@ -315,7 +323,8 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
       const {family}=path[0];
       const inherited=path.some(effect=>effect.inheritOwner);
       if (inherited && (path[0].inheritOwner || !path[0].owner?.licensed ||
-          tokens(path[0].owner.words).some(([term])=>worlds.scopeGrammar.universals.has(term)))) continue;
+          !path[0].owner.population &&
+          tokens(path[0].owner.words).some(([term])=>worlds.scopeGrammar.universalHeads.has(term)))) continue;
       if (path.length>1 && path.some(effect=>effect.negative || effect.value.unresolved)) continue;
       const topics=start ? Array.from({length:start-1},(_,at)=>at).flatMap(at=>{
         if (!leadAllowed(norm(0,at))) return [];
@@ -333,11 +342,15 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
       if (anaphoric && owners.length && !owner?.name) continue;
       const contextual=!owners.length && path.every(effect=>!effect.value.open || effect.owner?.reference);
       if (!contextual && (!owner || new Set(owners.map(item=>item.identity)).size!==1)) continue;
-      const predicate=(contextual || inherited) && path[0].predicate;
+      const population=owner?.population;
+      if (population && (anaphoric || path.some(effect=>effect.value.open || effect.value.unresolved || effect.negative))) continue;
+      const predicate=(contextual || inherited || population) && path[0].predicate;
+      const target=population ? 'fill=all quantifier=all sort='+quote(population.sort)+
+        ' sort_words='+quote(population.sortWords)+' count_words='+quote(owner.description)+' description='+quote(owner.description) :
+        contextual ? 'fill=context' : owner.name ? 'fill=written name='+quote(owner.name) : 'fill=description description='+quote(owner.description);
       const lines=['@r w.request.request act=change mood=do words='+quote(text)+(predicate ? ' predicate='+quote(predicate) : ''),
-        '@t w.request.target request=$r family='+quote(family)+' mode=existing '+
-          (contextual ? 'fill=context' : owner.name ? 'fill=written name='+quote(owner.name) : 'fill=description description='+quote(owner.description)),
-        '@l w.request.lookup request=$r target=$t key=thing from=page'];
+        '@t w.request.target request=$r family='+quote(family)+' mode=existing '+target];
+      if (!population) lines.push('@l w.request.lookup request=$r target=$t key=thing from=page');
       for (const [i,effect] of path.entries()) {
         const {key,keyWords,value}=effect;
         if (value.unresolved) {

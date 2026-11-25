@@ -4,7 +4,7 @@ import {compileRequestIntents} from './request-intents.mjs';
 import {structuredZones} from './structured-arguments.mjs';
 import {compileBenefactives} from './benefactive.mjs';
 import {compileParticipantAdjuncts} from './participant-adjunct.mjs';
-import {compileUniversalInventory,universalInventoryProviderTypes,universalInventoryType} from './universal-inventory.mjs';
+import {compileUniversalAgreement,compileUniversalInventory,universalInventoryProviderTypes,universalInventoryType} from './universal-inventory.mjs';
 import {compileSourceContainers} from './source-container.mjs';
 import {compileSetExclusions} from './set-exclusion.mjs';
 import {compileSpatialModifiers} from './spatial-modifier.mjs';
@@ -623,6 +623,7 @@ function compile(facts) {
     .flatMap(w=>values(w,'text').map(phrase)));
   const frames=argumentSequences(type=>type==='pro.reader.argument_sequence' ?
     [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys);
+  const universalAgreement=compileUniversalAgreement(facts);
   return {
     bodyLeads:{neutral:leadForms('neutral'),nominal:leadForms('nominal'),actionOnly:leadForms('action_only')},
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
@@ -697,7 +698,7 @@ function compile(facts) {
       return meanings?.size===1 && meanings.has(value);
     },
     compoundReferences:facts('pro.reader.compound_reference').map(w=>({family:one(w,'family'),firstKey:one(w,'first_key'),secondKey:one(w,'second_key'),delimiter:one(w,'delimiter')})),
-    universalInventory:compileUniversalInventory(facts,words,targetFamilies),
+    universalAgreement, universalInventory:compileUniversalInventory(facts,words,targetFamilies,universalAgreement),
     nominalClasses, participantAdjuncts:compileParticipantAdjuncts(facts,requestKeys), sourceContainers:compileSourceContainers(facts), landmarkPairs:compileLandmarkPairs(facts), setExclusions:compileSetExclusions(facts), spatialModifiers:compileSpatialModifiers(facts), spatialBindings, selectorKeys, identityAssignmentVerbs,
     predicateTransferFacts:{
       verbs:facts('k.actions.verb'), frames:facts('w.lang.en.frame'),

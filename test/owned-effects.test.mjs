@@ -209,10 +209,37 @@ test('inherits an explicit owner for coordinated assignments with distinct prope
     'Set the width of the nose to 9 and the height to 11 if selected',
     'Set the width of the nose to 9 and the width to 11',
     'Set the width of the nose to 9 and the height of the mouth to 11',
-    'Set the width of all the trees to 20 and the height to 25',
+    'Set the width of all the trees near the house to 20 and the height to 25',
   ]) {
     const {candidates}=await reader.propose(text);
     assert.ok(!candidates.some(candidate=>candidate.source==='owned-effects' &&
       parse(candidate.sop).filter(wire=>wire.type==='w.request.constraint').length>1),text);
+  }
+});
+
+test('retains the quantified sort through all coordinated properties',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [nominal,sortWords] of [['all the trees','trees'],['every single tree','tree'],['each of the trees','trees']]) {
+    const text='Set the width of '+nominal+' to 180 and the x to 120 and the y to 80 and the height to 90';
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>candidate.source==='owned-effects' && candidate.sop.includes('fill=all'));
+    assert.ok(reading,text);
+    const wires=parse(reading.sop), target=wires.find(wire=>wire.type==='w.request.target');
+    assert.deepEqual(target.attrs,{request:['$r'],family:['"drawn"'],mode:['existing'],fill:['all'],quantifier:['all'],
+      sort:['"tree"'],sort_words:[JSON.stringify(sortWords)],count_words:[JSON.stringify(nominal)],
+      description:[JSON.stringify(nominal)]});
+    assert.ok(!wires.some(wire=>wire.type==='w.request.lookup'));
+    assert.deepEqual(wires.filter(wire=>wire.type==='w.request.constraint').map(wire=>
+      [JSON.parse(wire.attrs.attribute[0]),wire.attrs.value[0],wire.attrs.request[0]]),
+    [['drawn.width','180','$r'],['drawn.x','120','$r'],['drawn.y','80','$r'],['drawn.height','90','$r']]);
+    assert.deepEqual(reading.catalog.issues,[]);
+    assert.deepEqual(reading.evidence.missing,[]);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0);
+  }
+  for (const nominal of ['all tree','every trees','all the unknownboxes','all the old trees',
+    'all the trees near the house','all the trees except the small one']) {
+    const {candidates}=await reader.propose('Set the width of '+nominal+' to 20 and the height to 25');
+    assert.ok(!candidates.some(candidate=>candidate.source==='owned-effects' && candidate.sop.includes('fill=all')),nominal);
   }
 });

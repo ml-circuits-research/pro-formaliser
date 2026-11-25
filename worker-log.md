@@ -417,3 +417,8 @@
 - Frozen 131 gains a complete part-scale proposal with the same trained model. Independent installed-world probes recover the required properties on House in frozen 96 and 199.
 - Reused part and slot inventories and added a guarded shared-owner continuation. Canonical routing and the remaining live lookup are recorded in the review response.
 - All 453 isolated release tests passed. No benchmark rerun.
+
+## Universal owners in coordinated assignments
+- Frozen scenes-24 row 635 now binds the existing tree population and all four properties with and without the trained model.
+- Shared agreement and exact noun binding preserve the written scope. Restricted populations still require grounded selectors.
+- All 454 isolated release tests passed. No benchmark rerun.

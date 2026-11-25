@@ -8,12 +8,6 @@
 @pro.reader.universal_inventory.requires core.slot of=pro.reader.universal_inventory key=requires kind=atom
 @pro.reader.universal_inventory.requires_result core.slot of=pro.reader.universal_inventory key=requires_result kind=boolean
 
-@pro.reader.universal_agreement core.type of=pro.reader.universal_agreement closed=true
-@pro.reader.universal_agreement.text core.slot of=pro.reader.universal_agreement key=text kind=string many=true required=true
-@pro.reader.universal_agreement.number core.slot of=pro.reader.universal_agreement key=number enum=sg enum=pl required=true
-@reader.universal_agreement.distributive pro.reader.universal_agreement number=sg text=every text="every single" text=each
-@reader.universal_agreement.plural pro.reader.universal_agreement number=pl text=all text="all the" text="all of the" text="every one of the" text="each of the"
-
 @reader.universal.drawing.objects.remove pro.reader.universal_inventory tab=drawing family=drawn act=remove mode=existing provider=k.objects.object identity=name
 @reader.universal.drawing.shapes.remove pro.reader.universal_inventory tab=drawing family=drawn act=remove mode=existing provider=k.shapes.shape identity=name
 @reader.universal.drawing.people.remove pro.reader.universal_inventory tab=drawing family=drawn act=remove mode=existing provider=k.people.kind identity=name requires=drawing

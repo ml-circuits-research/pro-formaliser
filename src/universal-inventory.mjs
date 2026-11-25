@@ -13,7 +13,44 @@ export function universalInventoryProviderTypes(facts) {
   return nativeTargetProviderTypes(view(facts));
 }
 
-export function compileUniversalInventory(facts,words,licensed) {
+export function compileUniversalAgreement(facts) {
+  const agreements=facts('pro.reader.universal_agreement').flatMap(wire=>{
+    const number=one(wire,'number');
+    if (!['sg','pl'].includes(number)) return [];
+    return vals(wire,'text').map(phrase=>[keys(phrase),number]);
+  });
+  const invariant=new Set(facts('w.lang.en.irregular').filter(w=>one(w,'singular')===one(w,'plural'))
+    .map(w=>one(w,'singular')).filter(Boolean).map(text=>keys(text).join(' ')));
+  return {agreements,invariant,heads:new Set(agreements.map(([[head]])=>head))};
+}
+
+// Match the entire written noun after a declared quantifier. An unsupported
+// qualifier or number mismatch cannot broaden a population to its bare sort.
+export function universalOwner(ts,worlds,family,act) {
+  const agreement=worlds.universalAgreement;
+  if (!agreement?.heads.has(ts[0]?.[0])) return;
+  const [prefix,number]=agreement.agreements.filter(([form])=>
+    worlds.scopeGrammar.universals.has(form.join(' ')) && form.every((term,i)=>ts[i]?.[0]===term))
+    .sort(([a],[b])=>b.length-a.length)[0] ?? [];
+  if (!prefix || prefix.length===ts.length) return {};
+  const words=ts.slice(prefix.length).map(([term])=>term);
+  const surface=words.join(' ');
+  const lookup=text=>{
+    const entries=(worlds.ownerInventory?.get(JSON.stringify([act,text])) ?? [])
+      .filter(item=>item.family===family).map(({sort})=>['target',act,family,'existing',sort,0]);
+    const pilot=worlds.universalInventory?.lookup(text).filter(([,sense,owner])=>sense===act && owner===family) ?? [];
+    return [...entries,...pilot];
+  };
+  const singular=lookup(surface);
+  const plural=worlds.nominalInflection(surface,lookup);
+  const invariant=agreement.invariant.has(words.at(-1));
+  const compatible=number==='pl' ? [...plural,...(invariant ? singular : [])] :
+    plural.length && !invariant ? [] : singular;
+  const sorts=new Set(compatible.map(entry=>entry[4]).filter(Boolean));
+  return sorts.size===1 ? {sort:[...sorts][0],nounStart:prefix.length} : {};
+}
+
+export function compileUniversalInventory(facts,words,licensed,agreement=compileUniversalAgreement(facts)) {
   const declarations=facts(universalInventoryType);
   if (!declarations.length) return;
   const records=nativeTargetInventory(view(facts),words,licensed);
@@ -32,15 +69,8 @@ export function compileUniversalInventory(facts,words,licensed) {
       surfaces.set(text,values);
     }
   }
-  const agreements=facts('pro.reader.universal_agreement').flatMap(wire=>{
-    const number=one(wire,'number');
-    if (!['sg','pl'].includes(number)) return [];
-    return vals(wire,'text').map(phrase=>[keys(phrase),number]);
-  });
-  const invariant=new Set(facts('w.lang.en.irregular').filter(w=>one(w,'singular')===one(w,'plural'))
-    .map(w=>one(w,'singular')).filter(Boolean).map(text=>keys(text).join(' ')));
   const lookup=term=>[...(surfaces.get(term)?.values() ?? [])];
-  return {lookup,agreements,invariant,resultActions,heads:new Set(agreements.map(([[head]])=>head))};
+  return {lookup,resultActions,...agreement};
 }
 
 export function universalInventoryPacket(ts,quotes,worlds) {
