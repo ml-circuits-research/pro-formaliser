@@ -84,6 +84,12 @@ export function argumentSequences(facts,catalog,formats=compileStructuredArgumen
     const family=one(w,'family'),act=one(w,'act'),mode=one(w,'mode');
     const props=new Map(catalog.filter(k=>k.family===family).map(k=>[k.name,k]));
     const owners=many(w,'owner').map(keys).filter(words=>words.length), ownerKey=one(w,'owner_key'),ownerValue=one(w,'owner_value');
+    const ownerSort=one(w,'owner_sort'), ownerKindType=one(w,'owner_kind_type');
+    const sortWords=ownerSort ? keys(ownerSort) : [];
+    if (Boolean(ownerSort)!==Boolean(ownerKindType) || ownerSort &&
+        (mode!=='new' || !owners.length || !sortWords.length ||
+         !facts(ownerKindType).some(kind=>one(kind,'name')===ownerSort) ||
+         owners.some(words=>!sortWords.every((word,i)=>word===words[words.length-sortWords.length+i])))) continue;
     const inferred=one(w,'inferred_owner')==='true', contextual=one(w,'contextual_owner')==='true';
     if (inferred && (owners.length || mode!=='new' || ownerKey || contextual) ||
         contextual && (owners.length || mode!=='existing' || ownerKey)) continue;
@@ -169,7 +175,7 @@ export function argumentSequences(facts,catalog,formats=compileStructuredArgumen
     for (const prefix of ownerLed || contextual ? [[]] : declaredPrefixes) {
       const head=prefix[0] ?? '';
       const entries=index.get(head) ?? [];
-      entries.push({prefix,parts,family,act,mode,owned,inferred,ownerKey,ownerValue,tails,boundaries,numericModifiers,
+      entries.push({prefix,parts,family,act,mode,owned,inferred,ownerKey,ownerValue,ownerSort,sortWords:sortWords.length,tails,boundaries,numericModifiers,
         bindsPredicate,ownerLed,contextual,contextualNumeric,orderedNumericPair,requestMode,modeMarker,
         scopeAttribute,scopeLiteralSlot,scopeLiterals});index.set(head,entries);
     }
@@ -254,6 +260,9 @@ export function sequencePacket(ts,worlds,restricted=false,text) {
         const boundary=f.prefix.findLastIndex(word=>[',',':'].includes(word));
         packet.owned={...addressed,inferred:f.inferred,ownerKey:f.ownerKey ?? '',ownerValue:f.ownerValue ?? '',
           utteranceEnd:ts[stop-1][3]};
+        if (f.ownerSort) Object.assign(packet.owned,{ownerSort:f.ownerSort,sortWords:f.sortWords});
+        const counts=parts.filter(part=>part.format==='positive_count').map(part=>part.key);
+        if (counts.length) packet.owned.counts=counts;
         if (f.contextual) packet.owned.contextual=true;
         if (f.orderedNumericPair) packet.owned.orderedNumericPair=true;
         if (f.requestMode) packet.owned.requestMode=f.requestMode;
@@ -328,6 +337,8 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels,adjuncts
   const identity=proof.bindings.find(([key])=>key===identityPart);
   if (!owner && !proof.owned.inferred && !contextual) return;
   const noun=owner && span(owner[2],owner[3]);
+  const sort=proof.owned.ownerSort && noun ? ' sort='+encode(proof.owned.ownerSort)+' sort_words='+
+    encode(Array.from(noun).slice(tokens(noun).at(-proof.owned.sortWords)[2]).join('')) : '';
   const target=identity ? ' fill=written name='+encode(span(identity[2],identity[3]))+' family_words='+encode(noun) :
     contextual ? ' fill=context' : proof.mode==='existing' ? ' fill=description description='+encode(noun) :
       noun ? ' determiner=indefinite family_words='+encode(noun) : '';
@@ -335,7 +346,7 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels,adjuncts
     '@r1 w.request.request act='+encode(proof.act)+' mood=do'+(requestMode ? ' mode='+requestMode : '')+
       (predicateStart===undefined ? '' : ' predicate='+encode(span(predicateStart,predicateEnd)))+
       ' words='+encode(text),
-    '@r1.t w.request.target request=$r1 family='+encode(proof.family)+' mode='+proof.mode+target,
+    '@r1.t w.request.target request=$r1 family='+encode(proof.family)+' mode='+proof.mode+target+sort,
   ];
   if (proof.mode==='existing') lines.push('@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page');
   const bindings=proof.bindings.flatMap(binding=>binding===owner ?
@@ -344,7 +355,7 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels,adjuncts
     binding===identity || binding[0]===unreadPart || binding[0].startsWith('=') ? [] : [binding]);
   for (const [i,[key,canonical,a,b]] of [...bindings,...extraBindings,...adjuncts?.bindings ?? []].entries()) {
     const words=span(a,b), measurement=canonical?.measurement, value=measurement ? canonical.value : canonical || words;
-    let keyWords='';
+    let keyWords='',countLabel='';
     if (labels?.has(key)) {
       // A role label must be in an adjacent connector. A fronted role may
       // have a label after its value and before the command delimiter.
@@ -354,13 +365,19 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels,adjuncts
         .filter(end=>end<=beforeRepeat[2]));
       const connectors=[[previous,tokens(span(previous,a))]];
       if (beforeRepeat && !span(previous,a).trim()) connectors.push([leadToRepeat,tokens(span(leadToRepeat,beforeRepeat[2]))]);
-      const following=proof.owned.bindsPredicate && b<predicateStart ?
-        tokens(span(b,Math.min(predicateStart,...proof.bindings.map(binding=>binding[2]).filter(start=>start>=b)))) : [];
+      const count=proof.owned.counts?.includes(key);
+      const forwardBoundary=count ? proof.end :
+        proof.owned.bindsPredicate && b<predicateStart ? predicateStart : b;
+      const following=tokens(span(b,Math.min(forwardBoundary,...proof.bindings.map(binding=>binding[2]).filter(start=>start>=b))));
       for (const label of labels.get(key)) {
         const prefix=following.slice(0,label.words.length);
         const matches=parts=>label.words.every((word,i)=>word===parts[i]?.[0]);
+        if (count && matches(prefix)) {
+          const written=span(b+prefix[0][2],b+prefix.at(-1)[3]);
+          if (written.length>countLabel.length) countLabel=written;
+        }
         const [offset,matched]=connectors.map(([from,connector])=>[from,connector.slice(-label.words.length)])
-          .find(([,suffix])=>matches(suffix)) ?? (matches(prefix) ? [b,prefix] : []);
+          .find(([,suffix])=>matches(suffix)) ?? (!count && matches(prefix) ? [b,prefix] : []);
         if (!matched) continue;
         const written=span(offset+matched[0][2],offset+matched.at(-1)[3]);
         if (written.length>keyWords.length) keyWords=written;
@@ -368,7 +385,8 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels,adjuncts
     }
     lines.push('@r1.arg'+i+' w.request.constraint request=$r1 on=attribute attribute='+encode(key)+
       ' value='+(!measurement && canonical && atom.test(canonical) ? canonical : encode(value))+
-      (words===value && !measurement ? '' : ' words='+encode(words))+(keyWords ? ' key_words='+encode(keyWords) : '')+
+      (words===value && !measurement ? '' : ' words='+encode(words))+
+      [...new Set([keyWords,countLabel])].filter(Boolean).map(label=>' key_words='+encode(label)).join('')+
       (modeMarkerStart===undefined ? '' : ' key_words='+encode(span(modeMarkerStart,proof.end)))+' operator=eq phase=result'+
       (measurement ? ' measure='+measurement.measure+' unit='+encode(measurement.unit)+' measure_words='+encode(measurement.words) : ''));
   }

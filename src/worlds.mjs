@@ -632,7 +632,7 @@ function compile(facts) {
   const leadForms=role=>new Set(facts('pro.reader.body_lead').filter(w=>one(w,'role')===role)
     .flatMap(w=>values(w,'text').map(phrase)));
   const argumentFormats=compileStructuredArguments(facts,requestKeys);
-  const scalarArgumentKeys=new Set([...argumentFormats].filter(([,format])=>format==='scalar_number')
+  const scalarArgumentKeys=new Set([...argumentFormats].filter(([,format])=>['scalar_number','positive_count'].includes(format))
     .map(([id])=>id));
   const frames=argumentSequences(type=>type==='pro.reader.argument_sequence' ?
     [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys,argumentFormats);
@@ -803,6 +803,7 @@ function providerTypes(facts, effective=facts) {
   }
   for (const frame of facts.get('pro.reader.orientation')?.values() ?? []) sources.push(one(frame,'landmark_type'));
   for (const frame of facts.get('pro.reader.motion')?.values() ?? []) sources.push(one(frame,'target_type'));
+  for (const frame of facts.get('pro.reader.argument_sequence')?.values() ?? []) sources.push(one(frame,'owner_kind_type'));
   for (const selector of facts.get(nominalSelectorType)?.values() ?? []) sources.push(...nominalSelectorProviders(selector));
   for (const type of ['pro.reader.nominal_pattern','pro.reader.nominal_value']) {
     for (const frame of facts.get(type)?.values() ?? []) sources.push(...values(frame,'subject_type'));

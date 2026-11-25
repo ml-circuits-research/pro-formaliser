@@ -8,7 +8,7 @@ const identifier = /^[\p{L}\p{N}][\p{L}\p{N}_-]*$/u;
 const shapeByFormat = new Map([
   ['identifier', ['candidate','span']], ['date', ['candidate','span']],
   ['clock', ['candidate','span']], ['zone', ['candidate','span']], ['measurement', ['number']],
-  ['nominal_description', ['span']], ['scalar_number', ['number']],
+  ['nominal_description', ['span']], ['scalar_number', ['number']], ['positive_count', ['number']],
 ]);
 const one = (wire,key) => str(wire.attrs[key]?.[0]);
 const form = text => tokens(text).map(([key])=>key).join(' ');
@@ -53,6 +53,11 @@ function operand(format,raw,worlds,family,key) {
     case 'clock': return clock.test(raw) ? '' : undefined;
     case 'zone': return worlds.argumentZones.has(form(raw)) ? '' : undefined;
     case 'scalar_number': return scalarNumber(raw,worlds,family,key);
+    case 'positive_count': {
+      const value=scalarNumber(raw,worlds,family,key);
+      if (Number.isSafeInteger(Number(value)) && Number(value)>0) return value;
+      return undefined;
+    }
     case 'nominal_description': {
       const [article,...terms]=tokens(raw).map(([term])=>term);
       if (!worlds.determiners[article] || !terms.length || terms.some(term=>

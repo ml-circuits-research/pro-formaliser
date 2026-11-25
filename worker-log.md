@@ -613,3 +613,8 @@
 - The declared order frame now retains opposite extremes and a written object on one request.
 - The targeted replay recovered ordering in 141 of 542 WebMeet messages. Evidence-complete proposals rose from 37.8% to 41.3%.
 - The independent review found remaining chart argument errors. All 528 release tests passed.
+
+## Histogram partition counts
+- The typed argument sequence now keeps the histogram kind, source field and positive partition count on one request.
+- Ten of 212 targeted WebMeet texts gained that combination. Complete text evidence rose from 33.5% to 34.4%.
+- Existing count edits and width quantities need separate bindings. All 529 release tests passed.

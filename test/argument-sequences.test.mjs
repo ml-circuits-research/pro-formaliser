@@ -22,6 +22,38 @@ function hasBindings(candidates,expected) {
   });
 }
 
+test('typed positive partition counts stay separate from the field and the histogram kind',async t=>{
+  const reader=createReader(undefined,loadWorlds());
+  t.after(()=>reader.close());
+  for (const [text,field,number,written,label] of [
+    ['Make a histogram of sales with 10 equal buckets.','sales','10',undefined,'equal buckets'],
+    ['Show a histogram of delivery times in five bins.','delivery times','5','five','bins'],
+    ['Make a histogram of sales with one hundred bins.','sales','100','one hundred','bins'],
+    ['Make a histogram of sales, bucketed into 10 equal bins.','sales','10',undefined,'equal bins'],
+    ['Plot order value bucketed into 10 equal buckets as a histogram.','order value','10',undefined,'equal buckets'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const candidate=candidates.find(c=>hasBindings([c],{'chart.xField':[field,undefined],'chart.bins':[number,written]}));
+    assert.ok(candidate,text);
+    const wires=parse(candidate.sop);
+    const target=wires.find(w=>w.type==='w.request.target');
+    assert.equal(value(target.attrs.sort[0]),'histogram',text);
+    const count=wires.find(w=>w.attrs.attribute?.map(value).includes('chart.bins'));
+    assert.equal(count.attrs.request[0],target.attrs.request[0],text);
+    assert.ok(count.attrs.key_words.map(value).includes(label),text);
+    assert.deepEqual(candidate.catalog.issues,[],text);
+    assert.deepEqual(candidate.evidence.missing,[],text);
+    assert.equal(candidate.evidence.counts.uncovered ?? 0,0,text);
+  }
+  for (const text of ['Make a histogram of sales with zero bins.',
+    'Make a histogram of sales with 2.5 bins.', 'Make a histogram of sales with 10-pixel wide buckets.',
+    'Make a histogram of sales with labels for the buckets.',
+    'Make a bar chart of sales with 10 bins.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(c=>c.source!=='argument-frame' || !c.sop.includes('chart.bins')),text);
+  }
+});
+
 test('native argument sequences bind a canonical aggregate and ordered written spans through propose', async () => {
   const reader=createReader(undefined,loadWorlds());
   try {

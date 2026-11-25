@@ -27,15 +27,17 @@ export function compileNominalNumbers(facts) {
   }
   const unspecified=new Set(facts('w.lang.en.phrase').filter(w=>first(w,'name')==='quant.some')
     .flatMap(w=>fields(w,'item').map(phrase)));
+  const articles=new Set(facts('w.lang.en.det').filter(w=>first(w,'kind')==='article')
+    .flatMap(w=>fields(w,'text').map(phrase)));
   for (const wire of facts('core.word')) {
     if (!fields(wire,'of').includes('w.lang.en.number.text')) continue;
     const [meaning,...extra]=fields(wire,'means');
     const number=!extra.length && meaning && numbers.get(phrase(meaning));
-    if (number?.kind!=='group') continue;
+    if (number?.kind!=='group' && number?.kind!=='cardinal') continue;
     const langs=fields(wire,'lang');
     if (langs.length && !langs.some(lang=>/^en(?:[-_]|$)/iu.test(lang))) continue;
     for (const text of fields(wire,'text').map(phrase)) {
-      if (!numbers.has(text) && !unspecified.has(text)) numbers.set(text,number);
+      if (!numbers.has(text) && !unspecified.has(text) && !articles.has(text)) numbers.set(text,number);
     }
   }
   for (const wire of facts('w.lang.en.phrase')) {
