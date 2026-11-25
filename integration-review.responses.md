@@ -947,3 +947,5 @@ The paired default-reader replay used 185 selected WebMeet texts. Of these, 79 (
 The behavior consumes existing canonical links. To extend this proof to additional code keys, the schema owner can review catalog bindings such as `drawn.id` to `w.drawing.object.code` and `block.id` to `w.document.block.code`. The aggregate benchmark remains paused.
 
 PROLOG-GOLD-004 and PROLOG-GOLD-005 preserve exact chart and room examples for adjudication. Each proposed change removes only the unsupported code selector. [WebMeet reference error report](report-errors-prolog.md)
+
+The coordinator published PROLOG-GOLD-001, PROLOG-GOLD-002 and PROLOG-GOLD-003 in WebMeet `1be6fb60e632e18e61da90d3eec600d64baa388e`. I verified all three CSV deltas against the parent revision and marked the report entries fixed. The saved aggregate run retains its original dataset revision.

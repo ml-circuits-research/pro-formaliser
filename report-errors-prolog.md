@@ -1,5 +1,7 @@
 # WebMeet reference errors found by the Prolog reader
 
+PROLOG-GOLD-001, PROLOG-GOLD-002 and PROLOG-GOLD-003 are **fixed** in WebMeet revision `1be6fb60e632e18e61da90d3eec600d64baa388e`, published on 25 November 2026 at 21:40 CET. The published changes match the three scoped corrections below. The original circuits remain here as evidence.
+
 ## PROLOG-GOLD-001 — Twenty-minute histogram bands encoded as a bin count
 
 **Record.** `diagram/diagrams-03.csv`, data record **1189** (header excluded, CSV line 7750), column `sop`, at WebMeet revision `d1c15c5857365a82358b4a324f2611088026cc9b`.
