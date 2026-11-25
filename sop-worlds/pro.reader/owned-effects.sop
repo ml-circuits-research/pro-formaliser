@@ -6,10 +6,13 @@
 @pro.reader.owned_effect.property_command core.slot of=pro.reader.owned_effect key=property_command kind=boolean
 @pro.reader.owned_effect.cue core.slot of=pro.reader.owned_effect key=cue kind=string many=true
 @pro.reader.owned_effect.open_text core.slot of=pro.reader.owned_effect key=open_text kind=boolean
+@pro.reader.owned_effect.inherit_owner core.slot of=pro.reader.owned_effect key=inherit_owner kind=boolean
 @pro.reader.owned_effect.want core.slot of=pro.reader.owned_effect key=want enum=no
 @reader.effect.object_and_value pro.reader.owned_effect operation=set pattern="set the {property} on {owner} to {value}" pattern="make the {property} on {owner} {value}" pattern="the {property} on {owner} should be {value}" pattern="the {property} on {owner} should be a bit {value}" pattern="the {property} on {owner} should be one step {value}" pattern="do the {property} {value} on {owner}" pattern="turn the {property} on {owner} {value}" pattern="use {value} {property} on {owner}"
 @reader.effect.position pro.reader.owned_effect operation=set pattern="put the {property} on the {value} of {owner}" pattern="move the {property} to the {value} of {owner}" pattern="put the {property} on the {value}" pattern="{property} on the {value}"
 @reader.effect.position_unstated_owner pro.reader.owned_effect operation=set pattern="move the {property} to the {value}" pattern="move the {property} on the {value}" pattern="{property} at the {value}"
+@reader.effect.explicit_assignment pro.reader.owned_effect operation=set pattern="set the {property} of {owner} to {value}"
+@reader.effect.property_continuation pro.reader.owned_effect operation=set inherit_owner=true pattern="{property} to {value}"
 @reader.effect.change pro.reader.owned_effect operation=set pattern="set the {property} to {value}" pattern="set the {property} {value}" pattern="make the {property} {value}" pattern="{property} {value}" pattern="{property} {value} instead of {prior}" pattern="the {property} {value} instead of {prior}"
 @reader.effect.excluded_choice pro.reader.owned_effect operation=set want=no pattern="set the {value} not {property}" pattern="make the {value} not {property}"
 @reader.effect.requested_value pro.reader.owned_effect operation=set pattern="try the {property} {value}" pattern="turn the {property} {value}" pattern="the {property} should be {value}"

@@ -180,3 +180,39 @@ test('binds a finite named choice, keeps local exclusion, and preserves an unsup
     assert.ok(!candidates.some(candidate=>candidate.source==='negative-owned-effect'),query);
   }
 });
+
+test('inherits an explicit owner for coordinated assignments with distinct property names',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,family,owner,expected] of [
+    ['Set the x of House to 120 and the y to 80 and the width to 180 and the height to 90',
+      'drawn',{name:['"House"']},[['x','120'],['y','80'],['width','180'],['height','90']]],
+    ['Set the width of the nose to 9 and the height to 11',
+      'part',{description:['"the nose"']},[['width','9'],['height','11']]],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>candidate.source==='owned-effects' &&
+      parse(candidate.sop).some(wire=>wire.type==='w.request.target' && wire.attrs.family?.[0]===JSON.stringify(family)));
+    assert.ok(reading,text);
+    const wires=parse(reading.sop), target=wires.find(wire=>wire.type==='w.request.target');
+    for (const [key,value] of Object.entries(owner)) assert.deepEqual(target.attrs[key],value);
+    assert.deepEqual(wires.filter(wire=>wire.type==='w.request.constraint').map(wire=>
+      [JSON.parse(wire.attrs.attribute[0]),wire.attrs.value[0],wire.attrs.request[0]]),
+    expected.map(([property,value])=>[family+'.'+property,value,target.attrs.request[0]]));
+    assert.deepEqual(reading.catalog.issues,[]);
+    assert.deepEqual(reading.evidence.missing,[]);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0);
+  }
+  for (const text of [
+    'The height to 11',
+    'Set the width of the nose to 9 and then the height to 11',
+    'Set the width of the nose to 9 and the height to 11 if selected',
+    'Set the width of the nose to 9 and the width to 11',
+    'Set the width of the nose to 9 and the height of the mouth to 11',
+    'Set the width of all the trees to 20 and the height to 25',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(!candidates.some(candidate=>candidate.source==='owned-effects' &&
+      parse(candidate.sop).filter(wire=>wire.type==='w.request.constraint').length>1),text);
+  }
+});

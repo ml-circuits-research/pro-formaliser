@@ -234,3 +234,37 @@ test('keeps compatible property aliases in an unrelated world and accepts a boun
   assert.equal(field(typed(open,'constraint'),'key_words'),'side note');
   assert.equal(implicit((await reader.propose('Set the side note to No reset')).candidates).length,0);
 });
+
+test('binds written component owners through installed part and slot inventories',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,description,sort,attribute,value] of [
+    ['Set the face scale to 0.8','the face','face','part.scale','0.8'],
+    ['Set the mouth scale to 1.1','the mouth','mouth','part.scale','1.1'],
+    ['Set the width of the left eye to 12.5','the left eye','eye','part.width','12.5'],
+    ['Could you set the eyebrow width to nine?','the eyebrow','eyebrows','part.width','9'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>{
+      if (candidate.source!=='native-property-frame') return false;
+      const wires=parse(candidate.sop), target=typed(wires,'target'), constraint=typed(wires,'constraint');
+      return field(target,'family')==='part' && field(target,'mode')==='existing' &&
+        field(target,'description')===description && field(target,'sort')===sort &&
+        field(constraint,'attribute')===attribute && field(constraint,'phase')==='result' && field(constraint,'value')===value;
+    });
+    assert.ok(reading,text);
+    assert.deepEqual(reading.evidence.missing,[],text);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0,text);
+    assert.deepEqual(reading.catalog.issues,[],text);
+  }
+  for (const text of [
+    'The face scale is 0.8',
+    'Set the face scale to tall',
+    'Set the face scale to 0.8 if available',
+    'Set the nose width to 9 and make a chart',
+    'Set the width of the quilloscope to 9',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(!result(candidates,'part.scale') && !result(candidates,'part.width'),text);
+  }
+});

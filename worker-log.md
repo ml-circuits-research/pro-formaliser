@@ -412,3 +412,8 @@
 - Frozen 70 sets X inversion and preserves the unsupported Z phrase on its own request. Frozen 168 offers X exclusion after spelling correction.
 - The reader keeps the closed choice and the written assertion separate. The X-specific scale and downstream exclusion remain open.
 - All 451 isolated release tests passed. No benchmark rerun.
+
+## Written component owners and coordinated assignments
+- Frozen 131 gains a complete part-scale proposal with the same trained model. Independent installed-world probes recover the required properties on House in frozen 96 and 199.
+- Reused part and slot inventories and added a guarded shared-owner continuation. Canonical routing and the remaining live lookup are recorded in the review response.
+- All 453 isolated release tests passed. No benchmark rerun.

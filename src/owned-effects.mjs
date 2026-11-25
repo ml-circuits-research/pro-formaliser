@@ -46,6 +46,7 @@ export function compileOwnedEffects(facts,keys,propertyLabels) {
   for (const row of facts('pro.reader.owned_effect')) {
     const operation=one(row,'operation'), command=one(row,'property_command')==='true';
     const openText=one(row,'open_text')==='true', negative=one(row,'want')==='no';
+    const inheritOwner=one(row,'inherit_owner')==='true';
     const cues=new Set(all(row,'cue').map(form).filter(Boolean));
     for (const pattern of all(row,'pattern')) {
       const parts=pattern.split(/(\{[a-z]+\})/u).flatMap(piece=>{
@@ -59,17 +60,19 @@ export function compileOwnedEffects(facts,keys,propertyLabels) {
       if (captures.includes('cue') && (operation==='set' || !cues.size)) continue;
       const negator=negative && parts[parts.findIndex(part=>part.slot==='property')-1]?.word;
       if (negative && (operation!=='set' || !parts[0].word || !negator)) continue;
+      if (inheritOwner && (operation!=='set' || captures.includes('owner') ||
+          parts[0].slot!=='property' || negator)) continue;
       const first=parts[0].word ?? '';
       const choices=frames.get(first) ?? [];
       if (parts[0].slot==='cue') {
         for (const head of new Set([...cues].map(cue=>cue.split(' ')[0]))) {
           const named=frames.get(head) ?? [];
-          named.push({parts,operation,command,openText,cues,negator});
+          named.push({parts,operation,command,openText,cues,negator,inheritOwner});
           frames.set(head,named);
         }
         continue;
       }
-      choices.push({parts,operation,command,openText,cues,negator});
+      choices.push({parts,operation,command,openText,cues,negator,inheritOwner});
       frames.set(first,choices);
     }
   }
@@ -251,9 +254,11 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
     for (let start=a;start<b;start++) {
       const lead=norm(a,start).replace(/ [,;]$/u,'');
       if (!leadAllowed(lead)) continue;
+      const noun=registered.has(start) || worlds.determiners[ts[start][0]]==='definite' && registered.has(start+1);
       const frames=[...(grammar.frames.get(ts[start][0]) ?? []),
-        ...(registered.has(start) ? grammar.frames.get('') ?? [] : [])];
+        ...(noun ? (grammar.frames.get('') ?? []).filter(frame=>registered.has(start) || frame.inheritOwner) : [])];
       for (const frame of frames) {
+        if (frame.inheritOwner && lead) continue;
         if (frame.negator && !worlds.scopeGrammar.negatives.has(frame.negator) && !worlds.negatives.has(frame.negator)) continue;
         for (const family of families) {
           for (const captured of match(frame,family,0,start,b,{})) {
@@ -274,7 +279,7 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
               const words=value.unresolved ? span(start,b) : frame.negator ?
                 span(captured.property.start-1,captured.property.end) : value.words;
               result.push({family,key:property.spec.name,keyWords,owner:captured.owner,value:{...value,words},
-                predicate,negative:frame.negator});
+                predicate,negative:frame.negator,inheritOwner:frame.inheritOwner});
             }
           }
         }
@@ -289,14 +294,16 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
     return words.length ? words.every(word=>['sequence','coordination','clause'].includes(worlds.joiners[word])) :
       terms.length===1;
   };
-  function* paths(start,depth=0) {
-    yield* effects(start,final).map(effect=>[effect]);
+  function* paths(start,depth=0,coordinated=false) {
+    const local=end=>effects(start,end).filter(effect=>coordinated || !effect.inheritOwner);
+    yield* local(final).map(effect=>[effect]);
     if (depth===3) return;
     for (let a=start+2;a<final-1;a++) for (let b=a+1;b<=Math.min(a+7,final-1);b++) {
       if (covered(a,b) || !coordinator(a,b)) continue;
-      const left=effects(start,a);
+      const left=local(a);
       if (!left.length) continue;
-      for (const rest of paths(b,depth+1)) {
+      const conjunction=ts.slice(a,b).every(([term])=>term===',' || worlds.joiners[term]==='coordination');
+      for (const rest of paths(b,depth+1,conjunction)) {
         for (const first of left) if (rest.every(effect=>effect.family===first.family)) yield [first,...rest];
       }
     }
@@ -306,6 +313,9 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
     if (start && ts[start-1][0]!==':') continue;
     for (const path of paths(start)) {
       const {family}=path[0];
+      const inherited=path.some(effect=>effect.inheritOwner);
+      if (inherited && (path[0].inheritOwner || !path[0].owner?.licensed ||
+          tokens(path[0].owner.words).some(([term])=>worlds.scopeGrammar.universals.has(term)))) continue;
       if (path.length>1 && path.some(effect=>effect.negative || effect.value.unresolved)) continue;
       const topics=start ? Array.from({length:start-1},(_,at)=>at).flatMap(at=>{
         if (!leadAllowed(norm(0,at))) return [];
@@ -323,7 +333,7 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
       if (anaphoric && owners.length && !owner?.name) continue;
       const contextual=!owners.length && path.every(effect=>!effect.value.open || effect.owner?.reference);
       if (!contextual && (!owner || new Set(owners.map(item=>item.identity)).size!==1)) continue;
-      const predicate=contextual && path[0].predicate;
+      const predicate=(contextual || inherited) && path[0].predicate;
       const lines=['@r w.request.request act=change mood=do words='+quote(text)+(predicate ? ' predicate='+quote(predicate) : ''),
         '@t w.request.target request=$r family='+quote(family)+' mode=existing '+
           (contextual ? 'fill=context' : owner.name ? 'fill=written name='+quote(owner.name) : 'fill=description description='+quote(owner.description)),
