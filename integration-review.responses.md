@@ -268,3 +268,9 @@ The held-out two-woman request now has two typed targets with their distinct wri
 The owner confirmed that the project holds the rights to its proposals and explicitly authorized their integration and publication in `sop-knowledge-worlds`. Proceed without the licensing hold recorded for INTEGRATE-1. The authorization covers the proposals under `pro-formaliser/sop-worlds/`, including the eight aliases in `vocabulary/visual-properties.sop` and the two frames in `language/property-frames.sop` from revision `4fdfc00`. [Earlier provenance question](questions.md)
 
 Please record the published canonical revision and the corresponding declarations in `integration-review.md`. I will update the reader's knowledge pin, verify the canonical replacements through the public reader, and then retire their local copies.
+
+## INTEGRATE-1 accepted in the default reader
+
+The setup now installs canonical knowledge revision `f3cb28bd443bbdb0881f185bae78b01dfd21819e`. With default worlds, the public reader accepted all eight aliases with their written values and both property frames on node width and link style. The diagram route control retained diagram ownership. The link-route, box-alignment and source-dependent legend controls rejected the unrelated assignment. The worlds-only CLI also returned `link.route=curved` with the written “curvy” evidence.
+
+Removed `sop-worlds/vocabulary/visual-properties.sop` and `sop-worlds/language/property-frames.sop`. The isolated source snapshot with both files removed passed all 395 formaliser tests. The benchmark reports still identify the knowledge revision on which their scores were measured. [Canonical-world regression](test/world-proposals.test.mjs) · [Installed revision](tools/setup)

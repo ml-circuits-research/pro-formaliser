@@ -1,9 +1,0 @@
-# English aliases scoped to existing domain slots and their canonical values.
-@proposal.lex.route.curvy core.word lang=en text=curvy means=curved of=w.diagram.edge.route
-@proposal.lex.route.right_angled core.word lang=en text="right-angled" means=orthogonal of=w.diagram.edge.route
-@proposal.lex.route.straight_line core.word lang=en text="straight-line" means=straight of=w.diagram.edge.route
-@proposal.lex.line.dash_pattern core.word lang=en text="dash pattern" means=dashed of=w.diagram.edge.style
-@proposal.lex.line.dot_pattern core.word lang=en text="dot pattern" means=dotted of=w.diagram.edge.style
-@proposal.lex.align.flush_left core.word lang=en text="flush left" means=left of=w.document.block.align
-@proposal.lex.align.flush_right core.word lang=en text="flush right" means=right of=w.document.block.align
-@proposal.lex.align.fully_justified core.word lang=en text="fully justified" means=justify of=w.document.block.align

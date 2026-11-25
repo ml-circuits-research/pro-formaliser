@@ -299,3 +299,7 @@
 - SOP declarations identify written nominal qualifiers. The motion reader keeps selectors on the target and direction on the result. Matched clauses get space to combine within the bounded search.
 - All 395 tests passed. The 1,000-request samples scored 55.1% on the primary with spelling and 46.0% on independent originals. See eval/QUALIFIED-MOTION-REPLAY.tsv.
 - PSys2 conversion keeps both selectors and directions in the new complete reading. Live execution still needs the target lookup and direction frame.
+
+## INTEGRATE-1 canonical vocabulary and grammar
+- Setup installs `f3cb28bd`. Default reader probes verify eight aliases, two property frames, diagram ownership and three scope controls.
+- Removed the two migrated SOP files. All 395 tests passed on the isolated source snapshot. See integration-review.responses.md for the handover.

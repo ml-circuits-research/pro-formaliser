@@ -16,8 +16,6 @@ Pachetul se poate revizui și integra pe bucăți. Piloții pentru posturi și e
 | [Distanță și direcție](measured-motion-pilot/README.md) | Chei de catalog, unități și expresii pentru deplasări și plasări cu distanță explicită. | „About one inch from the right border” păstrează aproximația, măsura și marginea scrisă. |
 | [Expresii ale figurilor](expression-pilot/README.md) | Cinci valori și o regulă gramaticală pentru o expresie scrisă după numele figurii. | Regula folosește valorile catalogului instalat. |
 | [Posturi ale figurilor](pose-pilot/README.md) | Patru valori suplimentare pentru catalogul închis de posturi. | Același model citește „kneeling” după obiectul descris. La integrare se adaugă doar valorile lipsă în intrarea curentă. |
-| [visual-properties.sop](vocabulary/visual-properties.sop) | Opt expresii englezești pentru trasee, stiluri de linie și aliniere. Fiecare sens este legat de proprietatea sa. | Cititorul le folosește când încarcă vocabularul. De exemplu, „curvy” produce valoarea canonică `curved` pentru traseul unei legături. |
-| [property-frames.sop](language/property-frames.sop) | Două construcții gramaticale cu roluri pentru obiect, proprietate și valoare. | Aceeași regulă citește „What width does the node have?” și „What style does the link have?”. Regula pentru atribuiri citește „Set the style on the link to dotted”. |
 | [w.relational](w.relational/schema.sop) și [predicatele sale](w.relational/shards/predicates.sop) | Un modul opțional pentru relații între participanți, proprietăți și sursa unei selecții. | Motorul SOP nativ încarcă modulul și validează grafurile descrise mai jos. Cititorul poate propune orientarea reciprocă, raportul între proprietățile unui obiect, sursa unei selecții și poziția între două repere scrise. Emiterea relației de proprietate comună și execuția relațiilor rămân deschise. |
 
 ## Folosire în pro-formaliser
@@ -25,9 +23,11 @@ Pachetul se poate revizui și integra pe bucăți. Piloții pentru posturi și e
 Din rădăcina proiectului, după instalarea reproductibilă cu `npm run setup`, se poate porni cititorul fără model antrenat.
 
 ```sh
-SOP_WORLDS=sop-worlds/vocabulary:sop-worlds/language .cache/node/bin/node bin/formalise.mjs --worlds-only --json 'Set the route on the link to curvy'
+SOP_WORLDS='' .cache/node/bin/node bin/formalise.mjs --worlds-only --json 'Set the route on the link to curvy'
 .cache/node/bin/node --test test/world-proposals.test.mjs
 ```
+
+Vocabularul pentru trasee, stiluri de linie și alinierea textului, precum și cele două cadre pentru întrebări și atribuiri de proprietăți, se încarcă implicit din revizia oficială `f3cb28bd`. [Vocabularul diagramelor](https://github.com/ml-circuits-research/sop-knowledge-worlds/blob/f3cb28bd443bbdb0881f185bae78b01dfd21819e/docs/worlds/w.diagram/shards/words.sop) · [Vocabularul documentelor](https://github.com/ml-circuits-research/sop-knowledge-worlds/blob/f3cb28bd443bbdb0881f185bae78b01dfd21819e/docs/worlds/w.document/shards/words.sop) · [Cadrele gramaticale](https://github.com/ml-circuits-research/sop-knowledge-worlds/blob/f3cb28bd443bbdb0881f185bae78b01dfd21819e/docs/worlds/w.lang.en/shards/property-frames.sop)
 
 Pentru integrare în depozitul de lumi, declarațiile `core.word` pot intra în shardurile de vocabular ale domeniilor respective, iar cadrele în shardurile `w.lang.en`. Directorul `w.relational/` urmează structura unui modul separat, cu `schema.sop` și `shards/`. Modulul importă `w.request`. Testul încarcă atât schema, cât și cheile de catalog la care se referă un graf.
 

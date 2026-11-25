@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import test from 'node:test';
-import {fileURLToPath} from 'node:url';
 import {World,parse} from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import {createReader} from '../src/runtime.mjs';
 import {loadWorlds} from '../src/worlds.mjs';
@@ -41,10 +40,10 @@ test('imports additive relational declarations and checks typed references in re
   }
 });
 
-test('the staged vocabulary supplies only scoped canonical property values through the public reader',async t=>{
-  const vocab=new URL('vocabulary/',folder);
-  const reader=createReader(undefined,loadWorlds({paths:[fileURLToPath(vocab)]}));
+test('the installed vocabulary supplies scoped property values through the public reader',async t=>{
+  const reader=createReader(undefined,loadWorlds({paths:[]}));
   t.after(()=>reader.close());
+  const read=async text=>(await reader.propose(text)).candidates.flatMap(candidate=>parse(candidate.sop));
   const forms=[
     ['the route of the link','link.route','curvy','curved'],
     ['the route of the link','link.route','right-angled','orthogonal'],
@@ -57,20 +56,28 @@ test('the staged vocabulary supplies only scoped canonical property values throu
   ];
   for(const [owner,key,surface,value] of forms){
     const input='Set '+owner+' to '+surface;
-    const out=await reader.propose(input);
-    assert.ok(out.candidates.some(c=>parse(c.sop).some(w=>attr(w,'attribute')===key && attr(w,'phase')==='result' &&
-      attr(w,'value')===value && attr(w,'words')===surface)),input);
+    assert.ok((await read(input)).some(w=>attr(w,'attribute')===key && attr(w,'phase')==='result' &&
+      attr(w,'value')===value && attr(w,'words')===surface),input);
+  }
+  const diagram=await read('Set the route of the diagram to orthogonal');
+  assert.ok(diagram.some(w=>attr(w,'attribute')==='diagram.route' && attr(w,'value')==='orthogonal' &&
+    attr(w,'phase')==='result'));
+  for (const [text,key] of [
+    ['Set the route of the diagram to right-angled','link.route'],
+    ['Align the boxes flush left','node.edge'],
+    ['Add a legend box in the top-left as a key to the line styles, then use the same dash patterns as the drawing.','link.style'],
+  ]) {
+    assert.ok(!(await read(text)).some(w=>attr(w,'attribute')===key),text);
   }
 });
 
-test('loads the staged native grammar and applies it to different property owners',async t=>{
-  const path=fileURLToPath(new URL('language/',folder));
-  const grammar=contents(folder,'language/property-frames.sop');
+test('loads the installed native grammar and applies it to different property owners',async t=>{
+  const grammar=contents(pinned,'w.lang.en/shards/property-frames.sop');
   const lang=new World({library:{'w.lang.en':contents(pinned,'w.lang.en/schema.sop')}});
   assert.ok(lang.use('w.lang.en').ok);
   const loaded=lang.tell(grammar,{factsOnly:true});
   assert.ok(loaded.ok,JSON.stringify(loaded.violations));
-  const reader=createReader(undefined,loadWorlds({paths:[path]}));
+  const reader=createReader(undefined,loadWorlds({paths:[]}));
   t.after(()=>reader.close());
   for(const [text,key,assigned] of [
     ['What width does the node have?','node.width'],
