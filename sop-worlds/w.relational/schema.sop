@@ -1,5 +1,5 @@
 # Proposed additive module for relationships explicitly stated in a request.
-@w.relational core.module name=w.relational version=1 imports=w.request exports=predicate exports=reciprocal exports=shared exports=scaled exports=source_scope
+@w.relational core.module name=w.relational version=1 imports=w.request exports=predicate exports=reciprocal exports=shared exports=scaled exports=source_scope exports=beneficiary
 @w.relational.world std.schema.world name=w.relational doc="Explicit relationships among selected things and their properties"
 
 # A directed binary predicate with a known meaning. Both directions must hold
@@ -68,3 +68,10 @@
 @w.relational.check.scaled_result.owner core.deny when=$w.relational.check.scaled_result when=$w.relational.check.target if=$w.relational.check.different_request why="The relation and target belong to different requests."
 @w.relational.check.source_scope w.relational.source_scope request=?relation_request affected=$w.relational.check.target
 @w.relational.check.source_scope.owner core.deny when=$w.relational.check.source_scope when=$w.relational.check.target if=$w.relational.check.different_request why="The source scope and affected target belong to different requests."
+
+# The beneficiary is distinct from the object created. Its identity may need resolution.
+@w.relational.beneficiary core.type of=w.relational.beneficiary closed=true
+@w.relational.beneficiary.request core.slot of=w.relational.beneficiary key=request type=w.request.request required=true present=true
+@w.relational.beneficiary.kind core.slot of=w.relational.beneficiary key=kind enum=pronoun enum=name required=true present=true
+@w.relational.beneficiary.value core.slot of=w.relational.beneficiary key=value kind=string required=true present=true
+@w.relational.beneficiary.words core.slot of=w.relational.beneficiary key=words kind=string required=true present=true

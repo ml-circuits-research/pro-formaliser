@@ -1,0 +1,9 @@
+# Enable the optional written beneficiary relation when w.relational is installed.
+@pro.reader.benefactive core.type of=pro.reader.benefactive closed=true
+@pro.reader.benefactive.act core.slot of=pro.reader.benefactive key=act kind=atom required=true many=true
+@pro.reader.benefactive.marker core.slot of=pro.reader.benefactive key=marker kind=atom required=true many=true
+@pro.reader.benefactive.name_provider core.slot of=pro.reader.benefactive key=name_provider kind=atom
+@pro.reader.benefactive.name_key core.slot of=pro.reader.benefactive key=name_key kind=atom
+@pro.reader.benefactive.name_blocker core.slot of=pro.reader.benefactive key=name_blocker kind=atom
+
+@reader.benefactive.creation pro.reader.benefactive act=make marker=for name_provider=k.people.given_name name_key=name name_blocker=k.time.month

@@ -4,6 +4,7 @@
 @pro.reader.owned_effect.operation core.slot of=pro.reader.owned_effect key=operation enum=set enum=show enum=hide required=true
 @pro.reader.owned_effect.pattern core.slot of=pro.reader.owned_effect key=pattern kind=string many=true required=true
 @pro.reader.owned_effect.property_command core.slot of=pro.reader.owned_effect key=property_command kind=boolean
+@pro.reader.owned_effect.cue core.slot of=pro.reader.owned_effect key=cue kind=string many=true
 @pro.reader.owned_effect.open_text core.slot of=pro.reader.owned_effect key=open_text kind=boolean
 @reader.effect.object_and_value pro.reader.owned_effect operation=set pattern="set the {property} on {owner} to {value}" pattern="make the {property} on {owner} {value}" pattern="the {property} on {owner} should be {value}" pattern="the {property} on {owner} should be a bit {value}" pattern="the {property} on {owner} should be one step {value}" pattern="do the {property} {value} on {owner}" pattern="turn the {property} on {owner} {value}" pattern="use {value} {property} on {owner}"
 @reader.effect.position pro.reader.owned_effect operation=set pattern="put the {property} on the {value} of {owner}" pattern="move the {property} to the {value} of {owner}" pattern="put the {property} on the {value}" pattern="{property} on the {value}"

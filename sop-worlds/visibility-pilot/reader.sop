@@ -1,0 +1,10 @@
+# The operation resolves against the selected property's declared value bank.
+@pilot.visibility.turn_on pro.reader.owned_effect operation=show cue=on pattern="turn {property} {cue}" pattern="turn {cue} {property}" pattern="switch {property} {cue}" pattern="switch {cue} {property}" pattern="turn {property} back {cue}" pattern="switch {property} back {cue}" pattern="turn {property} {cue} for {owner}" pattern="switch {property} {cue} for {owner}"
+@pilot.visibility.show pro.reader.owned_effect operation=show cue=show pattern="{cue} the {property}"
+@pilot.visibility.turn_off pro.reader.owned_effect operation=hide cue=off pattern="turn {property} {cue}" pattern="turn {cue} {property}" pattern="switch {property} {cue}" pattern="switch {cue} {property}" pattern="turn {property} {cue} for {owner}" pattern="switch {property} {cue} for {owner}"
+@pilot.visibility.ditch pro.reader.owned_effect operation=hide cue=ditch pattern="{cue} the {property}"
+@pilot.visibility.grid pro.reader.effect_sense family=chart key=chart.grid text=gridlines text="background grid"
+@pilot.visibility.legend pro.reader.effect_sense family=chart key=chart.legend text=legend text="chart legend"
+@pilot.visibility.errors pro.reader.effect_sense family=chart key=chart.errorBars text="error bars"
+@pilot.visibility.scale pro.reader.effect_sense family=chart key=chart.colourBar text="colour bar" text="color bar"
+@pilot.visibility.trend pro.reader.effect_sense family=chart key=chart.trendLine text="trend line" text=trendline

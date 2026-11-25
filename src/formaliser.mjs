@@ -1,3 +1,5 @@
+import {sentenceRequestReadings} from './sentence-requests.mjs';
+import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
 import {universalInventoryPacket} from './universal-inventory.mjs';
 import {sourceContainerMatch,sourceContainerReading} from './source-container.mjs';
@@ -24,7 +26,7 @@ import { verbEffectIndex,verbEffectReading } from './verb-effects.mjs';
 import { transformationReadings } from './transformation.mjs';
 import { numberedCreationReadings, numberedQualifierReadings } from './numbered-qualifier.mjs';
 import { coordinatedPacket,effectReading } from './coordinated-effects.mjs';
-import { discourseBody } from './trailing-discourse.mjs';
+import { detachedDiscourse,discourseBody } from './trailing-discourse.mjs';
 import { memberActionPackets,memberActionReadings } from './member-actions.mjs';
 import { affectedTargetCandidates } from './affected-target.mjs';
 import { ownerPropertyReadings } from './owner-property.mjs';
@@ -686,7 +688,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     return candidates;
   }
   return {
-    async formalise(text) {
+    formalise:async function propose(text,independent=true) {
       const candidates=await wrapped(text);
       const reason=discourseReason(text,worlds);
       if (reason) {
@@ -731,7 +733,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
-      for (const reading of [...await participantAdjunctReadings(text,worlds,wrapped,permit), ...await effectSequence(text,read), ...await setExclusionReadings(text,worlds,read,permit,packet=>worker.request({setExclusion:packet}))]) {
+      for (const reading of [...await benefactiveReadings(text,worlds,wrapped,permit), ...await participantAdjunctReadings(text,worlds,wrapped,permit), ...await effectSequence(text,read), ...await setExclusionReadings(text,worlds,read,permit,packet=>worker.request({setExclusion:packet}))]) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);
       }
@@ -821,6 +823,30 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
           const reading=sourceContainerReading(text,candidate,worlds,containerMatches);
           const key=reading && admissibleKey(text,reading.sop);
           if (key) additional.set(key,reading);
+        }
+      }
+      if (independent) {
+        const readWhole=async part=>(await propose(part,false)).candidates;
+        const canSplit=(part,quotes)=>!requestScope(part,maskQuoted(part,quotes),worlds,[]).preventsSplitting;
+        for (const reading of await sentenceRequestReadings(text,worlds,readWhole,canSplit)) {
+          const key=admissibleKey(text,reading.sop);
+          if (key && !additional.has(key)) additional.set(key,reading);
+        }
+        const edge=detachedDiscourse(text,worlds.discourseEdges);
+        if (edge) {
+          const body=await propose(edge.body,false);
+          const originalScope=requestScope(text,maskQuoted(text,quotedSpans(text)),worlds,[]);
+          for (const candidate of body.candidates) {
+            const wires=parse(candidate.sop);
+            if (!wires.some(w=>w.type==='w.request.request') || !originalScope.permits(wires)) continue;
+            for (const extra of edge.extras) {
+              let id='discourse';
+              while (wires.some(w=>w.id===id)) id+='_';
+              wires.push({id,type:'w.request.filler',attrs:{text:[JSON.stringify(extra)]}});
+            }
+            const sop=serialize(wires),key=admissibleKey(text,sop);
+            if (key && !additional.has(key)) additional.set(key,{sop,source:'detached-discourse',status:candidate.status});
+          }
         }
       }
       if (additional.size) {

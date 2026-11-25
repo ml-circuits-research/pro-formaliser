@@ -48,3 +48,20 @@ test('embedded text, unclosed quotes and additional actions are not stripped',()
     'Draw the chart. That would help. Delete another chart.',
   ]) assert.equal(discourseBody(input,index),undefined,input);
 });
+
+test('isolates a licensed request body and preserves both detached phrases',async t=>{
+  const {createReader}=await import('../src/runtime.mjs');
+  const reader=createReader(); t.after(()=>reader.close());
+  const text='Before I forget, draw a line chart of weekly totals of parcels, much appreciated.';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const match=candidates.find(c=>c.source==='detached-discourse' && c.sop.includes('chart.aggregate') &&
+    c.sop.includes('chart.period') && c.sop.includes('value="parcels"'));
+  assert.ok(match);
+  assert.deepEqual(parse(match.sop).filter(w=>w.type==='w.request.filler').map(w=>JSON.parse(w.attrs.text[0])),
+    ['Before I forget','much appreciated']);
+  assert.deepEqual(match.evidence.missing,[]);
+  for (const control of ['Before I forget, do not draw a line chart of weekly totals of parcels.',
+    'Call it “before I forget, draw a line chart”.']) {
+    assert.ok((await reader.propose(control)).candidates.every(c=>c.source!=='detached-discourse'));
+  }
+});

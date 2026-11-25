@@ -5,6 +5,8 @@ Pachetul se poate revizui și integra pe bucăți. Piloții pentru posturi și e
 | Fișier | Ce adaugă | Ce funcționează azi |
 | --- | --- | --- |
 | [pro.reader/](pro.reader/) | Schemele și regulile folosite deja implicit de formalizator, inclusiv roluri, regiuni și păstrarea stării. | Cititorul le încarcă la pornire. |
+| [Beneficiar scris](benefactive-pilot/README.md) | Păstrează pronumele sau numele beneficiarului într-o relație cu cererea. | „Build me a bar chart of monthly totals of orders” păstrează graficul, totalul, perioada și „me”. |
+| [Vizibilitatea unei proprietăți](visibility-pilot/README.md) | Reguli de limbă pentru afișare și ascundere, bazate pe catalogul proprietății. | În „switch the gridlines off”, „gridlines” identifică proprietatea și „off” stabilește valoarea. |
 | [Obiect ținut sau purtat](participant-adjunct-pilot/README.md) | O propoziție cu „carrying”, „holding” sau „wearing” leagă obiectul scris de figura descrisă. | „Put a tall woman there, carrying a picnic basket” păstrează femeia, înălțimea, coșul și destinația de rezolvat în context. |
 | [Categorii cuantificate](universal-inventory-pilot/inventory.sop) | O lume declară ce categorii existente admit o operație și ce formă de cuantificator se potrivește numărului gramatical. | În „make all arrows dotted”, rezultatul se aplică tuturor săgeților. Pentru schimbare se cere și un rezultat exprimat. |
 | [Filtrarea observațiilor dintr-un grafic](chart-predicate-pilot/README.md) | Trei chei pentru grupul filtrat, comparație și pragul scris. | „Only the weeks above target” păstrează săptămânile, comparația și referința la țintă. Rezolvarea pragului revine aplicației. |

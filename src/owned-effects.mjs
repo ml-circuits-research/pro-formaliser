@@ -11,7 +11,7 @@ const form=text=>tokens(text).map(([term])=>term).join(' ');
 const keyOf=(family,key)=>JSON.stringify([family,key]);
 const atom=/^[\p{L}\p{N}_][\p{L}\p{N}_.-]*$/u;
 const nominal=/^[\p{L}\p{M}\p{N}_'-]+$/u;
-const slots=new Set(['owner','property','value','prior']);
+const slots=new Set(['owner','property','value','prior','cue']);
 
 export function compileOwnedEffects(facts,keys,propertyLabels) {
   const library=new Map(), frames=new Map(), ownerHeads=new Map(), comparatives=new Map(), senses=new Map();
@@ -45,6 +45,7 @@ export function compileOwnedEffects(facts,keys,propertyLabels) {
   for (const row of facts('pro.reader.owned_effect')) {
     const operation=one(row,'operation'), command=one(row,'property_command')==='true';
     const openText=one(row,'open_text')==='true';
+    const cues=new Set(all(row,'cue').map(form).filter(Boolean));
     for (const pattern of all(row,'pattern')) {
       const parts=pattern.split(/(\{[a-z]+\})/u).flatMap(piece=>{
         if (piece.startsWith('{')) return [{slot:piece.slice(1,-1)}];
@@ -54,9 +55,18 @@ export function compileOwnedEffects(facts,keys,propertyLabels) {
       if (!parts.some(p=>p.word) && !command && parts[0]?.slot!=='property' ||
           !captures.includes('property') || captures.some(slot=>!slots.has(slot)) ||
           new Set(captures).size!==captures.length || captures.includes('value')!==(operation==='set')) continue;
+      if (captures.includes('cue') && (operation==='set' || !cues.size)) continue;
       const first=parts[0].word ?? '';
       const choices=frames.get(first) ?? [];
-      choices.push({parts,operation,command,openText});
+      if (parts[0].slot==='cue') {
+        for (const head of new Set([...cues].map(cue=>cue.split(' ')[0]))) {
+          const named=frames.get(head) ?? [];
+          named.push({parts,operation,command,openText,cues});
+          frames.set(head,named);
+        }
+        continue;
+      }
+      choices.push({parts,operation,command,openText,cues});
       frames.set(first,choices);
     }
   }
@@ -121,7 +131,7 @@ function openValueText(written,worlds,grammar,family) {
 function operand(frame,property,captured,worlds,grammar) {
   const {spec,sense}=property, heads=spec.head.split('+');
   if (frame.operation!=='set') {
-    return spec.values.includes(frame.operation) ? {value:frame.operation,words:captured.property.words} : undefined;
+    return spec.values.includes(frame.operation) ? {value:frame.operation,words:captured.cue?.words ?? captured.property.words} : undefined;
   }
   const {words,quoted}=captured.value;
   const written=form(words);
@@ -213,6 +223,8 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
       } else if (slot==='property') {
         const choices=registered.get(a)?.get(end)?.get(family);
         if (choices?.length) result={words:span(a,end),choices};
+      } else if (slot==='cue') {
+        if (!covered(a,end) && frame.cues.has(norm(a,end))) result={words:span(a,end)};
       } else {
         const quoted=quoteAt.get(ts[a][2]);
         if (quoted?.end===ts[end-1][3]) result={words:quoted.value,quoted:true};

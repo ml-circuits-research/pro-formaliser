@@ -251,3 +251,7 @@
 ## Combined participant replay and isolation diagnostic
 - Replayed the 1,000-request primary, replica and blind samples at 69b504b with frozen models. All-staged primary reached 54.1% with spelling, independent originals 44.7%. The audited proposal sets only gained alternatives.
 - Supplied clause boundaries recovered missing reference fields on 28/151 clauses in 65 incomplete or failed primary requests. The same whole-request grading and reviewed annotation issues are in eval/RESULTS.md.
+
+## Independent sentences, recipients and visibility cues
+- Compose independently grounded sentence requests from written boundaries and keep declared discourse spans. The optional beneficiary relation and visibility frames preserve their original words in separate typed roles.
+- All 378 tests passed. The real periodic chart request now retains “me”, and opposing visibility operations carry distinct on/off evidence.
