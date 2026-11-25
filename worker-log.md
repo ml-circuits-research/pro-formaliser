@@ -347,3 +347,7 @@
 ## Counted purpose and unresolved quantities
 - Fixed the reviewer regression for counted purpose phrases. Standalone quantities and recognised units on compatible targets remain explicit when the role is unresolved.
 - All 429 isolated release tests passed. The QNL-003 consumer expectations are in integration-review.responses.md. The benchmark remains paused.
+
+## Exact replacement of a written named target
+- The trained replay finds complete proposals for frozen controls 471 and 608, with the exact written target name and replacement content. A novel schema overlay confirms that the property binding is data-driven.
+- All 430 isolated release tests passed. The same-meaning courtesy variant preserves the original lexical proposal.

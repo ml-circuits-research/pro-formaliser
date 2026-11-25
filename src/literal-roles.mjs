@@ -82,7 +82,7 @@ function constraint(key, value, evidence, phase = 'result') {
   return {key,value,phase,keyWords:evidence};
 }
 
-function circuit({span, head, end, target, constraints}) {
+function circuit({span, head, end, target, constraints, lead}) {
   const tail = span(end).replace(/^\s*[.,!?]+\s*/u,'').trim();
   const hasUnread = unquotedRemainder.test(tail);
   const statement = span(head.start,hasUnread ? undefined : end);
@@ -106,13 +106,16 @@ function circuit({span, head, end, target, constraints}) {
       (keyWords ? ' key_words=' + quote(keyWords) : ''));
   });
   if (hasUnread) wires.push('@r1.u1 w.request.unread request=$r1 text=' + quote(tail));
-  return {sop:wires.join('\n'),source:'lexicon',support:0};
+  if (lead) wires.push('@r1.f1 w.request.filler text=' + quote(lead));
+  return {sop:wires.join('\n'),source:'lexicon',support:0,
+    ...(lead === undefined ? {} : {status:hasUnread ? 'partial' : 'matched'})};
 }
 
 function replacement(span, ts, quotes, head, worlds) {
   const readings = [];
   for (let i = head.next + 1; i < ts.length; i++) {
     for (const marker of phrases(ts,i)) {
+      if (quotes.some(({start,end}) => start < marker.end && end > marker.start)) continue;
       if (!worlds.lookup(marker.surface).some(([role,act,slot]) =>
         role === 'marker' && act === head.act && slot === 'replacement')) continue;
       const left = span(ts[head.next][2], marker.start).trim();
@@ -133,9 +136,10 @@ function replacement(span, ts, quotes, head, worlds) {
       if (!selectedText || worlds.isReference(selectedText)) continue;
       const named = backwards ? rightQuote?.value : firstQuote?.value;
       const explicit = selected.targets?.filter(([, ,family]) => worlds.literalGrammar.licenses(family,head.act));
-      const families = explicit?.map(([, ,family]) => family) ??
-        worlds.literalGrammar.bindings.filter(({role,family}) => role === 'payload' &&
-          worlds.literalGrammar.licenses(family,head.act)).map(({family}) => family);
+      const payloadFamilies = worlds.literalGrammar.bindings.filter(({role,family}) => role === 'payload' &&
+        worlds.literalGrammar.licenses(family,head.act)).map(({family}) => family);
+      const families = explicit?.map(([, ,family]) => family) ?? payloadFamilies;
+      const lead = span(0,head.start).replace(/,\s*$/u,'').trim();
       for (const family of new Set(families)) {
         const kindHit = explicit?.find(target => target[2] === family);
         const extra = kindHit && span(selected.phrase.end,backwards ? rightQuote?.end : marker.start).trim();
@@ -153,7 +157,19 @@ function replacement(span, ts, quotes, head, worlds) {
           else if (!kindHit) target.name = selectedText;
           else if (extra && !attribute?.length) target.name = extra;
           else target.context = true;
-          readings.push(circuit({span,head,end,target,constraints}));
+          readings.push(circuit({span,head,end,target,constraints,lead}));
+        }
+      }
+      // A catalogue noun may also be the start of a written title. Preserve
+      // that reading alongside the kind-based reading for a bare title span.
+      const bareTitle = !backwards && selected.phrase && !selected.det && !firstQuote &&
+        /^\p{Lu}[\p{L}\p{M}\p{N}_ '’\-]*$/u.test(left) &&
+        !worlds.properties(normalized(span(selected.phrase.end,marker.start))).length &&
+        ts.slice(head.next,i).every(([key]) => !worlds.scopeGrammar.conditionals.has(key));
+      if (bareTitle) for (const family of new Set(payloadFamilies)) {
+        for (const key of new Set(roleKeys(worlds,family,'payload'))) {
+          readings.push(circuit({span,head,end,lead,target:{family,mode:'existing',name:left},
+            constraints:[constraint(key,value,span(marker.start,marker.end))]}));
         }
       }
       if (readings.length) return readings;

@@ -16,6 +16,7 @@ export function evidenceVocabulary(facts) {
   }
   for (const w of facts('w.lang.en.skip'))
     add(['politeness','filler','desire'].includes(values(w,'class')[0]) ? filler : grammar,w);
+  for (const w of facts('pro.reader.trailing_discourse')) add(filler,w);
   for (const w of facts('w.lang.en.imperative.lead')) add(grammar,w);
   for (const w of facts('w.lang.en.contraction.ending')) values(w,'ending').forEach(v=>endings.add(normalized(v)));
   for (const w of facts('w.lang.en.contraction'))
@@ -99,7 +100,8 @@ export function evidenceReport(text,wires,vocabulary) {
     const unique=covering.filter(s=>s.ranges.length===1);
     const term=normalized(match[0]),suffix=term.indexOf("'");
     const grammatical=vocabulary.grammar.has(term) || (suffix>0 && vocabulary.grammar.has(term.slice(0,suffix)) && vocabulary.endings.has(term.slice(suffix)));
-    const validFiller=s=>vocabulary.filler.has(normalized(s.text)) || vocabulary.filler.has(term) || grammatical;
+    const validFiller=s=>vocabulary.filler.has(normalized(s.text)) ||
+      vocabulary.filler.has(normalized(s.text.replace(/[.!。！]+$/u,''))) || vocabulary.filler.has(term) || grammatical;
     let status;
     if (unique.some(s=>s.kind==='grounded')) status='grounded';
     else if (unique.some(s=>s.kind==='unread')) status='unread';

@@ -54,6 +54,31 @@ test('reads a replacement-first verb with separate old and new quoted values', a
   assert.ok(evidenceInText(input,answer.sop));
 });
 
+test('retains a written title even when its opening is also a catalogue noun', async t => {
+  const reader = createReader();
+  t.after(() => reader.close());
+  for (const [input,name,value,fillers] of [
+    ['Let us replace Chapter summaries with "We will review the draft tomorrow.". That would help.',
+      'Chapter summaries','We will review the draft tomorrow.',['Let us','That would help.']],
+    ['Hey, replace Story with "Please confirm these updated details.".',
+      'Story','Please confirm these updated details.',['Hey']],
+  ]) {
+    const {candidates} = await reader.propose(input,{evidence:true});
+    const candidate = candidates.find(reading => reading.status==='matched' && rows(reading,'target').some(target =>
+      target.family==='section' && target.mode==='existing' && target.fill==='written' && target.name===name) &&
+      rows(reading,'constraint').some(result => result.attribute==='section.content' && result.value===value &&
+        result.phase==='result'));
+    assert.ok(candidate,input);
+    assert.deepEqual(rows(candidate,'filler').map(row=>row.text),fillers);
+    assert.deepEqual(candidate.evidence.missing,[]);
+    assert.deepEqual(candidate.catalog.issues,[]);
+    assert.ok(!candidate.evidence.counts.unread && !candidate.evidence.counts.uncovered);
+    assert.ok(candidates.some(reading=>rows(reading,'target').some(target=>target.fill==='context')));
+  }
+  const negative = await reader.propose('Do not replace Chapter summaries with "New.".');
+  assert.ok(negative.candidates.every(reading=>!rows(reading,'constraint').some(result=>result.value==='New.')));
+});
+
 test('uses an explicitly named span key from a novel schema family', async t => {
   const cache = fileURLToPath(new URL('../.cache/', import.meta.url));
   const dir = mkdtempSync(join(cache,'literal-roles-test-'));
@@ -87,4 +112,11 @@ test('uses an explicitly named span key from a novel schema family', async t => 
   const replacement = 'Replace the stamp with “Tin.”';
   const replaced = await reader.formalise(replacement);
   assert.equal(rows(replaced,'constraint')[0].attribute,'stamp.impression');
+
+  const named = await reader.propose('Replace Stamp archive with “Tin.”');
+  assert.ok(named.candidates.some(reading=>rows(reading,'target').some(row=>
+    row.family==='stamp' && row.name==='Stamp archive') && rows(reading,'constraint').some(row=>
+    row.attribute==='stamp.impression' && row.value==='Tin.')));
+  const property = await reader.propose('Replace Stamp inscription with “Tin.”');
+  assert.ok(property.candidates.every(reading=>rows(reading,'target').every(row=>row.name!=='Stamp inscription')));
 });

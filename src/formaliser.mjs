@@ -745,8 +745,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
       const body=discourseBody(text,worlds.trailingDiscourse);
       if (body) {
-        const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
+        const byMeaning=new Map(candidates.map((c,i)=>[JSON.stringify(signatures(parse(c.sop),true)),i]));
         const steps=sequenceParts(body.text,tokens(body.text),worlds.joiners,sequenceOptions);
+        const coverage=wires=>evidenceReport(text,wires,worlds.evidenceVocabulary).counts;
         for (const candidate of await wrapped(body.text)) {
           const wires=parse(candidate.sop);
           if (steps.length>wires.filter(w=>w.type==='w.request.request').length) continue;
@@ -754,8 +755,14 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
           while (wires.some(w=>w.id===id)) id+='_';
           wires.push({id,type:'w.request.filler',attrs:{text:[JSON.stringify(body.suffix)]}});
           const sop=serialize(wires),key=admissibleKey(text,sop);
-          if (key && !seen.has(key)) {
-            seen.add(key);candidates.push({sop,status:candidate.status,source:'trailing-discourse'});
+          if (!key) continue;
+          const prior=byMeaning.get(key), reading={sop,status:candidate.status,source:'trailing-discourse'};
+          const previous=prior===undefined ? undefined : coverage(parse(candidates[prior].sop));
+          const current=previous && coverage(wires);
+          if (!previous || (current.unread ?? 0)<(previous.unread ?? 0) &&
+              (current.uncovered ?? 0)<=(previous.uncovered ?? 0)) {
+            byMeaning.set(key,candidates.length);
+            candidates.push(reading);
           }
         }
       }
