@@ -23,6 +23,33 @@ async function propose(reader, text) {
   return candidates.filter(candidate => candidate.source === 'literal-attachment');
 }
 
+test('numeric settings cannot borrow evidence from an independently bound quoted title',async t=>{
+  const title='Review scores in 8 buckets';
+  const texts=[
+    "Set the chart title to '"+title+"'.",
+    "Set the chart title to '"+title+"' and the bin count to '8'.",
+    "Set the chart title to '"+title+"' and the bin count to 8.",
+  ];
+  const examples=texts.map((text,index)=>({text,count:1,sop:[
+    '@r w.request.request act=change mood=do predicate=Set words='+JSON.stringify(text),
+    '@r.t w.request.target request=$r family=chart mode=existing fill=context',
+    '@r.title w.request.constraint request=$r on=attribute attribute=chart.title value='+JSON.stringify(title)+
+      ' key_words=title operator=eq phase=result',
+    '@r.bins w.request.constraint request=$r on=attribute attribute=chart.bins value=8'+
+      (index===0 ? ' words="in 8 buckets"' : ' key_words="bin count"')+' operator=eq phase=result',
+  ].join('\n')}));
+  const worlds=loadWorlds();
+  const reader=createFormaliser({version:1,examples,templates:[]},worlds);
+  t.after(()=>reader.close());
+  for (const [index,text] of texts.entries()) {
+    const {candidates}=await reader.formalise(text);
+    const copied=candidates.find(candidate=>candidate.source==='example' && hasField(candidate,'chart.title',title));
+    assert.ok(copied,text);
+    assert.equal(hasAttribute(copied,'chart.bins'),index!==0,text);
+    assert.ok(validate(copied.sop,worlds) && evidenceInText(text,copied.sop,worlds),text);
+  }
+});
+
 test('attaches explicit unquoted labels and preserves separately grounded placement', async t => {
   const worlds = loadWorlds();
   const reader = createFormaliser({version:1,examples:[],templates:[],lexicon:{

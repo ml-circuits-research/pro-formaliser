@@ -13,6 +13,57 @@ const nominalDeterminers = new Set(['definite','indefinite','demonstrative','pos
 const creationDeterminers = new Set(['indefinite','quantified']);
 const normalized = text => tokens(text).map(([key]) => key).join(' ');
 
+// A quote already owned as literal content cannot supply a second numeric
+// setting. A written operand elsewhere, including in a different quote,
+// remains eligible as evidence for the setting.
+export function numericSettingsInOwnedQuotes(text,wires,worlds) {
+  if (!/["'‘“]/u.test(text) || !wires.some(wire=>wire.type===type('constraint') &&
+      (get(wire,'on')==='count' || worlds.numericSettingKeys?.has(get(wire,'attribute'))))) return [];
+  const chars=Array.from(text);
+  const quotes=quotedSpans(text).map(({start,end,value})=>({
+    start:chars.slice(0,start).join('').length,end:chars.slice(0,end).join('').length,value,
+  }));
+  if (!quotes.length) return [];
+  const requests=wires.filter(wire=>wire.type===type('request'));
+  const owned=Map.groupBy(wires.filter(wire=>raw(wire,'request')),wire=>raw(wire,'request'));
+  const conflicts=[];
+  for (const request of requests) {
+    const scope=get(request,'words');
+    const ranges=scope ? literalRanges(text,scope) : requests.length===1 ? [[0,text.length]] : [];
+    if (ranges.length!==1) continue;
+    const [[start,end]]=ranges;
+    const local=owned.get('$'+request.id) ?? [];
+    const targets=local.filter(wire=>wire.type===type('target'));
+    const families=new Set(targets.map(target=>get(target,'family')));
+    const literalKeys=new Set(worlds.literalGrammar.quoteBindings.filter(binding=>
+      !families.size || families.has(binding.family)).map(binding=>binding.attribute));
+    const content=quotes.filter(quote=>start<=quote.start && quote.end<=end &&
+      local.some(wire=>wire.type===type('target') && get(wire,'name')===quote.value ||
+        wire.type===type('constraint') && literalKeys.has(get(wire,'attribute')) &&
+        wire.attrs.value?.some(value=>decode(value)===quote.value)));
+    if (!content.length) continue;
+    for (const wire of local) {
+      if (wire.type!==type('constraint') || literalKeys.has(get(wire,'attribute')) ||
+          !(get(wire,'on')==='count' || worlds.numericSettingKeys?.has(get(wire,'attribute')))) continue;
+      const operands=wire.attrs.measure_words ?? wire.attrs.words ?? wire.attrs.value ?? [];
+      const evidence=operands.flatMap(value=>literalRanges(text,decode(value),start,end));
+      if (evidence.length && evidence.every(([a,b])=>content.some(quote=>quote.start<=a && b<=quote.end)))
+        conflicts.push(wire);
+    }
+  }
+  return conflicts;
+}
+
+export function keepOwnedQuotesLiteral(text,reading,worlds) {
+  if (!reading.sop?.includes(' w.request.constraint ') || !/["'‘“]/u.test(text)) return reading;
+  const wires=parse(reading.sop);
+  const shadowed=numericSettingsInOwnedQuotes(text,wires,worlds);
+  if (!shadowed.length) return reading;
+  const ids=new Set(shadowed.map(wire=>'$'+wire.id));
+  if (wires.some(wire=>Object.values(wire.attrs).some(values=>values.some(value=>ids.has(value))))) return reading;
+  return {...reading,sop:serialize(wires.filter(wire=>!shadowed.includes(wire))).trimEnd()};
+}
+
 function locations(ts, surface, start = 0) {
   const forms = tokens(surface).map(token => token[0]);
   if (!forms.length) return [];

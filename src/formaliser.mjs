@@ -57,7 +57,7 @@ import { sequenceNameReadings } from './sequence-names.mjs';
 import { collectionQuestions, postfixSetQuestions, prefixSetQuestions, universalTargetReading } from './set-query.mjs';
 import { modifierReading } from './nominal-modifiers.mjs';
 import { ellipticalNominals } from './nominal-selectors.mjs';
-import { literalAttachments, quotedLiteralCleanup } from './literal-attachment.mjs';
+import { keepOwnedQuotesLiteral, literalAttachments, numericSettingsInOwnedQuotes, quotedLiteralCleanup } from './literal-attachment.mjs';
 import { createNearExample } from './near-example.mjs';
 import { nominalNumberReading } from './nominal-number.mjs';
 import { namedTargetReading } from './target-names.mjs';
@@ -214,6 +214,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     if (catalogIssues(wires,worlds).length) return;
     if (countOperandConflicts(text,wires,worlds).length) return;
+    if (numericSettingsInOwnedQuotes(text,wires,worlds).length) return;
     return JSON.stringify(signatures(wires,true));
   }
   const examples = new Map(), buckets = new Map(), frequencies = new Map();
@@ -360,6 +361,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const request = {text,ordering,relativePlacement:scope.restricted?undefined:relativePlacement,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,splitPlans:scope.restricted?[]:splitPlans,splitNominals,splitNumbers,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer,readingScope=scope,preferCompleteEvidence=false) {
+      answer=keepOwnedQuotesLiteral(text,answer,worlds);
       answer=keepConflictingCountsUnread(text,answer,worlds);
       const key = admissibleKey(text,answer.sop);
       if (!key || readingScope.restricted && !readingScope.permits(parse(answer.sop))) return;

@@ -622,3 +622,7 @@
 ## Distinguish count and interval width
 - In the paired replay, width or rounding inputs with a count fell from 86.7% to 1.2%. All 65 count contrasts were identical.
 - The unchanged aggregate metadata and counts are saved in `lastResult-prolog.md`. All 530 release tests passed.
+
+## Numeric settings inside literal quotes
+- One of 140 selected WebMeet texts lost a false setting drawn from a bound title. The other 139 were identical.
+- Two published reference errors now have scoped correction proposals. All 531 release tests passed.

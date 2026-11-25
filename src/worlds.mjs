@@ -650,6 +650,7 @@ function compile(facts) {
   const nominalPositions=nominalPositionForms(facts,requestKeys,words);
   const ownedEffects=compileOwnedEffects(facts,requestKeys,propertyLabels);
   return {
+    numericSettingKeys:new Set(requestKeys.filter(key=>key.head.split('+').includes('number')).map(key=>key.name)),
     bodyLeads:{neutral:leadForms('neutral'),nominal:leadForms('nominal'),actionOnly:leadForms('action_only')},
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
     nominalSelectorRules,

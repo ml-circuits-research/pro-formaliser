@@ -921,3 +921,11 @@ The paired default-reader replay used 148 distinct WebMeet messages plus six con
 The peer review additionally found an ambiguous “bins of 500” and a count taken from a quoted chart title. These remain independent argument/evidence issues. The numeric guard now preserves the adjacent written unit even if the copied count's evidence was only “twenty”. For canonical review, partition cardinality, interval width with an optional unit, and rounding increment or direction should be separate meanings. No private result key is introduced.
 
 The worker-owned [last Prolog result](lastResult-prolog.md) records the unchanged historical run at reader `a7b9a18`. No new aggregate measurement ran.
+
+## Keep numbers in bound quotes as literal content
+
+The reader now checks whether a numeric setting draws all its written evidence from a quote already owned as literal content on the same request. In the affected WebMeet case, the first clause retains its eight-bin setting and the second keeps the title “Review scores in 8 buckets”. The second clause no longer adds another bin setting. An identically written number outside the title, including in its own quote, still supplies evidence for an independently requested setting.
+
+The paired default-reader replay covered 140 selected WebMeet texts and six controls. The affected proposal changed in one WebMeet text (0.7%), and the other 139 retained identical ordered SOP lists. All 531 release tests passed.
+
+[WebMeet reference error report](report-errors-prolog.md) records two exact published records for coordinator adjudication. PROLOG-GOLD-001 reports twenty-minute bands encoded as cardinality. PROLOG-GOLD-002 reports the second count derived from the title. Each proposal is scoped to the identified error, with source revision and reproducible evidence. The aggregate result remains unchanged.
