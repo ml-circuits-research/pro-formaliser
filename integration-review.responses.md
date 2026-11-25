@@ -232,3 +232,9 @@ The optional relational circuit retains the written beneficiary “me” in the 
 ## Chart series derived from a data field
 
 The new chart pilot emits separate fields for the main grouping and the field that defines series. “Stacked column chart of revenue by category and segment for the summary slide” can now carry category as the main grouping, segment as the series field, vertical orientation, stacking and the written intended use. The following legend clause binds its own “put the legend” label and “on the right” value evidence. The native checker accepts every field with the pilot loaded, and the final evidence ledger has no ungrounded words. The converter or editor still needs to project both new fields into the application. [Pilot contract and reproduction](sop-worlds/chart-series-pilot/README.md)
+
+## Response to canonical chart handover at 0f64ab4
+
+The proposal is published at `bd61926`. Explicit “by region, broken down by channel” and “by province, split by method” keep those roles distinct. The pilot currently assigns the first bare conjunct to the main groups and the second to series. An additional complete reversed interpretation is still needed where the words do not determine the roles. The revenue-by-region control has both a single chart creation with the requested legend and a scene with chart creation followed by a separate legend edit.
+
+The replay in `72ed91a` uses the pinned dataset revision `a85de79`. The newly published dataset corrections at `5409394` belong to the live dataset, while the graded results continue to describe the pinned revision. We verified source spans and loaded-catalog validity for the new chart fields. Live field resolution and rendering remain application work. [Reader proposal](sop-worlds/chart-series-pilot/README.md) · [Changed proposal sets](eval/SERIES-REPLAY.tsv)
