@@ -134,3 +134,60 @@ test('offers an independent directional result for an installed family and catal
     ['device.finish','striped','selector','with finish'],['device.deflection','right','result',undefined],
   ]);
 });
+
+test('keeps a qualified singular target and its scalar movement distinct',async t=>{
+  const reader=createReader({version:1,examples:[],templates:[],lexicon:{
+    block:[['target','change','drawn','existing','block',5]],
+    blocks:[['target','change','drawn','existing','block',5]],
+  }});
+  t.after(()=>reader.close());
+  const text='Could you shift the 11 block upwards a little?';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const completed=candidates.find(c=>c.source==='directional-result');
+  assert.ok(completed);
+  assert.deepEqual(facts(completed.sop,'target').map(x=>[x.sort,x.description,x.ids,x.count]),
+    [['block','the 11 block',undefined,undefined]]);
+  assert.deepEqual(facts(completed.sop,'constraint').map(x=>[x.attribute,x.value,x.words]),
+    [['drawn.direction','up','upwards'],['drawn.distanceGrade','a little',undefined]]);
+  assert.deepEqual(completed.evidence.missing,[]);
+  assert.equal(completed.evidence.counts.uncovered ?? 0,0);
+  for (const text of ['Shift the 11 blocks upwards', 'Shift 11 blocks up', 'Shift the boat 11 right']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(c=>c.source!=='directional-result'),text);
+  }
+});
+
+test('keeps a combined direction and stopping condition under their written request owners',async t=>{
+  const reader=createReader({version:1,examples:[],templates:[],lexicon:{
+    block:[['target','change','drawn','existing','block',5]],
+  }});
+  t.after(()=>reader.close());
+  const first='Could you shift the 11 block slightly up and right';
+  const second='shift the 11 block down and slightly left until it lines up beside the 12 block';
+  const {candidates}=await reader.propose(first+', then '+second,{evidence:true});
+  const reading=candidates.find(c=>facts(c.sop,'target').filter(x=>x.description==='the 11 block').length===2 &&
+    facts(c.sop,'unread').length===3 && !facts(c.sop,'constraint').some(x=>x.phase==='result'));
+  assert.ok(reading);
+  assert.equal(reading.status,'partial');
+  assert.deepEqual(reading.catalog.issues,[]);
+  assert.deepEqual(reading.evidence.missing,[]);
+  assert.equal(reading.evidence.counts.uncovered ?? 0,0);
+  assert.deepEqual(facts(reading.sop,'request').map(x=>[x.predicate,x.words]),[['shift',first],['shift',second]]);
+  const owners=facts(reading.sop,'target').map(x=>x.request);
+  assert.deepEqual(facts(reading.sop,'unread').map(x=>[owners.indexOf(x.request),x.text]),[
+    [0,'slightly up and right'],
+    [1,'down and slightly left'],
+    [1,'until it lines up beside the 12 block'],
+  ]);
+  for (const text of [
+    'Move the boat up and down',
+    'Move the boat up or right',
+    'Move the boat up and paint the dock',
+    'Do not move the boat up and right',
+    'Did you move the boat up and right?',
+    'Move the boat left and right until tomorrow',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(c=>c.source!=='directional-incomplete'),text);
+  }
+});

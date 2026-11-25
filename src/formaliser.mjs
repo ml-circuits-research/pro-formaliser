@@ -354,14 +354,19 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       }
     }
     for (const reading of nativePropertyReadings(text,response.nativeProperties ?? [])) retain(reading);
-    if (scope.restricted) for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) {
+    if (scope.restricted) for (const reading of directionalResultCandidates(text,ts,quotes,worlds,model.lexicon)) {
       if (reading.source==='directional-prohibition') retain(reading);
     }
     if (!scope.restricted) {
       for (const candidate of compounds(text,ts,quotes)) retain(candidate);
       for (const candidate of endpoints(text,ts,quotes)) retain(candidate);
       for (const reading of affectedTargetCandidates(text,ts,quotes,worlds)) retain(reading);
-      for (const reading of directionalResultCandidates(text,ts,quotes,worlds)) retain(reading);
+      const directional=directionalResultCandidates(text,ts,quotes,worlds,model.lexicon);
+      for (const reading of directional.filter(reading=>reading.source!=='directional-incomplete')) retain(reading);
+      const firstLexical=candidates.findIndex(candidate=>candidate.source==='lexicon');
+      const afterDirect=candidates.length;
+      for (const reading of directional.filter(reading=>reading.source==='directional-incomplete')) retain(reading);
+      if (firstLexical>=0) candidates.splice(firstLexical,0,...candidates.splice(afterDirect));
       for (const reading of namedRetentionReadings(text,worlds)) retain(reading);
       for (const reading of transformationReadings(text,ts,quotes,worlds)) retain(reading);
       for (const reading of ownedEffectReadings(text,worlds)) retain(reading);

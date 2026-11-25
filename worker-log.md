@@ -402,3 +402,8 @@
 - Frozen 927 now returns two scoped placement requests with distinct attire selectors and exact unresolved destinations. Frozen 981 still retains the three scopes.
 - The clear same-kind landmark control binds the full written second description using the existing anchor lookup.
 - All 448 isolated release tests passed. No benchmark rerun.
+
+## Numbered targets and combined directions
+- Frozen 559 retains the written target on both moves and keeps their respective combined directions and stopping clause verbatim.
+- Single-axis control grounds the target and movement. The integrated response records the missing executable vector and stopping contracts.
+- All 450 isolated release tests passed. No benchmark rerun.
