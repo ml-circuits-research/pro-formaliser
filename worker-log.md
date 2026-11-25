@@ -525,3 +525,7 @@
 ## Canonical action admission
 - The Prolog search now uses complete native frames to reject learned action conflicts on exact canonical commands.
 - The actual 116-text replay recovered the two save acts, and the optional typed target proposal preserved chart format evidence. All 500 release tests passed.
+
+## Polite modal commands
+- A complete native command inside a declared courtesy wrapper keeps the act, exact courtesy and unresolved operands.
+- The current model gained grounded readings for 13 of 139 diagnostic texts. All 501 release tests passed.

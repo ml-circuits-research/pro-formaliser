@@ -156,3 +156,44 @@ test('a native sequence lead requires a real opening boundary',()=>{
   for (const input of ['next to the lantern','next week','name it "Next, add a lantern"'])
     assert.deepEqual(alternateBodies(input,rules),[]);
 });
+
+test('a proved command in an ability wrapper keeps the courtesy and unresolved operands',async t=>{
+  const reader=createReader({
+    version:1,examples:[],templates:[],
+    lexicon:{could:[['act','place','do',10000]],save:[['act','change','do',10000]]},
+  });
+  t.after(()=>reader.close());
+  for (const [text,prefix,unread] of [
+    ['Could you save the chart as PNG?','Could you','the chart as PNG'],
+    ['Could you please save the chart?','Could you please','the chart'],
+    ['Could you kindly save the chart?','Could you kindly','the chart'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    assert.ok(candidates.length,text);
+    const lifted=candidates.find(candidate=>candidate.source==='language-alternation');
+    assert.ok(lifted,text);
+    const [request,...dependents]=parse(lifted.sop);
+    assert.equal(request.attrs.act[0],'save',text);
+    assert.equal(request.attrs.predicate[0],'save',text);
+    assert.equal(JSON.parse(request.attrs.words[0]),text);
+    const filler=dependents.find(wire=>wire.type==='w.request.filler');
+    assert.equal(JSON.parse(filler.attrs.text[0]),prefix,text);
+    assert.deepEqual(dependents.filter(wire=>wire.type==='w.request.unread')
+      .map(wire=>JSON.parse(wire.attrs.text[0])),[unread],text);
+    assert.deepEqual(lifted.catalog.issues,[],text);
+    assert.deepEqual(lifted.evidence.missing,[],text);
+    assert.ok(candidates.every(candidate=>parse(candidate.sop)
+      .filter(wire=>wire.type==='w.request.request').every(wire=>wire.attrs.act[0]==='save')),text);
+  }
+
+  for (const text of [
+    'Could she save the chart?',
+    'Could you not save the chart?',
+    'Could you save the chart if it changes?',
+    'Could you save the chart or should I?',
+    'Write "Could you save the chart?"',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='language-alternation'),text);
+  }
+});

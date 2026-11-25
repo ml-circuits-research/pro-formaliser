@@ -813,6 +813,30 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   async function formalise(text) {
     return attachIntents(text,await formaliseBase(text),formaliseBase);
   }
+  // The canonical ability wrapper exposes a potential command. Only a
+  // complete native body frame can displace conflicting learned readings.
+  function politeCommandBody(text,body) {
+    if (body.mode!=='request' || body.family!=='ability question' || !body.prefix ||
+        (body.suffix && body.suffix!=='?')) return;
+    let result=body;
+    for (;;) {
+      const nested=alternateBodies(result.text,worlds.alternations);
+      if (nested.length!==1) return result;
+      const [next]=nested;
+      if (next.mode!=='request' || next.family!=='polite word' || !next.prefix || next.suffix) return result;
+      const start=result.start+next.start, end=result.start+next.end;
+      result={...body,text:next.text,start,end,prefix:text.slice(0,start).trim()};
+    }
+  }
+  function provedCommand(text,choices) {
+    for (const {language} of choices) {
+      if (!language?.discriminating || language.conflicts.length || !text.startsWith(language.predicate)) continue;
+      const surface=tokens(language.predicate).map(([key])=>key).join(' ');
+      if (surface!==language.act) continue;
+      const declared=worlds.lookup(surface).filter(([role])=>role==='act');
+      if (declared.length && declared.every(([,act])=>act===language.act)) return language;
+    }
+  }
   async function wrapped(text) {
     const base=await formalise(text);
     const {alternatives,[conditionalScope]:conditional,...first}=base;
@@ -820,17 +844,24 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const bodies=languageFrames ? alternateBodies(text,worlds.alternations) : [];
     if (!bodies.length || conditional) return candidates;
     const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
-    for (const body of bodies) {
+    for (const original of bodies) {
+      const modal=politeCommandBody(text,original);
+      const body=modal ?? original;
       const {alternatives,...head}=await formalise(body.text);
+      const choices=[head,...alternatives];
+      const command=modal && provedCommand(body.text,choices);
+      const grounded=new Map();
       const boundaries=sequenceParts(body.text,tokens(body.text),worlds.joiners,sequenceOptions);
-      for (const choice of [head,...alternatives]) {
+      for (const choice of choices) {
         if (!choice.sop) continue;
         const wires=parse(choice.sop), requests=wires.filter(w=>w.type==='w.request.request');
-        if (wires.some(w=>w.type==='w.request.unread' &&
+        if (!command && wires.some(w=>w.type==='w.request.unread' &&
             !Object.hasOwn(worlds.determiners,valueOf(w,'text')?.toLowerCase()))) continue;
         if (!requests.length || requests.length<boundaries.length ||
             requests.length>1 && requests.some(r=>!r.attrs.words)) continue;
         const [request]=requests;
+        if (command && (requests.length!==1 || valueOf(request,'act')!==command.act ||
+            valueOf(request,'predicate')!==command.predicate || choice.language?.conflicts.length)) continue;
         if (body.mode==='question' && !['ask','check'].includes(request.attrs.mood?.[0]) && request.attrs.act?.[0]!=='ask') continue;
         const evidence=evidenceReport(body.text,wires,worlds.evidenceVocabulary);
         if (evidence.missing.length || evidence.counts.uncovered) continue;
@@ -840,12 +871,29 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
           if (!body.text.startsWith(firstScope)) continue;
           request.attrs.words=[JSON.stringify(text.slice(0,body.start+firstScope.length))];
         }
+        if (command) {
+          const ids=new Set(wires.map(wire=>wire.id));
+          let id='f1', suffix=1;
+          while (ids.has(id)) id='f'+(++suffix);
+          wires.push({id,type:'w.request.filler',attrs:{text:[JSON.stringify(body.prefix)]}});
+        }
         const sop=serialize(wires);
         const key=admissibleKey(text,sop);
-        if (key && !seen.has(key)) {
+        if (key && command && !grounded.has(key)) {
+          grounded.set(key,{sop,status:choice.status,source:'language-alternation'});
+        } else if (key && !command && !seen.has(key)) {
           seen.add(key);
           candidates.push({sop,status:choice.status,source:'language-alternation'});
         }
+      }
+      if (grounded.size) {
+        const retained=candidates.filter(candidate=>{
+          const wires=parse(candidate.sop), requests=wires.filter(wire=>wire.type==='w.request.request');
+          return requests.length===1 && valueOf(requests[0],'act')===command.act &&
+            valueOf(requests[0],'predicate')===command.predicate &&
+            !grounded.has(JSON.stringify(signatures(wires,true)));
+        });
+        return [...grounded.values(),...retained];
       }
     }
     return candidates;

@@ -57,7 +57,8 @@ export function compileAlternations(facts) {
   const rules=new Map();
   for (const wire of facts('w.lang.en.alternation')) {
     const explicit=field(wire,'mode');
-    const ordered=!explicit && field(wire,'family')==='sequence lead';
+    const family=field(wire,'family');
+    const ordered=!explicit && family==='sequence lead';
     const mode=ordered ? 'ordered' : explicit;
     if (!ordered && !['request','question'].includes(mode)) continue;
     const lhs=pattern(field(wire,'from')), rhs=pattern(field(wire,'to'));
@@ -69,7 +70,7 @@ export function compileAlternations(facts) {
     const pivot=lhs.parts.findIndex(piece=>piece.key===slot);
     const before=lhs.parts.slice(0,pivot), after=lhs.parts.slice(pivot+1);
     if (ordered && (!before.length || after.length || rhs.parts.length!==1 || rhs.parts[0].key!==slot)) continue;
-    const rule={mode,before,after,dropBefore:start,dropAfter:lhs.parts.length-end};
+    const rule={mode,family,before,after,dropBefore:start,dropAfter:lhs.parts.length-end};
     rules.set(JSON.stringify(rule),rule);
   }
   return [...rules.values()];
@@ -112,7 +113,7 @@ export function alternateBodies(text, compiled) {
   const ends=[ts.length];
   if (terminal.has(ts[last].key) && !ts[last].hidden) ends.push(last);
   const alternatives=new Map();
-  for (const {before,after,mode,dropBefore,dropAfter} of compiled) {
+  for (const {before,after,mode,family,dropBefore,dropAfter} of compiled) {
     // A comma separates a turn-opening order marker from a noun modifier
     // (for example, “next, …” versus “next month” and “next to …”).
     if (mode==='ordered' && ts[before.length]?.key!==',') continue;
@@ -138,7 +139,7 @@ export function alternateBodies(text, compiled) {
       const specificity=before.length+after.length;
       const id=JSON.stringify([mode,start,stop]), previous=alternatives.get(id);
       if (!previous || previous.specificity<specificity) {
-        alternatives.set(id,{text:text.slice(start,stop),mode,start,end:stop,right,specificity,
+        alternatives.set(id,{text:text.slice(start,stop),mode,family,start,end:stop,right,specificity,
           prefix:text.slice(0,start).trim(),suffix:text.slice(stop).trim()});
       }
     }

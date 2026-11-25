@@ -715,3 +715,13 @@ The actual current reader replayed 116 texts, including the 106 warning texts. �
 The optional save-target proposal demonstrates the canonical addition separately. With the same model and no retraining, the picture yields a page target and the chart yields a chart target with exact unread “as PNG”. Diagram save is covered by the same kind declaration. The proposal extends the same installed contract used by documents and preserves each kind's existing acts. The Ledger check keeps “the Ledger” unread until the named input can be grounded and keeps format/name evidence separately unread. “Could you save the picture?” still permits learned alternatives because question-mark forms do not enter this complete imperative-frame proof. No aggregate benchmark ran. [Save applicability proposal](sop-worlds/save-target-pilot/README.md) · [Regression cases](test/language.test.mjs)
 
 All 500 isolated release tests passed.
+
+## Bulk findings fixed — modal courtesy backed by a native command frame
+
+The reader now reuses the canonical ability-question and optional politeness alternations. A complete native frame with an exact unambiguous action name can license the written command inside the wrapper. These proposals retain the courtesy span as filler and carry any unsupported operand as exact unread text. A declared disjunction blocks the single-command proof so an alternative such as “or should I?” is not absorbed into the command.
+
+The actual default-model before/after replay used 139 texts. Thirteen gained grounded modal readings for save, copy or remove. The other 126 returned identical ordered SOP candidates, including first- and third-person questions, negation, a substantive condition, a disjunction and a quoted command. A separate replay with the already reviewed optional kind proposal yielded a chart target and exact unread “as PNG” for “Could you save the chart as PNG?”. Catalogue and source-evidence checks passed for that circuit. No aggregate benchmark was run.
+
+The correction covers wrappers whose command has a complete supported frame. It leaves unresolved meanings such as a named copy source whose family has no copy licence, and does not resolve unsupported selection details from the noun alone. Bare punctuated echoes and modal verbs without that frame, including the exercised placement and undo shapes, remain outside this proof. Canonical save applicability is still routed through coordinator/data as recorded in the previous review. [Regressions](test/request-alternations.test.mjs)
+
+All 501 isolated release tests passed.
