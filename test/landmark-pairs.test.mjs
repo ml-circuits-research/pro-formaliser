@@ -36,10 +36,6 @@ test('links an affected item to two independently looked-up landmarks',async t=>
     assert.ok(wires.some(w=>get(w,'constraint')===selector && get(w,'from')==='page'));
   }
   assert.ok(validate(serialize(wires.toReversed()),worlds));
-  const invalid=parse(midpoint.sop);
-  const first=invalid.find(w=>'$'+w.id===get(pair,'first'));
-  first.attrs.phase=['result'];
-  assert.equal(validate(serialize(invalid),worlds),false);
   const other=parse(midpoint.sop);
   other.push({id:'unrelated',type:'w.request.request',attrs:{act:['place']}});
   const foreign=other.find(w=>'$'+w.id===get(pair,'second'));
@@ -49,6 +45,55 @@ test('links an affected item to two independently looked-up landmarks',async t=>
   const relation=duplicate.find(w=>w.type===pairType);
   relation.attrs.second=relation.attrs.first;
   assert.equal(validate(serialize(duplicate),worlds),false);
+});
+
+test('admits only explicit landmark selectors with their own page lookup and a catalogued anchor key',async t=>{
+  const worlds=loadWorlds({paths:[path]});
+  const reader=createReader(undefined,worlds);
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose('Next move it midway between Red Dock and Green Valley.');
+  const candidate=candidates.find(c=>c.source==='landmark-pair' &&
+    parse(c.sop).some(w=>get(w,'attribute')==='node.position'));
+  assert.ok(candidate);
+  const native=worlds.validationModules.bindActs(worlds.acts);
+  const nativeAccepts=wires=>native.fork().tell(wires,{factsOnly:true,strict:true}).ok;
+  assert.ok(nativeAccepts(parse(candidate.sop).reverse()));
+
+  const withChangedSelector=(role,change)=>{
+    const wires=parse(candidate.sop);
+    const pair=wires.find(w=>w.type===pairType);
+    const selector=wires.find(w=>'$'+w.id===get(pair,role));
+    const lookup=wires.find(w=>get(w,'constraint')===get(pair,role));
+    change(wires,selector,lookup);
+    return wires;
+  };
+  const structuralFailures=[
+    ['missing phase', (_w,selector)=>delete selector.attrs.phase],
+    ['result phase', (_w,selector)=>{selector.attrs.phase=['result'];}],
+    ['wrong role', (_w,selector)=>{selector.attrs.on=['attribute'];}],
+    ['missing lookup', (w,_selector,lookup)=>w.splice(w.indexOf(lookup),1)],
+    ['wrong lookup scope', (_w,_selector,lookup)=>{lookup.attrs.from=['any'];}],
+    ['lookup from another request', (w,_selector,lookup)=>{
+      w.push({id:'unrelated',type:'w.request.request',attrs:{act:['place']}});
+      lookup.attrs.request=['$unrelated'];
+    }],
+  ];
+  const catalogFailures=[
+    ['ordinary property', (_w,selector)=>{selector.attrs.attribute=['node.colour'];}],
+    ['anchor for another family', (_w,selector)=>{selector.attrs.attribute=['drawn.anchor'];}],
+    ['empty landmark', (_w,selector)=>{selector.attrs.value=['" "'];}],
+  ];
+  for (const role of ['first','second']) {
+    for (const [name,change] of structuralFailures) {
+      const wires=withChangedSelector(role,change);
+      assert.equal(nativeAccepts(wires),false,role+': '+name);
+      assert.equal(validate(serialize(wires),worlds),false,role+': '+name);
+    }
+    for (const [name,change] of catalogFailures) {
+      const wires=withChangedSelector(role,change);
+      assert.equal(validate(serialize(wires),worlds),false,role+': '+name);
+    }
+  }
 });
 
 test('keeps the ordinary interval and requires affirmative placement with two named or grounded anchors',async t=>{

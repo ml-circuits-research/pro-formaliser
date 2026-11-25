@@ -4,12 +4,29 @@ import {tokens} from './lexicon.mjs';
 import {literalRanges} from './evidence.mjs';
 
 const type=name=>'w.request.'+name;
-const pairType='w.relational.landmark_pair';
+export const landmarkPairType='w.relational.landmark_pair';
 const field=(wire,key)=>str(wire.attrs[key]?.[0]);
 const normalized=text=>tokens(text).map(([key])=>key);
 const word=/^[\p{L}\p{M}\p{N}_-]+$/u;
 const proper=/^\p{Lu}[\p{L}\p{M}\p{N}_-]*$/u;
 const quote=JSON.stringify;
+const writtenAnchorKey=(key,{tab,family,anchorKey})=>key.tab===tab && key.family===family &&
+  key.name===anchorKey && key.head==='fill+span' && !key.values.length;
+
+export function landmarkSelectorsMatchCatalog(wires,worlds) {
+  const pairs=wires.filter(wire=>wire.type===landmarkPairType);
+  if (!pairs.length) return true;
+  const references=new Map(wires.map(wire=>['$'+wire.id,wire]));
+  return pairs.every(pair=>{
+    const target=references.get(field(pair,'affected'));
+    const selectors=['first','second'].map(role=>references.get(field(pair,role)));
+    if (!target || !selectors.every(selector=>
+      selector?.attrs.value?.length===1 && field(selector,'value')?.trim())) return false;
+    return worlds.spatialBindings.some(binding=>binding.family===field(target,'family') &&
+      selectors.every(selector=>field(selector,'attribute')===binding.anchorKey) &&
+      worlds.requestKeys.some(key=>writtenAnchorKey(key,binding)));
+  });
+}
 
 export function compileLandmarkPairs(facts) {
   return facts('pro.reader.landmark_pair').flatMap(wire=>
@@ -87,14 +104,14 @@ function attach(text,body,candidate,plan,binding,worlds) {
     return constraint;
   };
   const first=anchor('first',plan.first), second=anchor('second',plan.second);
-  add('relation',pairType,{request:ref,affected,first,second,mode:plan.mode,words:quote(plan.words)});
+  add('relation',landmarkPairType,{request:ref,affected,first,second,mode:plan.mode,words:quote(plan.words)});
   request.attrs.words=[quote(text)];
   return {sop:serialize(wires),source:'landmark-pair',status:'matched'};
 }
 
 export async function landmarkPairReadings(text,worlds,read,permit,parseClause) {
   const frames=worlds.landmarkPairs;
-  if (!frames?.length || !worlds.validationModules?.types.has(pairType) || quotedSpans(text).length) return [];
+  if (!frames?.length || !worlds.validationModules?.types.has(landmarkPairType) || quotedSpans(text).length) return [];
   const ts=tokens(text), chars=Array.from(text);
   if (ts.length<5 || ts.length>44) return [];
   const outline=ts.map(([key])=>key);
@@ -117,7 +134,8 @@ export async function landmarkPairReadings(text,worlds,read,permit,parseClause) 
   const body=span(head);
   const plan={mode,marker:span(marker),first:span(first),second:span(second),words:span([marker[0],end]),relation:[...relation][0],
     leads:new Set(licensed.flatMap(frame=>[...frame.leads]))};
-  const admissible=worlds.spatialBindings.filter(binding=>worlds.requestKeys.some(key=>key.tab===binding.tab &&
+  const admissible=worlds.spatialBindings.filter(binding=>worlds.requestKeys.some(key=>writtenAnchorKey(key,binding)) &&
+    worlds.requestKeys.some(key=>key.tab===binding.tab &&
     key.family===binding.family && key.name===binding.relationKey && key.values.includes(plan.relation)) &&
     writtenLandmark(ts.slice(...first),binding.tab,worlds) && writtenLandmark(ts.slice(...second),binding.tab,worlds));
   if (!admissible.length) return [];

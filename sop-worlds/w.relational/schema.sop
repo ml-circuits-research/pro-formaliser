@@ -96,8 +96,11 @@
 @w.relational.check.pair_duplicate w.relational.landmark_pair first=?anchor second=?anchor
 @w.relational.check.pair_duplicate.deny core.deny when=$w.relational.check.pair_duplicate why="A landmark pair requires two distinct selector wires."
 
-@w.relational.check.pair_nonselector w.request.constraint phase=result
-@w.relational.check.pair_first_result w.relational.landmark_pair first=$w.relational.check.pair_nonselector
-@w.relational.check.pair_second_result w.relational.landmark_pair second=$w.relational.check.pair_nonselector
-@w.relational.check.pair_first_selector core.deny when=$w.relational.check.pair_first_result when=$w.relational.check.pair_nonselector why="The first landmark must be a selector."
-@w.relational.check.pair_second_selector core.deny when=$w.relational.check.pair_second_result when=$w.relational.check.pair_nonselector why="The second landmark must be a selector."
+# Both references must resolve to explicit selectors with their own page lookups.
+@w.relational.check.pair_selector w.request.constraint request=?relation_request on=place operator=relation phase=selector attribute=?key value=?text
+@w.relational.check.pair_selector.identity core.calc out=?w.relational.check.pair_selector fn=concat args=?w.relational.check.anchor
+@w.relational.check.pair_lookup w.request.lookup request=?relation_request constraint=$w.relational.check.anchor key=thing from=page
+@w.relational.check.pair_first_selector core.deny when=$w.relational.check.pair_first when=$w.relational.check.anchor with=$w.relational.check.pair_selector.identity not=$w.relational.check.pair_selector why="The first landmark requires a written place selector."
+@w.relational.check.pair_second_selector core.deny when=$w.relational.check.pair_second when=$w.relational.check.anchor with=$w.relational.check.pair_selector.identity not=$w.relational.check.pair_selector why="The second landmark requires a written place selector."
+@w.relational.check.pair_first_lookup core.deny when=$w.relational.check.pair_first when=$w.relational.check.anchor not=$w.relational.check.pair_lookup why="The first landmark requires a same-request page lookup."
+@w.relational.check.pair_second_lookup core.deny when=$w.relational.check.pair_second when=$w.relational.check.anchor not=$w.relational.check.pair_lookup why="The second landmark requires a same-request page lookup."

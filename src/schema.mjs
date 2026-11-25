@@ -105,7 +105,8 @@ export function validate(sop, worlds) {
     if (!extension || !wires.every(wire => !extension.catalogIds.has(wire.id) &&
         (requestTypes.has(wire.type) || extension.types.has(wire.type)))) return false;
     if (!extensionValidators.has(worlds)) extensionValidators.set(worlds, extension.bindActs(worlds.acts));
-    return extensionValidators.get(worlds).fork().tell(wires, {factsOnly:true, strict:true}).ok;
+    const native = extensionValidators.get(worlds).fork().tell(wires, {factsOnly:true, strict:true});
+    return native.ok && (extension.validateWires?.(wires) ?? true);
   } catch {
     return false;
   }

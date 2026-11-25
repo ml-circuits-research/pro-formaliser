@@ -1,5 +1,5 @@
 import {compileMeasuredMotion} from './measured-motion.mjs';
-import {compileLandmarkPairs} from './landmark-pairs.mjs';
+import {compileLandmarkPairs,landmarkPairType,landmarkSelectorsMatchCatalog} from './landmark-pairs.mjs';
 import {compileBenefactives} from './benefactive.mjs';
 import {compileParticipantAdjuncts} from './participant-adjunct.mjs';
 import {compileUniversalInventory,universalInventoryProviderTypes,universalInventoryType} from './universal-inventory.mjs';
@@ -789,6 +789,9 @@ export function loadWorlds({ paths = (process.env.SOP_WORLDS ?? '').split(delimi
     }
     worlds.evidenceVocabulary.referenceSlots=referenceSlots;
     worlds.validationModules=compileValidationModules(modules,[...facts.get('w.request.key').values()]);
+    if (worlds.validationModules.types.has(landmarkPairType)) {
+      worlds.validationModules.validateWires=wires=>landmarkSelectorsMatchCatalog(wires,worlds);
+    }
     worlds.reciprocal=compileReciprocal(type=>[...(facts.get(type)?.values() ?? [])]);
   }
   return worlds;

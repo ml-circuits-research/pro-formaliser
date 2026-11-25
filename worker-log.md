@@ -303,3 +303,7 @@
 ## INTEGRATE-1 canonical vocabulary and grammar
 - Setup installs `f3cb28bd`. Default reader probes verify eight aliases, two property frames, diagram ownership and three scope controls.
 - Removed the two migrated SOP files. All 395 tests passed on the isolated source snapshot. See integration-review.responses.md for the handover.
+
+## Landmark selector validation
+- Native SOP requires two explicit place selectors and a same-request page lookup per selector. The installed catalogue supplies the anchor key applicable to the affected family.
+- All 396 isolated release tests passed. Recorded the fix and the pending PSys2 projection in integration-review.responses.md.
