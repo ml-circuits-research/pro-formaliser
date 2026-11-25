@@ -35,6 +35,8 @@ Scopul și destinația unei cereri se pot reprezenta prin `w.request.intent` din
 
 Un cadru de argumente poate limita un câmp deschis la expresiile din vocabularul proprietății prin `lexical_part`. În „a sales chart”, măsura păstrează exact cuvântul „sales”, iar ținta rămâne graficul. Perechile de coordonate pot declara etichetele celor două câmpuri și le acceptă în oricare ordine, cu nume și valori scrise. [Cadre pentru măsuri](pro.reader/nominal-operands.sop) · [Teste pentru coordonate](../test/tuples.test.mjs)
 
+Un cadru de argumente poate declara formatul unui câmp scris prin `structured_part`. Pentru programări, cititorul păstrează separat data ISO, orele scrise, fusul și unitatea duratei. Identitatea întâlnirii existente rămâne separată de titlul propus. Validarea formatului se aplică exact la poziția unde apare fiecare valoare. [Declarații pentru programări](pro.reader/structured-schedules.sop) · [Teste](../test/structured-schedules.test.mjs)
+
 Pentru integrare în depozitul de lumi, declarațiile `core.word` pot intra în shardurile de vocabular ale domeniilor respective, iar cadrele în shardurile `w.lang.en`. Directorul `w.relational/` urmează structura unui modul separat, cu `schema.sop` și `shards/`. Modulul importă `w.request`. Testul încarcă atât schema, cât și cheile de catalog la care se referă un graf.
 
 ## Ce reprezintă modulul propus

@@ -335,3 +335,7 @@
 ## Written chart data and display roles
 - Same-model replay recovered the checked roles in nine held-out requests. Two still have written details marked unread.
 - All 419 tests passed. Exact canonical proposal paths and the replay results are in integration-review.responses.md.
+
+## Written schedules and ordered clauses
+- Two frozen schedule requests now retain written date, clocks, zone and target roles. Six ordered requests now split at the correct boundary.
+- All 424 tests passed. The scoped replay and proposed canonical declarations are in integration-review.responses.md.

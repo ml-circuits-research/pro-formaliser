@@ -40,7 +40,11 @@ sequence([Part|Tail],Tokens,Seen,Bindings) :-
 token_key([Key,_,_,_],Key).
 
 slot(Part,Tokens,Rest,Canonical) :-
-    ( get_dict(bank,Part,Bank) ->
+    ( get_dict(format,Part,_) ->
+      Tokens=[[_,Start,_,_]|_],
+      member([Words,Canonical,Start,End],Part.bank), eat(Words,Tokens,Rest),
+      append(Matched,Rest,Tokens), last(Matched,[_,_,End,_])
+    ; get_dict(bank,Part,Bank) ->
       member([Words,Canonical],Bank), eat(Words,Tokens,Rest)
     ; get_dict(nominal,Part,Nominals) ->
       Canonical="", between(0,8,N), length(Description,N), append(Description,After,Tokens),

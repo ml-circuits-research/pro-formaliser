@@ -2,6 +2,7 @@ import {parse,serialize} from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import {tokens} from './lexicon.mjs';
 import {consumeUnread} from './nominal-evidence.mjs';
 import {literalRanges} from './evidence.mjs';
+import {compileStructuredArguments,structuredBank} from './structured-arguments.mjs';
 
 const decode=v=>v?.startsWith('"') ? JSON.parse(v) : v;
 const many=(w,k)=>(w.attrs[k] ?? []).map(decode);
@@ -11,6 +12,7 @@ const encode=s=>JSON.stringify(s);
 const ownerPart='$owner';
 const predicatePart='$predicate';
 const unreadPart='$unread';
+const identityPart='$identity';
 const matchesAt=(ts,start,words)=>words.every((word,i)=>ts[start+i]?.[0]===word);
 const atom=/^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u;
 
@@ -67,6 +69,7 @@ function coordinatedCommandStarts(ts,worlds) {
 
 export function argumentSequences(facts,catalog) {
   const forms=new Map();
+  const formats=compileStructuredArguments(facts,catalog);
   const conjunctions=facts('w.lang.en.closed').filter(w=>one(w,'class')==='conjunction')
     .flatMap(w=>many(w,'text').map(keys));
   for (const w of facts('core.word')) {
@@ -77,12 +80,15 @@ export function argumentSequences(facts,catalog) {
   }
   const index=new Map();
   for (const w of facts('pro.reader.argument_sequence')) {
-    const family=one(w,'family'),act=one(w,'act'),mode=one(w,'mode');
-    const props=new Map(catalog.filter(k=>k.family===family && k.tab===one(w,'tab')).map(k=>[k.name,k]));
+    const family=one(w,'family'),act=one(w,'act'),mode=one(w,'mode'),tab=one(w,'tab');
+    const props=new Map(catalog.filter(k=>k.family===family && k.tab===tab).map(k=>[k.name,k]));
     const owners=many(w,'owner').map(keys).filter(words=>words.length), ownerKey=one(w,'owner_key'),ownerValue=one(w,'owner_value');
-    const owned=owners.length>0;
+    const inferred=one(w,'inferred_owner')==='true';
+    if (inferred && (owners.length || mode!=='new' || ownerKey)) continue;
+    const owned=owners.length>0 || inferred;
     const predicateBank=many(w,'predicate_surface').map(keys).filter(words=>words.length);
     const lexicalParts=new Set(many(w,'lexical_part'));
+    const structuredParts=new Set(many(w,'structured_part'));
     if (Boolean(ownerKey)!==Boolean(ownerValue) || ownerKey && (mode!=='new' || !props.get(ownerKey)?.values.includes(ownerValue))) continue;
     const openFields=new Set();
     const parts=many(w,'part').map(p=>{
@@ -90,14 +96,19 @@ export function argumentSequences(facts,catalog) {
         const field=p.slice(1);
         return owned && openFields.has(field) ? {repeat:field} : null;
       }
-      if (p===ownerPart) return owned ? (mode==='existing' ? {key:p,nominal:owners} :
+      if (p===ownerPart) return owners.length ? (mode==='existing' ? {key:p,nominal:owners} :
         {key:p,bank:owners.map(words=>[words,''])}) : null;
       if (p===predicatePart) return owned && predicateBank.length ? {key:p,bank:predicateBank.map(words=>[words,''])} : null;
       if (p===unreadPart) return owned ? {key:p} : null;
+      if (p===identityPart) return owned && mode==='existing' ? {key:p} : null;
       const prop=props.get(p);
       if (!prop) {
         const literal=keys(p);
         return p.includes('.') || !literal.length ? null : {literal};
+      }
+      if (structuredParts.has(p)) {
+        const format=formats.get(JSON.stringify([tab,family,p]));
+        return format && !lexicalParts.has(p) ? {key:p,format} : null;
       }
       if (lexicalParts.has(p)) {
         if (prop.values.length || !prop.head.split('+').includes('span')) return null;
@@ -118,7 +129,8 @@ export function argumentSequences(facts,catalog) {
     const slots=parts.filter(p=>p.key && p.key!==unreadPart).map(p=>p.key);
     if (slots.length<2 || new Set(slots).size!==slots.length ||
         [...lexicalParts].some(key=>!slots.includes(key)) ||
-        owned && (!slots.includes(ownerPart) || slots.includes(ownerKey))) continue;
+        [...structuredParts].some(key=>!slots.includes(key)) ||
+        inferred && !structuredParts.size || owned && (!inferred && !slots.includes(ownerPart) || slots.includes(ownerKey))) continue;
     const scopeLiteralSlot=one(w,'scope_literal_slot');
     const scopeLiterals=many(w,'scope_literal').map(keys);
     const closedSlot=parts.find(part=>part.key===scopeLiteralSlot)?.bank;
@@ -130,7 +142,7 @@ export function argumentSequences(facts,catalog) {
     const numericModifiers=many(w,'numeric_modifier').map(keys).filter(words=>words.length);
     for (const prefix of many(w,'prefix').map(keys).filter(prefix=>prefix.length)) {
       const entries=index.get(prefix[0]) ?? [];
-      entries.push({prefix,parts,family,act,mode,owned,ownerKey,ownerValue,tails,boundaries,numericModifiers,
+      entries.push({prefix,parts,family,act,mode,owned,inferred,ownerKey,ownerValue,tails,boundaries,numericModifiers,
         bindsPredicate,scopeLiteralSlot,scopeLiterals});index.set(prefix[0],entries);
     }
   }
@@ -145,7 +157,7 @@ export function argumentSequences(facts,catalog) {
   return index;
 }
 
-export function sequencePacket(ts,worlds,restricted=false) {
+export function sequencePacket(ts,worlds,restricted=false,text) {
   const packets=[];
   let stop=ts.length;
   while (stop && ['.','!','?'].includes(ts[stop-1][0])) stop--;
@@ -195,14 +207,19 @@ export function sequencePacket(ts,worlds,restricted=false) {
     }
     for (const end of endings) {
       if (end-start>32) continue;
-      const packet={family:f.family,act:f.act,mode:f.mode,parts:f.parts,input:input.slice(0,end-start),
+      const parts=f.parts.map(part=>part.format ? {...part,bank:structuredBank(text,ts,start,end,worlds,f.family,part)} : part);
+      if (parts.some(part=>part.format && !part.bank.length)) continue;
+      const packet={family:f.family,act:f.act,mode:f.mode,parts,input:input.slice(0,end-start),
         anchor:ts[i][2],start:ts[start][2],end:ts[end-1][3]};
       if (f.owned) {
         const boundary=f.prefix.findLastIndex(word=>[',',':'].includes(word));
-        packet.owned={...addressed,ownerKey:f.ownerKey ?? '',ownerValue:f.ownerValue ?? '',
+        packet.owned={...addressed,inferred:f.inferred,ownerKey:f.ownerKey ?? '',ownerValue:f.ownerValue ?? '',
           utteranceEnd:ts[stop-1][3]};
         if (f.scopeLiteralSlot) Object.assign(packet.owned,{scopeLiteralSlot:f.scopeLiteralSlot,scopeLiterals:f.scopeLiterals});
-        if (f.bindsPredicate) packet.owned.bindsPredicate=true;
+        if (f.bindsPredicate) {
+          packet.owned.bindsPredicate=true;
+          if (admittedLead(ts,start,worlds)) packet.owned.prefaceEnd=ts[start-1][3];
+        }
         else Object.assign(packet.owned,{predicateStart:ts[i+boundary+1][2],predicateEnd:ts[start-1][3]});
       }
       packets.push(packet);
@@ -259,19 +276,23 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
   const chars=Array.from(text), span=(start,end)=>chars.slice(start,end).join('');
   const {ownerKey,ownerValue,predicateStart,predicateEnd,utteranceEnd}=proof.owned;
   const owner=proof.bindings.find(([key])=>key===ownerPart);
-  if (!owner) return;
-  const [, ,start,end]=owner, noun=span(start,end);
+  const identity=proof.bindings.find(([key])=>key===identityPart);
+  if (!owner && !proof.owned.inferred) return;
+  const noun=owner && span(owner[2],owner[3]);
+  const target=identity ? ' fill=written name='+encode(span(identity[2],identity[3]))+' family_words='+encode(noun) :
+    proof.mode==='existing' ? ' fill=description description='+encode(noun) :
+      noun ? ' determiner=indefinite family_words='+encode(noun) : '';
   const lines=[
     '@r1 w.request.request act='+encode(proof.act)+' mood=do predicate='+encode(span(predicateStart,predicateEnd))+
       ' words='+encode(text),
-    '@r1.t w.request.target request=$r1 family='+encode(proof.family)+' mode='+proof.mode+
-      (proof.mode==='existing' ? ' fill=description description='+encode(noun) : ' determiner=indefinite family_words='+encode(noun)),
+    '@r1.t w.request.target request=$r1 family='+encode(proof.family)+' mode='+proof.mode+target,
   ];
   if (proof.mode==='existing') lines.push('@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page');
   const bindings=proof.bindings.flatMap(binding=>binding===owner ?
-    (ownerKey ? [[ownerKey,ownerValue,start,end]] : []) : binding[0]===unreadPart || binding[0].startsWith('=') ? [] : [binding]);
+    (ownerKey ? [[ownerKey,ownerValue,owner[2],owner[3]]] : []) :
+    binding===identity || binding[0]===unreadPart || binding[0].startsWith('=') ? [] : [binding]);
   for (const [i,[key,canonical,a,b]] of [...bindings,...extraBindings].entries()) {
-    const words=span(a,b),value=canonical || words;
+    const words=span(a,b), measurement=canonical?.measurement, value=measurement ? canonical.value : canonical || words;
     let keyWords='';
     if (labels?.has(key)) {
       // A role label must be in an adjacent connector. A fronted role may
@@ -295,10 +316,12 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
       }
     }
     lines.push('@r1.arg'+i+' w.request.constraint request=$r1 on=attribute attribute='+encode(key)+
-      ' value='+(canonical && atom.test(canonical) ? canonical : encode(value))+
-      (words===value ? '' : ' words='+encode(words))+(keyWords ? ' key_words='+encode(keyWords) : '')+' operator=eq phase=result');
+      ' value='+(!measurement && canonical && atom.test(canonical) ? canonical : encode(value))+
+      (words===value && !measurement ? '' : ' words='+encode(words))+(keyWords ? ' key_words='+encode(keyWords) : '')+' operator=eq phase=result'+
+      (measurement ? ' measure='+measurement.measure+' unit='+encode(measurement.unit)+' measure_words='+encode(measurement.words) : ''));
   }
-  const lead=span(proof.owned.courtesyStart ?? 0,proof.owned.bindsPredicate ? proof.anchor : predicateStart).trim();
+  const lead=span(proof.owned.courtesyStart ?? 0,proof.owned.prefaceEnd ??
+    (proof.owned.bindsPredicate ? proof.anchor : predicateStart)).trim();
   if (lead) lines.push('@f1 w.request.filler text='+encode(lead.replace(/,\s*$/u,'')));
   const remainder=span(proof.end,utteranceEnd).replace(/^\s*,?\s*/u,'');
   const unread=proof.bindings.filter(([key])=>key===unreadPart).map(([, ,a,b])=>span(a,b));

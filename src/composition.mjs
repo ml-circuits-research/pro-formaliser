@@ -84,15 +84,24 @@ export function sequenceParts(text, ts, joiners, { isAct, isPreservation, prefix
   const words = visibleTokens(chars, ts);
   const max = Math.max(1, ...Object.keys(joiners).map(phrase => phrase.split(' ').length));
   const parts = [];
-  let start = 0, pending = [];
+  let start = 0;
   const offset = index => ts[index]?.[2] ?? chars.length;
   const phrase = (from, to) => chars.slice(offset(from),offset(to)).join('').trim();
-  const connector = key => Object.hasOwn(joiners,key);
+  function connectorAt(index) {
+    let key = '', match;
+    for (let end=index;end<ts.length && end<index+max && words[end];end++) {
+      key += (end===index ? '' : ' ') + words[end];
+      if (Object.hasOwn(joiners,key)) match = {kind:joiners[key],end:end+1};
+    }
+    return match;
+  }
+  const strongKind = kind => kind==='sequence' || kind==='clause';
+  const precedence = kind => kind==='condition' ? 3 : strongKind(kind) ? 2 : kind==='sequence-boundary' ? 1 : 0;
 
   function hasPreservationLead(from, to) {
     if (!isPreservation || from >= to) return false;
     for (let stop=from+1; stop<to; stop++) {
-      if (connector(words[stop]) && isPreservation(phrase(from,stop))) return true;
+      if (connectorAt(stop) && isPreservation(phrase(from,stop))) return true;
     }
     return isPreservation(phrase(from,to));
   }
@@ -110,7 +119,7 @@ export function sequenceParts(text, ts, joiners, { isAct, isPreservation, prefix
       const head = [], clause = words.slice(index,to).filter(Boolean).join(' ');
       for (let i=index; i<to && i<index+8; i++) {
         const key = words[i];
-        if (!key || !word.test(key) || connector(key)) break;
+        if (!key || !word.test(key) || connectorAt(i)) break;
         head.push(key);
         const follow = i+1<to ? ts[i+1][0] : undefined;
         const next = follow && (word.test(follow) || quotes.has(follow)) ? follow : undefined;
@@ -125,35 +134,30 @@ export function sequenceParts(text, ts, joiners, { isAct, isPreservation, prefix
   }
 
   for (let i=0; i<ts.length;) {
-    let key = '', kind, end = i;
-    for (let j=i; j<ts.length && j<i+max && words[j]; j++) {
-      key += (j===i ? '' : ' ') + words[j];
-      if (!Object.hasOwn(joiners,key)) continue;
-      kind = joiners[key];
-      end = j+1;
-    }
-    if (!kind) {
-      pending = [];
+    const first = i, initial = connectorAt(i);
+    if (!initial) {
       i++;
       continue;
     }
-    if (!pending.length) pending.push(i);
-    pending[1] = end;
-    const [first] = pending;
-    const adjacent = end < ts.length && connector(words[end]);
-    const strong = ['sequence','clause'].includes(kind);
-    if (!adjacent && first>start && end<ts.length) {
+    let {kind,end} = initial, following;
+    // Punctuation after an ordered connector keeps the order. A condition in
+    // the same run still belongs with the clause it qualifies.
+    while ((following = connectorAt(end))) {
+      if (precedence(following.kind)>=precedence(kind)) kind = following.kind;
+      end = following.end;
+    }
+    if (kind==='condition') break;
+    if (first>start && end<ts.length) {
       let next = end+1;
-      while (next<ts.length && !connector(words[next])) next++;
+      while (next<ts.length && !connectorAt(next)) next++;
       const left = phrase(start,first);
-      const preservation = kind==='contrast' && hasPreservationLead(end,ts.length);
+      const ordered = strongKind(kind) || kind==='sequence-boundary' && hasLead(end,next);
       const weak = ['coordination','addition','list-or-clause','contrast'].includes(kind) &&
         (hasActLead(end,next) || hasPreservationLead(end,ts.length));
-      if (word.test(left) && (strong || (weak || preservation) && (!requireLeftAct || hasLead(start,first)))) {
+      if (word.test(left) && (ordered || weak && (!requireLeftAct || hasLead(start,first)))) {
         parts.push(left);
         if (parts.length >= 8) return [];
         start = end;
-        pending = [];
       }
     }
     i = end;

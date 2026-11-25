@@ -269,7 +269,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
     const topicCommands=scope.restricted ? undefined : topicCommandPacket(text,ts,quotes,worlds,topicGrammar);
     const propertyCommands=scope.restricted || quotes.length ? undefined : propertyCommandPacket(text,ts,model.propertyCommands);
-    const argumentSequences=quotes.length ? [] : sequencePacket(ts,worlds,scope.restricted);
+    const argumentSequences=quotes.length ? [] : sequencePacket(ts,worlds,scope.restricted,text);
     const memberActions=scope.restricted ? [] : memberActionPackets(text,ts,quotes,worlds);
     const coordinatedEffects=scope.restricted || quotes.length ? undefined : coordinatedPacket(ts,worlds,model.lexicon);
     const verbEffects=scope.restricted || quotes.length ? [] : [...new Set(ts.map(t=>t[0]))].flatMap(head=>verbIndex.get(head) ?? []);

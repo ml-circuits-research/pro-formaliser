@@ -127,6 +127,14 @@
 @pro.reader.argument_sequence.prefix core.slot of=pro.reader.argument_sequence key=prefix kind=string many=true required=true
 @pro.reader.argument_sequence.part core.slot of=pro.reader.argument_sequence key=part kind=atom kind=string many=true required=true
 @pro.reader.argument_sequence.lexical_part core.slot of=pro.reader.argument_sequence key=lexical_part kind=atom many=true
+@pro.reader.argument_sequence.structured_part core.slot of=pro.reader.argument_sequence key=structured_part kind=atom many=true
+@pro.reader.argument_sequence.inferred_owner core.slot of=pro.reader.argument_sequence key=inferred_owner kind=boolean
+
+@pro.reader.argument_format core.type of=pro.reader.argument_format closed=true
+@pro.reader.argument_format.tab core.slot of=pro.reader.argument_format key=tab kind=atom required=true
+@pro.reader.argument_format.family core.slot of=pro.reader.argument_format key=family kind=atom required=true
+@pro.reader.argument_format.key core.slot of=pro.reader.argument_format key=key kind=atom required=true
+@pro.reader.argument_format.format core.slot of=pro.reader.argument_format key=format enum=identifier enum=date enum=clock enum=zone enum=measurement required=true
 
 @pro.reader.argument_sequence.owner core.slot of=pro.reader.argument_sequence key=owner kind=string many=true
 @pro.reader.argument_sequence.owner_key core.slot of=pro.reader.argument_sequence key=owner_key kind=atom

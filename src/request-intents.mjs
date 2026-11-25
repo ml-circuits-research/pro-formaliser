@@ -80,6 +80,8 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
       const valueStart = i + frame.cue.length;
       if (valueStart >= end || !matches(keys, i, frame.cue) || !word.test(keys[valueStart]) ||
           frame.form === 'nominal' && worlds.scopeGrammar.universalHeads.has(keys[valueStart]) ||
+          frame.role === 'purpose' && frame.form === 'nominal' &&
+            (/^\d+$/u.test(keys[valueStart]) || worlds.nominalNumbers.get(keys[valueStart])?.kind === 'cardinal') ||
           frame.form === 'verbal' && !verbalPurpose(valueStart, frame)) continue;
       const previous = keys[i - 1];
       const boundary = previous === ',' || worlds.joiners[previous] === 'coordination' ? i - 1 : i;

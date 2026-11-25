@@ -27,6 +27,31 @@ test('coalesces adjacent connectors and preserves quoted or possessive content',
   assert.deepEqual(split('paint the circle; move the box'), ['paint the circle','move the box']);
 });
 
+test('keeps ordered transitions outside both clause spans', () => {
+  const {joiners:declared}=loadWorlds();
+  const splitDeclared=text=>sequenceParts(text,tokens(text),declared,{isAct:phrase=>acts.has(phrase)});
+  for (const separator of [', and after that,','; after that',', after that,',', next']) {
+    assert.deepEqual(splitDeclared(`a red box${separator} move the circle`),['a red box','move the circle']);
+  }
+  assert.deepEqual(splitDeclared('move the box, next to the circle'),[]);
+  assert.deepEqual(splitDeclared('create the next page'),[]);
+  assert.deepEqual(splitDeclared('create the page, next page'),[]);
+  assert.deepEqual(splitDeclared('move the box, and after that, if allowed, paint the circle'),[]);
+  assert.deepEqual(splitDeclared('create "red; after that paint" then move the box'),
+    ['create "red; after that paint"','move the box']);
+});
+
+test('composes separate public request readings across written ordering cues', async t => {
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const separator of [', and after that,','; after that',', next']) {
+    const {candidates}=await reader.propose(`Draw a small dog${separator} draw a small cat`);
+    assert.ok(candidates.some(({source,sop})=>source==='sequence' &&
+      parse(sop).filter(wire=>wire.type==='w.request.request').map(wire=>JSON.parse(wire.attrs.words[0]))
+        .join('|')==='Draw a small dog|draw a small cat'),separator);
+  }
+});
+
 test('keeps bracketed list items together across commas and semicolons', () => {
   assert.deepEqual(split('create [red, move the box; remove the circle], then paint the list'),
     ['create [red, move the box; remove the circle]','paint the list']);
