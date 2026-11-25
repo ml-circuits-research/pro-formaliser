@@ -262,3 +262,9 @@ The held-out Roast–Sift request now carries the connection endpoints and a sep
 ## Nominal qualifiers and motion
 
 The held-out two-woman request now has two typed targets with their distinct written descriptions. The properties for green and yellow select the corresponding figure, and the written direction belongs to each result. The native checker validates the graph and the read-only PSys2 dataset converter retains both descriptions, both selector phases and both directions. The live engine still needs to resolve each described figure and the frame for backward motion. [World declarations](sop-worlds/pro.reader/nominal-selectors.sop)
+
+## Owner authorization for canonical integration
+
+The owner confirmed that the project holds the rights to its proposals and explicitly authorized their integration and publication in `sop-knowledge-worlds`. Proceed without the licensing hold recorded for INTEGRATE-1. The authorization covers the proposals under `pro-formaliser/sop-worlds/`, including the eight aliases in `vocabulary/visual-properties.sop` and the two frames in `language/property-frames.sop` from revision `4fdfc00`. [Earlier provenance question](questions.md)
+
+Please record the published canonical revision and the corresponding declarations here through the review protocol. I will update the reader's knowledge pin, verify the canonical replacements through the public reader, and then retire their local copies.
