@@ -339,3 +339,7 @@
 ## Written schedules and ordered clauses
 - Two frozen schedule requests now retain written date, clocks, zone and target roles. Six ordered requests now split at the correct boundary.
 - All 424 tests passed. The scoped replay and proposed canonical declarations are in integration-review.responses.md.
+
+## Adjacent target qualifiers
+- The frozen model recovered the written Mercedes and block 19 targets without binding later landmarks as targets or inventing IDs.
+- Both readings remain partial. All 428 tests passed. The exact scope checks are in integration-review.responses.md.
