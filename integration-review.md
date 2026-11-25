@@ -842,3 +842,21 @@ Implementation worker: run a REAL comparable L0–L4 aggregate now. Deadline: **
 Publish baseline and current actual L0/L1/L2/L3/L4 and L3+L4 counts/percentages, N, reader/data/knowledge/model/evaluator/budget metadata, genuine run timestamps/timezone and paired gains/losses in lastResult-prolog.md, with saved evidence links and limits. Focused tests or evidence-complete counts are not aggregate semantic scores. Pursue one broad measured mechanism rather than successive local wording patches. No invented context/history/identity, gold-dependent effects or fabricated measurements. Existing code/error-report review work remains intact.
 
 Practical success threshold: **at least5 percentage points absolute L3+L4 improvement** in that comparable replay by23:45 CET. If below threshold OR no trustworthy comparable result exists by the deadline, finish a safe checkpoint, report **STANDBY**, and begin no further implementation or experiments until **26 November 2026, 08:00 CET**, unless the owner explicitly resumes earlier. Use the existing poll only; create no schedule. The reviewer records this operational task but does not run the worker's benchmark or advance last_review for this administrative instruction.
+
+
+## Post-commit review — declared infinitive action openings
+
+Reviewed af52bbbfeb2b393746488f5feff6e4bab5bca71e at clean source HEADdbfa509; worker response mtime2026-11-25 21:48:18.145554981 +0100; checks21:50:28–21:51:10 +0100. Both focused new tests passed: independent body proof/exact opening filler and prevention of swallowed unquoted references. Two additional worlds-only calls on one initialized reader confirm “The next step is to move them below the tree” retains literal them and its destination; an explicitly quoted title “Do it” remains literal chart.title under the opening, rather than being rejected as an unresolved pronoun. Positive evidence/catalogue checks are clean, calls return error=null.
+
+Accept this bounded wrapper mechanism, not correctness of every existing body interpretation. Source-specific scope stays with the independently proved body; the wrapper supplies no previous turn, scene or identity. Route the new action_opening role/phrases in request-openings.sop through the existing shared English grammar handoff. No new output schema is demonstrated. The real comparable aggregate deadline/practical threshold/standby instruction remains unchanged; no new comparable aggregate result is present in this reviewed worker response. These focused checks do not update historical scores.
+
+### Approved individual report PROLOG-GOLD-006
+
+Independently fetched WebMeet1be6fb60e632e18e61da90d3eec600d64baa388e diagram/charts-06.csv data record4898, column sop; exact text/current circuit match the report. Text: “The next thing is to add a Budget series to it with 11, 17 and 23.” Approve only deleting @prev w.request.previous and adding @r1.destination w.request.intent request=$r1 role=destination value="it" words="to it". Keep all existing series, label, values, filler/request words and source text. The destination is explicitly written but unresolved; the previous-message claim has no current-text support. The exact proposed circuit passes native/evidence/catalogue checkCircuit without errors. No model reproduction of the old cell is required or claimed.
+
+Route this scoped report delta through coordinator/data with expected-old-cell verification. Reports001–005 are not reaudited here. Reviewer file stable for publication; no source/report/result/Git edits, aggregate/full-suite replay or PSys inspection.
+
+
+## DATA PUBLICATION — approved report corrections closed
+
+2026-11-25 21:56 CET: WebMeet 70673ae6dfc9965d18a58fcccfa5fe9aa1289888 publishes PROLOG-GOLD-004/005; requested exact benefit-unread amendments are included. Native batch gate99/99, uncovered-word advisories retained. NL and other cells preserved; no broader draft approval. Please mark corresponding report IDs fixed with this revision in your own report file; retain their source evidence. This data publication does not update reader accuracy or unfreeze benchmark gold.
