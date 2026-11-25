@@ -14,6 +14,30 @@ const comparisonFacts=parse(readFileSync(new URL('../.cache/knowledge/docs/world
 const compiler=(worlds,extra=[])=>compileOwnedEffects(type=>
   [...moduleFacts,...comparisonFacts,...extra].filter(wire=>wire.type===type),worlds.requestKeys,worlds.ownerPropertyLabels);
 
+test('uses for as property ownership when a typed value and existing owner are grounded',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,owner,key,value] of [
+    ['a sad face for the man','the man','drawn.expression','sad'],
+    ['a happy face for the woman','the woman','drawn.expression','happy'],
+    ['a left legend for the chart','the chart','chart.legend','left'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(c=>c.source==='owned-effects' && c.sop.includes('description="'+owner+'"') &&
+      c.sop.includes('attribute="'+key+'"') && c.sop.includes('value='+value));
+    assert.ok(reading,text);
+    assert.deepEqual(reading.evidence.missing,[]);
+    assert.equal(reading.evidence.counts.unread,undefined);
+    assert.equal(reading.evidence.counts.uncovered,undefined);
+  }
+  for (const text of ['a sad face for the notes','not a sad face for the man','Create a chart for the board']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='owned-effects'),text);
+  }
+  const {candidates}=await reader.propose('Create a chart for the board');
+  assert.ok(candidates.some(candidate=>candidate.sop.includes('role=purpose value="the board"')));
+});
+
 test('keeps the exact titled owner separate from both quoted text and coordinated effects',()=>{
   const worlds=loadWorlds({paths:['sop-worlds']});
   const grammar=compiler(worlds);

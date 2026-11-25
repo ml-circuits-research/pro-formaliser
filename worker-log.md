@@ -327,3 +327,7 @@
 ## Written operands and labelled coordinates
 - The full chart-plus-calculation control preserves the chart measure and the separate calculation intents. An overlay supplies a new measure without code changes.
 - Same-model replay on six holdout requests recovered the named `Valid?` node and both coordinates. All 411 tests passed. Canonical staging proposals are in integration-review.responses.md.
+
+## Nominal property owners
+- The public reader now attaches the sad expression to the written existing man on a frozen holdout case. Chart and genuine purpose controls pass.
+- All 412 tests passed. Shared language and drawing vocabulary proposals are in integration-review.responses.md.

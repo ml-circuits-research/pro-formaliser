@@ -103,13 +103,18 @@ function resolveOwner(tokens,span,a,b,worlds,frame,heads) {
   if (normalized.split(' ').some(token=>worlds.negatives.has(token) || worlds.joiners[token])) return;
   const determiner=worlds.determiners[tokens[a][0]];
   const headStart=determiner ? a+1 : a;
-  const familyNoun=[...heads].some(head=>normalized===head || normalized.endsWith(' '+head)) ||
-    tokens.slice(headStart,b).some((_,i)=>worlds.lookup(names(tokens,headStart+i,b)).some(([role,act,family,mode])=>
-      role==='target' && act==='change' && family===frame.family && mode==='existing'));
   if (headStart===b || ['indefinite','quantified'].includes(determiner) || worlds.isReference(normalized) ||
       tokens.slice(headStart,b).some(([term])=>worlds.scopeGrammar.subjects.has(term))) return;
   const written=span(headStart,b);
   const hasTitle=/^\p{Lu}/u.test(written) && /\p{L}/u.test(written.slice(1));
+  const familyNoun=[...heads].some(head=>normalized===head || normalized.endsWith(' '+head)) ||
+    tokens.slice(headStart,b).some((_,i)=>{
+      const surface=names(tokens,headStart+i,b);
+      return (determiner || !hasTitle) &&
+        worlds.ownerInventory?.get(keyOf('change',surface))?.some(({family})=>family===frame.family) ||
+        worlds.lookup(surface).some(([role,act,family,mode])=>
+          role==='target' && act==='change' && family===frame.family && mode==='existing');
+    });
   return {words,licensed:familyNoun || hasTitle,identity:form(written),...(familyNoun ? {description:words} : {name:written})};
 }
 
