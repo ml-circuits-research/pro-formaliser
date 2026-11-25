@@ -497,3 +497,7 @@
 ## Short property requests
 - Finite property banks now support polite requests with or without a written property label, as declared for each key. Compatible effects are separate proposals.
 - The real default-model CLI returned 13 results. Two reported no-proposal cases now produce native-valid circuits. All 487 release tests passed.
+
+## Closed selection requests
+- Compiled the declared whole-clause frames for clearing the selection into the native targetless deselect act.
+- The real before/after CLI batch produced five new clean readings across 11 messages. All 488 release tests passed.

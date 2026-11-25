@@ -61,6 +61,7 @@ import { nominalNumberReading } from './nominal-number.mjs';
 import { namedTargetReading } from './target-names.mjs';
 import { catalogIssues } from './catalog.mjs';
 import { frameSupport } from './language-frames.mjs';
+import { closedRequestReadings } from './closed-requests.mjs';
 import { contextScores } from './context.mjs';
 import { prologWorker } from './prolog-worker.mjs';
 import { requestScope } from './request-scope.mjs';
@@ -323,6 +324,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (key && !seen.has(key)) { seen.add(key); candidates.push(answer); return true; }
     }
     const nominalRoles=new Set();
+    // Closed frames account for the entire current utterance, including
+    // negative words that express a desired state rather than a prohibition.
+    if (!quotes.length) for (const reading of closedRequestReadings(text,ts,worlds,politeness)) {
+      retain(reading,{restricted:false});
+    }
     if (!scope.restricted && !quotes.length) {
       for (const reading of ellipticalPropertyReadings(text,ts,worlds,politeness)) retain(reading);
       for (const {nominalWords,...reading} of ellipticalNominals(text,ts,worlds,politeness)) {
