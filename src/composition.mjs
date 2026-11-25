@@ -79,7 +79,9 @@ export function clausePrefixes(prefixes) {
   return byHead;
 }
 
-export function sequenceParts(text, ts, joiners, { isAct, isPreservation, prefixes, requireLeftAct = true } = {}) {
+export function sequenceParts(text, ts, joiners, {
+  isAct, isPreservation, prefixes, requireLeftAct = true, requireClauseBoundary = false,
+} = {}) {
   const chars = Array.from(text);
   const words = visibleTokens(chars, ts);
   const max = Math.max(1, ...Object.keys(joiners).map(phrase => phrase.split(' ').length));
@@ -140,14 +142,16 @@ export function sequenceParts(text, ts, joiners, { isAct, isPreservation, prefix
       continue;
     }
     let {kind,end} = initial, following;
+    let clauseBoundary = kind==='clause';
     // Punctuation after an ordered connector keeps the order. A condition in
     // the same run still belongs with the clause it qualifies.
     while ((following = connectorAt(end))) {
+      clauseBoundary ||= following.kind==='clause';
       if (precedence(following.kind)>=precedence(kind)) kind = following.kind;
       end = following.end;
     }
     if (kind==='condition') break;
-    if (first>start && end<ts.length) {
+    if ((!requireClauseBoundary || clauseBoundary) && first>start && end<ts.length) {
       let next = end+1;
       while (next<ts.length && !connectorAt(next)) next++;
       const left = phrase(start,first);

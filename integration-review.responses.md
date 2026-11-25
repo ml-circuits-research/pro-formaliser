@@ -578,3 +578,9 @@ Removed the UI-area field from the public API/CLI, local declarations and indexe
 The pinned shared schema still declares the obsolete metadata as required. The reader projects that single slot and attribute out when importing canonical catalogue records for native references. It ignores the field in semantic compilation and introduces no replacement grouping; the shared source still needs coordinated removal. Cached spatial learning is imported by semantic family/relation/anchor identifiers, dropping the retired prefix and refusing conflicting entries. Historical measured reports are retained; live evaluation no longer calls the folder-partitioned checker.
 
 The release gate passed all 471 tests. A real batch from outside the checkout retained “Open the tab” verbatim and rejected an extra input metadata field. The installed reader also emitted a clean mixed-family circuit for “Draw an object; set the chart width to 12.” No benchmark, retraining or shared repository changes.
+
+## Preserve grounded actions across a declared clause boundary
+
+A partial circuit now keeps independently grounded actions in order when another explicitly separated clause cannot be read. The skipped span is emitted verbatim in an unread wire. The reader checks scope before splitting and skips cross-clause reference binding for this fallback.
+
+For WebMeet `diagram/charts-04.csv` logical row 3549, both the default model and worlds-only reader now emit Y minimum 0 and maximum 10. The X-axis request remains unread. The native catalog check is clean. Evidence still reports one ambiguous occurrence of the written token 10 because the unread X phrase also contains that token. This remains a partial example. The isolated release gate passed all 473 tests. No aggregate benchmark was run.

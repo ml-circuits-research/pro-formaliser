@@ -481,3 +481,7 @@
 ## Global semantic catalogue
 - Removed UI-area input/selection from the reader, estimator, catalogue, local declarations and live evaluation. Native mixed-family smoke and all 471 release tests passed.
 - Pinned schema metadata is stripped on import pending canonical removal. Historical benchmark retained.
+
+## Clause boundaries and unread fragments
+- A declared clause boundary can preserve grounded actions on either side of an unread fragment. The partial circuit keeps the fragment verbatim.
+- WebMeet charts-04 row 3549 retains the Y bounds in both reader modes. All 473 release tests passed.

@@ -847,6 +847,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       const readWhole=async part=>(await propose(part,false)).candidates;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
+      const separatedClauses=[];
       for (const reading of retentionCorrectionReadings(text,worlds)) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);
@@ -874,8 +875,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const ts=tokens(text);
         const strict=sequenceParts(text,ts,worlds.joiners,sequenceOptions);
         const flexible=sequenceParts(text,ts,worlds.joiners,{...sequenceOptions,requireLeftAct:false});
+        const bounded=sequenceParts(text,ts,worlds.joiners,{requireClauseBoundary:true});
         const plans=JSON.stringify(strict)===JSON.stringify(flexible) ? [strict] : [strict,flexible];
-        if (plans.some(parts=>parts.length)) {
+        if (bounded.length || plans.some(parts=>parts.length)) {
           const scope=requestScope(text,maskQuoted(text,quotedSpans(text)),worlds,[]);
           if (!scope.preventsSplitting) {
             const fragments=new Map();
@@ -886,6 +888,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
             for (const parts of plans) for (const reading of await coordinatedRequestReadings(parts,worlds,readClause,canSplit)) {
               const key=admissibleKey(text,reading.sop);
               if (key && scope.permits(parse(reading.sop))) additional.set(key,reading);
+            }
+            for (const reading of await coordinatedRequestReadings(bounded,worlds,readClause,canSplit,{text})) {
+              if (admissibleKey(text,reading.sop) && scope.permits(parse(reading.sop))) separatedClauses.push(reading);
             }
           }
         }
@@ -1003,6 +1008,15 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (additional.size) {
         for (const candidate of candidates) additional.delete(JSON.stringify(signatures(parse(candidate.sop),true)));
         candidates.push(...additional.values());
+      }
+      if (separatedClauses.length) {
+        // An unread clause can contain a missing antecedent. Do not infer links
+        // across it when deriving within-utterance references.
+        const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),c.status!=='partial'))));
+        for (const reading of separatedClauses) {
+          const key=JSON.stringify(signatures(parse(reading.sop),reading.status!=='partial'));
+          if (!seen.has(key)) {seen.add(key);candidates.push(reading);}
+        }
       }
       const modifier=incidentalModifier(text,worlds);
       if (modifier) {

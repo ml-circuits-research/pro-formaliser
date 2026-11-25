@@ -121,10 +121,11 @@ function extendCombinations(beam,options) {
   return next.sort((a,b)=>a.cost-b.cost).slice(0,12);
 }
 
-export async function coordinatedRequestReadings(parts,worlds,read,permit) {
+export async function coordinatedRequestReadings(parts,worlds,read,permit,{text}={}) {
   if (parts.length<2) return [];
   let beam=[{wires:[],cost:0}];
   let matched=beam;
+  const understood=[];
   for (const [index,part] of parts.entries()) {
     if (!permit(part,quotedSpans(part))) return [];
     const candidates=await read(part);
@@ -146,14 +147,53 @@ export async function coordinatedRequestReadings(parts,worlds,read,permit) {
       seen.set(key,option);
       options.push(option);
     }
-    if (!options.length) return [];
+    if (!options.length) {
+      if (text===undefined) return [];
+      continue;
+    }
+    understood.push(index);
     beam=extendCombinations(beam,options);
     // Complete local readings can be ranked below lexical fallbacks on every
     // clause. Give their combinations space independently of the mixed beam.
     matched=extendCombinations(matched,options.filter(option=>option.matched));
   }
-  const combined=new Set([...beam,...matched].map(({wires})=>serialize(wires)));
-  return [...combined].map(sop=>({sop,source:'coordinated-requests',status:'matched'}));
+  if (!understood.length) return [];
+  const partial=understood.length<parts.length;
+  const groups=[];
+  if (partial) {
+    const bounds=[];
+    let cursor=0;
+    for (const part of parts) {
+      const location=literalRanges(text,part,cursor)[0];
+      if (!location) return [];
+      bounds.push(location);
+      cursor=location[1];
+    }
+    for (const [i,index] of understood.entries()) {
+      const from=i ? index : 0;
+      const to=understood[i+1] ?? parts.length;
+      if (to-from===1) continue;
+      const words=text.slice(bounds[from][0],bounds[to-1][1]);
+      const gaps=parts.slice(from,to).filter((_,offset)=>from+offset!==index);
+      groups.push({prefix:'clause'+(index+1)+'.',words,gaps});
+    }
+  }
+  const combined=new Set([...beam,...matched].map(({wires})=>{
+    const bounded=[...wires];
+    for (const {prefix,words,gaps} of groups) {
+      const ownerIndex=bounded.findIndex(wire=>wire.type===requestType && wire.id.startsWith(prefix));
+      const request=bounded[ownerIndex];
+      // Unread wires require a request owner, and literal evidence must be in
+      // its scope. Widen only the source span, after certifying the clause.
+      bounded[ownerIndex]={...request,attrs:{...request.attrs,words:[JSON.stringify(words)]}};
+      for (const [i,gap] of gaps.entries()) {
+        bounded.push({id:'gap.'+prefix+i,type:unreadType,
+          attrs:{request:['$'+request.id],text:[JSON.stringify(gap)]}});
+      }
+    }
+    return serialize(bounded);
+  }));
+  return [...combined].map(sop=>({sop,source:'coordinated-requests',status:partial ? 'partial' : 'matched'}));
 }
 
 function alternatives(part,index,worlds) {

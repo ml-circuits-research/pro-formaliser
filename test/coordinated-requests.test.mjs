@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {fileURLToPath} from 'node:url';
+import {createReader as createPublicReader} from '../src/reader.mjs';
 import {createReader} from '../src/runtime.mjs';
 import {parse,validate} from '../src/schema.mjs';
 import {coordinatedRequestReadings} from '../src/sentence-requests.mjs';
@@ -66,7 +67,7 @@ test('keeps typed landmark lookups and the installed predicate of a reciprocal c
   }
 });
 
-test('requires every coordinated clause to be grounded and respects guarded spans',async t=>{
+test('requires every comma-coordinated clause to be grounded and respects guarded spans',async t=>{
   const reader=createReader(undefined,worlds);
   t.after(()=>reader.close());
   for (const text of [
@@ -79,6 +80,47 @@ test('requires every coordinated clause to be grounded and respects guarded span
     const {candidates}=await reader.propose(text);
     assert.equal(candidates.some(coordinated),false,text);
   }
+});
+
+test('keeps independently grounded semicolon clauses on both sides of an unread clause',async t=>{
+  const reader=await createPublicReader({worldsOnly:true,evidence:true});
+  t.after(()=>reader.close());
+  const first='Set chart width to 500';
+  const gap='Kalveram it';
+  const last='set the value axis range from zero to 10';
+  const text=[first,gap,last].join('; ');
+  const result=await reader.propose(text);
+  assert.equal(result.error,null);
+  const index=result.candidates.findIndex(candidate=>{
+    if (!coordinated(candidate) || candidate.status!=='partial') return false;
+    const constraints=parse(candidate.sop).filter(wire=>wire.type==='w.request.constraint');
+    return ['chart.width','chart.min','chart.max'].every(attribute=>
+      constraints.some(wire=>field(wire,'attribute')===attribute));
+  });
+  assert.ok(index>=0,text);
+  const {sop,evidence}=result.candidates[index];
+  assert.ok(validate(sop,worlds));
+  assert.deepEqual(evidence.missing,[]);
+  assert.equal(evidence.counts.uncovered,undefined);
+  const wires=parse(sop);
+  const requests=wires.filter(wire=>wire.type==='w.request.request');
+  assert.deepEqual(requests.map(wire=>field(wire,'words')),[first+'; '+gap,last]);
+  assert.deepEqual(requests.map(wire=>field(wire,'predicate')),['Set','set the value axis range from']);
+  for (const [request,expected] of [[requests[0],[['chart.width','500']]],
+    [requests[1],[['chart.min','0'],['chart.max','10']]]]) {
+    const constraints=wires.filter(wire=>wire.type==='w.request.constraint' &&
+      field(wire,'request')==='$'+request.id);
+    assert.deepEqual(constraints.map(wire=>[field(wire,'attribute'),field(wire,'value')]),expected);
+  }
+  assert.deepEqual(result.unresolved.filter(item=>item.candidate===index).map(item=>item.text),[gap]);
+});
+
+test('does not emit unconditional coordinated requests for a guarded semicolon sequence',async t=>{
+  const reader=await createPublicReader({worldsOnly:true});
+  t.after(()=>reader.close());
+  const result=await reader.propose('If approved, set chart width to 500; Kalveram it; set the value axis range from zero to 10');
+  assert.equal(result.error,null);
+  assert.equal(result.candidates.some(coordinated),false);
 });
 
 test('a named endpoint remains an argument of the leading connection predicate',async t=>{
