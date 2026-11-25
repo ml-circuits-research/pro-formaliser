@@ -268,3 +268,40 @@ test('binds written component owners through installed part and slot inventories
     assert.ok(!result(candidates,'part.scale') && !result(candidates,'part.width'),text);
   }
 });
+
+test('keeps a typed restriction on a population while changing its specified value',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,sort,selector,value,remaining] of [
+    ['Make all green plants blue','plant','green','blue',undefined],
+    ['paint each of the flowers blue','flower',undefined,'blue',undefined],
+    ['Set all of the green plants to the same vivid chartreuse','plant','green','chartreuse','the same vivid'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>candidate.source==='native-property-frame' &&
+      field(typed(parse(candidate.sop),'target'),'fill')==='all');
+    assert.ok(reading,text);
+    const wires=parse(reading.sop),target=typed(wires,'target'), constraints=wires.filter(wire=>wire.type==='w.request.constraint');
+    assert.equal(field(target,'sort'),sort,text);
+    assert.equal(field(target,'quantifier'),'all',text);
+    assert.deepEqual(constraints.map(wire=>[field(wire,'attribute'),field(wire,'phase'),field(wire,'value')]),
+      [...(selector ? [['drawn.colour','selector',selector]] : []),['drawn.colour','result',value]],text);
+    assert.equal(field(typed(wires,'unread'),'text'),remaining,text);
+    if (remaining) assert.equal(reading.status,'partial');
+    assert.ok(!typed(wires,'lookup'),text);
+    assert.deepEqual(reading.evidence.missing,[],text);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0,text);
+    assert.deepEqual(reading.catalog.issues,[],text);
+  }
+  for (const text of [
+    'Make all green plant blue',
+    'Make all heavy curtains blue',
+    'Make all green plants near the house blue',
+    'Make all green plants except the small one blue',
+    'Make all green plants blue if ready',
+    'Were all green plants blue?',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(!native(candidates).some(wires=>field(typed(wires,'target'),'fill')==='all'),text);
+  }
+});

@@ -32,9 +32,22 @@ export function compileNominalSelectors(facts,requestKeys,words) {
   });
 }
 
+export function directHead(noun,binding) {
+  return binding.heads.find(bank=>bank.has(noun))?.get(noun);
+}
+
+export function nominalSelectorLines(selector,owner='r1') {
+  if (!selector) return [];
+  const {key,value,words,marker}=selector, quote=JSON.stringify;
+  return ['@'+owner+'.subject.property w.request.constraint request=$'+owner+' on=attribute attribute='+quote(key)+
+    ' value='+quote(value)+' operator=eq phase=selector'+
+    (value!==words ? ' words='+quote(words) : '')+
+    (marker ? ' key_words='+quote(marker) : '')];
+}
+
 // The entire noun phrase must decompose into a known noun, a declared marker
 // (where required), and one unambiguous value of the selector.
-export function nominalSelectors(bindings,start,end,phrase,span) {
+export function nominalSelectors(bindings,start,end,phrase,span,resolveHead=directHead) {
   const matches=[];
   for (const binding of bindings) {
     for (let middle=start+1;middle<end;middle++) {
@@ -49,7 +62,7 @@ export function nominalSelectors(bindings,start,end,phrase,span) {
         if (!value) continue;
         const noun=phrase(headStart,headEnd);
         // A preceding source can supply a more specific kind than a later alias.
-        const names=binding.heads.find(bank=>bank.has(noun))?.get(noun);
+        const names=resolveHead(noun,binding);
         if (names?.size!==1) continue;
         matches.push({sort:[...names][0],sortWords:span(headStart,headEnd),
           selector:{key:binding.key,value,words:span(valueStart,valueEnd),

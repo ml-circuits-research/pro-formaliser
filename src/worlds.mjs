@@ -28,7 +28,7 @@ import {compileNativePropertyFrames} from './native-property-frames.mjs';
 import {compilePreservationAdjuncts} from './preservation-adjunct.mjs';
 import { compileOwnerPropertyOperands } from './owner-property.mjs';
 import { compileDirectionalResults } from './directional-result.mjs';
-import { nominalSelectorProviders,nominalSelectorType } from './nominal-selectors.mjs';
+import { compileNominalSelectors,nominalSelectorProviders,nominalSelectorType } from './nominal-selectors.mjs';
 import { nativeVerbEffects } from './verb-effects.mjs';
 import { compileTransformations } from './transformation.mjs';
 import { compileCreationRoles } from './literal-roles.mjs';
@@ -624,6 +624,7 @@ function compile(facts) {
   const frames=argumentSequences(type=>type==='pro.reader.argument_sequence' ?
     [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys);
   const universalAgreement=compileUniversalAgreement(facts);
+  const nominalSelectorRules=compileNominalSelectors(facts,requestKeys,words);
   return {
     bodyLeads:{neutral:leadForms('neutral'),nominal:leadForms('nominal'),actionOnly:leadForms('action_only')},
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
@@ -675,7 +676,7 @@ function compile(facts) {
     ...compileOwnerPropertyOperands(facts,requestKeys,words),
     nativePropertyFrames:compileNativePropertyFrames(facts),
     preservationAdjuncts:compilePreservationAdjuncts(facts,requestKeys),
-    directionalResults:compileDirectionalResults(facts,requestKeys,words),
+    nominalSelectorRules, directionalResults:compileDirectionalResults(facts,requestKeys,words,nominalSelectorRules),
     measuredMotion:compileMeasuredMotion(facts,requestKeys),
     transformations:compileTransformations(facts,requestKeys,words),
     trailingDiscourse:compileTrailingDiscourse(facts),

@@ -1,5 +1,6 @@
 import { str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { tokens } from './lexicon.mjs';
+import {directHead,nominalSelectors} from './nominal-selectors.mjs';
 import { nativeTargetInventory, nativeTargetInventoryType, nativeTargetProviderTypes } from './native-target-inventory.mjs';
 
 export const universalInventoryType='pro.reader.universal_inventory';
@@ -26,28 +27,35 @@ export function compileUniversalAgreement(facts) {
 
 // Match the entire written noun after a declared quantifier. An unsupported
 // qualifier or number mismatch cannot broaden a population to its bare sort.
-export function universalOwner(ts,worlds,family,act) {
+export function universalOwner(ts,worlds,family,act,span) {
   const agreement=worlds.universalAgreement;
   if (!agreement?.heads.has(ts[0]?.[0])) return;
   const [prefix,number]=agreement.agreements.filter(([form])=>
     worlds.scopeGrammar.universals.has(form.join(' ')) && form.every((term,i)=>ts[i]?.[0]===term))
     .sort(([a],[b])=>b.length-a.length)[0] ?? [];
   if (!prefix || prefix.length===ts.length) return {};
-  const words=ts.slice(prefix.length).map(([term])=>term);
-  const surface=words.join(' ');
+  const phrase=(a,b)=>ts.slice(a,b).map(([term])=>term).join(' ');
+  const target=sort=>['target',act,family,'existing',sort,0];
+  const agree=(surface,lookup)=>{
+    const singular=lookup(surface), plural=worlds.nominalInflection(surface,lookup);
+    const invariant=agreement.invariant.has(surface.split(' ').at(-1));
+    const compatible=number==='pl' ? [...plural,...(invariant ? singular : [])] :
+      plural.length && !invariant ? [] : singular;
+    return new Set(compatible.map(entry=>entry[4]).filter(Boolean));
+  };
+  const selectors=(worlds.nominalSelectorRules ?? []).filter(row=>row.family===family);
+  const qualified=nominalSelectors(selectors,prefix.length,ts.length,phrase,span,(surface,binding)=>
+    agree(surface,lemma=>[...(directHead(lemma,binding) ?? [])].map(target)));
+  const choices=new Map(qualified.map(item=>[JSON.stringify(item),item]));
+  if (choices.size) return choices.size===1 ? choices.values().next().value : {};
   const lookup=text=>{
     const entries=(worlds.ownerInventory?.get(JSON.stringify([act,text])) ?? [])
-      .filter(item=>item.family===family).map(({sort})=>['target',act,family,'existing',sort,0]);
+      .filter(item=>item.family===family).map(({sort})=>target(sort));
     const pilot=worlds.universalInventory?.lookup(text).filter(([,sense,owner])=>sense===act && owner===family) ?? [];
     return [...entries,...pilot];
   };
-  const singular=lookup(surface);
-  const plural=worlds.nominalInflection(surface,lookup);
-  const invariant=agreement.invariant.has(words.at(-1));
-  const compatible=number==='pl' ? [...plural,...(invariant ? singular : [])] :
-    plural.length && !invariant ? [] : singular;
-  const sorts=new Set(compatible.map(entry=>entry[4]).filter(Boolean));
-  return sorts.size===1 ? {sort:[...sorts][0],nounStart:prefix.length} : {};
+  const sorts=agree(phrase(prefix.length,ts.length),lookup);
+  return sorts.size===1 ? {sort:[...sorts][0],sortWords:span(prefix.length,ts.length)} : {};
 }
 
 export function compileUniversalInventory(facts,words,licensed,agreement=compileUniversalAgreement(facts)) {

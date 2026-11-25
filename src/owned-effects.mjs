@@ -3,6 +3,7 @@ import { quotedSpans } from './literal-roles.mjs';
 import { resolveWrittenMeasurement } from './owner-property.mjs';
 import { parse } from './schema.mjs';
 import { universalOwner } from './universal-inventory.mjs';
+import { nominalSelectorLines } from './nominal-selectors.mjs';
 
 const quote=JSON.stringify;
 const decode=item=>item?.startsWith('"') ? JSON.parse(item) : item;
@@ -15,7 +16,7 @@ const nominal=/^[\p{L}\p{M}\p{N}_'-]+$/u;
 const slots=new Set(['owner','property','value','prior','cue']);
 
 export function compileOwnedEffects(facts,keys,propertyLabels) {
-  const library=new Map(), frames=new Map(), ownerHeads=new Map(), comparatives=new Map(), senses=new Map(), closedChoices=new Set();
+  const library=new Map(), frames=new Map(), ownerHeads=new Map(), comparatives=new Map(), senses=new Map(), closedChoices=new Set(), resultQualifiers=new Map();
   for (const key of keys) {
     const index=keyOf(key.family,key.name), group=library.get(index) ?? [];
     group.push(key); library.set(index,group);
@@ -37,6 +38,12 @@ export function compileOwnedEffects(facts,keys,propertyLabels) {
     for (const alias of all(row,'alias')) {
       const at=alias.indexOf('=');
       if (at>0) aliases.set(form(alias.slice(0,at)),alias.slice(at+1));
+    }
+    const qualifiers=all(row,'result_qualifier').map(form).filter(Boolean);
+    if (qualifiers.length) {
+      const group=resultQualifiers.get(family) ?? new Map();
+      group.set(key,[...new Set([...(group.get(key) ?? []),...qualifiers])]);
+      resultQualifiers.set(family,group);
     }
     const variants=senses.get(index) ?? [], finiteChoice=one(row,'finite_choice')==='true';
     if (finiteChoice && library.get(index).every(spec=>spec.values.length)) closedChoices.add(index);
@@ -100,7 +107,7 @@ export function compileOwnedEffects(facts,keys,propertyLabels) {
     const [family,key]=JSON.parse(index);
     for (const sense of variants) for (const surface of sense.surfaces) register(surface,family,key,[sense]);
   }
-  return {frames,comparatives,ownerHeads,properties,propertyHeads,closedChoices};
+  return {frames,comparatives,ownerHeads,properties,propertyHeads,closedChoices,resultQualifiers};
 }
 
 function resolveOwner(tokens,span,a,b,worlds,frame,heads) {
@@ -108,12 +115,10 @@ function resolveOwner(tokens,span,a,b,worlds,frame,heads) {
   const words=span(a,b);
   const normalized=names(tokens,a,b);
   if (normalized.split(' ').some(token=>worlds.negatives.has(token) || worlds.joiners[token])) return;
-  const population=universalOwner(tokens.slice(a,b),worlds,frame.family,'change');
+  const population=universalOwner(tokens.slice(a,b),worlds,frame.family,'change',(from,to)=>span(a+from,a+to));
   if (population) {
     if (!population.sort) return;
-    return {words,description:words,licensed:true,identity:normalized,population:{
-      sort:population.sort,sortWords:span(a+population.nounStart,b),
-    }};
+    return {words,description:words,licensed:true,identity:normalized,population};
   }
   const determiner=worlds.determiners[tokens[a][0]];
   const headStart=determiner ? a+1 : a;
@@ -350,7 +355,8 @@ export function ownedEffectReadings(text,worlds,grammar=worlds.ownedEffects) {
         contextual ? 'fill=context' : owner.name ? 'fill=written name='+quote(owner.name) : 'fill=description description='+quote(owner.description);
       const lines=['@r w.request.request act=change mood=do words='+quote(text)+(predicate ? ' predicate='+quote(predicate) : ''),
         '@t w.request.target request=$r family='+quote(family)+' mode=existing '+target];
-      if (!population) lines.push('@l w.request.lookup request=$r target=$t key=thing from=page');
+      if (population) lines.push(...nominalSelectorLines(population.selector,'r'));
+      else lines.push('@l w.request.lookup request=$r target=$t key=thing from=page');
       for (const [i,effect] of path.entries()) {
         const {key,keyWords,value}=effect;
         if (value.unresolved) {

@@ -1,5 +1,7 @@
 import { tokens } from './lexicon.mjs';
 import { parse } from './schema.mjs';
+import { universalOwner } from './universal-inventory.mjs';
+import { nominalSelectorLines } from './nominal-selectors.mjs';
 
 const decode=value=>value?.startsWith('"') ? JSON.parse(value) : value;
 const fields=(wire,slot)=>(wire.attrs[slot] ?? []).map(decode);
@@ -139,8 +141,17 @@ function contextKeys(worlds,surface) {
   return contextualLabels.get(worlds).get(surface)?.values() ?? [];
 }
 
-function ownerBindings(worlds,act,words,span,plain,det,start,end) {
+function ownerBindings(worlds,act,ts,words,span,plain,det,start,end) {
   const owners=new Map(), {next,mode}=det(start,end);
+  if (worlds.universalAgreement?.heads.has(ts[start]?.[0])) {
+    if (act!=='change' || !plain(start,end)) return owners;
+    for (const family of Object.keys(worlds.familyTabs)) {
+      if (!worlds.literalGrammar.licenses(family,act)) continue;
+      const population=universalOwner(ts.slice(start,end),worlds,family,act,(a,b)=>span(start+a,start+b));
+      if (population?.sort) owners.set(family,{act,family,fill:'all',description:span(start,end),...population});
+    }
+    return owners;
+  }
   if (next>=end || mode && !targetDeterminers.has(mode) || !plain(next,end)) return owners;
   const description=span(start,end), raw=span(next,end);
   const bind=(family,fields)=>{
@@ -232,6 +243,27 @@ function qualitativeValues(worlds,family,surface) {
   return choices.length<2 ? choices : choices.filter(choice=>choice.alias);
 }
 
+function qualifiedValues(worlds,family,start,first,end,words,span) {
+  const readings=[];
+  for (const [key,qualifiers] of worlds.ownedEffects?.resultQualifiers?.get(family) ?? []) {
+    const cuts=new Set([first]);
+    for (let at=first;at<end-1;at++) {
+      if (!cuts.has(at)) continue;
+      for (const qualifier of qualifiers) {
+        const after=at+qualifier.split(' ').length;
+        if (after<end && words(at,after)===qualifier) cuts.add(after);
+      }
+    }
+    for (const cut of cuts) {
+      if (cut===first) continue;
+      for (const value of qualitativeValues(worlds,family,words(cut,end))) {
+        if (value.key===key) readings.push({...value,words:span(cut,end),qualifier:span(start,cut)});
+      }
+    }
+  }
+  return readings;
+}
+
 function prefixStops(parts,input) {
   let starts=[0];
   for (const part of parts) {
@@ -308,7 +340,7 @@ export function nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly=false}
   if (acts.length) {
     for (let a=0;a<end;a++) for (let b=a+1;b<=Math.min(a+10,end);b++) {
       for (const act of acts) {
-        for (const item of ownerBindings(worlds,act,words,span,plain,det,a,b).values()) {
+        for (const item of ownerBindings(worlds,act,ts,words,span,plain,det,a,b).values()) {
           owners.push({a,b,...item});
           families.add(item.family);
         }
@@ -349,9 +381,13 @@ export function nativePropertyPacket(text,ts,quotes,worlds,{questionsOnly=false}
     const source=quoted?.value ?? span(a,b);
     if (!source.trim() || !quoted && ((!plain(a,b) && !decimal.test(source)) ||
         connectors.some(form=>a+form.length<=b && hasWords(input,a,form)))) continue;
-    const {next}=det(a,b);
-    if (canQualify && !quoted && next===a) for (const family of families) {
-      for (const value of qualitativeValues(worlds,family,words(a,b))) qualitative.push({a,b,family,words:source,...value});
+    const {next,mode}=det(a,b);
+    if (canQualify && !quoted) for (const family of families) {
+      const direct=next===a ? qualitativeValues(worlds,family,words(a,b)) : [];
+      for (const value of direct) qualitative.push({a,b,family,words:source,...value});
+      if (b===end && !direct.length && (next===a || mode==='definite')) {
+        for (const value of qualifiedValues(worlds,family,a,next,b,words,span)) qualitative.push({a,b,family,...value});
+      }
     }
     for (const key of properties.values()) {
       const value=parseValue(key,source,norm(source),worlds) ??
@@ -376,6 +412,7 @@ export function nativePropertyReadings(text,proofs) {
   const ts=tokens(text), chars=Array.from(text), span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
   const alternatives=new Map();
   for (const {act,frame,owner,attribute,value,predicate,questionKinds} of proofs) {
+    if (value?.qualifier && owner.fill!=='all') continue;
     const key=identity(owner.family,frame), meanings=alternatives.get(key) ?? new Map();
     const binding=JSON.stringify([owner.a,owner.b,attribute?.a,attribute?.b,owner.implicit ? undefined : attribute?.key,
       value?.a,value?.b,attribute && !owner.implicit ? value?.value : undefined]);
@@ -391,8 +428,10 @@ export function nativePropertyReadings(text,proofs) {
         (owner.determiner ? ' determiner='+owner.determiner : '')+
         (owner.description ? ' description='+quote(owner.description) : '')+
         (owner.ids ? ' ids='+quote(owner.ids) : '')+(owner.name ? ' name='+quote(owner.name) : '')+
-        (owner.sort ? ' sort='+quote(owner.sort)+' sort_words='+quote(owner.head) :
-          owner.head ? ' family_words='+quote(owner.head) : ''),
+        (owner.sort ? ' sort='+quote(owner.sort)+' sort_words='+quote(owner.sortWords ?? owner.head) :
+          owner.head ? ' family_words='+quote(owner.head) : '')+
+        (owner.fill==='all' ? ' quantifier=all count_words='+quote(owner.description) : ''),
+      ...nominalSelectorLines(owner.selector),
     ];
     if (!asking) {
       const props=value.canonical && (value.numeric || atom.test(value.value)) ? value.value : quote(value.value);
@@ -401,9 +440,11 @@ export function nativePropertyReadings(text,proofs) {
         ' value='+props+(value.words!==value.value ? ' words='+quote(value.words) : '')+
         ' operator='+(value.operator ?? 'eq')+' phase=result');
     }
+    if (value?.qualifier) lines.push('@r1.u w.request.unread request=$r1 text='+quote(value.qualifier)+
+      ' note='+quote('unresolved result qualifier'));
     if (owner.fill==='description' || owner.implicit) lines.push('@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page');
     const sop=lines.join('\n');
-    entries.set(sop,{sop,source:'native-property-frame'});
+    entries.set(sop,{sop,source:'native-property-frame',...(value?.qualifier ? {status:'partial'} : {})});
     meanings.set(binding,entries);
     alternatives.set(key,meanings);
   }

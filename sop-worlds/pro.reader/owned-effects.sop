@@ -30,6 +30,7 @@
 @pro.reader.effect_sense.scale core.slot of=pro.reader.effect_sense key=scale kind=atom
 @pro.reader.effect_sense.property_command core.slot of=pro.reader.effect_sense key=property_command kind=boolean
 @pro.reader.effect_sense.alias core.slot of=pro.reader.effect_sense key=alias kind=string many=true
+@pro.reader.effect_sense.result_qualifier core.slot of=pro.reader.effect_sense key=result_qualifier kind=string many=true
 @pro.reader.effect_sense.finite_choice core.slot of=pro.reader.effect_sense key=finite_choice kind=boolean
 @reader.effect.chart.title pro.reader.effect_sense family=chart key=chart.title text=title text=label property_command=true
 @reader.effect.chart.inversion pro.reader.effect_sense family=chart key=chart.invert finite_choice=true text=invert text=inverted alias="x axis=x" alias="the x axis=x" alias="y axis=y" alias="the y axis=y" alias="z axis=z" alias="the z axis=z"
@@ -53,3 +54,6 @@
 @pro.reader.effect_owner.text core.slot of=pro.reader.effect_owner key=text kind=string many=true required=true
 @reader.effect.chart.owner pro.reader.effect_owner family=chart text=chart text=plot text=graph text=histogram text=pie text=scatter text=contour text=heatmap
 @reader.effect.chart.colour_bar_position pro.reader.effect_sense family=chart key=chart.colourBarPosition text="colour bar position" text="colour bar"
+
+# These modifiers can precede a named colour but are retained as unresolved.
+@reader.effect.drawn.colour_qualifiers pro.reader.effect_sense family=drawn key=drawn.colour result_qualifier=same result_qualifier=vivid

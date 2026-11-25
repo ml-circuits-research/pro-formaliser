@@ -422,3 +422,8 @@
 - Frozen scenes-24 row 635 now binds the existing tree population and all four properties with and without the trained model.
 - Shared agreement and exact noun binding preserve the written scope. Restricted populations still require grounded selectors.
 - All 454 isolated release tests passed. No benchmark rerun.
+
+## Typed selectors on quantified owners
+- Frozen scenes-10 rows 1228 and 1258 now preserve population scope and supported colour effects in both reader profiles. Row 1196 still keeps the ungrounded restriction outside this path.
+- The existing nominal selectors and number agreement now supply a separate predicate before a shared assignment. The exact result modifier remains unresolved.
+- All 456 isolated release tests passed. No benchmark rerun.

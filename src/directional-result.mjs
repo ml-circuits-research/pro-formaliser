@@ -1,5 +1,5 @@
 import {nativeInventory} from './native-inventory.mjs';
-import {compileNominalSelectors,nominalSelectors} from './nominal-selectors.mjs';
+import {compileNominalSelectors,nominalSelectors,nominalSelectorLines} from './nominal-selectors.mjs';
 import { tokens } from './lexicon.mjs';
 
 const values=(wire,key)=>(wire.attrs[key] ?? []).map(value=>value.startsWith('"') ? JSON.parse(value) : value);
@@ -11,7 +11,8 @@ const existingDeterminers=new Set(['definite','demonstrative','possessive']);
 const atom=/^[\p{L}_][\p{L}\p{M}\p{N}_.-]*$/u;
 const apostrophe=text=>text.replaceAll('’',"'");
 
-export function compileDirectionalResults(facts,requestKeys,words=facts('core.word')) {
+export function compileDirectionalResults(facts,requestKeys,words=facts('core.word'),
+  selectorRules=compileNominalSelectors(facts,requestKeys,words)) {
   const placeFrames=new Set(facts('w.lang.en.frame')
     .filter(wire=>one(wire,'act')==='place').map(wire=>one(wire,'name')));
   const parts=facts('w.lang.en.part');
@@ -33,7 +34,6 @@ export function compileDirectionalResults(facts,requestKeys,words=facts('core.wo
   }));
   const stoppingLeads=new Set(facts('w.lang.en.prep.time').filter(wire=>one(wire,'span')==='end')
     .flatMap(wire=>values(wire,'text').map(normal)));
-  const selectorRules=compileNominalSelectors(facts,requestKeys,words);
   const bindings=[];
   for (const wire of facts('pro.reader.motion')) {
     const [tab,family,act,directionKey,degreeKey,offsetKey,targetType]=
@@ -91,14 +91,7 @@ export function writtenMotionTargets(worlds,binding,start,end,phrase,span,lexico
   }));
 }
 
-export function motionSelector(selector) {
-  if (!selector) return [];
-  const {key,value,words,marker}=selector;
-  return ['@r1.subject.property w.request.constraint request=$r1 on=attribute attribute='+quote(key)+
-    ' value='+quote(value)+' operator=eq phase=selector'+
-    (value!==words ? ' words='+quote(words) : '')+
-    (marker ? ' key_words='+quote(marker) : '')];
-}
+export const motionSelector=nominalSelectorLines;
 
 function directionalComponent(start,end,binding,motion,phrase,span) {
   const options=[];

@@ -243,3 +243,20 @@ test('retains the quantified sort through all coordinated properties',async t=>{
     assert.ok(!candidates.some(candidate=>candidate.source==='owned-effects' && candidate.sop.includes('fill=all')),nominal);
   }
 });
+
+test('retains the population selector when its properties share an explicit owner',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  const text='Set the width of all green trees to 30 and the height to 20';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const reading=candidates.find(candidate=>candidate.source==='owned-effects' && candidate.sop.includes('fill=all'));
+  assert.ok(reading);
+  const wires=parse(reading.sop);
+  assert.equal(wires.find(wire=>wire.type==='w.request.target').attrs.sort[0],'"tree"');
+  const constraints=wires.filter(wire=>wire.type==='w.request.constraint');
+  assert.deepEqual(constraints.map(wire=>[JSON.parse(wire.attrs.attribute[0]),wire.attrs.phase[0],wire.attrs.value[0]]),
+    [['drawn.colour','selector','"green"'],['drawn.width','result','30'],['drawn.height','result','20']]);
+  assert.deepEqual(reading.catalog.issues,[]);
+  assert.deepEqual(reading.evidence.missing,[]);
+  assert.equal(reading.evidence.counts.uncovered ?? 0,0);
+});
