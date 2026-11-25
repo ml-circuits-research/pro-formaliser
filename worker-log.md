@@ -377,3 +377,8 @@
 ## Written regions under a standing rule
 - Frozen 700 has a complete written scope and region proposal. Frozen 202 also binds the explicit exclusion and keeps the final qualifier unread. The same grammar works on a diagram node.
 - All 439 isolated release tests passed. Canonical routing and exclusions are recorded for review.
+
+## Subject-first preservation of the remainder
+- The frozen replay separates the retained objects in controls 990 and 981. The same proposals preserve the unresolved modifier or broader preservation words.
+- Normalized the retention declarations and used canonical amount phrases to prevent a spurious preservation effect on the moved object.
+- All 441 isolated release tests passed. No benchmark rerun.

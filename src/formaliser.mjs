@@ -18,6 +18,7 @@ import {quantifiedVerbReadings} from './quantified-verb.mjs';
 import {createTopicCommands,topicCommandPacket,topicCommandReading} from './topic-commands.mjs';
 import {postposedCause,postposedClauseReadings,readsCauseAsCommand,withPostposedCause} from './postposed-clause.mjs';
 import {standingPositionReadings} from './standing-position.mjs';
+import {incidentalModifier,withIncidentalModifier} from './incidental-modifiers.mjs';
 import {analyticalOwnerBindings} from './analytical-frames.mjs';
 import {orientationLandmarkReadings} from './orientation-landmark.mjs';
 import {reciprocalReading} from './reciprocal-reading.mjs';
@@ -174,6 +175,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   const endpoints=createEndpointReferenceReader(worlds);
   const instanceReferences = createInstanceReferenceReader(worlds);
   const preservation = createPreservation(model.examples,worlds,model.lexicon);
+  const preservationKeys=new Set(worlds.preservationBindings.map(binding=>binding.attribute));
   const ordinaryAct = coordinationActs(worlds,model.lexicon);
   const sequenceOptions = {
     isAct:(surface,context)=>worlds.requestIntents.predicates.has(surface) || ordinaryAct(surface,context),
@@ -215,6 +217,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const quotes = quotedSpans(text);
     const scopeText = maskQuoted(text,quotes);
     const outside = scopeText === text ? null : new Set(tokens(scopeText).map(t => t[2]));
+    const amounts=ts.flatMap((_,start)=>worlds.motionAmountPhrases.flatMap(words=>
+      words.every((word,i)=>ts[start+i]?.[0]===word && (!outside || outside.has(ts[start+i][2]))) ?
+        [[start,start+words.length]] : []));
     const scores = contextScores(text, model.context ?? {});
     for (const anchor of new Set([undefined,...ts.map(t => t[0])])) {
       for (const {min,max,template} of buckets.get(anchor) ?? []) {
@@ -255,6 +260,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
             if (Object.hasOwn(worlds.determiners,words)) continue;
             entry = ground(entry,chars.slice(ts[i][2],ts[j][3]).join(''));
             if (!entry) continue;
+            if (amounts.some(([start,end])=>i>=start && j<end && j-i+1<end-start) &&
+                preservationKeys.has(valueOf(parse('@c w.request.constraint '+entry[3])[0],'attribute'))) continue;
           }
           const prior = role === 'act' ? scores['act:' + a + '/' + b] ?? 0 : 0;
           hits.push([ts[i][2],ts[j][3],entry,prior]);
@@ -768,10 +775,13 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
       }
       const retained=preservationAdjunct(text,worlds);
-      if (retained && !requestScope(text,maskQuoted(text,quotedSpans(text)),worlds,[]).restricted) {
+      const retentionScope=retained?.reinforcement ? retained.body : text;
+      if (retained && !requestScope(retentionScope,maskQuoted(retentionScope,quotedSpans(retentionScope)),worlds,[]).restricted) {
         const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
-        const steps=sequenceParts(retained.body,tokens(retained.body),worlds.joiners,sequenceOptions);
-        const bodyReadings=await wrapped(retained.body);
+        const sequenceBody=retained.retentionWords ? incidentalModifier(retained.body,worlds)?.body ?? retained.body : retained.body;
+        const steps=sequenceParts(sequenceBody,tokens(sequenceBody),worlds.joiners,sequenceOptions);
+        const bodyReadings=retained.retentionWords ? (await propose(retained.body,independent)).candidates :
+          await wrapped(retained.body);
         for (const base of [...bodyReadings,...candidates]) {
           if (steps.length && parse(base.sop).filter(w=>w.type==='w.request.request').length<steps.length) continue;
           const reading=preservationAdjunctReading(text,retained,base,worlds);
@@ -935,6 +945,15 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (additional.size) {
         for (const candidate of candidates) additional.delete(JSON.stringify(signatures(parse(candidate.sop),true)));
         candidates.push(...additional.values());
+      }
+      const modifier=incidentalModifier(text,worlds);
+      if (modifier) {
+        const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
+        for (const candidate of (await propose(modifier.body,independent)).candidates) {
+          const reading=withIncidentalModifier(text,modifier,candidate);
+          const key=reading && admissibleKey(text,reading.sop);
+          if (key && !seen.has(key)) {seen.add(key);candidates.push(reading);}
+        }
       }
       const cause=postposedCause(text,worlds);
       const separated=[];

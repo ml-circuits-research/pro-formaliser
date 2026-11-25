@@ -54,6 +54,57 @@ test('requires a complete local preservation frame outside quotations and condit
   ]) assert.equal((await read(reader,text)).length,0,text);
 });
 
+test('keeps the remainder on the independently established object family through a page-wide edit',async t=>{
+  const reader=createReader({version:1,examples:[],templates:[],
+    lexicon:{circle:[['target','make','drawn','new','circle',10]]}});
+  t.after(()=>reader.close());
+  const text='Draw a circle, clear as day, then set the entire picture to a foggy morning — the other objects stay put.';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const matched=candidates.find(c=>{
+    if (c.source!=='preservation-adjunct') return false;
+    const wires=parse(c.sop), requests=wires.filter(w=>w.type==='w.request.request');
+    const owned=(wire,req)=>value(wire,'request')==='$'+req?.id;
+    const [draw,scene,keep]=requests;
+    return requests.length===3 && value(draw,'act')==='make' && value(keep,'predicate')==='stay' &&
+      wires.some(w=>owned(w,scene) && value(w,'family')==='page') &&
+      wires.some(w=>owned(w,keep) && value(w,'family')==='drawn' && value(w,'description')==='the other objects') &&
+      wires.some(w=>owned(w,keep) && value(w,'attribute')==='drawn.keep' && value(w,'value')==='place') &&
+      wires.some(w=>owned(w,draw) && w.type==='w.request.unread' && value(w,'text')==='clear as day');
+  });
+  assert.ok(matched,text);
+  assert.deepEqual(matched.evidence.missing,[]);
+  assert.deepEqual(matched.catalog.issues,[]);
+  assert.ok(!matched.evidence.counts.uncovered);
+  for (const text of [
+    'Draw a circle — the other objects stay on the left.',
+    'Draw a circle — the other objects stay put if approved.',
+    'Draw a circle — the other objects stay put, delete the node.',
+    'Draw a circle, then remove the node — the other objects stay put.',
+    'Draw a circle labelled "the other objects stay put".',
+  ]) assert.equal((await read(reader,text)).length,0,text);
+});
+
+test('motion amount wording cannot transfer a retention constraint onto the moved object',async t=>{
+  const reader=createReader({version:1,examples:[],templates:[],lexicon:{
+    dog:[['target','place','drawn','existing','dog',10]],
+    all:[['constraint','*','drawn','on=attribute attribute=drawn.keep value=all operator=eq phase=result',10]],
+  }});
+  t.after(()=>reader.close());
+  const text='Move the dog all the way to the left, and the rest stay exactly where they are, no other change to the scene.';
+  const candidates=await read(reader,text);
+  const matching=candidates.find(wires=>{
+    const [edit,keep]=wires.filter(w=>w.type==='w.request.request');
+    return value(edit,'act')==='place' && value(keep,'predicate')==='stay' &&
+      wires.some(w=>value(w,'request')==='$'+keep.id && value(w,'description')==='the rest') &&
+      wires.some(w=>value(w,'request')==='$'+keep.id && value(w,'attribute')==='drawn.keep' && value(w,'value')==='place') &&
+      wires.some(w=>value(w,'request')==='$'+keep.id && w.type==='w.request.unread' &&
+        value(w,'text')==='no other change to the scene');
+  });
+  assert.ok(matching,text);
+  assert.ok(matching.filter(w=>value(w,'attribute')==='drawn.keep').every(w=>value(w,'value')==='place'));
+  assert.ok(matching.some(w=>w.type==='w.request.unread' && value(w,'text').includes('all the way')));
+});
+
 test('binds a scoped keep request to the single written owner of its preceding change',async t=>{
   const reader=createReader();
   t.after(()=>reader.close());

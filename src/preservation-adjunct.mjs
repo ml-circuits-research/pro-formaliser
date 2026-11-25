@@ -24,17 +24,13 @@ export function compilePreservationAdjuncts(facts,requestKeys) {
   for (const wire of facts('pro.reader.retention')) {
     const native=cues.get(one(wire,'cue')), value=one(wire,'value');
     if (!native || !atom.test(value ?? '')) continue;
-    const leads=new Set();
-    for (const expression of fields(wire,'lead')) {
-      const [base,adjunct,...extra]=expression.split(':').map(keyOf);
-      if (!native.has(base) || !adjunct || extra.length) continue;
-      leads.add(base);
-      leads.add(adjunct);
-    }
+    const leads=new Set(fields(wire,'lead').map(keyOf).filter(form=>native.has(form)));
+    if (leads.size) for (const form of fields(wire,'adjunct').map(keyOf).filter(Boolean)) leads.add(form);
+    const subjectPredicates=new Set(fields(wire,'subject_predicate').map(keyOf).filter(Boolean));
     const tails=new Set(fields(wire,'tail').map(keyOf).filter(Boolean));
     const scopeLeads=new Set(fields(wire,'scope_lead').map(keyOf).filter(Boolean));
     const scopeKey=one(wire,'scope_attribute');
-    if (!leads.size || !tails.size && !(scopeLeads.size && scopeKey)) continue;
+    if (!leads.size && !subjectPredicates.size || !tails.size && !(scopeLeads.size && scopeKey)) continue;
     const keys=new Map();
     for (const binding of facts('pro.reader.preservation')) {
       const family=one(binding,'family'), name=one(binding,'attribute');
@@ -45,7 +41,9 @@ export function compilePreservationAdjuncts(facts,requestKeys) {
       options.add(name);
       keys.set(family,options);
     }
-    frames.push({value,leads,tails,keys,scopeLeads,scopeKey,remainder:new Set(fields(wire,'remainder').map(keyOf))});
+    frames.push({value,leads,tails,keys,scopeLeads,scopeKey,subjectPredicates,
+      reinforcement:new Set(fields(wire,'reinforcement').map(keyOf)),ambient:new Set(fields(wire,'ambient_family')),
+      remainder:new Set(fields(wire,'remainder').map(keyOf))});
   }
   return frames;
 }
@@ -71,6 +69,26 @@ function* scopedRetentionMatches(ts,begin,stop,worlds,span,term,hidden) {
   }
 }
 
+function* subjectRetentionMatches(ts,begin,stop,worlds,span,term,hidden) {
+  const coordinated=worlds.joiners[ts[begin-1][0]]==='coordination';
+  const split=coordinated && boundary.has(ts[begin-2][0]) ? begin-2 : begin-1;
+  if (!split || !coordinated && !boundary.has(ts[split][0]) || ts.slice(begin,stop).some((_,i)=>hidden(begin+i))) return;
+  const extra=ts.findIndex(([key],i)=>i>begin && i<stop && key===',');
+  const end=extra<0 ? stop : extra;
+  for (const frame of worlds.preservationAdjuncts) {
+    if (!frame.subjectPredicates.size || extra>=0 && !frame.reinforcement.has(term(extra+1,stop))) continue;
+    for (let head=begin+1;head<end-1;head++) {
+      if (!frame.remainder.has(term(begin,head))) continue;
+      for (let after=head+1;after<end;after++) {
+        if (!frame.subjectPredicates.has(term(head,after)) || !frame.tails.has(term(after,end))) continue;
+        yield {body:span(0,split),suffix:span(begin,stop),predicate:span(head,after),target:span(begin,head),
+          value:frame.value,scope:'remainder',keys:frame.keys,ambient:frame.ambient,retentionWords:span(begin,end),
+          reinforcement:extra>=0 ? span(extra+1,stop) : undefined};
+      }
+    }
+  }
+}
+
 export function preservationAdjunct(text,worlds) {
   if (!worlds.preservationAdjuncts?.length) return;
   const ts=tokens(text), chars=Array.from(text), quotes=quotedSpans(text);
@@ -83,6 +101,10 @@ export function preservationAdjunct(text,worlds) {
   const matches=new Map();
   for (let begin=Math.max(2,stop-22);begin<stop-2;begin++) {
     if (hidden(begin-1) || hidden(begin)) continue;
+    for (const matched of subjectRetentionMatches(ts,begin,stop,worlds,span,term,hidden)) {
+      const {body,suffix,predicate,target,value}=matched;
+      matches.set(JSON.stringify([body,suffix,predicate,target,value,'subject']),matched);
+    }
     let first=begin, split=begin-1;
     if (worlds.joiners[ts[first][0]]==='contrast') first++;
     for (const matched of scopedRetentionMatches(ts,begin,stop,worlds,span,term,hidden)) {
@@ -156,13 +178,23 @@ export function preservationAdjunctReading(text,split,candidate,worlds) {
   const requests=wires.filter(wire=>wire.type===request);
   const last=requests.at(-1);
   if (!last || ![undefined,'do'].includes(one(last,'mood'))) return;
-  const targets=wires.filter(wire=>wire.type===target && wire.attrs.request?.[0]==='$'+last.id);
+  const localTargets=req=>wires.filter(wire=>wire.type===target && wire.attrs.request?.[0]==='$'+req.id);
+  const isAmbient=(req,t)=>split.ambient?.has(one(t,'family')) && one(t,'mode')==='existing' &&
+    one(req,'act')==='change' && wires.some(w=>w.type==='w.request.constraint' && one(w,'request')==='$'+req.id &&
+      one(w,'phase')==='result' && worlds.requestKeys.some(key=>key.name===one(w,'attribute') && key.family===one(t,'family')));
+  const objectRequests=requests.filter(req=>{
+    const local=localTargets(req);
+    return local.length!==1 || !isAmbient(req,local[0]);
+  });
+  const anchor=objectRequests.at(-1);
+  if (!anchor) return;
+  const targets=localTargets(anchor);
   if (targets.length!==1) return;
   const family=one(targets[0],'family'), keys=split.keys.get(family);
-  if (keys?.size!==1 || !worlds.literalGrammar.licenses(family,one(last,'act')) ||
+  if (keys?.size!==1 || !worlds.literalGrammar.licenses(family,one(anchor,'act')) ||
     !worlds.literalGrammar.licenses(family,'change')) return;
-  if (split.scope==='remainder' && requests.some(req=>{
-    const local=wires.filter(wire=>wire.type===target && wire.attrs.request?.[0]==='$'+req.id);
+  if (split.scope==='remainder' && objectRequests.some(req=>{
+    const local=localTargets(req);
     return local.length!==1 || one(local[0],'family')!==family;
   })) return;
   let cursor=start;
@@ -207,10 +239,13 @@ export function preservationAdjunctReading(text,split,candidate,worlds) {
       ' mode=bound family_words=' : ' mode=existing '+description)+quote(split.target),
     ...usesPrior ? [] : ['@'+id+'.l w.request.lookup request=$'+id+' target=$'+id+'.t key=thing from=page'],
     '@'+id+'.c w.request.constraint request=$'+id+' on=attribute attribute='+quote(key)+
-      ' value='+split.value+' words='+quote(split.suffix)+' operator=eq phase=result',
+      ' value='+split.value+' words='+quote(split.retentionWords ?? split.suffix)+' operator=eq phase=result',
+    ...split.reinforcement ? ['@'+id+'.u '+unread+' request=$'+id+' text='+quote(split.reinforcement)+
+      ' note='+quote('additional preservation requirement')] : [],
     ...usesPrior ? ['@'+id+'.scope w.request.constraint request=$'+id+' on=attribute attribute='+quote(split.scopeKey)+
       ' value='+quote(split.scopeWords)+' operator=eq phase=result'] : [],
   ].join('\n');
   return {sop:body+'\n'+suffix,
-    source:'preservation-adjunct',status:usesPrior ? (wires.some(w=>w.type===unread) ? 'partial' : 'matched') : candidate.status};
+    source:'preservation-adjunct',status:split.reinforcement ? 'partial' :
+      usesPrior ? (wires.some(w=>w.type===unread) ? 'partial' : 'matched') : candidate.status};
 }
