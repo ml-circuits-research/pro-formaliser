@@ -40,6 +40,11 @@ test('links an affected item to two independently looked-up landmarks',async t=>
   const first=invalid.find(w=>'$'+w.id===get(pair,'first'));
   first.attrs.phase=['result'];
   assert.equal(validate(serialize(invalid),worlds),false);
+  const other=parse(midpoint.sop);
+  other.push({id:'unrelated',type:'w.request.request',attrs:{act:['place']}});
+  const foreign=other.find(w=>'$'+w.id===get(pair,'second'));
+  foreign.attrs.request=['$unrelated'];
+  assert.equal(validate(serialize(other),worlds),false);
   const duplicate=parse(midpoint.sop);
   const relation=duplicate.find(w=>w.type===pairType);
   relation.attrs.second=relation.attrs.first;
@@ -49,7 +54,7 @@ test('links an affected item to two independently looked-up landmarks',async t=>
 test('keeps the ordinary interval and requires affirmative placement with two named or grounded anchors',async t=>{
   const reader=createReader(undefined,loadWorlds({paths:[path]}));
   t.after(()=>reader.close());
-  const result=await reader.propose('Place them between Harbour and Marina.');
+  const result=await reader.propose('Could you place them between Harbour and Marina?');
   assert.ok(result.candidates.some(c=>c.source==='landmark-pair' &&
     parse(c.sop).some(w=>w.type===pairType && get(w,'mode')==='between')));
   for (const text of [

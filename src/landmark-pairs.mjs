@@ -99,7 +99,7 @@ export async function landmarkPairReadings(text,worlds,read,permit,parseClause) 
   if (ts.length<5 || ts.length>44) return [];
   const outline=ts.map(([key])=>key);
   if (!frames.some(({marker})=>outline.includes(marker[0])) || !permit(text,[])) return [];
-  const end=outline.length-Number(['.','!'].includes(outline.at(-1)));
+  const end=outline.length-Number(['.','!','?'].includes(outline.at(-1)));
   const tokenKeys=outline.slice(0,end);
   const active=frames.filter(frame=>worlds.joiners[frame.joiner]==='coordination');
   const blocked=[...new Set(tokenKeys.filter(key=>!word.test(key) || worlds.joiners[key] ||
