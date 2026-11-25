@@ -1,7 +1,9 @@
 import { parse, serialize, str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { visibleTokens } from './composition.mjs';
+import { literalRanges } from './evidence.mjs';
 import { tokens } from './lexicon.mjs';
 import { tupleAssignments } from './tuple-assignments.mjs';
+import { detachedDiscourse } from './trailing-discourse.mjs';
 
 const requestType = 'w.request.request';
 const word = /[\p{L}\p{N}]/u;
@@ -10,17 +12,31 @@ const terms = text => tokens(text).map(([key]) => key);
 const matches = (keys, at, sequence) => sequence.every((key, i) => key === keys[at + i]);
 const quote = JSON.stringify;
 
-export function compileRequestIntents(facts) {
+export function compileRequestIntents(facts, argumentSequences) {
   const frames = (type, fields) => facts(type).flatMap(wire =>
     (wire.attrs.text ?? []).map(raw => ({cue: terms(str(raw)), ...Object.fromEntries(
       fields.map(key => [key, one(wire, key)]))})).filter(frame => frame.cue.length));
   const results = frames('pro.reader.result_request', ['question', 'qualifier'])
     .sort((a, b) => Number(Boolean(b.qualifier)) - Number(Boolean(a.qualifier)));
+  const continuations = new Map();
+  for (const entries of argumentSequences.values()) for (const frame of entries) {
+    const [separator, effect] = frame.parts.slice(-2);
+    if (!frame.owned || separator?.literal?.[0] !== ',' || !effect?.bank ||
+        effect.lexical || effect.key.startsWith('$')) continue;
+    for (const [form] of effect.bank) {
+      const phrase = [...separator.literal.slice(1), ...form];
+      if (phrase.length < 2) continue;
+      const surface = phrase.join(' '), roles = continuations.get(surface) ?? new Set();
+      roles.add(effect.key);
+      continuations.set(surface, roles);
+    }
+  }
   return {
     results,
     predicates: new Set(results.map(frame => frame.cue.join(' '))),
     intents: frames('pro.reader.request_intent_frame', ['role', 'form', 'owner', 'want', 'resolution'])
       .sort((a, b) => b.cue.length - a.cue.length),
+    continuations,
   };
 }
 
@@ -45,8 +61,11 @@ export function resultRequestReading(text, ts, worlds) {
 
 export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
   const ts = tokens(text), chars = Array.from(text), keys = visibleTokens(chars, ts);
-  const end = keys.length - Number(['.', '?', '!'].includes(keys.at(-1)));
+  let end = keys.length - Number(['.', '?', '!'].includes(keys.at(-1)));
   if (end < 4 || end > 72) return [];
+  const courtesy = worlds.discourseEdges.after.has(keys[end-1]) &&
+    detachedDiscourse(text,{before:new Map(),after:worlds.discourseEdges.after});
+  if (courtesy) end = tokens(courtesy.body).length;
   const span = (from, to) => chars.slice(ts[from][2], ts[to - 1][3]).join('');
   const events = [];
   const verbalPurpose = (start, frame) => {
@@ -79,14 +98,28 @@ export function requestIntentPlans(text, worlds, crossesRequest = () => false) {
         tail.push(event);
       }
     }
+    let continuation;
+    for (let j = tail.at(-1).valueStart + 1; j < end - 1; j++) {
+      if (keys[j] !== ',') continue;
+      const roles = worlds.requestIntents.continuations.get(keys.slice(j + 1, end).join(' '));
+      if (!roles) continue;
+      continuation = {boundary: j, roles, words: span(j + 1,end)};
+      break;
+    }
     const intents = tail.map(({start, valueStart, frame}, j) => {
-      const stop = tail[j + 1]?.boundary ?? end;
+      const stop = tail[j + 1]?.boundary ?? continuation?.boundary ?? end;
       if (valueStart >= stop || keys.slice(valueStart, stop).some(key => !key || ['.', '?', '!', ';'].includes(key) ||
           worlds.scopeGrammar.conditionals.has(key))) return;
       const value = span(valueStart, stop);
       return crossesRequest(value) ? undefined : {...frame, value, words: span(start, stop)};
     });
-    return intents.every(Boolean) ? [{body: span(0, first.boundary), intents}] : [];
+    if (!intents.every(Boolean)) return [];
+    const body = span(0,first.boundary);
+    const plan = {body,intents,fillers:courtesy?.extras ?? []};
+    if (!continuation) return [plan];
+    const suffix = chars.slice(ts[continuation.boundary][2],ts[end-1][3]).join('');
+    return [{...plan,body:body+suffix,continuation,seam:body.length},
+      {...plan,unread:continuation.words}];
   });
 }
 
@@ -104,7 +137,13 @@ export function withRequestIntents(text, plan, candidate) {
     one(owner, 'asked_words');
   if (!keepsMeaning) return;
   const scope = one(owner, 'words') ?? plan.body;
-  owner.attrs.words = [quote(text.slice(plan.body.length - scope.length))];
+  const scopeStart = plan.body.length - scope.length;
+  if (plan.continuation && (scopeStart >= plan.seam || !wires.some(wire=>
+    wire.type === 'w.request.constraint' && one(wire,'request') === ref && one(wire,'phase') === 'result' &&
+    plan.continuation.roles.has(one(wire,'attribute')) &&
+    literalRanges(plan.continuation.words,one(wire,'words') ?? one(wire,'value')).length))) return;
+  const first = text.length - text.trimStart().length;
+  owner.attrs.words = [quote(text.slice(first + scopeStart))];
   const ids = new Set(wires.map(wire => wire.id));
   let n = 0;
   let hasUnresolved = false;
@@ -121,6 +160,15 @@ export function withRequestIntents(text, plan, candidate) {
         request: [ref], role: [role], value: [quote(value)], words: [quote(words)], want: [want],
       }});
     }
+  }
+  if (plan.unread) {
+    while (ids.has('intent.' + n)) n++;
+    wires.push({id:'intent.'+n++,type:'w.request.unread',attrs:{request:[ref],text:[quote(plan.unread)]}});
+    hasUnresolved = true;
+  }
+  for (const filler of plan.fillers) {
+    while (ids.has('intent.' + n)) n++;
+    wires.push({id:'intent.'+n++,type:'w.request.filler',attrs:{text:[quote(filler)]}});
   }
   return {sop: serialize(wires), status: hasUnresolved ? 'partial' : candidate.status, source: 'request-intent'};
 }

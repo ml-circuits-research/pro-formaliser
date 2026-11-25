@@ -144,7 +144,8 @@ function operand(frame,property,captured,worlds,grammar) {
   if (frame.command) return;
   const step=grammar.comparatives.get(JSON.stringify([sense?.scale,written]));
   if (step && heads.some(head=>['candidate','number','span','step'].includes(head))) return {step,words};
-  if (heads.includes('number') && !spec.values.length) {
+  if (!spec.values.length && (heads.includes('number') ||
+      worlds.ownerPropertyNumeric?.has(keyOf(spec.family,spec.name)))) {
     const resolved=resolveWrittenMeasurement(words,worlds,spec.family,spec.name);
     if (resolved?.value) return {value:resolved.value,words,measurement:resolved.measurement};
   }

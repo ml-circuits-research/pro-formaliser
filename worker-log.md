@@ -331,3 +331,7 @@
 ## Nominal property owners
 - The public reader now attaches the sad expression to the written existing man on a frozen holdout case. Chart and genuine purpose controls pass.
 - All 412 tests passed. Shared language and drawing vocabulary proposals are in integration-review.responses.md.
+
+## Written chart data and display roles
+- Same-model replay recovered the checked roles in nine held-out requests. Two still have written details marked unread.
+- All 419 tests passed. Exact canonical proposal paths and the replay results are in integration-review.responses.md.

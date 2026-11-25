@@ -43,6 +43,28 @@ function addressedLead(ts,end,worlds) {
   return {courtesyStart:ts[start][2],locationEnd:ts[comma-1][3]};
 }
 
+function coordinatedCommandStarts(ts,worlds) {
+  const starts=new Set();
+  const phrase=(from,to)=>ts.slice(from,to).map(([word])=>word).join(' ');
+  for (let start=1;start+2<ts.length;start++) {
+    if (!worlds.joiners[ts[start-1][0]]) continue;
+    for (let boundary=start+1;boundary<Math.min(start+5,ts.length-1);boundary++) {
+      if (worlds.determiners[ts[boundary][0]]!=='definite') continue;
+      const acts=worlds.lookup(phrase(start,boundary)).filter(([role,act,mood])=>
+        role==='act' && act!=='ask' && (!mood || mood==='do')).map(([,act])=>act);
+      if (!acts.length) continue;
+      for (let end=boundary+2;end<=Math.min(boundary+5,ts.length);end++) {
+        if (worlds.lookup(phrase(boundary+1,end)).some(([role,act,,mode])=>
+          role==='target' && mode==='existing' && acts.includes(act))) {
+          starts.add(start);
+          break;
+        }
+      }
+    }
+  }
+  return starts;
+}
+
 export function argumentSequences(facts,catalog) {
   const forms=new Map();
   const conjunctions=facts('w.lang.en.closed').filter(w=>one(w,'class')==='conjunction')
@@ -81,7 +103,7 @@ export function argumentSequences(facts,catalog) {
         if (prop.values.length || !prop.head.split('+').includes('span')) return null;
         const bank=[...forms.get(prop.name) ?? [],...forms.get(prop.means) ?? []]
           .filter(([words])=>words.length).map(([words])=>[words,'']);
-        return bank.length ? {key:p,bank} : null;
+        return bank.length ? {key:p,bank,lexical:true} : null;
       }
       if (prop.values.length && prop.head.split('+').some(h=>['class','candidate'].includes(h))) {
         const bank=prop.values.map(v=>[keys(v),v]);
@@ -115,7 +137,8 @@ export function argumentSequences(facts,catalog) {
   for (const frames of index.values()) {
     for (const frame of frames.filter(frame=>frame.owned)) {
       frame.boundPhrases=frames.filter(peer=>peer.owned && peer.family===frame.family && peer.act===frame.act)
-        .flatMap(peer=>peer.parts.filter(part=>part.key!==ownerPart).flatMap(part=>part.bank ?? []))
+        // A vocabulary for an open slot can appear in another open field.
+        .flatMap(peer=>peer.parts.filter(part=>part.key!==ownerPart && !part.lexical).flatMap(part=>part.bank ?? []))
         .map(([words])=>words).filter(words=>words.length>1);
     }
   }
@@ -127,6 +150,7 @@ export function sequencePacket(ts,worlds,restricted=false) {
   let stop=ts.length;
   while (stop && ['.','!','?'].includes(ts[stop-1][0])) stop--;
   if (!stop) return packets;
+  let commandStarts;
   for (let i=0;i<stop;i++) for (const f of worlds.argumentSequences?.get(ts[i][0]) ?? []) {
     if (!matchesAt(ts,i,f.prefix) || restricted && !f.scopeLiteralSlot) continue;
     const start=i+f.prefix.length;
@@ -156,8 +180,9 @@ export function sequencePacket(ts,worlds,restricted=false) {
         for (let at=from;at<from+2+words.length;at++) protectedPositions.add(at);
       }
     }
+    commandStarts ??= coordinatedCommandStarts(ts,worlds);
     const input=ts.slice(start,stop).map(([word,,a,b],j)=>{
-      const protectedWord=protectedPositions.has(start+j) ||
+      const protectedWord=protectedPositions.has(start+j) || commandStarts.has(start+j) ||
         worlds.negatives.has(word) || worlds.scopeGrammar.conditionals.has(word) ||
         Boolean(worlds.joiners[word]) || worlds.scopeGrammar.auxiliary.has(word) ||
         worlds.lookup(word).some(([role])=>role==='marker') ||

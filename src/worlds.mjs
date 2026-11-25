@@ -603,6 +603,8 @@ function compile(facts) {
   }
   const leadForms=role=>new Set(facts('pro.reader.body_lead').filter(w=>one(w,'role')===role)
     .flatMap(w=>values(w,'text').map(phrase)));
+  const frames=argumentSequences(type=>type==='pro.reader.argument_sequence' ?
+    [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys);
   return {
     bodyLeads:{neutral:leadForms('neutral'),nominal:leadForms('nominal'),actionOnly:leadForms('action_only')},
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
@@ -640,12 +642,11 @@ function compile(facts) {
     landmarkSurfaceFacts:facts('pro.reader.landmark_surface'),
     appositiveSelectors:compileAppositiveSelectors(facts,requestKeys,words),
     quantifiedVerbs:compileQuantifiedVerbs(facts,requestKeys),
-    requestIntents:compileRequestIntents(facts),
+    requestIntents:compileRequestIntents(facts,frames),
     topicCommands:compileTopicCommandDeclarations(facts,requestKeys),
     postposedClauses:compilePostposedClauses(facts,requestKeys,words),
     orientationLandmarks:compileOrientationLandmarks(facts,requestKeys),
-    argumentSequences:argumentSequences(type=>type==='pro.reader.argument_sequence' ?
-      [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys),
+    argumentSequences:frames,
     ownerPropertyFrames:facts('pro.reader.owner_property').map(w=>({act:one(w,'act'),owner:one(w,'owner'),value:one(w,'value')})),
     ...effectGrammar(facts,requestKeys),
     ...compileOwnerPropertyOperands(facts,requestKeys,words),

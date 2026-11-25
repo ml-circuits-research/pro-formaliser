@@ -38,6 +38,28 @@ test('uses for as property ownership when a typed value and existing owner are g
   assert.ok(candidates.some(candidate=>candidate.sop.includes('role=purpose value="the board"')));
 });
 
+test('uses the native numeric slot for a written display value and keeps closed display roles separate',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  const text='the bar width on Revenue by department should be 0.6. y axis on the right';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const candidate=candidates.find(c=>c.source==='owned-effects' &&
+    c.sop.includes('name="Revenue by department"') &&
+    /attribute="chart.barWidth".*words="0.6".*value=0.6/u.test(c.sop) &&
+    /attribute="chart.axisSide".*value=right/u.test(c.sop));
+  assert.ok(candidate);
+  assert.deepEqual(candidate.evidence.missing,[]);
+  assert.equal(candidate.evidence.counts.uncovered,undefined);
+  assert.equal(candidate.evidence.counts.unread,undefined);
+  const keep=await reader.propose('Keep values shown.');
+  assert.ok(keep.candidates.some(c=>c.source==='contextual-effects' &&
+    /attribute="chart.show_values".*words="shown".*value=show/u.test(c.sop)));
+  for (const text of ['Do not keep values shown.', 'the bar width on Revenue by department should be Revenue']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(c=>c.source!=='owned-effects' && c.source!=='contextual-effects'),text);
+  }
+});
+
 test('keeps the exact titled owner separate from both quoted text and coordinated effects',()=>{
   const worlds=loadWorlds({paths:['sop-worlds']});
   const grammar=compiler(worlds);
@@ -89,11 +111,14 @@ test('requires a real catalog key and supports a separately loaded owner family'
 @target pro.reader.target of=w.rig.modulator family=rig mode=existing act=change text=modulator
 @tag w.request.key tab=rig family=rig name=rig.tag head=span
 @rate w.request.key tab=rig family=rig name=rig.rate head=number
+@w.rig.modulator.level core.slot of=w.rig.modulator key=level kind=number
+@level w.request.key tab=rig family=rig name=rig.level head=span means=w.rig.modulator.level
 `;
   const newSenses=`
 @signal pro.reader.effect_sense family=rig key=rig.tag text=stamp property_command=true
 @alternate pro.reader.effect_sense family=rig key=rig.tag text=inscribe property_command=true
 @pulse pro.reader.effect_sense family=rig key=rig.rate text=pulse
+@level_sense pro.reader.effect_sense family=rig key=rig.level text=level
 @invalid pro.reader.effect_sense family=rig key=rig.absent text=pace
 `;
   writeFileSync(path,schema+'\n'+newSenses);
@@ -109,6 +134,8 @@ test('requires a real catalog key and supports a separately loaded owner family'
   assert.ok(evidenceInText(text,candidate.sop,worlds));
   const reader=createReader(undefined,worlds);
   t.after(()=>reader.close());
+  const level=await reader.propose('Set the level on the modulator to 0.6');
+  assert.ok(level.candidates.some(c=>c.source==='owned-effects' && /attribute="rig.level".*value=0.6/u.test(c.sop)));
   for (const verb of ['Stamp','Inscribe']) {
     const query=text.replace('Stamp',verb);
     const {candidates}=await reader.propose(query);

@@ -72,6 +72,15 @@ export function compileOwnerPropertyOperands(facts,requestKeys,words) {
   const ownerPropertyOpen=new Set([...groups].filter(([,keys])=>keys.every(key=>
     !key.values.length && key.head.split('+').includes('candidate') &&
       validBackings.has(key.means))).map(([id])=>id));
+  const numericSlots=new Set(slots.filter(slot=>{
+    const peers=slotsByField.get(identity(valuesOf(slot,'of')[0],valuesOf(slot,'key')[0]));
+    return peers.every(peer=>{
+      const kinds=valuesOf(peer,'kind');
+      return kinds.length===1 && ['number','integer'].includes(kinds[0]);
+    });
+  }).map(slot=>slot.id));
+  const ownerPropertyNumeric=new Set([...groups].filter(([,keys])=>keys.every(key=>
+    !key.values.length && numericSlots.has(key.means))).map(([id])=>id));
 
   const ownerInventory=new Map(), cache=new Map();
   const addOwner=(act,surface,family,sort)=>{
@@ -133,7 +142,7 @@ export function compileOwnerPropertyOperands(facts,requestKeys,words) {
     factors.add(value);
     ownerPropertyMultipliers.set(surface,factors);
   }
-  return {ownerPropertyOpen,ownerInventory,ownerPropertyUnits,
+  return {ownerPropertyOpen,ownerPropertyNumeric,ownerInventory,ownerPropertyUnits,
     ownerPropertyUnitNames:unitNames,ownerPropertyUnitSymbols:unitSymbols,ownerPropertyMultipliers};
 }
 
