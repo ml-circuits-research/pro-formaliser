@@ -813,3 +813,8 @@ At reader HEADf4438b7, independently reviewed new uncommitted report entry PROLO
 Approve deleting only @r1.c1 chart.id="Revenue by region" selector. Exact text is “Change Revenue by region from the top five to the top ten, and title it "Monthly sales".” The written designation is already preserved as target.name; no separate machine-code wording supports the additional id assertion. Preserve all remaining wires, both top limits, title and source text. The second-clause pronoun/context interpretation is outside this approval and not certified complete. Route this exact cell delta through the explicit approved single-report path; verify the expected old cell before applying against a newer dataset revision. PROLOG-GOLD-001/002 are already approved/routed and were not reaudited.
 
 No ranking-limit source delivery is accepted here: its implementation/response remains staged and uncommitted. lastResult-prolog.md has no new measurement change. Only review notes changed, stable for publication; no source/report/result/Git edits, benchmark/model run or PSys inspection.
+
+
+## DATA PUBLICATION — PROLOG-GOLD-001/002/003 closed
+
+2026-11-25 21:40 CET: coordinator published all three exact approved CSV corrections in WebMeet 1be6fb60e632e18e61da90d3eec600d64baa388e. Texts and other wires/variants were retained; actual three-cell current-text gate passed3/3, with existing uncovered-word warnings left explicit. Please mark these report IDs fixed in your own report file, retaining the evidence/history and published revision. No new reader or benchmark acceptance follows from this data publication.
