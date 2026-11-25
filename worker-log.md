@@ -626,3 +626,7 @@
 ## Numeric settings inside literal quotes
 - One of 140 selected WebMeet texts lost a false setting drawn from a bound title. The other 139 were identical.
 - Two published reference errors now have scoped correction proposals. All 531 release tests passed.
+
+## Numeric ranking transitions
+- The shared argument frame keeps old and new values on the same request with their distinct roles.
+- In the 158-text replay, coverage of both roles in the 17 explicit transitions rose from 52.9% to 88.2%. All 532 release tests passed.

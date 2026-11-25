@@ -22,6 +22,50 @@ function hasBindings(candidates,expected) {
   });
 }
 
+test('a numeric transition keeps the written old and new settings on one request',async t=>{
+  const reader=createReader(undefined,loadWorlds());
+  t.after(()=>reader.close());
+  for (const [text,key,before,after,object] of [
+    ['Change the chart from the top five to the top eight.','chart.top','5','8','the chart'],
+    ['Update the bar chart from bottom 10 to bottom 3.','chart.bottom','10','3','the bar chart'],
+    ['Could you change the Monthly sales chart from the top five to the top ten?','chart.top','5','10','the Monthly sales chart'],
+    ['Change it from the top five to the top eight.','chart.top','5','8','it'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const candidate=candidates.find(c=>c.sop.includes(key) && c.sop.includes('phase=selector') &&
+      c.sop.includes('phase=result'));
+    assert.ok(candidate,text);
+    const wires=parse(candidate.sop);
+    const request=wires.find(w=>w.type==='w.request.request');
+    const fields=wires.filter(w=>value(w.attrs.attribute?.[0])===key);
+    assert.deepEqual(fields.map(w=>[value(w.attrs.phase[0]),value(w.attrs.value[0]),w.attrs.request[0]]),
+      [['selector',before,'$'+request.id],['result',after,'$'+request.id]],text);
+    assert.match(value(fields[0].attrs.key_words[0]),/^from /iu);
+    assert.match(value(fields[1].attrs.key_words[0]),/^to /iu);
+    const target=wires.find(w=>w.type==='w.request.target');
+    const lookup=wires.find(w=>w.type==='w.request.lookup');
+    if (object==='it') {
+      assert.equal(target,undefined,text);
+      assert.equal(value(lookup.attrs.words[0]),'it',text);
+      assert.equal(lookup.attrs.from,undefined,text);
+    } else assert.equal(value(target.attrs.description[0]),object,text);
+    assert.deepEqual(candidate.evidence.missing,[],text);
+    assert.equal(candidate.evidence.counts.uncovered ?? 0,0,text);
+    assert.equal(candidate.evidence.counts.ambiguous_occurrence ?? 0,0,text);
+    assert.deepEqual(candidate.catalog.issues,[],text);
+  }
+  for (const text of ['Change the chart from top five to bottom eight.',
+    'Change the chart from top zero to top eight.','Change the chart from top five to top eight if needed.',
+    'Change the chart from top five to top eight or keep it unchanged.','Change the top five to the top eight.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(c=>c.source!=='argument-frame' ||
+      !(c.sop.includes('phase=selector') && c.sop.includes('chart.top'))),text);
+  }
+  const simple=await reader.propose('Limit the chart to the top eight.');
+  assert.ok(simple.candidates.some(c=>c.source==='argument-frame' && c.sop.includes('chart.top') &&
+    c.sop.includes('phase=result') && !c.sop.includes('phase=selector')));
+});
+
 test('typed positive partition counts stay separate from the field and the histogram kind',async t=>{
   const reader=createReader(undefined,loadWorlds());
   t.after(()=>reader.close());

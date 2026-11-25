@@ -47,8 +47,10 @@ slot(Part,Tokens,Rest,Canonical) :-
     ; get_dict(bank,Part,Bank) ->
       member([Words,Canonical],Bank), eat(Words,Tokens,Rest)
     ; get_dict(nominal,Part,Nominals) ->
-      Canonical="", between(0,8,N), length(Description,N), append(Description,After,Tokens),
-      maplist(open_token,Description), member(Noun,Nominals), eat(Noun,After,Rest)
+      ( get_dict(references,Part,References), member(Reference,References),
+        eat(Reference,Tokens,Rest), Canonical="literal_reference"
+      ; Canonical="", between(0,8,N), length(Description,N), append(Description,After,Tokens),
+        maplist(open_token,Description), member(Noun,Nominals), eat(Noun,After,Rest) )
     ; Canonical="", between(1,12,N), length(Taken,N),append(Taken,Rest,Tokens),
       maplist(open_token,Taken) ).
 

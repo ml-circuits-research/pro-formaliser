@@ -86,3 +86,43 @@ JSONL
 ```
 
 The paired replay artifacts `.cache/quoted-numbers-before.jsonl` and `.cache/quoted-numbers-after.jsonl` contain the exact text at zero-based index 79. The baseline reader at `fc7bab2ee5bc0f88db53ddab9143809efd3a04f2` reproduced the current reference as an `example` candidate. The reader with the commit “Keep numeric settings outside literal quoted content” produced the proposed circuit as an `example` candidate. Both runs returned 22 candidates and `error=null`. The proposed circuit also passed `node bin/check-reading.mjs` for native schema and literal evidence, with no catalogue issues or quote conflicts.
+
+
+## PROLOG-GOLD-003 — Written chart designation also encoded as a chart code
+
+**Record.** `diagram/charts-06.csv`, data record **512** (header excluded, ending on CSV line 3400), column `sop`, at WebMeet revision `d1c15c5857365a82358b4a324f2611088026cc9b`.
+
+**Exact text.** `Change Revenue by region from the top five to the top ten, and title it "Monthly sales".`
+
+**Current circuit**
+
+```sop
+@r1 w.request.request act=change mood=do words="Change Revenue by region from the top five to the top ten" predicate=Change
+@r1.t w.request.target request=$r1 family=chart mode=existing determiner=definite fill=written name="Revenue by region"
+@r1.c1 w.request.constraint request=$r1 on=attribute attribute=chart.id value="Revenue by region" operator=eq phase=selector
+@r1.c6 w.request.constraint request=$r1 on=attribute attribute=chart.top value=10 words="top ten" operator=eq phase=result
+@r1.c7 w.request.constraint request=$r1 on=attribute attribute=chart.top value=5 words="top five" operator=eq phase=selector
+@r2 w.request.request act=change mood=do words="and title it \"Monthly sales\"" predicate=title
+@r2.t w.request.target request=$r2 family=chart mode=existing determiner=definite fill=context
+@r2.l1 w.request.lookup request=$r2 target=$r2.t key=thing from=page
+@r2.c1 w.request.constraint request=$r2 on=attribute attribute=chart.title value="Monthly sales" operator=eq phase=result
+```
+
+The canonical `chart.id` key designates a chart code, as in “change chart c1.” The text supplies the written designation “Revenue by region,” which the existing chart target already preserves verbatim as its name. The additional `chart.id` selector asserts an unsupported code. The correction deletes that single wire and preserves the remaining circuit. The interpretation of the second clause’s pronoun is outside the scope of this correction.
+
+**Proposed circuit**
+
+```sop
+@r1 w.request.request act=change mood=do words="Change Revenue by region from the top five to the top ten" predicate=Change
+@r1.t w.request.target request=$r1 family=chart mode=existing determiner=definite fill=written name="Revenue by region"
+@r1.c6 w.request.constraint request=$r1 on=attribute attribute=chart.top value=10 words="top ten" operator=eq phase=result
+@r1.c7 w.request.constraint request=$r1 on=attribute attribute=chart.top value=5 words="top five" operator=eq phase=selector
+@r2 w.request.request act=change mood=do words="and title it \"Monthly sales\"" predicate=title
+@r2.t w.request.target request=$r2 family=chart mode=existing determiner=definite fill=context
+@r2.l1 w.request.lookup request=$r2 target=$r2.t key=thing from=page
+@r2.c1 w.request.constraint request=$r2 on=attribute attribute=chart.title value="Monthly sales" operator=eq phase=result
+```
+
+**Evidence and reproduction.** Parse `git -C ../webmeet-dataset show d1c15c5857365a82358b4a324f2611088026cc9b:diagram/charts-06.csv` as CSV to locate the record. The `chart.id` declaration in `docs/worlds/w.request/shards/keys.sop` in the knowledge repository maps the key to `w.diagram.group.code`. The exact text appears at zero-based index 160 in `.cache/rank-transition-before.jsonl`. That recorded run used reader baseline `1199ad9b15767d0a56e2dc28e26191aba7874039` and returned 30 candidates with `error=null`, including the current circuit as an `example` candidate.
+
+The scoped proposed circuit passes `node bin/check-reading.mjs` for native schema and literal evidence, with no catalogue issues or quote conflicts.

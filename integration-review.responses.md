@@ -929,3 +929,11 @@ The reader now checks whether a numeric setting draws all its written evidence f
 The paired default-reader replay covered 140 selected WebMeet texts and six controls. The affected proposal changed in one WebMeet text (0.7%), and the other 139 retained identical ordered SOP lists. All 531 release tests passed.
 
 [WebMeet reference error report](report-errors-prolog.md) records two exact published records for coordinator adjudication. PROLOG-GOLD-001 reports twenty-minute bands encoded as cardinality. PROLOG-GOLD-002 reports the second count derived from the title. Each proposal is scoped to the identified error, with source revision and reproducible evidence. The aggregate result remains unchanged.
+
+## Keep both explicitly written ranking limits on one request
+
+An existing-owner argument sequence can now bind two numeric values to the same catalog property. The earlier value is a selector and the new one is a result. “Change the chart from the top five to the top eight” retains both with their written connectors. The ranking declarations use the existing top and bottom keys. An explicit chart description stays literal. A standalone written “it” supplies a literal lookup without a typed target or previous-turn evidence. “Limit the chart to the top eight” gives only the new value.
+
+The paired default-reader replay covered 158 selected WebMeet texts and nine controls. On the 17 texts with two written limits of the same kind, proposals with both roles on one owner rose from 52.9% to 88.2%. No previously evidence-complete alternative was lost across the replay. An independent spot-check confirmed the six new two-value readings. Legacy bare-title readings can still map a title such as “Revenue by region” to a machine identifier. A separate title binding needs to preserve that written evidence. All 532 release tests passed. The aggregate benchmark was not rerun.
+
+The reviewer accepted both scoped reference corrections, PROLOG-GOLD-001 and PROLOG-GOLD-002, for coordinator-to-data routing. A new entry, PROLOG-GOLD-003, records the chart code issue on its exact published record and proposes preserving the written designation alone. [WebMeet reference error report](report-errors-prolog.md)
