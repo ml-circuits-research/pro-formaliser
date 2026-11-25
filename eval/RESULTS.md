@@ -2,6 +2,35 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Independent sentences and written visibility cues
+
+Reader `f7352fd` reaches **54.4% L3 + L4** on the same 1,000 random primary requests, with spelling and all staged worlds. The independent 1,000 original requests reach **45.6%**. The public reader received the request text without discussion history, active tab or annotation. The independent benchmark records binary judgments. The rows below give the full primary grade breakdown. [Paired judgments for changed proposal sets](SENTENCE-REPLAY.tsv)
+
+| Profile | Primary original | Primary including spelling | Independent original |
+| --- | ---: | ---: | ---: |
+| Default | 51.4% | 52.9% | 45.1% |
+| All staged worlds | 53.0% | **54.4%** | **45.6%** |
+
+| Grade | All staged worlds, original or corrected |
+| --- | ---: |
+| L0 – Fail | 1.3% |
+| L1 – Wrong | 9.3% |
+| L1a – Wrong intent | 1.9% |
+| L1b – Wrong target | 2.2% |
+| L1c – Wrong detail or role | 3.6% |
+| L1d – Invented instruction | 1.6% |
+| L2 – Incomplete | 35.0% |
+| L2a – Missing action, question or step | 6.0% |
+| L2b – Missing target, endpoint or reference | 8.3% |
+| L2c – Missing value, property, placement, scope or condition | 20.7% |
+| L3 – Identical and reasonable | 20.5% |
+| L4 – Reasonable alternative | 33.9% |
+| **L3 + L4 – Reasonable** | **54.4%** |
+
+Every previously available proposal survived across the replayed profiles. More requests gained reasonable readings for a sequence of chart edits and for declarative visibility, such as “ditch the gridlines”. The periodic summary reader also recovered quarter-by-quarter revenue averages after a detached discourse introduction. An opt-in beneficiary keeps the written person in “build me a bar chart” without resolving who that person is. The closed chart catalog still lacks the z value for axis inversion. The readable two-axis proposal preserves it with exact evidence as an open value.
+
+The primary audit has identified material reference issues in **24.4%** of all requests. Both a reasonable proposal and an annotation issue are present in **3.6%** of the full primary sample. The changed cases include previously flagged references that omit an axis operation, store a grouping operand as a second measure or leave a written result unread. [Review response](../integration-review.responses.md)
+
 ## Participant and location attachment
 
 On reader `69b504b`, **54.1%** of the 1,000 primary requests have at least one reasonable reading with all staged worlds and spelling (previously 53.9%). On the independent 1,000 original requests, coverage reached **44.7%** (previously 44.5%). The frozen models, sample order and grading rules are unchanged. Comparing the complete proposal sets across all seven profiles found additions and no removals. The third sample kept every proposal set unchanged. LLM reviewers inspected the changed circuits.

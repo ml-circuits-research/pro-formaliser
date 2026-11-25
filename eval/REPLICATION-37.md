@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Independent sentences at f7352fd
+
+All-staged original coverage reaches **45.6%**. Default coverage reaches **45.1%**. [Row judgments](SENTENCE-REPLAY.tsv)
+
 ## Participants and placement at 69b504b
 
 All-staged original coverage reaches **44.7%**, including a four-object fountain scene and a weekly chart. Default coverage reaches **44.4%**. [Row judgments](PARTICIPANT-REPLAY.tsv)

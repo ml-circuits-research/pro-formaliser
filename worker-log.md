@@ -255,3 +255,7 @@
 ## Independent sentences, recipients and visibility cues
 - Compose independently grounded sentence requests from written boundaries and keep declared discourse spans. The optional beneficiary relation and visibility frames preserve their original words in separate typed roles.
 - All 378 tests passed. The real periodic chart request now retains “me”, and opposing visibility operations carry distinct on/off evidence.
+
+## Sentence and visibility replay
+- Finished primary and independent 1,000-request replays. All-staged primary 54.4% with spelling and independent 45.6% on originals. The observed changes are additive.
+- All 378 tests passed. Per-level percentages and paired judgments are in eval/RESULTS.md and eval/SENTENCE-REPLAY.tsv.

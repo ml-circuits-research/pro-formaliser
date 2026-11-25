@@ -1,0 +1,377 @@
+profile	sample	source	row	previous	current	reference_note	reason
+primary	40	diagram/charts-03.csv	2151	L4	L4		The known reasonable proposal survives.
+primary	56	calendar/meetings-01.csv	3183	L3	L3		The known reasonable proposal survives.
+primary	69	drawing/objects-02.csv	1176	L4	L4		The known reasonable proposal survives.
+primary	70	diagram/charts-06.csv	2399	L2c	L4		The two changes independently preserve x and z axis inversion and the additive phrasing. Mood=do follows the reference for these suggestions. The z value remains open, without a canonical axis binding in the closed chart catalog.
+primary	91	drawing/scenes-17.csv	829	L3	L3		The known reasonable proposal survives.
+primary	126	document/text-02.csv	1173	L4	L4		The known reasonable proposal survives.
+primary	128	drawing/objects-04.csv	899	L3	L3		The known reasonable proposal survives.
+primary	133	drawing/scenes-17.csv	3562	L3	L3		The known reasonable proposal survives.
+primary	137	diagram/charts-04.csv	4656	L1c	L1c		The new courtesy-stripped chart reading still turns retention of the error-bar colour into a chart-wide colour effect and misses the wider marker interval.
+primary	166	drawing/objects-04.csv	2538	L4	L4		The known reasonable proposal survives.
+primary	172	drawing/scenes-16.csv	3566	L3	L3		The known reasonable proposal survives.
+primary	195	drawing/placement-06.csv	1861	L4	L4		The known reasonable proposal survives.
+primary	205	drawing/objects-04.csv	1799	L4	L4		The known reasonable proposal survives.
+primary	221	drawing/scenes-17.csv	2754	L3	L3		The known reasonable proposal survives.
+primary	226	diagram/charts-01.csv	3095	L2c	L2c	The reference uses two independent measure values instead of grounding the segment as the grouping or comparison role.	The detached opening exposes bar chart and average, but segment remains in a second measure rather than in the grouping role.
+primary	327	diagram/nodes-06.csv	2990	L3	L3		The known reasonable proposal survives.
+primary	333	drawing/objects-04.csv	184	L4	L4		The known reasonable proposal survives.
+primary	355	diagram/charts-04.csv	3144	L4	L4		The known reasonable proposal survives.
+primary	391	diagram/charts-04.csv	1260	L2a	L2a		The chart grid clause now binds; font and cap changes still become a page preference.
+primary	438	drawing/scenes-05.csv	2206	L2c	L2c		The added readings select the dog rather than closing the door behind it.
+primary	455	drawing/objects-04.csv	667	L3	L3		The known reasonable proposal survives.
+primary	465	drawing/scenes-03.csv	3644	L4	L4		The known reasonable proposal survives.
+primary	477	diagram/charts-02.csv	3038	L4	L4		The known reasonable proposal survives.
+primary	480	document/text-01.csv	2700	L3	L3		The known reasonable proposal survives.
+primary	500	drawing/people-05.csv	3658	L4	L4		The known reasonable proposal survives.
+primary	558	document/text-02.csv	1321	L4	L4		The known reasonable proposal survives.
+primary	580	diagram/charts-02.csv	2092	L2c	L2c	The first requested change is left unread in the reference.	The legend binds, but setting unsynchronized axes and a claims measure does not assign the claims series to the right-side axis.
+primary	582	document/text-02.csv	1915	L4	L4		The known reasonable proposal survives.
+primary	594	drawing/scenes-16.csv	3029	L3	L3		The known reasonable proposal survives.
+primary	607	diagram/charts-02.csv	159	L2c	L4		A typed effect hides gridlines on the contextual chart and retains the written polarity cue.
+primary	610	drawing/objects-04.csv	1775	L3	L3		The known reasonable proposal survives.
+primary	631	drawing/scenes-16.csv	737	L4	L4		The known reasonable proposal survives.
+primary	677	document/text-01.csv	4530	L4	L4		The known reasonable proposal survives.
+primary	683	diagram/charts-04.csv	4133	L2a	L2a		Added proposals do not bind both the medium arrow setting and the curved route to arrows.
+primary	693	document/text-02.csv	1380	L4	L4		The known reasonable proposal survives.
+primary	701	drawing/scenes-07.csv	2747	L4	L4		The known reasonable proposal survives.
+primary	707	diagram/charts-06.csv	1851	L2c	L2c		New readings do not bind exponent format and two-digit precision to the axis.
+primary	710	document/text-07.csv	785	L4	L4		The known reasonable proposal survives.
+primary	721	drawing/objects-04.csv	1317	L4	L4		The known reasonable proposal survives.
+primary	735	calendar/meetings-02.csv	274	L4	L4		The known reasonable proposal survives.
+primary	738	drawing/scenes-17.csv	94	L3	L3		The known reasonable proposal survives.
+primary	741	drawing/scenes-13.csv	4608	L4	L4		The known reasonable proposal survives.
+primary	753	drawing/scenes-16.csv	3507	L3	L3		The known reasonable proposal survives.
+primary	757	document/text-01.csv	3544	L4	L4		The known reasonable proposal survives.
+primary	763	calendar/meetings-01.csv	3179	L3	L3		The known reasonable proposal survives.
+primary	766	diagram/charts-03.csv	2642	L2c	L2c	The reference leaves the written lines and partial opacity unread.	Transparency is read without the requested partial degree and without correctly locating the flow-line scope.
+primary	795	diagram/nodes-07.csv	1194	L4	L4		The known reasonable proposal survives.
+primary	811	drawing/objects-04.csv	1647	L3	L3		The known reasonable proposal survives.
+primary	825	diagram/diagrams-04.csv	2184	L4	L4		The known reasonable proposal survives.
+primary	826	diagram/nodes-06.csv	4279	L4	L4		The known reasonable proposal survives.
+primary	875	drawing/placement-04.csv	168	L4	L4		The known reasonable proposal survives.
+primary	890	diagram/charts-04.csv	1603	L2a	L4		A complete alternative assigns the dark-green-to-light-green chart palette and independently sets the exact title Sensor readings.
+primary	929	diagram/diagrams-04.csv	1509	L3	L3		The known reasonable proposal survives.
+primary	948	diagram/charts-02.csv	2298	L4	L4		The known reasonable proposal survives.
+primary	984	diagram/nodes-06.csv	3342	L4	L4		The known reasonable proposal survives.
+primary-spell	40	diagram/charts-03.csv	2151	L4	L4		The known reasonable proposal survives.
+primary-spell	56	calendar/meetings-01.csv	3183	L3	L3		The known reasonable proposal survives.
+primary-spell	69	drawing/objects-02.csv	1176	L4	L4		The known reasonable proposal survives.
+primary-spell	70	diagram/charts-06.csv	2399	L2c	L4		The two changes independently preserve x and z axis inversion and the additive phrasing. Mood=do follows the reference for these suggestions. The z value remains open, without a canonical axis binding in the closed chart catalog.
+primary-spell	91	drawing/scenes-17.csv	829	L3	L3		The known reasonable proposal survives.
+primary-spell	126	document/text-02.csv	1173	L4	L4		The known reasonable proposal survives.
+primary-spell	128	drawing/objects-04.csv	899	L3	L3		The known reasonable proposal survives.
+primary-spell	133	drawing/scenes-17.csv	3562	L3	L3		The known reasonable proposal survives.
+primary-spell	137	diagram/charts-04.csv	4656	L1c	L1c		The new courtesy-stripped chart reading still turns retention of the error-bar colour into a chart-wide colour effect and misses the wider marker interval.
+primary-spell	166	drawing/objects-04.csv	2538	L4	L4		The known reasonable proposal survives.
+primary-spell	172	drawing/scenes-16.csv	3566	L3	L3		The known reasonable proposal survives.
+primary-spell	195	drawing/placement-06.csv	1861	L4	L4		The known reasonable proposal survives.
+primary-spell	205	drawing/objects-04.csv	1799	L4	L4		The known reasonable proposal survives.
+primary-spell	221	drawing/scenes-17.csv	2754	L3	L3		The known reasonable proposal survives.
+primary-spell	226	diagram/charts-01.csv	3095	L2c	L2c	The reference uses two independent measure values instead of grounding the segment as the grouping or comparison role.	The detached opening exposes bar chart and average, but segment remains in a second measure rather than in the grouping role.
+primary-spell	327	diagram/nodes-06.csv	2990	L3	L3		The known reasonable proposal survives.
+primary-spell	333	drawing/objects-04.csv	184	L4	L4		The known reasonable proposal survives.
+primary-spell	355	diagram/charts-04.csv	3144	L4	L4		The known reasonable proposal survives.
+primary-spell	391	diagram/charts-04.csv	1260	L2a	L2a		The chart grid clause now binds; font and cap changes still become a page preference.
+primary-spell	438	drawing/scenes-05.csv	2206	L2c	L2c		The added readings select the dog rather than closing the door behind it.
+primary-spell	455	drawing/objects-04.csv	667	L3	L3		The known reasonable proposal survives.
+primary-spell	465	drawing/scenes-03.csv	3644	L4	L4		The known reasonable proposal survives.
+primary-spell	477	diagram/charts-02.csv	3038	L4	L4		The known reasonable proposal survives.
+primary-spell	480	document/text-01.csv	2700	L3	L3		The known reasonable proposal survives.
+primary-spell	500	drawing/people-05.csv	3658	L4	L4		The known reasonable proposal survives.
+primary-spell	558	document/text-02.csv	1321	L4	L4		The known reasonable proposal survives.
+primary-spell	580	diagram/charts-02.csv	2092	L2c	L2c	The first requested change is left unread in the reference.	The legend binds, but setting unsynchronized axes and a claims measure does not assign the claims series to the right-side axis.
+primary-spell	582	document/text-02.csv	1915	L4	L4		The known reasonable proposal survives.
+primary-spell	594	drawing/scenes-16.csv	3029	L3	L3		The known reasonable proposal survives.
+primary-spell	607	diagram/charts-02.csv	159	L2c	L4		A typed effect hides gridlines on the contextual chart and retains the written polarity cue.
+primary-spell	610	drawing/objects-04.csv	1775	L3	L3		The known reasonable proposal survives.
+primary-spell	631	drawing/scenes-16.csv	737	L4	L4		The known reasonable proposal survives.
+primary-spell	677	document/text-01.csv	4530	L4	L4		The known reasonable proposal survives.
+primary-spell	683	diagram/charts-04.csv	4133	L2a	L2a		Added proposals do not bind both the medium arrow setting and the curved route to arrows.
+primary-spell	693	document/text-02.csv	1380	L4	L4		The known reasonable proposal survives.
+primary-spell	701	drawing/scenes-07.csv	2747	L4	L4		The known reasonable proposal survives.
+primary-spell	707	diagram/charts-06.csv	1851	L2c	L2c		New readings do not bind exponent format and two-digit precision to the axis.
+primary-spell	710	document/text-07.csv	785	L4	L4		The known reasonable proposal survives.
+primary-spell	721	drawing/objects-04.csv	1317	L4	L4		The known reasonable proposal survives.
+primary-spell	735	calendar/meetings-02.csv	274	L4	L4		The known reasonable proposal survives.
+primary-spell	738	drawing/scenes-17.csv	94	L3	L3		The known reasonable proposal survives.
+primary-spell	741	drawing/scenes-13.csv	4608	L4	L4		The known reasonable proposal survives.
+primary-spell	753	drawing/scenes-16.csv	3507	L3	L3		The known reasonable proposal survives.
+primary-spell	757	document/text-01.csv	3544	L4	L4		The known reasonable proposal survives.
+primary-spell	763	calendar/meetings-01.csv	3179	L3	L3		The known reasonable proposal survives.
+primary-spell	766	diagram/charts-03.csv	2642	L2c	L2c	The reference leaves the written lines and partial opacity unread.	Transparency is read without the requested partial degree and without correctly locating the flow-line scope.
+primary-spell	795	diagram/nodes-07.csv	1194	L4	L4		The known reasonable proposal survives.
+primary-spell	811	drawing/objects-04.csv	1647	L3	L3		The known reasonable proposal survives.
+primary-spell	825	diagram/diagrams-04.csv	2184	L4	L4		The known reasonable proposal survives.
+primary-spell	826	diagram/nodes-06.csv	4279	L4	L4		The known reasonable proposal survives.
+primary-spell	875	drawing/placement-04.csv	168	L4	L4		The known reasonable proposal survives.
+primary-spell	890	diagram/charts-04.csv	1603	L2a	L4		A complete alternative assigns the dark-green-to-light-green chart palette and independently sets the exact title Sensor readings.
+primary-spell	929	diagram/diagrams-04.csv	1509	L3	L3		The known reasonable proposal survives.
+primary-spell	948	diagram/charts-02.csv	2298	L4	L4		The known reasonable proposal survives.
+primary-spell	984	diagram/nodes-06.csv	3342	L4	L4		The known reasonable proposal survives.
+replica	1	calendar/meetings-01.csv	2469	1	1		The known reasonable proposal survives.
+replica	4	calendar/meetings-01.csv	802	1	1		The known reasonable proposal survives.
+replica	23	diagram/diagrams-03.csv	3250	0	0		The added readings treat missing as a predicate and leave the line width and target unread.
+replica	29	drawing/scenes-16.csv	1734	1	1		The known reasonable proposal survives.
+replica	52	calendar/meetings-01.csv	3277	1	1		The known reasonable proposal survives.
+replica	76	drawing/scenes-13.csv	2791	1	1		The known reasonable proposal survives.
+replica	82	drawing/scenes-16.csv	1502	1	1		The known reasonable proposal survives.
+replica	117	drawing/objects-04.csv	2409	1	1		The known reasonable proposal survives.
+replica	153	diagram/charts-04.csv	1906	0	1		One circuit increases marker interval on the current chart and sets its title to Order value by quantity.
+replica	168	drawing/scenes-17.csv	2161	1	1		The known reasonable proposal survives.
+replica	198	calendar/meetings-01.csv	1417	1	1		The known reasonable proposal survives.
+replica	255	calendar/meetings-01.csv	1023	1	1		The known reasonable proposal survives.
+replica	267	calendar/meetings-01.csv	153	1	1		The known reasonable proposal survives.
+replica	271	drawing/objects-04.csv	208	1	1		The known reasonable proposal survives.
+replica	285	diagram/charts-02.csv	4496	0	1		A contextual chart circuit preserves maximum pie radius and the detached opening.
+replica	293	diagram/diagrams-03.csv	1077	0	1		One circuit increases marker size and sets the exact title Monthly P&L.
+replica	325	drawing/scenes-16.csv	368	1	1		The known reasonable proposal survives.
+replica	354	diagram/charts-01.csv	3790	0	0		The added question leaves the scatter operands and categorical colour unread.
+replica	366	diagram/charts-04.csv	2836	0	1		The combined proposal sets bars horizontal and narrows them on the named sales chart.
+replica	379	diagram/charts-02.csv	2067	0	1		The visibility operation shows the legend on the contextual chart.
+replica	380	document/text-01.csv	4519	1	1		The known reasonable proposal survives.
+replica	416	drawing/objects-04.csv	943	1	1		The known reasonable proposal survives.
+replica	435	document/text-01.csv	326	1	1		The known reasonable proposal survives.
+replica	447	diagram/nodes-02.csv	1379	0	0		The added reading leaves the link style and route unresolved.
+replica	463	drawing/people-05.csv	3596	1	1		The known reasonable proposal survives.
+replica	466	diagram/nodes-01.csv	797	0	0		The added reading selects a corner, leaving the requested picture unread.
+replica	481	drawing/objects-04.csv	2015	1	1		The known reasonable proposal survives.
+replica	492	document/text-01.csv	4186	1	1		The known reasonable proposal survives.
+replica	495	diagram/charts-04.csv	4379	0	0		The added question about a pin does not set purple marker faces.
+replica	509	drawing/scenes-16.csv	2294	1	1		The known reasonable proposal survives.
+replica	514	drawing/placement-06.csv	216	1	1		The known reasonable proposal survives.
+replica	516	drawing/scenes-17.csv	1989	1	1		The known reasonable proposal survives.
+replica	542	diagram/charts-04.csv	730	1	1		The known reasonable proposal survives.
+replica	583	diagram/charts-02.csv	4165	1	1		The known reasonable proposal survives.
+replica	594	diagram/charts-05.csv	4612	0	0		The new count question still omits the store threshold and fraction question.
+replica	598	diagram/charts-05.csv	794	0	1		The line chart has all four roles: revenue, average, quarter and line type.
+replica	606	calendar/meetings-01.csv	2731	1	1		The known reasonable proposal survives.
+replica	614	document/text-02.csv	2410	1	1		The known reasonable proposal survives.
+replica	621	calendar/meetings-01.csv	3270	1	1		The known reasonable proposal survives.
+replica	623	diagram/charts-04.csv	1162	0	0		The cap decrease is distinct, but dash, magenta and horizontal remain a combined open style value rather than separate effects.
+replica	627	drawing/objects-04.csv	2303	1	1		The known reasonable proposal survives.
+replica	645	diagram/charts-02.csv	3213	0	0		No added circuit binds the requested contour result to the written chart title.
+replica	684	drawing/scenes-16.csv	1577	1	1		The known reasonable proposal survives.
+replica	699	diagram/nodes-03.csv	685	0	0		The page creation leaves the contents of the three panels unread.
+replica	703	document/text-02.csv	2900	1	1		The known reasonable proposal survives.
+replica	716	drawing/scenes-17.csv	1042	1	1		The known reasonable proposal survives.
+replica	747	drawing/objects-03.csv	4249	1	1		The known reasonable proposal survives.
+replica	781	diagram/charts-02.csv	4458	0	1		One circuit inverts the x axis of the named chart and then applies the written title to the contextually identified chart.
+replica	787	document/text-01.csv	3384	1	1		The known reasonable proposal survives.
+replica	794	calendar/meetings-01.csv	550	1	1		The known reasonable proposal survives.
+replica	806	drawing/objects-03.csv	4877	1	1		The known reasonable proposal survives.
+replica	839	diagram/charts-04.csv	88	0	1		One circuit restores ten contour levels on the named chart and changes its title.
+replica	870	diagram/nodes-06.csv	2881	1	1		The known reasonable proposal survives.
+replica	877	drawing/placement-06.csv	4012	1	1		The known reasonable proposal survives.
+replica	889	diagram/charts-02.csv	4110	0	1		The background grid is explicitly hidden according to the grid visibility value bank.
+replica	894	drawing/placement-06.csv	1788	1	1		The known reasonable proposal survives.
+replica	928	diagram/charts-05.csv	4449	0	0		The leading-month query and its comparison against the mean are still not jointly grounded.
+base-primary	40	diagram/charts-03.csv	2151	L4	L4		The known reasonable proposal survives.
+base-primary	56	calendar/meetings-01.csv	3183	L3	L3		The known reasonable proposal survives.
+base-primary	69	drawing/objects-02.csv	1176	L4	L4		The known reasonable proposal survives.
+base-primary	70	diagram/charts-06.csv	2399	L2c	L4		The two changes independently preserve x and z axis inversion and the additive phrasing. Mood=do follows the reference for these suggestions. The z value remains open, without a canonical axis binding in the closed chart catalog.
+base-primary	91	drawing/scenes-17.csv	829	L3	L3		The known reasonable proposal survives.
+base-primary	126	document/text-02.csv	1173	L4	L4		The known reasonable proposal survives.
+base-primary	128	drawing/objects-04.csv	899	L3	L3		The known reasonable proposal survives.
+base-primary	133	drawing/scenes-17.csv	3562	L3	L3		The known reasonable proposal survives.
+base-primary	137	diagram/charts-04.csv	4656	L1c	L1c		The new courtesy-stripped chart reading still turns retention of the error-bar colour into a chart-wide colour effect and misses the wider marker interval.
+base-primary	166	drawing/objects-04.csv	2538	L4	L4		The known reasonable proposal survives.
+base-primary	172	drawing/scenes-16.csv	3566	L3	L3		The known reasonable proposal survives.
+base-primary	195	drawing/placement-06.csv	1861	L4	L4		The known reasonable proposal survives.
+base-primary	205	drawing/objects-04.csv	1799	L4	L4		The known reasonable proposal survives.
+base-primary	221	drawing/scenes-17.csv	2754	L3	L3		The known reasonable proposal survives.
+base-primary	226	diagram/charts-01.csv	3095	L2c	L2c	The reference uses two independent measure values instead of grounding the segment as the grouping or comparison role.	The detached opening exposes bar chart and average, but segment remains in a second measure rather than in the grouping role.
+base-primary	327	diagram/nodes-06.csv	2990	L3	L3		The known reasonable proposal survives.
+base-primary	333	drawing/objects-04.csv	184	L3	L3		The known reasonable proposal survives.
+base-primary	355	diagram/charts-04.csv	3144	L4	L4		The known reasonable proposal survives.
+base-primary	391	diagram/charts-04.csv	1260	L2a	L2a		The chart grid clause now binds; font and cap changes still become a page preference.
+base-primary	438	drawing/scenes-05.csv	2206	L2c	L2c		The added readings select the dog rather than closing the door behind it.
+base-primary	455	drawing/objects-04.csv	667	L3	L3		The known reasonable proposal survives.
+base-primary	465	drawing/scenes-03.csv	3644	L4	L4		The known reasonable proposal survives.
+base-primary	477	diagram/charts-02.csv	3038	L4	L4		The known reasonable proposal survives.
+base-primary	480	document/text-01.csv	2700	L3	L3		The known reasonable proposal survives.
+base-primary	500	drawing/people-05.csv	3658	L4	L4		The known reasonable proposal survives.
+base-primary	558	document/text-02.csv	1321	L4	L4		The known reasonable proposal survives.
+base-primary	580	diagram/charts-02.csv	2092	L2c	L2c	The first requested change is left unread in the reference.	The legend binds, but setting unsynchronized axes and a claims measure does not assign the claims series to the right-side axis.
+base-primary	582	document/text-02.csv	1915	L4	L4		The known reasonable proposal survives.
+base-primary	594	drawing/scenes-16.csv	3029	L3	L3		The known reasonable proposal survives.
+base-primary	610	drawing/objects-04.csv	1775	L3	L3		The known reasonable proposal survives.
+base-primary	631	drawing/scenes-16.csv	737	L4	L4		The known reasonable proposal survives.
+base-primary	677	document/text-01.csv	4530	L4	L4		The known reasonable proposal survives.
+base-primary	683	diagram/charts-04.csv	4133	L2a	L2a		Added proposals do not bind both the medium arrow setting and the curved route to arrows.
+base-primary	693	document/text-02.csv	1380	L4	L4		The known reasonable proposal survives.
+base-primary	701	drawing/scenes-07.csv	2747	L4	L4		The known reasonable proposal survives.
+base-primary	707	diagram/charts-06.csv	1851	L2c	L2c		New readings do not bind exponent format and two-digit precision to the axis.
+base-primary	710	document/text-07.csv	785	L4	L4		The known reasonable proposal survives.
+base-primary	721	drawing/objects-04.csv	1317	L3	L3		The known reasonable proposal survives.
+base-primary	735	calendar/meetings-02.csv	274	L4	L4		The known reasonable proposal survives.
+base-primary	738	drawing/scenes-17.csv	94	L3	L3		The known reasonable proposal survives.
+base-primary	741	drawing/scenes-13.csv	4608	L4	L4		The known reasonable proposal survives.
+base-primary	753	drawing/scenes-16.csv	3507	L3	L3		The known reasonable proposal survives.
+base-primary	757	document/text-01.csv	3544	L4	L4		The known reasonable proposal survives.
+base-primary	763	calendar/meetings-01.csv	3179	L3	L3		The known reasonable proposal survives.
+base-primary	766	diagram/charts-03.csv	2642	L2c	L2c	The reference leaves the written lines and partial opacity unread.	Transparency is read without the requested partial degree and without correctly locating the flow-line scope.
+base-primary	795	diagram/nodes-07.csv	1194	L4	L4		The known reasonable proposal survives.
+base-primary	811	drawing/objects-04.csv	1647	L3	L3		The known reasonable proposal survives.
+base-primary	825	diagram/diagrams-04.csv	2184	L4	L4		The known reasonable proposal survives.
+base-primary	826	diagram/nodes-06.csv	4279	L4	L4		The known reasonable proposal survives.
+base-primary	875	drawing/placement-04.csv	168	L4	L4		The known reasonable proposal survives.
+base-primary	890	diagram/charts-04.csv	1603	L2a	L4		A complete alternative assigns the dark-green-to-light-green chart palette and independently sets the exact title Sensor readings.
+base-primary	929	diagram/diagrams-04.csv	1509	L3	L3		The known reasonable proposal survives.
+base-primary	948	diagram/charts-02.csv	2298	L4	L4		The known reasonable proposal survives.
+base-primary	984	diagram/nodes-06.csv	3342	L4	L4		The known reasonable proposal survives.
+default-spell	40	diagram/charts-03.csv	2151	1	1		The known reasonable proposal survives.
+default-spell	56	calendar/meetings-01.csv	3183	1	1		The known reasonable proposal survives.
+default-spell	69	drawing/objects-02.csv	1176	1	1		The known reasonable proposal survives.
+default-spell	70	diagram/charts-06.csv	2399	0	1		The two changes independently preserve x and z axis inversion and the additive phrasing. Mood=do follows the reference for these suggestions. The z value remains open, without a canonical axis binding in the closed chart catalog.
+default-spell	91	drawing/scenes-17.csv	829	1	1		The known reasonable proposal survives.
+default-spell	126	document/text-02.csv	1173	1	1		The known reasonable proposal survives.
+default-spell	128	drawing/objects-04.csv	899	1	1		The known reasonable proposal survives.
+default-spell	133	drawing/scenes-17.csv	3562	1	1		The known reasonable proposal survives.
+default-spell	137	diagram/charts-04.csv	4656	0	0		The new courtesy-stripped chart reading still turns retention of the error-bar colour into a chart-wide colour effect and misses the wider marker interval.
+default-spell	166	drawing/objects-04.csv	2538	1	1		The known reasonable proposal survives.
+default-spell	172	drawing/scenes-16.csv	3566	1	1		The known reasonable proposal survives.
+default-spell	195	drawing/placement-06.csv	1861	1	1		The known reasonable proposal survives.
+default-spell	205	drawing/objects-04.csv	1799	1	1		The known reasonable proposal survives.
+default-spell	221	drawing/scenes-17.csv	2754	1	1		The known reasonable proposal survives.
+default-spell	226	diagram/charts-01.csv	3095	0	0	The reference uses two independent measure values instead of grounding the segment as the grouping or comparison role.	The detached opening exposes bar chart and average, but segment remains in a second measure rather than in the grouping role.
+default-spell	327	diagram/nodes-06.csv	2990	1	1		The known reasonable proposal survives.
+default-spell	333	drawing/objects-04.csv	184	1	1		The known reasonable proposal survives.
+default-spell	355	diagram/charts-04.csv	3144	1	1		The known reasonable proposal survives.
+default-spell	391	diagram/charts-04.csv	1260	0	0		The chart grid clause now binds; font and cap changes still become a page preference.
+default-spell	438	drawing/scenes-05.csv	2206	0	0		The added readings select the dog rather than closing the door behind it.
+default-spell	455	drawing/objects-04.csv	667	1	1		The known reasonable proposal survives.
+default-spell	465	drawing/scenes-03.csv	3644	1	1		The known reasonable proposal survives.
+default-spell	477	diagram/charts-02.csv	3038	1	1		The known reasonable proposal survives.
+default-spell	480	document/text-01.csv	2700	1	1		The known reasonable proposal survives.
+default-spell	500	drawing/people-05.csv	3658	1	1		The known reasonable proposal survives.
+default-spell	558	document/text-02.csv	1321	1	1		The known reasonable proposal survives.
+default-spell	580	diagram/charts-02.csv	2092	0	0	The first requested change is left unread in the reference.	The legend binds, but setting unsynchronized axes and a claims measure does not assign the claims series to the right-side axis.
+default-spell	582	document/text-02.csv	1915	1	1		The known reasonable proposal survives.
+default-spell	594	drawing/scenes-16.csv	3029	1	1		The known reasonable proposal survives.
+default-spell	610	drawing/objects-04.csv	1775	1	1		The known reasonable proposal survives.
+default-spell	631	drawing/scenes-16.csv	737	1	1		The known reasonable proposal survives.
+default-spell	677	document/text-01.csv	4530	1	1		The known reasonable proposal survives.
+default-spell	683	diagram/charts-04.csv	4133	0	0		Added proposals do not bind both the medium arrow setting and the curved route to arrows.
+default-spell	693	document/text-02.csv	1380	1	1		The known reasonable proposal survives.
+default-spell	701	drawing/scenes-07.csv	2747	1	1		The known reasonable proposal survives.
+default-spell	707	diagram/charts-06.csv	1851	0	0		New readings do not bind exponent format and two-digit precision to the axis.
+default-spell	710	document/text-07.csv	785	1	1		The known reasonable proposal survives.
+default-spell	721	drawing/objects-04.csv	1317	1	1		The known reasonable proposal survives.
+default-spell	735	calendar/meetings-02.csv	274	1	1		The known reasonable proposal survives.
+default-spell	738	drawing/scenes-17.csv	94	1	1		The known reasonable proposal survives.
+default-spell	741	drawing/scenes-13.csv	4608	1	1		The known reasonable proposal survives.
+default-spell	753	drawing/scenes-16.csv	3507	1	1		The known reasonable proposal survives.
+default-spell	757	document/text-01.csv	3544	1	1		The known reasonable proposal survives.
+default-spell	763	calendar/meetings-01.csv	3179	1	1		The known reasonable proposal survives.
+default-spell	766	diagram/charts-03.csv	2642	0	0	The reference leaves the written lines and partial opacity unread.	Transparency is read without the requested partial degree and without correctly locating the flow-line scope.
+default-spell	795	diagram/nodes-07.csv	1194	1	1		The known reasonable proposal survives.
+default-spell	811	drawing/objects-04.csv	1647	1	1		The known reasonable proposal survives.
+default-spell	825	diagram/diagrams-04.csv	2184	1	1		The known reasonable proposal survives.
+default-spell	826	diagram/nodes-06.csv	4279	1	1		The known reasonable proposal survives.
+default-spell	875	drawing/placement-04.csv	168	1	1		The known reasonable proposal survives.
+default-spell	890	diagram/charts-04.csv	1603	0	1		A complete alternative assigns the dark-green-to-light-green chart palette and independently sets the exact title Sensor readings.
+default-spell	929	diagram/diagrams-04.csv	1509	1	1		The known reasonable proposal survives.
+default-spell	948	diagram/charts-02.csv	2298	1	1		The known reasonable proposal survives.
+default-spell	984	diagram/nodes-06.csv	3342	1	1		The known reasonable proposal survives.
+base-replica	1	calendar/meetings-01.csv	2469	1	1		The known reasonable proposal survives.
+base-replica	4	calendar/meetings-01.csv	802	1	1		The known reasonable proposal survives.
+base-replica	23	diagram/diagrams-03.csv	3250	0	0		The added readings treat missing as a predicate and leave the line width and target unread.
+base-replica	29	drawing/scenes-16.csv	1734	1	1		The known reasonable proposal survives.
+base-replica	52	calendar/meetings-01.csv	3277	1	1		The known reasonable proposal survives.
+base-replica	76	drawing/scenes-13.csv	2791	1	1		The known reasonable proposal survives.
+base-replica	82	drawing/scenes-16.csv	1502	1	1		The known reasonable proposal survives.
+base-replica	117	drawing/objects-04.csv	2409	1	1		The known reasonable proposal survives.
+base-replica	153	diagram/charts-04.csv	1906	0	1		One circuit increases marker interval on the current chart and sets its title to Order value by quantity.
+base-replica	168	drawing/scenes-17.csv	2161	1	1		The known reasonable proposal survives.
+base-replica	198	calendar/meetings-01.csv	1417	1	1		The known reasonable proposal survives.
+base-replica	255	calendar/meetings-01.csv	1023	1	1		The known reasonable proposal survives.
+base-replica	267	calendar/meetings-01.csv	153	1	1		The known reasonable proposal survives.
+base-replica	271	drawing/objects-04.csv	208	1	1		The known reasonable proposal survives.
+base-replica	285	diagram/charts-02.csv	4496	0	1		A contextual chart circuit preserves maximum pie radius and the detached opening.
+base-replica	293	diagram/diagrams-03.csv	1077	0	1		One circuit increases marker size and sets the exact title Monthly P&L.
+base-replica	325	drawing/scenes-16.csv	368	1	1		The known reasonable proposal survives.
+base-replica	354	diagram/charts-01.csv	3790	0	0		The added question leaves the scatter operands and categorical colour unread.
+base-replica	366	diagram/charts-04.csv	2836	0	1		The combined proposal sets bars horizontal and narrows them on the named sales chart.
+base-replica	380	document/text-01.csv	4519	1	1		The known reasonable proposal survives.
+base-replica	416	drawing/objects-04.csv	943	1	1		The known reasonable proposal survives.
+base-replica	435	document/text-01.csv	326	1	1		The known reasonable proposal survives.
+base-replica	447	diagram/nodes-02.csv	1379	0	0		The added reading leaves the link style and route unresolved.
+base-replica	463	drawing/people-05.csv	3596	1	1		The known reasonable proposal survives.
+base-replica	466	diagram/nodes-01.csv	797	0	0		The added reading selects a corner, leaving the requested picture unread.
+base-replica	481	drawing/objects-04.csv	2015	1	1		The known reasonable proposal survives.
+base-replica	492	document/text-01.csv	4186	1	1		The known reasonable proposal survives.
+base-replica	495	diagram/charts-04.csv	4379	0	0		The added question about a pin does not set purple marker faces.
+base-replica	509	drawing/scenes-16.csv	2294	1	1		The known reasonable proposal survives.
+base-replica	514	drawing/placement-06.csv	216	1	1		The known reasonable proposal survives.
+base-replica	516	drawing/scenes-17.csv	1989	1	1		The known reasonable proposal survives.
+base-replica	542	diagram/charts-04.csv	730	1	1		The known reasonable proposal survives.
+base-replica	583	diagram/charts-02.csv	4165	1	1		The known reasonable proposal survives.
+base-replica	594	diagram/charts-05.csv	4612	0	0		The new count question still omits the store threshold and fraction question.
+base-replica	598	diagram/charts-05.csv	794	0	1		The line chart has all four roles: revenue, average, quarter and line type.
+base-replica	606	calendar/meetings-01.csv	2731	1	1		The known reasonable proposal survives.
+base-replica	614	document/text-02.csv	2410	1	1		The known reasonable proposal survives.
+base-replica	621	calendar/meetings-01.csv	3270	1	1		The known reasonable proposal survives.
+base-replica	623	diagram/charts-04.csv	1162	0	0		The cap decrease is distinct, but dash, magenta and horizontal remain a combined open style value rather than separate effects.
+base-replica	627	drawing/objects-04.csv	2303	1	1		The known reasonable proposal survives.
+base-replica	645	diagram/charts-02.csv	3213	0	0		No added circuit binds the requested contour result to the written chart title.
+base-replica	684	drawing/scenes-16.csv	1577	1	1		The known reasonable proposal survives.
+base-replica	699	diagram/nodes-03.csv	685	0	0		The page creation leaves the contents of the three panels unread.
+base-replica	703	document/text-02.csv	2900	1	1		The known reasonable proposal survives.
+base-replica	716	drawing/scenes-17.csv	1042	1	1		The known reasonable proposal survives.
+base-replica	747	drawing/objects-03.csv	4249	1	1		The known reasonable proposal survives.
+base-replica	781	diagram/charts-02.csv	4458	0	1		One circuit inverts the x axis of the named chart and then applies the written title to the contextually identified chart.
+base-replica	787	document/text-01.csv	3384	1	1		The known reasonable proposal survives.
+base-replica	794	calendar/meetings-01.csv	550	1	1		The known reasonable proposal survives.
+base-replica	806	drawing/objects-03.csv	4877	1	1		The known reasonable proposal survives.
+base-replica	839	diagram/charts-04.csv	88	0	1		One circuit restores ten contour levels on the named chart and changes its title.
+base-replica	870	diagram/nodes-06.csv	2881	1	1		The known reasonable proposal survives.
+base-replica	877	drawing/placement-06.csv	4012	1	1		The known reasonable proposal survives.
+base-replica	894	drawing/placement-06.csv	1788	1	1		The known reasonable proposal survives.
+base-replica	928	diagram/charts-05.csv	4449	0	0		The leading-month query and its comparison against the mean are still not jointly grounded.
+blind	6	diagram/nodes-07.csv	1242	0	0	The reference assumes an existing group and divides the leading title into three properties.	The retained doughnut readings leave “Deep Dive Status Summary” disconnected. Added readings leave both it and the requested doughnut unread.
+blind	25	drawing/objects-04.csv	1515	1	1		The exact mat creation remains. The added reading resolves the same target and treats the opening as discourse.
+blind	31	diagram/nodes-06.csv	2149	1	1		The exact red hexagon creation with label Profile setup remains. New partial readings miss the label or use a different act.
+blind	60	drawing/objects-03.csv	4066	1	1		The retained addition creates the requested chariot object despite the wording “a chariots.” The new question leaves the object unread.
+blind	88	diagram/diagrams-04.csv	4142	1	1		The exact descending sort of Typing speed remains. The added readings do not bind the chart or direction.
+blind	155	drawing/objects-04.csv	3188	1	1		The exact chute creation remains. The new reading creates the same chute and retains the opening as discourse.
+blind	173	diagram/diagrams-04.csv	2018	1	1		A retained circuit connects Dinner plan to Venue with the written orientation. The new partial readings leave both endpoints unread.
+blind	215	drawing/objects-04.csv	1936	1	1		The exact creation with the written kind “gold” remains. The new reading preserves the same kind and the discourse opening.
+blind	220	drawing/objects-04.csv	1123	1	1		The retained circuit adds a tire. The added removal reading leaves “a tire” unread and takes “me” as its target.
+blind	228	drawing/scenes-16.csv	2735	1	1		The exact green square creation and name Daisy 1 remain. The replacements for the dropped partials still do not assign Daisy 1 to the square.
+blind	252	diagram/diagrams-01.csv	3693	0	0	The reference leaves the count operation implicit in the predicate “counting.”	The retained bar chart binds students and advisor labels. No circuit encodes the requested count, and the new readings leave both operands unread.
+blind	284	diagram/nodes-06.csv	1513	1	1		The exact red rectangle with label Dependencies remains. Added partials omit the label or act on another target.
+blind	328	document/text-02.csv	2511	1	1		A retained two-request circuit creates the heading Cooking class handout and a paragraph with the exact quoted sentence. The added partial leaves both contents unread.
+blind	337	diagram/diagrams-04.csv	2187	1	1		The complete link from Ticket to Triage remains. The new partials leave both endpoints unread.
+blind	338	drawing/scenes-17.csv	1016	1	1		The exact recoloring of Flag to orange remains. The added candidates confuse properties or targets.
+blind	369	drawing/scenes-16.csv	1507	1	1		The exact circuit creates the blue circle and assigns it the name Sunflower. The changed partials still fail the name assignment.
+blind	370	calendar/meetings-01.csv	1163	1	1		The exact booking of Room 4 for Planning at 13:00 UTC on the written date for 15 minutes remains. The new partials omit material booking fields.
+blind	380	diagram/diagrams-04.csv	1807	1	1		A complete retained alternative links Quote request to Price check. New alternatives leave the two endpoints unread or treat Quote as a block.
+blind	450	document/text-02.csv	1514	1	1		A retained alternative moves Results after Summary. New connection or undo readings leave both section names unread.
+blind	505	diagram/diagrams-04.csv	1010	1	1	“Start to Review” could name an object or describe a link.	The retained named-object recoloring reads the whole phrase and applies purple. The new star readings leave “to Review” unread.
+blind	523	drawing/scenes-16.csv	1829	1	1		The exact orange fish creation named Snowflake remains. Changed partials still leave Snowflake unbound.
+blind	555	drawing/people-05.csv	1061	1	1		A retained circuit gives the existing nose the button variant, dark brown color, and huge size. The new readings leave those properties unread.
+blind	580	document/text-01.csv	1986	1	1		A retained circuit replaces the named Lab report draft with the quoted sentence. The unused “Thanks!” is courtesy.
+blind	636	document/text-01.csv	1863	1	1		A retained circuit replaces the named Rainfall report with the exact quoted sentence. The new candidates leave both the report name and replacement unread.
+blind	638	drawing/scenes-07.csv	2596	1	1		The retained circuit changes the whole current page to the written pop art painting style. A new equivalent reading also separates the courtesy phrase.
+blind	657	drawing/objects-02.csv	1312	1	1	The bare numbers could be coordinates or dimensions. The reference assigns them height and width.	The retained star creation uses 260 for height and 400 for width. The new readings leave both quantities unread.
+blind	672	drawing/objects-04.csv	415	1	1		The retained circuit creates the requested trifle. The new reading treats “me” as a removal target and leaves the object unread.
+blind	715	drawing/objects-02.csv	1034	1	1	The bare numbers could be coordinates or dimensions. The reference assigns them height and width.	The retained balloon creation uses 260 for height and 400 for width. New readings leave both quantities unread.
+blind	724	calendar/meetings-01.csv	2103	1	1		The contextual room booking with Planning, date, time, zone and duration is retained.
+blind	744	drawing/objects-03.csv	4718	1	1		The retained creation places the written barricades.
+blind	780	diagram/charts-02.csv	3884	0	1		The new circuit adjusts font size on the named chart and sets the y axis on the right.
+blind	791	document/text-01.csv	3591	1	1		The creation with both title and exact document body was already present.
+blind	813	drawing/placement-02.csv	1846	1	1		The complete retained reading creates a small rock in front of the white house.
+blind	830	drawing/scenes-03.csv	3213	0	0		No complete proposal applies the contextually repeated effect to the remaining clouds.
+blind	831	drawing/objects-06.csv	184	0	0		The existing named Circle and narrower result remain unbound together.
+blind	843	drawing/scenes-17.csv	3693	1	1		The reasonable exact circuit deletes the fruit bowl and excludes the orange.
+blind	851	diagram/charts-06.csv	1695	0	1		A combined circuit sets diamond markers on revenue trend and shows grid lines.
+blind	852	document/text-01.csv	4324	1	1		The reasonable exact report request retains the topic and approximate length.
+blind	888	diagram/nodes-06.csv	3297	1	1		A retained circuit creates Idea, then links Idea to Plan.
+blind	894	drawing/placement-06.csv	4706	1	1		The cockerel and position below the tree are both retained.
+blind	902	drawing/placement-06.csv	1675	1	1		A retained proposal places a large condor above the written lake.
+blind	912	calendar/meetings-01.csv	3232	1	1		The reasonable exact meeting move retains the name, date, time and zone.
+blind	915	diagram/charts-04.csv	2282	0	0		The title and solid red style are present together, but both directions remains in the open style wording without a scoped chart axis effect.
+blind	921	drawing/scenes-11.csv	3877	1	1		A retained circuit binds all four operations with their scopes, placement and count.
+blind	996	drawing/objects-03.csv	4656	1	1		A retained proposal creates the written fiddle.
+blind	1000	drawing/scenes-11.csv	4307	0	0		There is no new checked pattern result on the existing headboard.
