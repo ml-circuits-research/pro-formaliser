@@ -558,3 +558,9 @@ node /home/salboaie/work/sopworlds/nl-formaliser/bin/formalise.mjs --batch < tex
 ```
 
 Verified the Prolog command from outside its checkout with nine ordered outputs including supported variants, unresolved pronoun, unknown input, malformed JSON, four rejected state fields and a final successful request. A probe observed one read of the actual model file. Separately, the public library opened the real default model from `/tmp` and returned four ordered results, with zero candidates and one diagnostic for the unknown input. No previous-turn wires or lookups occurred in the checked output. All 466 release tests passed. The second command is the shared handoff invocation for the independent Z3 worker; this check covered Prolog.
+
+## Explicit scalar bounds on the value axis
+
+The existing ordered argument parser now accepts an authored predicate-first contextual frame with a scalar property or a declared ordered pair. Finite unit-free numbers and their written forms are validated by the same reader grounding used elsewhere. The value-axis declarations reuse chart.min/chart.max and defer the existing chart to page lookup. A paired frame refuses descending bounds; named chart phrases, conditional commands, questions asking whether a change happened, an X axis and exponent notation stay outside these declarations.
+
+With worlds alone, five actual controls gained complete clean proposals over `e393986`: WebMeet `diagram/charts-02.csv` logical rows 191, 1879, 3317 and 4022 and `diagram/charts-06.csv` row 1802. The two longer held-out examples (`charts-02.csv` row 4033 and `charts-04.csv` row 3549) still have no complete bound proposal for the whole utterance. All 468 release tests passed. No aggregate rerun. The newly reviewed native possessive-property issue is separate from this mechanism.

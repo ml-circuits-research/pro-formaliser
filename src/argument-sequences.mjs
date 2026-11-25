@@ -28,9 +28,9 @@ function admittedLead(ts,end,worlds) {
 
 // A fronted location can qualify an instruction without naming its owner.
 // Preserve that span until a world supplies the placement binding.
-function addressedLead(ts,end,worlds) {
+function addressedLead(ts,end,worlds,allowAddition=false) {
   const comma=ts.slice(0,end).findIndex(([word])=>word===',');
-  const start=comma+1;
+  const start=comma<0 && allowAddition && worlds.joiners[ts[0]?.[0]]==='addition' ? 1 : comma+1;
   const lead=ts.slice(start,end).map(([word])=>word);
   const grammar=worlds.scopeGrammar;
   if (!grammar.modals.has(lead[0]) || !grammar.addressees.has(lead[1]) ||
@@ -69,9 +69,8 @@ function coordinatedCommandStarts(ts,worlds) {
   return starts;
 }
 
-export function argumentSequences(facts,catalog) {
+export function argumentSequences(facts,catalog,formats=compileStructuredArguments(facts,catalog)) {
   const forms=new Map();
-  const formats=compileStructuredArguments(facts,catalog);
   const conjunctions=facts('w.lang.en.closed').filter(w=>one(w,'class')==='conjunction')
     .flatMap(w=>many(w,'text').map(keys));
   for (const w of facts('core.word')) {
@@ -142,7 +141,12 @@ export function argumentSequences(facts,catalog) {
         [...structuredParts].some(key=>!slots.includes(key)) ||
         inferred && !structuredParts.size ||
         owned && (!inferred && !contextual && !slots.includes(ownerPart) || slots.includes(ownerKey))) continue;
-    if (contextual && (slots.length!==2 || parts.length!==2 || !parts[0].bank || parts[1].key!==predicatePart)) continue;
+    const orderedNumericPair=one(w,'ordered_numeric_pair')==='true';
+    const contextualNumeric=contextual && parts[0].key===predicatePart && parts[1]?.format==='scalar_number' &&
+      (parts.length===2 && !orderedNumericPair ||
+        orderedNumericPair && parts.length===4 && parts[2].literal && parts[3].format==='scalar_number');
+    const contextualPostfix=slots.length===2 && parts.length===2 && parts[0].bank && parts[1].key===predicatePart;
+    if (contextual && !contextualNumeric && !contextualPostfix || orderedNumericPair && !contextualNumeric) continue;
     if (modeMarker && (!requestMode || parts.at(-1).literal?.join(' ')!==keys(modeMarker).join(' ') ||
         slots.filter(key=>props.has(key)).length!==1)) continue;
     const scopeLiteralSlot=one(w,'scope_literal_slot');
@@ -166,7 +170,8 @@ export function argumentSequences(facts,catalog) {
       const head=prefix[0] ?? '';
       const entries=index.get(head) ?? [];
       entries.push({prefix,parts,family,act,mode,owned,inferred,ownerKey,ownerValue,tails,boundaries,numericModifiers,
-        bindsPredicate,ownerLed,contextual,requestMode,modeMarker,scopeAttribute,scopeLiteralSlot,scopeLiterals});index.set(head,entries);
+        bindsPredicate,ownerLed,contextual,contextualNumeric,orderedNumericPair,requestMode,modeMarker,
+        scopeAttribute,scopeLiteralSlot,scopeLiterals});index.set(head,entries);
     }
   }
   for (const frames of index.values()) {
@@ -197,7 +202,7 @@ export function sequencePacket(ts,worlds,restricted=false,text) {
       if (det && !['definite','demonstrative','possessive'].includes(det) ||
           !f.parts[0].nominal.some(noun=>matchesAt(ts,i+Number(Boolean(det)),noun))) continue;
     }
-    const addressed=f.owned && !f.bindsPredicate && addressedLead(ts,i,worlds);
+    const addressed=f.owned && (!f.bindsPredicate || f.contextualNumeric) && addressedLead(ts,i,worlds,f.contextualNumeric);
     if (f.owned) {
       if (!worlds.literalGrammar.licenses(f.family,f.act) ||
           !addressed && (ts[stop]?.[0]==='?' || !admittedLead(ts,i,worlds))) continue;
@@ -250,6 +255,7 @@ export function sequencePacket(ts,worlds,restricted=false,text) {
         packet.owned={...addressed,inferred:f.inferred,ownerKey:f.ownerKey ?? '',ownerValue:f.ownerValue ?? '',
           utteranceEnd:ts[stop-1][3]};
         if (f.contextual) packet.owned.contextual=true;
+        if (f.orderedNumericPair) packet.owned.orderedNumericPair=true;
         if (f.requestMode) packet.owned.requestMode=f.requestMode;
         if (marker.length) packet.owned.modeMarkerStart=ts[markerAt][2];
         if (f.scopeAttribute) packet.owned.scopeAttribute=f.scopeAttribute;
@@ -312,6 +318,10 @@ export function sequenceScopeText(text,proof) {
 
 export function sequenceFrameReading(text,proof,extraBindings=[],labels,adjuncts) {
   if (!proof.owned) return;
+  if (proof.owned.orderedNumericPair) {
+    const [lower,upper]=proof.bindings.map(([,value])=>Number(value));
+    if (!Number.isFinite(lower) || !Number.isFinite(upper) || lower>upper) return;
+  }
   const chars=Array.from(text), span=(start,end)=>chars.slice(start,end).join('');
   const {ownerKey,ownerValue,predicateStart,predicateEnd,utteranceEnd,contextual,requestMode,modeMarkerStart}=proof.owned;
   const owner=proof.bindings.find(([key])=>key===ownerPart);

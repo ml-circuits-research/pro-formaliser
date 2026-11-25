@@ -1,7 +1,7 @@
 import {compileMeasuredMotion} from './measured-motion.mjs';
 import {compileLandmarkPairs,landmarkPairType,landmarkSelectorsMatchCatalog} from './landmark-pairs.mjs';
 import {compileRequestIntents} from './request-intents.mjs';
-import {structuredZones} from './structured-arguments.mjs';
+import {compileStructuredArguments,scalarNumber,structuredZones} from './structured-arguments.mjs';
 import {compileBenefactives} from './benefactive.mjs';
 import {compileParticipantAdjuncts} from './participant-adjunct.mjs';
 import {compileUniversalAgreement,compileUniversalInventory,universalInventoryProviderTypes,universalInventoryType} from './universal-inventory.mjs';
@@ -621,8 +621,11 @@ function compile(facts) {
   }
   const leadForms=role=>new Set(facts('pro.reader.body_lead').filter(w=>one(w,'role')===role)
     .flatMap(w=>values(w,'text').map(phrase)));
+  const argumentFormats=compileStructuredArguments(facts,requestKeys);
+  const scalarArgumentKeys=new Set([...argumentFormats].filter(([,format])=>format==='scalar_number')
+    .map(([id])=>JSON.stringify(JSON.parse(id).slice(1))));
   const frames=argumentSequences(type=>type==='pro.reader.argument_sequence' ?
-    [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys);
+    [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys,argumentFormats);
   const universalAgreement=compileUniversalAgreement(facts);
   const nominalSelectorRules=compileNominalSelectors(facts,requestKeys,words);
   const nominalPositions=nominalPositionForms(facts,requestKeys,words);
@@ -698,7 +701,9 @@ function compile(facts) {
     ownerPropertyValues:compatibleValues,
     declaredValueAlias(family,key,text,value) {
       const meanings=closedValueAliases.get(JSON.stringify([family,key,phrase(text)]));
-      return meanings?.size===1 && meanings.has(value) || analyticalAdjunctAlias(this,family,key,text,value);
+      return meanings?.size===1 && meanings.has(value) ||
+        scalarArgumentKeys.has(JSON.stringify([family,key])) && scalarNumber(text,this,family,key)===value ||
+        analyticalAdjunctAlias(this,family,key,text,value);
     },
     compoundReferences:facts('pro.reader.compound_reference').map(w=>({family:one(w,'family'),firstKey:one(w,'first_key'),secondKey:one(w,'second_key'),delimiter:one(w,'delimiter')})),
     universalAgreement, universalInventory:compileUniversalInventory(facts,words,targetFamilies,universalAgreement),

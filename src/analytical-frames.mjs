@@ -1,6 +1,6 @@
 import { str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { tokens } from './lexicon.mjs';
-import { resolveWrittenMeasurement } from './owner-property.mjs';
+import { scalarNumber } from './structured-arguments.mjs';
 
 const surface=text=>tokens(text).map(([key])=>key).join(' ');
 const ownerId=(family,key,value,words)=>JSON.stringify([family,key,value,surface(words)]);
@@ -154,8 +154,7 @@ function adjunctValue({key,lead,tail,value},part,span,worlds,family) {
       !tail.every((word,i)=>part[stop+i][0]===word)) return;
   if (value!==undefined) return stop===lead.length ? value : undefined;
   if (stop===lead.length) return;
-  const result=resolveWrittenMeasurement(span(part[lead.length][2],part[stop-1][3]),worlds,family,key);
-  if (!result?.measurement) return result?.value;
+  return scalarNumber(span(part[lead.length][2],part[stop-1][3]),worlds,family,key);
 }
 
 export function analyticalAdjunctAlias(worlds,family,key,text,value) {

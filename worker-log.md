@@ -469,3 +469,7 @@
 ## Shared current-text reader and batch API
 - Added the async Prolog library and cwd-independent JSONL CLI with per-record error recovery.
 - Default-model library smoke produced four ordered results. The batch test produced nine ordered records and observed one model load. All 466 release tests passed.
+
+## Explicit value-axis bounds
+- Five WebMeet controls gained complete world-only proposals, including numeric ranges and written cardinal bounds on an unresolved existing chart.
+- Two compound held-out utterances remain incomplete. All 468 isolated release tests passed.

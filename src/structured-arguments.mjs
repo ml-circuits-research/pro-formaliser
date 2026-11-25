@@ -8,7 +8,7 @@ const identifier = /^[\p{L}\p{N}][\p{L}\p{N}_-]*$/u;
 const shapeByFormat = new Map([
   ['identifier', ['candidate','span']], ['date', ['candidate','span']],
   ['clock', ['candidate','span']], ['zone', ['candidate','span']], ['measurement', ['number']],
-  ['nominal_description', ['span']],
+  ['nominal_description', ['span']], ['scalar_number', ['number']],
 ]);
 const one = (wire,key) => str(wire.attrs[key]?.[0]);
 const form = text => tokens(text).map(([key])=>key).join(' ');
@@ -36,6 +36,11 @@ export function structuredZones(facts) {
   return new Set(names.map(form));
 }
 
+export function scalarNumber(text,worlds,family,key) {
+  const result=resolveWrittenMeasurement(text,worlds,family,key);
+  if (!result?.measurement) return result?.value;
+}
+
 function operand(format,raw,worlds,family,key) {
   switch (format) {
     case 'identifier': return identifier.test(raw) ? '' : undefined;
@@ -46,6 +51,7 @@ function operand(format,raw,worlds,family,key) {
     }
     case 'clock': return clock.test(raw) ? '' : undefined;
     case 'zone': return worlds.argumentZones.has(form(raw)) ? '' : undefined;
+    case 'scalar_number': return scalarNumber(raw,worlds,family,key);
     case 'nominal_description': {
       const [article,...terms]=tokens(raw).map(([term])=>term);
       if (!worlds.determiners[article] || !terms.length || terms.some(term=>
