@@ -640,6 +640,7 @@ function compile(facts) {
   const universalAgreement=compileUniversalAgreement(facts);
   const nominalSelectorRules=compileNominalSelectors(facts,requestKeys,words);
   const nominalPositions=nominalPositionForms(facts,requestKeys,words);
+  const ownedEffects=compileOwnedEffects(facts,requestKeys,propertyLabels);
   return {
     bodyLeads:{neutral:leadForms('neutral'),nominal:leadForms('nominal'),actionOnly:leadForms('action_only')},
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
@@ -677,7 +678,7 @@ function compile(facts) {
     analyticalAdjuncts:compileAnalyticalAdjuncts(facts,requestKeys),
     dialogueCoverage:compileDialogueCoverage(facts),
     dependentOperands:compileDependentOperands(facts,requestKeys),
-    ownedEffects:compileOwnedEffects(facts,requestKeys,propertyLabels),
+    ownedEffects,
     landmarkSurfaceFacts:facts('pro.reader.landmark_surface'),
     appositiveSelectors:compileAppositiveSelectors(facts,requestKeys,words),
     quantifiedVerbs:compileQuantifiedVerbs(facts,requestKeys),
@@ -719,6 +720,11 @@ function compile(facts) {
         const match=rule.family===family && rule.key===key && rule.bank.get(surface);
         return match ? [match] : [];
       }));
+      for (const reading of ownedEffects.elliptical) {
+        if (reading.family===family && reading.key===key && reading.bank.has(surface)) {
+          nominalValues.add(reading.bank.get(surface));
+        }
+      }
       return meanings?.size===1 && meanings.has(value) ||
         !meanings && nominalValues.size===1 && nominalValues.has(value) ||
         scalarArgumentKeys.has(JSON.stringify([family,key])) && scalarNumber(text,this,family,key)===value ||

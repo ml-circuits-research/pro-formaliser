@@ -12,7 +12,7 @@ import {spatialModifierReadings} from './spatial-modifier.mjs';
 import {dependentOperandReadings} from './dependent-operands.mjs';
 import {createDialogueCoverage} from './dialogue-coverage.mjs';
 import {createEffectSequence} from './effect-sequence.mjs';
-import {ownedEffectReadings} from './owned-effects.mjs';
+import {ellipticalPropertyReadings,ownedEffectReadings} from './owned-effects.mjs';
 import {adjacentSelectorReading,createAppositiveSelectorReader} from './appositive-selector.mjs';
 import {quantifiedVerbReadings} from './quantified-verb.mjs';
 import {createTopicCommands,topicCommandPacket,topicCommandReading} from './topic-commands.mjs';
@@ -324,6 +324,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     const nominalRoles=new Set();
     if (!scope.restricted && !quotes.length) {
+      for (const reading of ellipticalPropertyReadings(text,ts,worlds,politeness)) retain(reading);
       for (const {nominalWords,...reading} of ellipticalNominals(text,ts,worlds,politeness)) {
         const {missing,counts}=evidenceReport(text,parse(reading.sop),worlds.evidenceVocabulary);
         if (missing.length || counts.uncovered || counts.unread || counts.ambiguous_occurrence) continue;

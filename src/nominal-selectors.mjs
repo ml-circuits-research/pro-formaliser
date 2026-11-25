@@ -1,6 +1,7 @@
 import {str} from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import {tokens} from './lexicon.mjs';
 import {nativeInventory} from './native-inventory.mjs';
+import {politeBody} from './trailing-discourse.mjs';
 
 export const nominalSelectorType='pro.reader.nominal_selector';
 const values=(wire,key)=>(wire.attrs[key] ?? []).map(str);
@@ -74,33 +75,16 @@ export function nominalSelectors(bindings,start,end,phrase,span,resolveHead=dire
 }
 
 export function ellipticalNominals(text,ts,worlds,politeness) {
-  if (ts.length<2 || ts.length>14 || ts.some(([term])=>term==='?')) return [];
-  const chars=Array.from(text);
-  const phrase=(start,end)=>ts.slice(start,end).map(([term])=>term).join(' ');
-  const span=(start,end)=>chars.slice(ts[start][2],ts[end-1][3]).join('');
-  let start=0, end=ts.length;
-  while (['.','!'].includes(ts[end-1]?.[0])) end--;
-  const fillers=[];
-  for (let width=Math.min(end-2,5);width>0;width--) {
-    if (!politeness.has(phrase(0,width))) continue;
-    fillers.push(span(0,width));
-    start=width+Number(ts[width]?.[0]===',');
-    break;
-  }
-  for (let width=Math.min(end-start-2,5);width>0;width--) {
-    if (!politeness.has(phrase(end-width,end))) continue;
-    fillers.push(span(end-width,end));
-    end-=width;
-    end-=Number(ts[end-1]?.[0]===',');
-    break;
-  }
+  const body=politeBody(text,ts,politeness,2);
+  if (!body) return [];
+  const {start,end,fillers,phrase,span}=body;
   const determiner=worlds.determiners[ts[start]?.[0]];
   if (determiner && determiner!=='indefinite' || !determiner && !fillers.length) return [];
-  start+=Number(Boolean(determiner));
+  const nounStart=start+Number(Boolean(determiner));
   const quote=JSON.stringify;
   return worlds.nominalSelectorRules.flatMap(binding=>{
     if (!worlds.literalGrammar.licenses(binding.family,'make')) return [];
-    return nominalSelectors([binding],start,end,phrase,span).map(({sort,sortWords,selector})=>{
+    return nominalSelectors([binding],nounStart,end,phrase,span).map(({sort,sortWords,selector})=>{
       const sop=[
         '@r1 w.request.request act=make mood=do words='+quote(text),
         '@r1.t w.request.target request=$r1 family='+quote(binding.family)+' mode=new sort='+quote(sort)+

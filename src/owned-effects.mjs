@@ -4,6 +4,7 @@ import { resolveWrittenMeasurement } from './owner-property.mjs';
 import { parse } from './schema.mjs';
 import { universalOwner } from './universal-inventory.mjs';
 import { nominalSelectorLines } from './nominal-selectors.mjs';
+import { politeBody } from './trailing-discourse.mjs';
 
 const quote=JSON.stringify;
 const decode=item=>item?.startsWith('"') ? JSON.parse(item) : item;
@@ -17,6 +18,7 @@ const slots=new Set(['owner','property','value','prior','cue']);
 
 export function compileOwnedEffects(facts,keys,propertyLabels) {
   const library=new Map(), frames=new Map(), ownerHeads=new Map(), comparatives=new Map(), senses=new Map(), closedChoices=new Set(), resultQualifiers=new Map();
+  const elliptical=[];
   for (const key of keys) {
     const index=keyOf(key.family,key.name), group=library.get(index) ?? [];
     group.push(key); library.set(index,group);
@@ -47,7 +49,23 @@ export function compileOwnedEffects(facts,keys,propertyLabels) {
     }
     const variants=senses.get(index) ?? [], finiteChoice=one(row,'finite_choice')==='true';
     if (finiteChoice && library.get(index).every(spec=>spec.values.length)) closedChoices.add(index);
-    variants.push({id:row.id,aliases,scale:one(row,'scale'),surfaces:new Set(all(row,'text').map(form)),
+    const surfaces=new Set(all(row,'text').map(form));
+    const ellipsis=one(row,'ellipsis');
+    const [spec,...otherSpecs]=library.get(index);
+    if (['bare','labelled'].includes(ellipsis) && spec.values.length &&
+        otherSpecs.every(other=>quote(other.values)===quote(spec.values))) {
+      const spellings=new Map();
+      for (const [surface,value] of [...spec.values.map(v=>[form(v.replaceAll('_',' ')),v]),...aliases]) {
+        if (!surface || !spec.values.includes(value)) continue;
+        const meanings=spellings.get(surface) ?? new Set();
+        meanings.add(value);
+        spellings.set(surface,meanings);
+      }
+      const bank=new Map([...spellings].flatMap(([surface,meanings])=>
+        meanings.size===1 ? [[surface,[...meanings][0]]] : []));
+      elliptical.push({family,key,bank,labels:surfaces,bare:ellipsis==='bare'});
+    }
+    variants.push({id:row.id,aliases,scale:one(row,'scale'),surfaces,
       command:one(row,'property_command')==='true',finiteChoice});
     senses.set(index,variants);
   }
@@ -107,7 +125,36 @@ export function compileOwnedEffects(facts,keys,propertyLabels) {
     const [family,key]=JSON.parse(index);
     for (const sense of variants) for (const surface of sense.surfaces) register(surface,family,key,[sense]);
   }
-  return {frames,comparatives,ownerHeads,properties,propertyHeads,closedChoices,resultQualifiers};
+  return {frames,comparatives,ownerHeads,properties,propertyHeads,closedChoices,resultQualifiers,elliptical};
+}
+
+export function ellipticalPropertyReadings(text,ts,worlds,politeness) {
+  const body=politeBody(text,ts,politeness,1);
+  if (!body?.fillers.length) return [];
+  const {start,end,fillers,phrase,span}=body;
+  const readings=[];
+  for (const {family,key,bank,labels,bare} of worlds.ownedEffects.elliptical) {
+    if (!worlds.literalGrammar.licenses(family,'change')) continue;
+    const emit=(a,b,label)=>{
+      const value=bank.get(phrase(a,b));
+      if (!value) return;
+      const sop=[
+        '@r w.request.request act=change mood=do words='+quote(text),
+        '@t w.request.target request=$r family='+quote(family)+' mode=existing fill=context',
+        '@l w.request.lookup request=$r target=$t key=thing',
+        '@c w.request.constraint request=$r on=attribute attribute='+quote(key)+' phase=result operator=eq'+
+          ' value='+quote(value)+' words='+quote(span(a,b))+(label ? ' key_words='+quote(label) : ''),
+        ...fillers.map((words,i)=>'@f'+(i+1)+' w.request.filler text='+quote(words)),
+      ].join('\n');
+      readings.push({sop,source:'elliptical-property',status:'matched'});
+    };
+    if (bare) emit(start,end);
+    for (let split=start+1;split<end;split++) {
+      if (labels.has(phrase(start,split))) emit(split,end,span(start,split));
+      if (labels.has(phrase(split,end))) emit(start,split,span(split,end));
+    }
+  }
+  return readings;
 }
 
 function resolveOwner(tokens,span,a,b,worlds,frame,heads) {

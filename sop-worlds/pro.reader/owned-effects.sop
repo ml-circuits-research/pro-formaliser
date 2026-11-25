@@ -32,6 +32,7 @@
 @pro.reader.effect_sense.alias core.slot of=pro.reader.effect_sense key=alias kind=string many=true
 @pro.reader.effect_sense.result_qualifier core.slot of=pro.reader.effect_sense key=result_qualifier kind=string many=true
 @pro.reader.effect_sense.finite_choice core.slot of=pro.reader.effect_sense key=finite_choice kind=boolean
+@pro.reader.effect_sense.ellipsis core.slot of=pro.reader.effect_sense key=ellipsis enum=bare enum=labelled
 @reader.effect.chart.title pro.reader.effect_sense family=chart key=chart.title text=title text=label property_command=true
 @reader.effect.chart.inversion pro.reader.effect_sense family=chart key=chart.invert finite_choice=true text=invert text=inverted alias="x axis=x" alias="the x axis=x" alias="y axis=y" alias="the y axis=y" alias="z axis=z" alias="the z axis=z"
 @reader.effect.chart.axis_scale pro.reader.effect_sense family=chart key=chart.axisScale text=scale text="axis scale" alias="logarithmic=log"

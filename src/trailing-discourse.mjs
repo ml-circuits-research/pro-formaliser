@@ -7,6 +7,30 @@ const word=/^[\p{L}\p{N}\p{M}_]+$/u;
 const decode=value=>value?.startsWith('"') ? JSON.parse(value) : value;
 const keyOf=key=>key==='’' ? "'" : key;
 
+export function politeBody(text,ts,politeness,minWords) {
+  if (ts.length<minWords || ts.length>14 || ts.some(([term])=>['?','？'].includes(term))) return;
+  const chars=Array.from(text);
+  const phrase=(start,end)=>ts.slice(start,end).map(([term])=>term).join(' ');
+  const span=(start,end)=>chars.slice(ts[start][2],ts[end-1][3]).join('');
+  let start=0, end=ts.length;
+  while (courtesyEnd.has(ts[end-1]?.[0])) end--;
+  const fillers=[];
+  for (let width=Math.min(end-minWords,5);width>0;width--) {
+    if (!politeness.has(phrase(0,width))) continue;
+    fillers.push(span(0,width));
+    start=width+Number(ts[width]?.[0]===',');
+    break;
+  }
+  for (let width=Math.min(end-start-minWords,5);width>0;width--) {
+    if (!politeness.has(phrase(end-width,end))) continue;
+    fillers.push(span(end-width,end));
+    end-=width;
+    end-=Number(ts[end-1]?.[0]===',');
+    break;
+  }
+  if (end-start>=minWords) return {start,end,fillers,phrase,span};
+}
+
 export function compileTrailingDiscourse(facts) {
   const index=new Map();
   for (const wire of facts('pro.reader.trailing_discourse')) {

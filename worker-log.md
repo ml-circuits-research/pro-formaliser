@@ -493,3 +493,7 @@
 ## Polite and indefinite nominal creation
 - Reused declared nominal property and noun banks for creation without a written verb, preserving exact words.
 - Actual default-model CLI returned eight ordered results. Five positive texts produced clean proposals and three contrast texts did not trigger the new reading. All 485 release tests passed.
+
+## Short property requests
+- Finite property banks now support polite requests with or without a written property label, as declared for each key. Compatible effects are separate proposals.
+- The real default-model CLI returned 13 results. Two reported no-proposal cases now produce native-valid circuits. All 487 release tests passed.
