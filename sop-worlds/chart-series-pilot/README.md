@@ -1,13 +1,13 @@
 # Primary categories and series categories
 
-A chart can group marks by one data field and use another field to define its series. “A stacked bar chart of revenue by region, broken down by channel” groups by region and gets its series from channel. The optional `chart.seriesDimension` slot distinguishes the data field from the names of concrete series. The frames preserve vertical orientation for columns, stacking or side-by-side grouping, and written display options such as legend position and visible values.
+A chart can group marks by one data field and use another field to define its series. “A stacked bar chart of revenue by region, broken down by channel” uses region as the primary grouping and channel as the series source. Canonical knowledge revision `f48e08f7` maps `chart.seriesDimension` to `w.diagram.group.series_field`, which stores the written source field. Concrete series names and colour encoding have their own keys. [Canonical revision](https://github.com/ml-circuits-research/sop-knowledge-worlds/commit/f48e08f7a285e23534228eb8a6b6f07e78cd64a3)
 
-A phrase introduced by “for” can name the intended deliverable. The optional `chart.intendedUse` slot retains this phrase for an application that can assign or resolve the destination. A circuit can describe that intention before the destination exists.
+The optional `reader.sop` still supplies argument frames for primary and series grouping, vertical orientation for columns, stacking or side-by-side grouping, and written display options such as legend position and visible values. The frames also recognize “for” phrases in supported chart requests. The local `chart.intendedUse` proposal preserves those phrases while a reusable request-level purpose and destination contract is developed.
 
-The argument parser uses the same rules for the existing closed catalog values and the two proposed open fields. Consumers of the new keys still need to bind them to their live chart and document state.
+The application resolves the written field and any destination against live data and document state. To load the optional series grammar after setup, run the following from the project root.
 
 ```sh
-SOP_WORLDS=sop-worlds node bin/formalise.mjs --worlds-only --json --evidence \
+SOP_WORLDS=sop-worlds/chart-series-pilot .cache/node/bin/node bin/formalise.mjs --worlds-only --json --evidence \
   'Build a clustered column chart of donations by province, split by method, with the legend on the left.'
 ```
 

@@ -1,6 +1,5 @@
 # Series names and the categorical field that generates series are different roles.
 @pilot.chart.intended_use w.request.key tab=diagram family=chart name=chart.intendedUse head=span about="the written deliverable or context for which the chart is requested"
-@pilot.chart.series_dimension w.request.key tab=diagram family=chart name=chart.seriesDimension head=span about="the data field whose category values define the separate series in a chart"
 @pilot.chart.series_column_vertical pro.reader.analytical_owner_property tab=diagram family=chart owner_key=chart.type owner_value=bar text="a stacked column chart" text="a grouped column chart" text="a clustered column chart" key=chart.orientation value=vertical
 @pilot.chart.series_stacked pro.reader.analytical_owner_property tab=diagram family=chart owner_key=chart.type owner_value=bar text="a stacked bar chart" text="a stacked column chart" key=chart.stacking value=stacked
 @pilot.chart.series_grouped pro.reader.analytical_owner_property tab=diagram family=chart owner_key=chart.type owner_value=bar text="a grouped bar chart" text="a grouped column chart" text="a clustered bar chart" text="a clustered column chart" key=chart.stacking value=none

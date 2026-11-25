@@ -1,5 +1,0 @@
-# Proposed source-field mappings distinct from numeric page position and display title.
-@w.diagram.group.x_field core.slot of=w.diagram.group key=x_field kind=string
-@w.diagram.group.y_field core.slot of=w.diagram.group key=y_field kind=string
-@w.request.key.diagram.chart.xField w.request.key tab=diagram family=chart name=chart.xField head=span means=w.diagram.group.x_field about="the data field supplying scatter points' horizontal coordinates"
-@w.request.key.diagram.chart.yField w.request.key tab=diagram family=chart name=chart.yField head=span means=w.diagram.group.y_field about="the data field supplying scatter points' vertical coordinates"

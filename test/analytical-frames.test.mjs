@@ -137,9 +137,44 @@ test('keeps binning and comparison clauses out of open analytical operands', asy
     {'chart.type':'bar','chart.measure':'sales','chart.dimension':'state'});
 });
 
-test('opt-in scatter field mappings preserve axis semantics without creating axis titles',async t=>{
+test('default reader distinguishes canonical source fields and axis titles', async t => {
+  const worlds = loadWorlds({paths:[]});
+  const reader = createReader(undefined, worlds);
+  t.after(() => reader.close());
+  for (const [name, role] of [
+    ['chart.xField', 'x_field'],
+    ['chart.yField', 'y_field'],
+    ['chart.seriesDimension', 'series_field'],
+  ]) {
+    const definitions = worlds.requestKeys.filter(key => key.tab === 'diagram' && key.family === 'chart' &&
+      key.name === name);
+    assert.deepEqual(definitions.map(({head, means}) => [head, means]), [['span', 'w.diagram.group.' + role]]);
+  }
+  for (const [phrase, key, value] of [
+    ['x field', 'chart.xField', 'Region'],
+    ['y field', 'chart.yField', 'Revenue'],
+    ['series field', 'chart.seriesDimension', 'Category'],
+    ['x axis label', 'chart.xLabel', 'Region'],
+    ['y axis label', 'chart.yLabel', 'Revenue'],
+  ]) {
+    const input = `Set the ${phrase} on the chart to ${value}`;
+    const {candidates} = await reader.propose(input, {evidence:true});
+    const result = candidates.find(candidate => candidate.source === 'native-property-frame' &&
+      properties(parse(candidate.sop))[key] === value);
+    assert.ok(result, input);
+    assert.deepEqual(properties(parse(result.sop)), {[key]:value});
+    assert.deepEqual(result.evidence.missing, []);
+    assert.deepEqual(result.catalog.issues, []);
+    assert.ok(result.evidence.spans.some(span => span.slot === 'key_words' &&
+      span.kind === 'grounded' && span.text === phrase), input);
+    assert.ok(result.evidence.spans.some(span => span.slot === 'value' &&
+      span.kind === 'grounded' && span.text === value), input);
+  }
+});
+
+test('opt-in scatter grammar binds canonical axis fields and preserves the written colour role',async t=>{
   const path=new URL('../sop-worlds/scatter-fields-pilot/',import.meta.url);
-  const original=createReader();
+  const original=createReader(undefined,loadWorlds({paths:[]}));
   const reader=createReader(undefined,loadWorlds({paths:[fileURLToPath(path)]}));
   t.after(async()=>{await original.close();await reader.close()});
   const source='Make a scatter plot of defect rate against elapsed minutes, colored by repair crew';
@@ -148,7 +183,7 @@ test('opt-in scatter field mappings preserve axis semantics without creating axi
   };
   const result=await proves(reader,source,expected);
   const props=properties(parse(result.sop));
-  for (const key of ['chart.x','chart.y','chart.xLabel','chart.yLabel','chart.measure','chart.dimension']) {
+  for (const key of ['chart.x','chart.y','chart.xLabel','chart.yLabel','chart.measure','chart.dimension','chart.compare']) {
     assert.equal(props[key],undefined,key);
   }
   assert.ok((await original.propose(source)).candidates.every(candidate=>
@@ -156,6 +191,9 @@ test('opt-in scatter field mappings preserve axis semantics without creating axi
 
   await proves(reader,'Display net repairs against technician tenure, coloured by office in a scatter plot',{
     'chart.type':'scatter','chart.xField':'technician tenure','chart.yField':'net repairs','chart.colourBy':'office',
+  });
+  await proves(reader,'Make a scatter plot of elapsed minutes against defect rate, colored by repair crew',{
+    ...expected,'chart.xField':'defect rate','chart.yField':'elapsed minutes',
   });
   await proves(reader,'Draw a scatter plot with heater load on the x axis, fuel draw on the y axis, coloured by unit',{
     'chart.type':'scatter','chart.xField':'heater load','chart.yField':'fuel draw','chart.colourBy':'unit',
@@ -259,10 +297,14 @@ test('binds the primary dimension and series dimension to separate data roles',a
   const path=fileURLToPath(new URL('../sop-worlds/chart-series-pilot/',import.meta.url));
   const reader=createReader(undefined,loadWorlds({paths:[path]}));
   t.after(()=>reader.close());
-  await proves(reader,'Build a clustered column chart of donations by province, split by method, with the legend on the left.',{
+  const split = await proves(reader,'Build a clustered column chart of donations by province, split by method, with the legend on the left.',{
     'chart.type':'bar','chart.measure':'donations','chart.dimension':'province',
     'chart.seriesDimension':'method','chart.orientation':'vertical','chart.stacking':'none','chart.legend':'left'
   });
+  const splitProps = properties(parse(split.sop));
+  for (const key of ['chart.colourBy', 'chart.compare', 'chart.series']) {
+    assert.equal(splitProps[key], undefined, key);
+  }
   await proves(reader,'Give me a grouped bar chart of average donations broken down by month and method for the committee review, with the values printed on the marks.',{
     'chart.type':'bar','chart.measure':'donations','chart.aggregate':'avg','chart.dimension':'month',
     'chart.seriesDimension':'method','chart.intendedUse':'the committee review','chart.stacking':'none','chart.show_values':'show'

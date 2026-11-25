@@ -307,3 +307,7 @@
 ## Landmark selector validation
 - Native SOP requires two explicit place selectors and a same-request page lookup per selector. The installed catalogue supplies the anchor key applicable to the affected family.
 - All 396 isolated release tests passed. Recorded the fix and the pending PSys2 projection in integration-review.responses.md.
+
+## INTEGRATE-2 canonical chart fields
+- Installed `f48e08f7` and removed the three duplicate field declarations. Preserved optional grouping, scatter syntax and intended-use coverage.
+- Verified all three source fields and both axis titles in the default reader. All 397 isolated release tests passed.
