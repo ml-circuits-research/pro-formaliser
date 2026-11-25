@@ -465,3 +465,7 @@
 ## Analytical creation settings
 - Frozen charts-05 row 2411 retains both field orders and adds the grid and zero minimum. The fit method remains unread.
 - Two further WebMeet requests now have complete world-only scatter/regression proposals. All 464 release tests passed.
+
+## Shared current-text reader and batch API
+- Added the async Prolog library and cwd-independent JSONL CLI with per-record error recovery.
+- Default-model library smoke produced four ordered results. The batch test produced nine ordered records and observed one model load. All 466 release tests passed.

@@ -26,21 +26,53 @@ node bin/formalise.mjs --json "turn code on for characters 10 to 15 of Body"
 node bin/formalise.mjs --tab drawing --spell --json "make teh house blue"
 ```
 
+## Shared reader API and JSONL batch
+
+Both the Prolog and Z3 checkouts export async `createReader()` from `src/reader.mjs`. Import it from the checkout for the engine you want. The Prolog adapter loads the checkout's existing `.cache/model.json` once per reader, using a path relative to the checkout. Reuse the reader for multiple utterances and await `close()` when finished.
+
+```js
+import { createReader } from '/home/salboaie/work/sopworlds/pro-formaliser/src/reader.mjs';
+
+const reader = await createReader();
+try {
+  const result = await reader.propose('Invert the y axis');
+  console.log(result);
+} finally {
+  await reader.close();
+}
+```
+
+`propose(text)` uses only the current utterance and declared language, schema and knowledge. Each result includes `engine` (`prolog` or `z3`), the original `text`, `candidates` (records with `sop` and any available metadata), `unresolved` (diagnostics outside the SOP, or an empty array) and `error` (`null` or a visible failure). Partial candidates and supported alternatives are preserved. An unknown utterance can return an empty candidate list.
+
+Both commands accept the same JSONL input and can run from any working directory.
+
+```sh
+node /home/salboaie/work/sopworlds/pro-formaliser/bin/formalise.mjs --batch < texts.jsonl > prolog-results.jsonl
+node /home/salboaie/work/sopworlds/nl-formaliser/bin/formalise.mjs --batch < texts.jsonl > z3-results.jsonl
+```
+
+```jsonl
+{"text":"Invert the y axis"}
+{"text":"Set its width to 12"}
+```
+
+Each command reuses one reader for the stream and writes one compact result per nonempty input line in order. `--batch` selects JSONL output. Invalid records, including records with `previous`, `context` or `clock`, produce an error result and processing continues with subsequent rows.
+
 ## Extend the reader with SOP
 
 Set `SOP_WORLDS` to one or more SOP files or directories and start the CLI again. The same declarations feed spelling and formalisation. An action with verb aliases supplies predicates. A domain kind supplies target vocabulary. A request key and its value bindings supply typed constraints. A declarative reader binding can select facts of a new type, apply filters, and project their fields into surface words and canonical values. See the [overlay format and worked example](resources/worlds.md) and the optional [target binding schema](sop-worlds/pro.reader/schema.sop).
 
-New facts using those contracts work with an existing trained model or with `--worlds-only`. The JavaScript reader API can also load an explicit snapshot with `loadWorlds({paths})` and pass it to `createReader(model, worlds)`. A new semantic operation outside the implemented contracts still needs an interpreter. The emitted circuit vocabulary in this release is `w.request`.
+New facts using those contracts work with an existing trained model or with `--worlds-only`. The engine-specific API can also load an explicit snapshot with `loadWorlds({paths})` and pass it to `createReader(model, worlds)` from `src/runtime.mjs`. A new semantic operation outside the implemented contracts still needs an interpreter. The emitted circuit vocabulary in this release is `w.request`.
 
 ## Interpreting results
 
-The independent spellchecker enumerates single-edit candidates in Prolog, uses word frequencies and optionally neighbouring words, and returns original offsets, replacements and alternatives. `tools/train-spelling.mjs` builds optional word-pair and centered phrase counts and a list of domain words corroborated by training annotations. Published SOP vocabulary is available independently of that model. With `--spell --json`, the reader includes the original input, edits, and proposals from both readings. The public reader supports the same opt-in with `{spell:true}` on `propose` and `formalise`. [Spelling resources and model](resources/spell/README.md)
+The independent spellchecker enumerates single-edit candidates in Prolog, uses word frequencies and optionally neighbouring words, and returns original offsets, replacements and alternatives. `tools/train-spelling.mjs` builds optional word-pair and centered phrase counts and a list of domain words corroborated by training annotations. Published SOP vocabulary is available independently of that model. With `--spell --json`, the reader includes the original input, edits, and proposals from both readings. The engine-specific reader in `src/runtime.mjs` supports the same opt-in with `{spell:true}` on `propose` and `formalise`. [Spelling resources and model](resources/spell/README.md)
 
 The reader considers exact examples, learned patterns, alignments to examples or self-contained clauses, and partial readings assembled from predicates, targets and constraints. Alignment can change a slot when its value is grounded in the input and compatible with the field. Explicit sequence boundaries can compose separate request graphs. A supplied `--tab` gives a preference to compatible interpretations. Alternatives are retained. Copied evidence must occur within its request, and the resulting SOP is checked against the request schema and available acts.
 
 The default CLI and `createFormaliser(...).formalise(text)` return a `candidates` array. Each circuit carries its source and any training support. The set can be empty, with the original text retained as `unread`. The generator receives only the utterance. When several SOP families license the same object phrase, Prolog retains a representative of each grounded binding alongside its ordinary shortlist. It uses word associations for the action only.
 
-Use `--pipeline` to return a leading circuit with alternatives. With text alone the pipeline takes the first proposal. Passing `--context` or `--tab` also enables the pipeline and lets the independent estimator reorder proposals using the caller’s evidence. Batch input follows the same convention per line. In Node, `reader.propose(text)` returns the set and `reader.formalise(text, options)` runs the pipeline. [Context format and runnable examples](docs/context.html)
+For a single message, `--pipeline` returns a leading circuit with alternatives. With text alone the pipeline takes the first proposal. Passing `--context` or `--tab` also enables the pipeline and lets the independent estimator reorder proposals using the caller’s evidence. The existing benchmark uses the internal `--pipeline --batch` path. The engine-specific `reader.formalise(text, options)` runs the pipeline in Node. [Context format and runnable examples](docs/context.html)
 
 ## Check a proposed interpretation
 
