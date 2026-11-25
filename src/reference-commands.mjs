@@ -82,7 +82,7 @@ export function splitTargetPlans(text,ts,worlds,politeness) {
   const plans=[];
   for (let cut=start+2;cut<end;cut++) {
     const acts=frames.get(quote([phrase(start,start+1),phrase(cut,end)]));
-    if (!acts || ts.slice(start+1,cut).some(([key])=>!verbWord.test(key) ||
+    if (!acts || ts.slice(start+1,cut).some(([key])=>!verbWord.test(key) && !/^\d{1,8}$/u.test(key) ||
         worlds.joiners[key] || worlds.negatives.has(key) || worlds.scopeGrammar.negatives.has(key) ||
         worlds.scopeGrammar.choices.has(key) || worlds.scopeGrammar.conditionals.has(key))) continue;
     plans.push({

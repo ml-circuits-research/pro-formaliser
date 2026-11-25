@@ -73,6 +73,7 @@ function endingAt(input,after,numbers,numberOf,kinds) {
 const amounts=new Set([...standardKinds,'additive','qualitative']);
 const increment=new Set(['increment']);
 const cardinal=new Set(['cardinal']);
+const ordinal=new Set(['ordinal']);
 const comparison=new Set(['comparison']);
 
 function qualifierBefore(text,input,position,numbers,numberOf,modifiers,family,grounded) {
@@ -94,12 +95,16 @@ function qualifierBefore(text,input,position,numbers,numberOf,modifiers,family,g
   }
   if (!match) return;
   const {i,number}=match;
-  const preceding=numberOf(input[i-1]);
-  const relativeBeforeCount=number.kind==='cardinal' && preceding?.kind==='ordinal' && Number(preceding.value)<0;
-  if (amounts.has(preceding?.kind) && !relativeBeforeCount || ['.',',','-','+','/'].includes(input[i-1]?.key) &&
-      (numberOf(input[i-2]) || ['-','+'].includes(input[i-1].key))) return;
-  const start=input[i].start, end=input[after-1].end;
-  return {start,end,surface:text.slice(start,end),number,position};
+  const order=number.kind==='cardinal' && Number(number.value)>1 && endingAt(input,i,numbers,numberOf,ordinal);
+  // The attested group endpoints are the first N and the last N. A different
+  // ordinal next to a count may describe a numbered batch, not its endpoint.
+  if (order && ![1,-1].includes(Number(order.number.value))) return;
+  const begin=order ? order.i : i;
+  if (amounts.has(numberOf(input[begin-1])?.kind) || ['.',',','-','+','/'].includes(input[begin-1]?.key) &&
+      (numberOf(input[begin-2]) || ['-','+'].includes(input[begin-1].key))) return;
+  const start=input[begin].start, end=input[after-1].end;
+  return {start,end,surface:text.slice(start,end),number,position,
+    order:order && {value:order.number.value,countWords:text.slice(input[i].start,end)}};
 }
 
 function groundedModifiers(wires,input,text,scope,target,numberOf) {
@@ -127,7 +132,7 @@ function groundedModifiers(wires,input,text,scope,target,numberOf) {
   return grounded;
 }
 
-export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers={},determiners={}) {
+export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers={},worlds={},learned={}) {
   const input=tokenize(text);
   const numberOf = token => token && (numbers.get(token.key) ??
     (/^\d{1,8}$/u.test(token.key) ? {kind:'cardinal',value:token.key} : undefined));
@@ -136,7 +141,7 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
   const targets=wires.filter(w=>w.type==='w.request.target'), requests=wires.filter(w=>w.type==='w.request.request');
   if (targets.length!==1 || requests.length!==1) return;
   const [target]=targets, [holder]=requests;
-  if (['ordinal','count','quantity','quantifier'].some(k=>target.attrs[k])) return;
+  if (target.attrs.ordinal || target.attrs.quantifier) return;
   const head=first(target,'sort_words') ?? first(target,'family_words') ?? first(target,'sort');
   if (!head || !/\p{L}/u.test(head)) return;
   const keys=tokenize(head).map(t=>t.key);
@@ -164,8 +169,21 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
   // A later number may belong to a payload or a second object. An earlier
   // plausible head or another qualified occurrence leaves the binding open.
   if (qualified.length!==1 || qualified[0].position!==positions[0]) return;
-  const [{start,end,surface,number}]=qualified;
-  if (number.kind==='ordinal' && (amounts.has(numbers.get(phrase(head))?.kind) ||
+  const [{start,end,surface,number,order}]=qualified;
+  const ordered=order || number.kind==='ordinal';
+  if ((target.attrs.count || target.attrs.quantity || target.attrs.count_words) && (!order ||
+    target.attrs.count && Number(first(target,'count'))!==Number(number.value) ||
+    ['quantity','count_words'].some(key=>target.attrs[key] && phrase(first(target,key))!==phrase(order.countWords)))) return;
+  if (order) {
+    if (first(target,'mode')!=='existing' || !worlds.nominalInflection) return;
+    const noun=phrase(head), lookup=lemma=>[
+      ...worlds.lookup(lemma),...worlds.frameTargets(lemma),...(Object.hasOwn(learned,lemma) ? learned[lemma] : []),
+    ];
+    const invariant=worlds.universalAgreement.invariant.has(keys.at(-1));
+    if (!worlds.nominalInflection(noun,lookup).length &&
+        !(invariant && lookup(noun).some(([role])=>role==='target'))) return;
+  }
+  if (ordered && (amounts.has(numbers.get(phrase(head))?.kind) ||
     ['name','ids'].some(key=>fields(target,key).some(written=>
       literalRanges(text,written,left,right).some(([a,b])=>a<end && b>start))))) return;
   if (number.kind==='qualitative') {
@@ -185,15 +203,17 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
     })) return;
   }
   if (wires.some(w=>w.type==='w.request.constraint' && ['on','words','value'].some(k=>
-    (k==='on' && first(w,k)==='count') || first(w,k)===surface))) return;
+    (k==='on' && first(w,k)==='count') || !order && first(w,k)===surface))) return;
   const additions=number.kind==='ordinal' ? {ordinal:[JSON.stringify(surface)]}
-    : {...(number.kind==='qualitative' ? {} : {count:[String(number.value)]}),quantity:[JSON.stringify(surface)],count_words:[JSON.stringify(surface)]};
+    : {...(number.kind==='qualitative' ? {} : {count:[String(number.value)]}),
+      quantity:[JSON.stringify(order?.countWords ?? surface)],count_words:[JSON.stringify(order?.countWords ?? surface)],
+      ...(order ? {ordinal:[JSON.stringify(surface)]} : {})};
   let consumeFrom=start;
-  if (number.kind==='ordinal') {
+  if (ordered) {
     const before=input.findIndex(token=>token.start===start);
     let determiner;
     for (let i=Math.max(0,before-4);i<before;i++) {
-      const mode=determiners[input.slice(i,before).map(token=>token.key).join(' ')];
+      const mode=worlds.determiners?.[input.slice(i,before).map(token=>token.key).join(' ')];
       if (!['definite','demonstrative','possessive'].includes(mode) || input[i].start<left || inQuotes(input[i].start,start)) continue;
       determiner={mode,start:input[i].start};
       break;
@@ -201,11 +221,12 @@ export function nominalNumberReading(text,candidate,numbers,quotes=[],modifiers=
     // A relative endpoint needs its own nominal boundary. Its final word
     // alone does not select the endpoint in compound order descriptions.
     const predicate=first(holder,'predicate');
-    const relative=Number(number.value)<0;
-    if (relative && !determiner && !literalRanges(text,predicate,left,start)
+    const relative=Number(order?.value ?? number.value)<0;
+    if ((relative || order) && !determiner && !literalRanges(text,predicate,left,start)
       .some(([,finish])=>!text.slice(finish,start).trim())) return;
-    if ((relative || candidate.source==='split-target-frame') && determiner &&
-        first(target,'mode')==='existing' && !target.attrs.determiner) {
+    const onlyQuantityDeterminer=order && fields(target,'determiner').every(mode=>mode==='quantified');
+    if ((relative || order || candidate.source==='split-target-frame') && determiner &&
+        first(target,'mode')==='existing' && (!target.attrs.determiner || onlyQuantityDeterminer)) {
       additions.determiner=[determiner.mode];
       consumeFrom=determiner.start;
     }

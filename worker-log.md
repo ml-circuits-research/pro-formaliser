@@ -571,3 +571,7 @@
 - The reader now preserves written action ordinals, including relative endpoints within proved split verbs.
 - The default reader replay covered 132 WebMeet requests and found six new ordinal proposals with complete written evidence.
 - All 517 release tests passed.
+
+## Nominal ordered groups
+- Existing plural targets now retain both the explicit count and the full first/last group phrase.
+- The default reader added ordered-group readings for 61 of 242 targeted WebMeet inputs. All 519 tests passed.

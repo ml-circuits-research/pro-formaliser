@@ -135,11 +135,32 @@ test('a declared separable verb keeps a written inventory noun between the verb 
     'Take it out.', 'Take out the grass.', 'Take the grass out of the drawing.',
     'Do not rub the grass out.', 'Did you rub the grass out?', 'Rub the grass out if it is dry.',
     'Rub the grass out or leave it.', 'Rub "the grass" out.', 'Rub the grass away.',
-    'Turn the light off.', 'Put the box in.', 'Take the Start box out.', 'Take the last two dogs out.',
+    'Turn the light off.', 'Put the box in.', 'Take the Start box out.', 'Take the last two out.',
   ]) {
     const result=await reader.propose(text);
     assert.equal(result.error,null,text);
     assert.ok(result.candidates.every(c=>c.source!=='split-target-frame'),text);
+  }
+});
+
+test('an ordered group inside a split command has a written noun, endpoint and count',async t=>{
+  const reader=await createReader({worldsOnly:true,evidence:true});
+  t.after(()=>reader.close());
+  for (const [text,ordinal,count,surface] of [
+    ['Take the last two dogs out.','last two','2','two'],
+    ['Pick the first 3 red flowers out.','first 3','3','3'],
+  ]) {
+    const result=await reader.propose(text);
+    assert.equal(result.error,null,text);
+    const reading=result.candidates.find(candidate=>candidate.source==='split-target-frame');
+    assert.ok(reading,text);
+    const target=parse(reading.sop).find(wire=>wire.type==='w.request.target');
+    assert.deepEqual(values(target,'ordinal'),[ordinal],text);
+    assert.deepEqual(values(target,'count'),[count],text);
+    assert.deepEqual(values(target,'count_words'),[surface],text);
+    assert.deepEqual(reading.catalog.issues,[],text);
+    assert.equal(reading.evidence.counts.unread ?? 0,0,text);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0,text);
   }
 });
 

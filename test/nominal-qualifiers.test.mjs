@@ -9,7 +9,7 @@ import { quotedSpans } from '../src/literal-roles.mjs';
 const worlds=loadWorlds();
 const candidate={sop:'@r w.request.request act=make\n@t w.request.target request=$r family=node mode=new sort=box sort_words=boxes'};
 test('a numeral qualifying one noun keeps its written evidence',()=>{
-  const count=text=>nominalNumberReading(text,candidate,worlds.nominalNumbers,quotedSpans(text),{},worlds.determiners);
+  const count=text=>nominalNumberReading(text,candidate,worlds.nominalNumbers,quotedSpans(text),{},worlds);
   assert.match(count('create three boxes').sop,/count=3 quantity="three" count_words="three"/u);
   assert.match(count('find the first boxes').sop,/ordinal="first"/u);
   assert.match(count('find the last boxes').sop,/ordinal="last"/u);
@@ -26,13 +26,32 @@ test('an ordinal stays separate from a literal target name and retains its own d
     '@t w.request.target request=$r family=drawn mode=existing sort=flower',
     '@u w.request.unread request=$r text="the last"',
   ].join('\n')};
-  const read=(input,proposal)=>nominalNumberReading(input,proposal,worlds.nominalNumbers,quotedSpans(input),{},worlds.determiners);
+  const read=(input,proposal)=>nominalNumberReading(input,proposal,worlds.nominalNumbers,quotedSpans(input),{},worlds);
   assert.match(read(text,base).sop,/ordinal="last" determiner=definite/u);
   assert.doesNotMatch(read(text,base).sop,/w\.request\.unread/u);
   const title={sop:base.sop.replace('sort=flower','sort=flower name="Last Flower"')};
   assert.equal(read('Remove the Last Flower',title),undefined);
   assert.equal(read('Remove the second to last flower',base),undefined);
   assert.equal(read('Remove the last two',{sop:base.sop.replace('sort=flower','sort=flower sort_words=two')}),undefined);
+});
+
+test('an ordered group keeps its cardinal evidence and enriches only compatible counts',()=>{
+  const text='Remove the Last three flowers';
+  const reader=(input,count='',mode='existing')=>nominalNumberReading(input,{sop:[
+    '@r w.request.request act=remove predicate=Remove',
+    `@t w.request.target request=$r family=drawn mode=${mode} sort=flower sort_words=flowers${count}`,
+    '@u w.request.unread request=$r text="the Last three"',
+  ].join('\n')},worlds.nominalNumbers,quotedSpans(input),{},worlds);
+  const sop=reader(text,' count=3 count_words=three').sop;
+  assert.match(sop,/count=3 .*ordinal="Last three" determiner=definite/u);
+  assert.doesNotMatch(sop,/w\.request\.unread/u);
+  assert.equal(reader(text,' count=4'),undefined);
+  assert.equal(reader(text,'','new'),undefined);
+  assert.equal(reader('Remove the second three flowers'),undefined);
+  assert.equal(reader('Remove the second to last three flowers'),undefined);
+  const falseHead={sop:'@r w.request.request act=place predicate=Put\n'+
+    '@t w.request.target request=$r family=drawn mode=existing sort=back'};
+  assert.equal(nominalNumberReading('Put the last two back',falseHead,worlds.nominalNumbers,[],{},worlds),undefined);
 });
 
 test('chooses a qualified target when its noun is repeated in the payload',()=>{

@@ -164,7 +164,7 @@ reachable_prefix(Q, Scope, [Start|Pending], End) :-
 modifier_end(Q, nominal, Start, End) :-
     ( member([Start,End,_], Q.determiners)
     ; member([Start,End,["constraint",_,_,Body,_],_], Q.constraintHits), string(Body)
-    ; get_dict(splitPredicate,Q,_), member([Start,End],Q.splitOrdinals) ).
+    ; get_dict(splitPredicate,Q,_), member([Start,End],Q.splitNumbers) ).
 modifier_end(Q, family(Act,Family), Start, End) :-
     member([Start,End,["constraint",Licence,Family,Body,_],_], Q.constraintHits), string(Body),
     ( Licence == "*" ; Licence == Act ).
