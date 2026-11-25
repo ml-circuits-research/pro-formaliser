@@ -805,3 +805,11 @@ In the actual default-model replay of 100 WebMeet inputs selected for this const
 The special path leaves unresolved names and ordinals to the ordinary proposals. For example, it does not claim to have resolved “Start” in “take the Start box out” or “last” in “put the last step back”. Declared attribute effects and required continuations keep their existing proof requirements. The canonical `w.request` schema has no new commit to consume. [Regressions](test/reference-commands.test.mjs)
 
 All 514 release tests passed.
+
+## Bulk findings fixed — written state after a property name
+
+The reader now composes the native verb–attribute–value frame with declared fixed states and separable verbs. “Take the values away” can mean hide the value labels and “turn the grid lines off” can set grid visibility. The original verb, property name and final particle occupy separate evidence fields. Equivalent circuits with less evidence yield to the complete proof. Independent object readings remain available.
+
+The actual default-model replay processed 135 distinct WebMeet requests, selected for these constructions. Twelve gained a property reading with complete evidence and clean catalogue validation. In three of the twelve, the same meaning was already present with the terminal particle uncovered. The other 123 returned identical SOP lists. All 515 release tests passed. [Focused regressions](test/fixed-properties.test.mjs)
+
+Canonical handoff requested for chart marker visibility. The installed marker size and interval keys cannot represent hiding markers. “Take the markers away” still admits a literal removable-object reading. It needs a reusable visibility binding if the canonical chart model supports that setting. Keep it distinct from marker size, fill, edge and the removable map marker. This patch uses the installed schema and declarations and leaves the aggregate benchmark paused.

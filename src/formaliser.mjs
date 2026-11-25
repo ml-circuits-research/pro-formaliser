@@ -355,8 +355,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (!key || readingScope.restricted && !readingScope.permits(parse(answer.sop))) return;
       if (!seen.has(key)) { seen.add(key); candidates.push(answer); return true; }
       if (!preferCompleteEvidence) return;
-      // A learned or shorter predicate can have the same meaning while
-      // leaving the written particle unread. Keep the complete native proof.
+      // Equivalent readings can differ in how much written evidence they
+      // attach. Keep the complete proof when it grounds more of the text.
       const wires=parse(answer.sop);
       if (wires.some(wire=>wire.type==='w.request.unread')) return;
       const current=evidenceReport(text,wires,worlds.evidenceVocabulary);
@@ -587,7 +587,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     if (!scope.restricted && worlds.fixedProperties?.has(ts[0]?.[0])) {
       for (const candidate of [undefined,...candidates]) {
-        for (const reading of fixedPropertyReadings(text,ts,quotes,candidate,worlds)) retain(reading);
+        for (const reading of fixedPropertyReadings(text,ts,quotes,candidate,worlds)) retain(reading,scope,true);
       }
     }
     if (!scope.restricted && ts.some(([key]) => classHeads.has(key))) {

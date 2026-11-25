@@ -94,7 +94,42 @@ test('loads a fixed-value property overlay through the normal reader without a m
       sop.includes('value=active words="Switch on" key_words="Pilot Lamp"')));
     const negated = await reader.propose('Do not switch on the Pilot Lamp.');
     assert.ok(!negated.candidates.some(candidate=>candidate.source==='fixed-property'));
+    for (const [text,value,particle] of [
+      ['Switch the Pilot Lamp on.','active','on'],
+      ['Take the Pilot Lamp away.','idle','away'],
+    ]) {
+      const result=await reader.propose(text,{evidence:true});
+      const candidate=result.candidates.find(reading=>reading.source==='fixed-property' &&
+        reading.sop.includes(`value=${value} words="${particle}" key_words="Pilot Lamp"`));
+      assert.ok(candidate,text);
+      assert.deepEqual(candidate.catalog.issues,[],text);
+      assert.deepEqual(candidate.evidence.missing,[],text);
+      assert.equal(candidate.evidence.counts.uncovered ?? 0,0,text);
+    }
   } finally {
     await reader.close();
+  }
+});
+
+test('uses a declared terminal particle as exact state evidence without forcing an object interpretation', async t => {
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,key,expected] of [
+    ['Take the values away.','chart.show_values','hide'],
+    ['Turn the grid lines off.','chart.grid','hide'],
+    ['Bring the grid back.','chart.grid','show'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>candidate.source==='fixed-property' &&
+      candidate.sop.includes(`attribute=${key} value=${expected}`));
+    assert.ok(reading,text);
+    assert.equal(reading.evidence.tokens.at(-1).status,'grounded',text);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0,text);
+  }
+  for (const text of ['Take the dogs out.', 'Take the values back.', 'Take the values away tomorrow.',
+    'Take "the values" away.', 'Take the values away if needed.', 'Do not take the values away.',
+    'Take the values away?', 'Take the markers away.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='fixed-property'),text);
   }
 });

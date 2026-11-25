@@ -562,3 +562,7 @@
 - Native verb and object-role declarations now ground the written target before a terminal particle.
 - The default reader improved written evidence on 11 of 100 targeted WebMeet inputs. The separate 235-input replay changed nine lists.
 - All 514 release tests passed.
+
+## Written property states
+- The fixed-property reader now preserves a final state particle after a declared setting name.
+- The default reader improved 12 of 135 targeted WebMeet requests. All 515 release tests passed.

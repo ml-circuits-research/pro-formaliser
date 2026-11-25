@@ -74,12 +74,11 @@ function nativeFrames(facts) {
   const leads = new Map(facts('w.lang.en.phrase').map(wire=>[field(wire,'name'),values(wire,'item').map(phrase)]));
   const nominalDeterminers = new Set(facts('w.lang.en.closed')
     .filter(wire=>field(wire,'class')==='determiner').flatMap(wire=>values(wire,'text').map(text=>phrase(text).join(' '))));
-  return facts('w.lang.en.frame').flatMap(frame=>{
+  const variableFrames=[], fixedFrames=facts('w.lang.en.frame').flatMap(frame=>{
     const act = field(frame,'act'), name = field(frame,'name');
     if (!act || field(frame,'mode')!=='set' || field(frame,'polarity') || field(frame,'mood')) return [];
     const fixed = literals.get(name) ?? [];
     const state = fixed.length===1 && field(fixed[0],'role')==='value' ? field(fixed[0],'value') : undefined;
-    if (!['on','off'].includes(state)) return [];
     const pattern = [...(parts.get(name) ?? [])].sort((a,b)=>Number(field(a,'at'))-Number(field(b,'at')));
     const optional = wire => field(wire,'optional')==='yes';
     const prefix = pattern[0] && field(pattern[0],'is')==='lead' && optional(pattern[0]) ? pattern.shift() : undefined;
@@ -88,14 +87,59 @@ function nativeFrames(facts) {
     const determiner = pattern[0] && field(pattern[0],'is')==='det' && optional(pattern[0]) ? Boolean(pattern.shift()) : false;
     const attribute = pattern.shift();
     if (!attribute || field(attribute,'is')!=='role' || field(attribute,'role')!=='attribute' ||
-        field(attribute,'takes')!=='lexicon' || optional(attribute) ||
-        pattern.length>1 || pattern.some(piece=>field(piece,'is')!=='word' || !optional(piece))) return [];
-    return values(verb,'word').map(phrase).filter(keys=>keys.length).map(head=>({
+        field(attribute,'takes')!=='lexicon' || optional(attribute)) return [];
+    const records=values(verb,'word').map(phrase).filter(keys=>keys.length).map(head=>({
       act,state,head,determiner,nominalDeterminers,
       leads:prefix ? (leads.get(field(prefix,'phrase')) ?? []) : [],
-      tails:pattern.flatMap(piece=>values(piece,'word').map(phrase)).filter(keys=>keys.length),
     }));
+    if (!fixed.length && pattern.length===1 && !optional(pattern[0]) && field(pattern[0],'is')==='role' &&
+        field(pattern[0],'role')==='value' && field(pattern[0],'takes')==='lexicon' && field(pattern[0],'lexicon')==='value') {
+      variableFrames.push(...records.filter(record=>record.head.length===1));
+    }
+    if (!['on','off'].includes(state) || pattern.length>1 ||
+        pattern.some(piece=>field(piece,'is')!=='word' || !optional(piece))) return [];
+    const tails=pattern.flatMap(piece=>values(piece,'word').map(phrase)).filter(keys=>keys.length);
+    return records.map(record=>({...record,tails}));
   });
+  // A written particle can supply a state when the contiguous form specifies
+  // it directly, or when the separable verb shares an act with a fixed cue.
+  const verbActs=new Map(), separableForms=new Map();
+  for (const verb of facts('k.actions.verb')) {
+    const act=field(verb,'act');
+    if (!act || field(verb,'object')!=='thing' || ['attribute','complement','after_particle','value']
+      .some(name=>field(verb,name))) continue;
+    for (const text of values(verb,'text')) {
+      const keys=phrase(text), written=keys.join(' ');
+      const acts=verbActs.get(written) ?? new Set();
+      acts.add(act);
+      verbActs.set(written,acts);
+      if (keys.length<2 || field(verb,'separable')!=='true') continue;
+      const forms=separableForms.get(keys[0]) ?? [];
+      forms.push({act,tail:keys.slice(1)});
+      separableForms.set(keys[0],forms);
+    }
+  }
+  const splitFrames=[];
+  for (const frame of variableFrames) {
+    const direct=fixedFrames.filter(fixed=>fixed.act===frame.act && fixed.head.length>1 && fixed.head[0]===frame.head[0]);
+    const tailsByState=new Map();
+    const add=(tail,state)=>{
+      const key=tail.join(' '), states=tailsByState.get(key) ?? new Set();
+      states.add(state);
+      tailsByState.set(key,states);
+    };
+    for (const fixed of direct) add(fixed.head.slice(1),fixed.state);
+    for (const {act,tail} of separableForms.get(frame.head[0]) ?? []) {
+      const compatible=fixedFrames.filter(fixed=>fixed.act===frame.act &&
+        verbActs.get(fixed.head.join(' '))?.has(act) && fixed.tails.some(form=>form.join(' ')===tail.join(' ')));
+      for (const fixed of compatible) add(tail,fixed.state);
+    }
+    for (const [tail,states] of tailsByState) {
+      if (states.size!==1) continue;
+      splitFrames.push({...frame,state:[...states][0],tails:[tail.split(' ')],requiredTail:true});
+    }
+  }
+  return [...fixedFrames,...splitFrames];
 }
 
 export function compileFixedProperties(facts,requestKeys) {
@@ -139,6 +183,7 @@ function frameMatch(entry,keys,worlds) {
     if (!matches.length) continue;
     const longest = matches.sort((a,b)=>b.to-a.to || a.from-b.from)[0];
     const tail = entry.tails.filter(form=>match(keys,longest.to,form)).sort((a,b)=>b.length-a.length)[0];
+    if (entry.requiredTail && !tail) continue;
     return {start,after,...longest,finish:longest.to+(tail?.length ?? 0)};
   }
 }
@@ -208,6 +253,7 @@ export function fixedPropertyReadings(text,ts,quotes,candidate,worlds) {
   const point = offset => chars.slice(0,offset).join('').length;
   const proposals = [];
   for (const entry of entries) {
+    if (entry.requiredTail && wires) continue;
     const span = frameMatch(entry,keys,worlds);
     if (!span) continue;
     const {start,after,from,to} = span;
@@ -218,12 +264,13 @@ export function fixedPropertyReadings(text,ts,quotes,candidate,worlds) {
         wires.some(wire=>wire.type===constraintType && field(wire,'attribute')===entry.attribute))) continue;
     let stop=keys.length;
     while (stop>finish && terminal.test(keys[stop-1])) stop--;
+    if (entry.requiredTail && finish!==stop) continue;
     if (finish>to && contextualTail(keys.slice(to,stop),worlds)) finish=to;
     if (!wires && finish<stop && !contextualTail(keys.slice(finish,stop),worlds)) continue;
     const request = requests[0] ?? {id:'r1',type:requestType,attrs:{act:[atom(entry.act)],mood:['do'],predicate:[atom(verb)]}};
     const consume = program => consumeUnread(consumeUnread(program,text,point(local[from][2]),point(local[finish-1][3])),
       text,point(local[start][2]),point(local[after-1][3]));
-    const circuit = asCircuit(entry,verb,alias,wires,request,consume);
+    const circuit = asCircuit(entry,entry.requiredTail ? slice(to,finish) : verb,alias,wires,request,consume);
     const determiner = worlds.determiners[keys.slice(after,from).join(' ')];
     const unread = [];
     if (!wires && from>after && !['definite','indefinite'].includes(determiner)) unread.push(slice(after,from));
