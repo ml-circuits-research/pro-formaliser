@@ -32,12 +32,13 @@ export function resolveWrittenMeasurement(text,worlds,family,key) {
   for (let j=ts.length;j>0;j--) {
     const written=span(0,j), numeral=worlds.nominalNumbers.get(before(0,j));
     const literal=decimal.test(written) && Number.isFinite(Number(written));
-    if (!literal && !(numeral?.kind==='cardinal' && /^\d+$/u.test(numeral.value))) continue;
-    const number=literal ? written : numeral.value;
+    const article=j<ts.length && worlds.singularArticles?.has(before(0,j));
+    if (!literal && !article && !(numeral?.kind==='cardinal' && /^\d+$/u.test(numeral.value))) continue;
+    const number=literal ? written : article ? '1' : numeral.value;
     if (j===ts.length) return {value:number};
     if (written.startsWith('-')) continue;
     const unit=resolvePropertyUnit(worlds,family,key,before(j,ts.length),span(j,ts.length));
-    if (!unit) continue;
+    if (!unit || article && before(j,ts.length)!==form(unit.replaceAll('_',' '))) continue;
     if (measurement) return null;
     const measure=number.replace(/^\+/u,'').replace(/^\./u,'0.');
     measurement={measure,unit,words:written};
@@ -146,15 +147,28 @@ export function compileOwnerPropertyOperands(facts,requestKeys,words) {
     ownerPropertyUnitNames:unitNames,ownerPropertyUnitSymbols:unitSymbols,ownerPropertyMultipliers};
 }
 
-function catalogProperty(worlds,family,surface) {
-  const aliases = worlds.ownerPropertyLabels?.get(JSON.stringify([surface,family])) ?? [];
-  const attributes = new Set(aliases.map(({attribute})=>attribute));
-  if (attributes.size!==1) return;
-  const [attribute]=attributes;
-  const keys=worlds.requestKeys.filter(k=>k.family===family && k.name===attribute);
-  if (!keys.length || keys.some(k=>k.head!==keys[0].head ||
-      k.values.length!==keys[0].values.length || k.values.some(v=>!keys[0].values.includes(v)))) return;
-  return keys[0];
+function catalogProperties(worlds,family,surface) {
+  const aliases=worlds.ownerPropertyLabels?.get(identity(surface,family)) ?? [];
+  const attributes=new Set(aliases.map(({attribute})=>attribute));
+  return [...attributes].flatMap(attribute=>{
+    const [key,...others]=worlds.requestKeys.filter(k=>k.family===family && k.name===attribute);
+    if (!key || others.some(other=>other.head!==key.head || other.values.length!==key.values.length ||
+        other.values.some(value=>!key.values.includes(value)))) return [];
+    return [key];
+  });
+}
+
+function measuredProperty(worlds,key,operand) {
+  return !key.values.length && key.head.split('+').includes('number') &&
+    resolveWrittenMeasurement(operand,worlds,key.family,key.name)?.measurement;
+}
+
+function catalogProperty(worlds,family,surface,operand) {
+  const keys=catalogProperties(worlds,family,surface);
+  if (keys.length===1) return keys[0];
+  if (!operand) return;
+  const matching=keys.filter(key=>measuredProperty(worlds,key,operand));
+  if (matching.length===1) return matching[0];
 }
 
 function closedValue(worlds,key,surface) {
@@ -237,7 +251,7 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
           const from=detAt(a,b).next;
           for (let j=from+1;j<Math.min(from+9,b);j++) {
             if (!matches(j,value) || j+value.length>=b || !plain(from,j)) continue;
-            const property=catalogProperty(worlds,family,before(from,j));
+            const property=catalogProperty(worlds,family,before(from,j),span(j+value.length,b));
             if (property) options.push({property,label:span(from,j),start:j+value.length});
           }
         }
@@ -300,7 +314,12 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
                 overlapsConnector(start,valueAt) || unsafe(propertyAt,valueAt)) continue;
             const payload=valueAt+value.length;
             if (payload>=end) continue;
+            const coordinated=keys.findIndex((key,i)=>i>=payload && !quoted(i) && worlds.joiners[key]==='coordination');
+            const firstEnd=coordinated<0 ? end : coordinated-Number(keys[coordinated-1]===',');
+            if (firstEnd<=payload) continue;
+            const operand=span(payload,firstEnd), label=before(propertyAt,ownerAt);
             const nounOptions=[];
+            let knownOwner=false;
             for (let noun=det.next;noun<valueAt;noun++) {
               const surface=before(noun,valueAt);
               const fromInventory=worlds.ownerInventory?.get(identity(act,surface)) ?? [];
@@ -308,24 +327,37 @@ export function ownerPropertyReadings(text,ts,quotes,worlds) {
                 role==='target' && sense===act && mode==='existing' ? [{family,sort}] : []);
               for (const {family,sort} of [...fromInventory,...fromLexicon]) {
                 if (!sort && fromInventory.some(item=>item.family===family)) continue;
-                const property=catalogProperty(worlds,family,before(propertyAt,ownerAt));
+                knownOwner=true;
+                const property=catalogProperty(worlds,family,label,operand);
                 if (property) nounOptions.push({noun,family,sort,property});
+              }
+            }
+            const name=span(det.next,valueAt);
+            if (!knownOwner && (det.mode==='definite' || /^\p{Lu}/u.test(name)) &&
+                !worlds.scopeGrammar.universalHeads.has(keys[start]) && !worlds.isReference(before(det.next,valueAt))) {
+              const matching=Object.keys(worlds.familyTabs).flatMap(family=>
+                worlds.literalGrammar.licenses(family,act) ? catalogProperties(worlds,family,label)
+                  .filter(key=>measuredProperty(worlds,key,operand)) : []);
+              if (matching.length===1) {
+                const [property]=matching;
+                nounOptions.push({noun:det.next,family:property.family,property,name});
               }
             }
             const firstByFamily=new Map();
             for (const {noun,family} of nounOptions) {
               if (!firstByFamily.has(family)) firstByFamily.set(family,noun);
             }
-            for (const {noun,family,sort,property} of nounOptions) {
+            for (const {noun,family,sort,property,name:writtenName} of nounOptions) {
               if (noun!==firstByFamily.get(family)) continue;
               const records=propertyValues(family,property,span(propertyAt,ownerAt),payload);
               if (!records.length) continue;
               const head=span(noun,valueAt);
               const prefix=[
                 '@r1 w.request.request act='+quote(act)+' mood=do predicate='+quote(span(verbAt,verbEnd)),
-                '@r1.t w.request.target request=$r1 family='+quote(family)+' mode=existing fill=description'+
-                  (det.mode ? ' determiner='+det.mode : '')+' description='+quote(span(start,valueAt))+
-                  (sort ? ' sort='+quote(sort)+' sort_words='+quote(head) : ' family_words='+quote(head))
+                '@r1.t w.request.target request=$r1 family='+quote(family)+' mode=existing'+
+                  (det.mode ? ' determiner='+det.mode : '')+(writtenName ? ' fill=written name='+quote(writtenName) :
+                    ' fill=description description='+quote(span(start,valueAt))+
+                    (sort ? ' sort='+quote(sort)+' sort_words='+quote(head) : ' family_words='+quote(head)))
               ];
               const circuit=useScaled=>[...prefix,...records.map(({unread,scaled,property,keyWords,words,resolved,measurement},i)=>{
                 if (useScaled && scaled) return '@r1.s'+(i+1)+' w.relational.scaled request=$r1 result=$r1.t'+

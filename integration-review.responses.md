@@ -486,3 +486,29 @@ The shared agreement declarations moved from the opt-in universal inventory into
 Frozen `drawing/scenes-10.csv` row 1228 now grounds an existing population of plants, an initial green selector and a chartreuse result. The exact `the same vivid` span remains unresolved on the result request. Row 1258 now has a complete proposal to paint each flower blue. The heavy-curtain control in row 1196 remains outside the new population path because the reader cannot ground `heavy` as a selector. The three examples were checked with installed worlds alone and with the frozen model. [Native property controls](test/native-property-frames.test.mjs)
 
 The universal property path reuses the installed nominal-selector and number-agreement banks. It requires a complete noun phrase and preserves the selector separately from every result, including coordinated numeric assignments. The result qualifier field in `pro.reader/owned-effects.sop` licenses retention only beside an independently grounded result on its own property. Unsupported qualifiers make the proposal partial. The deployed resolver must still apply the selector to each member before any shared assignment. These changes use existing target and constraint keys. All 456 isolated release tests passed. The 1% benchmark remains paused. [Coordinated assignment controls](test/owned-effects.test.mjs)
+
+## Measurement evidence for a written owner
+
+Frozen `calendar/meetings-07.csv` row 367, “change the length of the design critique to an hour,” now gives a complete change proposal on the existing meeting named `design critique`. The result binds `meeting.length`, exact `an hour`, magnitude 1 and unit hour. The installed quantity declaration disambiguates the written label from other length keys, including `meeting.duration`, which takes a scalar in milliseconds. The reader keeps the written name and leaves its live identity to lookup. Bare numbers, incompatible nouns, invalid article-unit agreement and an independent second dimension-compatible family remain outside the inferred-owner path. The same unit proof disambiguates a property on a known meeting without inferring its type. The earlier model-free reader had no equivalent proposal. This replay passed with the current installed worlds and with the frozen model. No output schema changes are needed. All 458 isolated release tests passed. [Measured owner regressions](test/owner-property.test.mjs)
+
+## Source record for face scale adjudication
+
+At WebMeet `23f19aa`, `drawing/scenes-02.csv` contains this utterance at data record 140 (first record after the header is 1), starting at physical line 650. The frozen replay lists row 141. Exact text is `set the face scale to 0.8`. The source reference is:
+
+```sop
+@r1 w.request.request act=change mood=do predicate=set
+@r1.t w.request.target request=$r1 family=drawn mode=existing determiner=definite fill=context family_words=face
+@r1.l1 w.request.lookup request=$r1 target=$r1.t key=thing from=page
+@r1.c1 w.request.constraint request=$r1 on=attribute attribute=drawn.scale value="0.8" operator=eq phase=result key_words=scale
+```
+
+The alternative replay from `384bc09` was:
+
+```sop
+@r1 w.request.request act="change" mood=do predicate="set" words="set the face scale to 0.8"
+@r1.t w.request.target request=$r1 family="part" mode=existing fill=description determiner=definite description="the face" sort="face" sort_words="face"
+@r1.c w.request.constraint request=$r1 on=attribute attribute="part.scale" key_words="scale" value="0.8" operator=eq phase=result
+@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page
+```
+
+The component reading follows the explicit noun and the part property in the request catalog. The dataset is unchanged. The benchmark remains paused.

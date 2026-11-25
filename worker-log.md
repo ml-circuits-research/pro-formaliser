@@ -427,3 +427,8 @@
 - Frozen scenes-10 rows 1228 and 1258 now preserve population scope and supported colour effects in both reader profiles. Row 1196 still keeps the ungrounded restriction outside this path.
 - The existing nominal selectors and number agreement now supply a separate predicate before a shared assignment. The exact result modifier remains unresolved.
 - All 456 isolated release tests passed. No benchmark rerun.
+
+## Measured assignment on a written owner
+- Frozen meetings-07 row 367 now has a complete meeting duration proposal in both reader profiles, with no matching proposal from the previous model-free reader.
+- The reader reuses declared quantities to narrow competing keys and keeps exact unit evidence. Face-scale source coordinates and circuits are in the review response.
+- All 458 isolated release tests passed. No benchmark rerun.

@@ -285,3 +285,63 @@ test('compiles owner inventories and backing slot types from an unrelated overla
     }
   } finally {await reader.close();}
 });
+
+test('uses a declared unit to resolve a named owner and an ambiguous property label',async t=>{
+  const reader=createReader(undefined,worlds);
+  t.after(()=>reader.close());
+  for (const [text,name,literal,measure,unit,measureWords] of [
+    ['change the length of the design critique to an hour','design critique','an hour','1','hour','an'],
+    ['Change the duration of the weekly review to 30 minutes','weekly review','30 minutes','30','minute','30'],
+    ['change the length of the meeting to an hour',undefined,'an hour','1','hour','an'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(c=>c.source==='owner-property' && c.sop.includes('attribute="meeting.length"'));
+    assert.ok(reading,text);
+    const wires=parse(reading.sop),target=wires.find(w=>w.type==='w.request.target'),
+      result=wires.find(w=>w.type==='w.request.constraint');
+    assert.equal(field(target,'mode'),'existing');
+    assert.equal(field(target,'family'),'meeting');
+    assert.equal(field(target,'name'),name);
+    assert.equal(field(target,'fill'),name ? 'written' : 'description');
+    assert.deepEqual([field(result,'value'),field(result,'measure'),field(result,'unit'),field(result,'measure_words')],
+      [literal,measure,unit,measureWords],text);
+    assert.deepEqual(reading.evidence.missing,[]);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0);
+    assert.deepEqual(reading.catalog.issues,[]);
+  }
+  for (const text of [
+    'Set the length of the design critique to 1',
+    'Set the length of the design critique to an hours',
+    'Set the length of the door to an hour',
+    'Set the length of the design critique to an inch',
+    'Set the length of the design critique to an hour if approved',
+    'Did you set the length of the design critique to an hour?',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(!candidates.some(c=>c.source==='owner-property' && c.sop.includes('attribute="meeting.length"')),text);
+  }
+});
+
+test('does not infer an owner when another installed property accepts the same unit',async t=>{
+  const dir=mkdtempSync(fileURLToPath(new URL('../.cache/measured-owner-overlay-',import.meta.url)));
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  writeFileSync(join(dir,'time.sop'),[
+    '@bench std.schema.world name=w.workbench',
+    '@job std.schema.kind of=w.workbench.job world=w.workbench acts=change',
+    '@job.word core.word text="batch job" means=w.workbench.job',
+    '@duration w.request.key tab=workbench family=job name=job.runtime head=number',
+    '@duration.word core.word text=length means=job.runtime',
+    '@duration.quantity pro.reader.property_quantity family=job key=job.runtime quantity=time',
+  ].join('\n'));
+  const reader=createReader(undefined,loadWorlds({paths:[dir]}));
+  t.after(()=>reader.close());
+  const ambiguous=await reader.propose('Set the length of the weekly review to an hour');
+  assert.ok(!ambiguous.candidates.some(candidate=>candidate.source==='owner-property'));
+  const explicit=await reader.propose('Set the length of the batch job to an hour');
+  const reading=explicit.candidates.find(candidate=>candidate.source==='owner-property' &&
+    candidate.sop.includes('attribute="job.runtime"'));
+  assert.ok(reading);
+  const wires=parse(reading.sop);
+  const result=wires.find(wire=>wire.type==='w.request.constraint');
+  assert.deepEqual([field(result,'measure'),field(result,'unit')],['1','hour']);
+});
