@@ -818,3 +818,27 @@ No ranking-limit source delivery is accepted here: its implementation/response r
 ## DATA PUBLICATION — PROLOG-GOLD-001/002/003 closed
 
 2026-11-25 21:40 CET: coordinator published all three exact approved CSV corrections in WebMeet 1be6fb60e632e18e61da90d3eec600d64baa388e. Texts and other wires/variants were retained; actual three-cell current-text gate passed3/3, with existing uncovered-word warnings left explicit. Please mark these report IDs fixed in your own report file, retaining the evidence/history and published revision. No new reader or benchmark acceptance follows from this data publication.
+
+
+## Post-commit review — numeric transitions and designations versus codes
+
+Reviewed59727b8/88e7766 after1199ad9 at clean HEADaed8bf7 (later commits only close the already published reports). Worker response mtime2026-11-25 21:41:09.137443346 +0100; checks21:41:22–21:41:57 +0100. Three focused tests passed: old/new numeric ranking values on one owner, unsupported duplicate code selectors on multiword designations, and independent composed evidence retained after that repair. Existing explicit-code/short-code contrasts stay available. This accepts the bounded selector/result and designation repair, not all legacy name/reference alternatives. Canonical code-slot links are used; further means bindings need source-owner review, not a hardcoded family list. Ranking frames/formats remain shared grammar preparation; no new result schema is demonstrated.
+
+### Approved individual reports PROLOG-GOLD-004 and PROLOG-GOLD-005
+
+Independently fetched both exact cells/texts at WebMeetd1c15c5857365a82358b4a324f2611088026cc9b; each matches the report's current circuit. Each proposal differs by exactly one code-selector deletion and passes native/evidence/catalogue checkCircuit without errors.
+
+PROLOG-GOLD-004: diagram/charts-06.csv data record2637, sop. Text: “Set the title of Revenue by region to \"Revenue review\", and make the font bigger.” Approve deleting only @r1.c1 chart.id="Revenue by region" selector. Keep the written target.name, requested title, font increase and all other wires/text. No code marker supplies independent evidence for that duplicate code. Second-clause context is outside this correction.
+
+PROLOG-GOLD-005: calendar/meetings-07.csv data record210, sop. Text: “focus pod, capacity 2 please”. Approve deleting only @r1.c1 room.id="focus pod" selector. Preserve target.name, room.seats=2, courtesy and all other wires/text. Installed room.id means w.meetings.room.code; the utterance supplies no separate code assertion. This removal does not certify that every possible room kind/name reading has been resolved.
+
+Route only these two scoped deltas through the approved single-report path, verifying expected old cells against the publication target. Reports001/002/003 are closed/published and were not reaudited or reassigned. lastResult-prolog.md remains unchanged historical measurement; no benchmark/model/full-suite/PSys run or source/report/result/Git edit. Reviewer file stable for publication.
+
+
+## OWNER OPERATIONAL PRIORITY — comparable aggregate now; checkpoint and standby if insufficient
+
+Implementation worker: run a REAL comparable L0–L4 aggregate now. Deadline: **25 November 2026, 23:45 CET (UTC+01:00)**. Compare the latest reader against last measured a7b9a18 on the SAME frozen exact-text cohort of the existing1000 graded requests, holding dataset revision, declared knowledge, evaluator, model and proposal budget identical. Reuse actual initialized engines and existing scripts; no new benchmark framework. Saved baseline outputs may be reused only if genuinely compatible. If historical grading/gold/evaluator differs, rerun the baseline too; do not attribute data or evaluator changes to reader improvement. This direct benchmark authorization supersedes the earlier no-status-only-rerun limitation for this task.
+
+Publish baseline and current actual L0/L1/L2/L3/L4 and L3+L4 counts/percentages, N, reader/data/knowledge/model/evaluator/budget metadata, genuine run timestamps/timezone and paired gains/losses in lastResult-prolog.md, with saved evidence links and limits. Focused tests or evidence-complete counts are not aggregate semantic scores. Pursue one broad measured mechanism rather than successive local wording patches. No invented context/history/identity, gold-dependent effects or fabricated measurements. Existing code/error-report review work remains intact.
+
+Practical success threshold: **at least5 percentage points absolute L3+L4 improvement** in that comparable replay by23:45 CET. If below threshold OR no trustworthy comparable result exists by the deadline, finish a safe checkpoint, report **STANDBY**, and begin no further implementation or experiments until **26 November 2026, 08:00 CET**, unless the owner explicitly resumes earlier. Use the existing poll only; create no schedule. The reviewer records this operational task but does not run the worker's benchmark or advance last_review for this administrative instruction.
