@@ -583,3 +583,7 @@
 ## Replacement complement boundaries
 - Verb-specific grammatical roles keep replacement complements out of purpose.
 - The default-model replay removed incorrect purpose on six of 140 targeted inputs. All 521 tests passed.
+
+## Written replacement direction
+- Native replacement language now preserves the target and exact unresolved operand in both written orders.
+- The 140-input default-model replay added 17 partial replacement readings and three typed affected targets. All 522 tests passed.

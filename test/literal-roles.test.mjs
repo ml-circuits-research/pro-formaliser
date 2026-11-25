@@ -12,6 +12,36 @@ const decode = value => value?.startsWith('"') ? JSON.parse(value) : value;
 const rows = (answer,kind) => parse(answer.sop).filter(wire => wire.type === 'w.request.' + kind)
   .map(wire => Object.fromEntries(Object.entries(wire.attrs).map(([key,[value]])=>[key,decode(value)])));
 
+test('reads both written directions of replacement while keeping the unbound operand exact',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,target,right] of [
+    ['Replace the hat with a crown.','the hat','with a crown'],
+    ['Substitute a crown for the hat.','the hat','a crown'],
+    ['Replace the red cat with a brown dog.','the red cat','with a brown dog'],
+    ['Replace a zebra with a tiger.','a zebra','with a tiger'],
+    ['Replace the bushes with three birches.','the bushes','with three birches'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>candidate.source==='written-replacement');
+    assert.ok(reading,text);
+    assert.equal(reading.status,'partial',text);
+    assert.equal(rows(reading,'request')[0].mode,'replace',text);
+    assert.equal(rows(reading,'target')[0].description,target,text);
+    assert.deepEqual(rows(reading,'unread').map(({text,note})=>[text,note]),[[right,'replacement operand']],text);
+    if (target==='the red cat') assert.equal(rows(reading,'constraint')[0].value,'red');
+    assert.deepEqual(reading.catalog.issues,[],text);
+    assert.deepEqual(reading.evidence.missing,[],text);
+  }
+  for (const text of ['Swap in a hat for it.', 'Swap the clear sky out for a bright afternoon.',
+    'Switch the grid off for the workshop.',
+    'Replace the hat with a crown?', 'Do not replace the hat with a crown.',
+    'Replace the hat with a crown if needed.', 'Replace the hat with a crown or a cap.']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='written-replacement'),text);
+  }
+});
+
 test('grounds a whole named replacement before preserving its exact quoted result', async t => {
   const reader = createReader();
   t.after(() => reader.close());

@@ -1,5 +1,6 @@
 import {nativeInventory} from './native-inventory.mjs';
 import { tokens } from './lexicon.mjs';
+import { nominalSelectors, nominalSelectorLines } from './nominal-selectors.mjs';
 
 const definite = new Set(['definite', 'demonstrative', 'possessive']);
 const normalized = text => tokens(text).map(token => token[0]).join(' ');
@@ -73,9 +74,9 @@ function knownTargets(ts, start, stop, act, worlds) {
   const startNominal = determiner?.next ?? start;
   for (const phrase of phrases(ts,startNominal,stop)) {
     const targets = worlds.lookup(phrase.surface).filter(([role, licence]) => role === 'target' && licence === act);
-    if (targets.length) return {phrase, targets, det:worlds.determiners[determiner?.surface]};
+    if (targets.length) return {phrase, targets, startNominal, det:worlds.determiners[determiner?.surface]};
   }
-  return {det:worlds.determiners[determiner?.surface]};
+  return {startNominal,det:worlds.determiners[determiner?.surface]};
 }
 
 function constraint(key, value, evidence, phase = 'result') {
@@ -176,6 +177,63 @@ function replacement(span, ts, quotes, head, worlds) {
     }
   }
   return readings;
+}
+
+function writtenReplacement(span,ts,head,worlds) {
+  const markers=worlds.requestIntents.replacementMarkers.get(head.surface);
+  if (!markers?.length || ['?','？'].includes(ts.at(-1)?.[0])) return [];
+  const end=ts.length-Number(/^[.!。！]$/u.test(ts.at(-1)?.[0] ?? ''));
+  if (end-head.next<3 || end-head.next>24 || ts.slice(head.next,end).some(([key])=>
+    !/^[\p{L}\p{M}\p{N}_]+$/u.test(key) || worlds.joiners[key] || worlds.negatives.has(key) ||
+    worlds.scopeGrammar.choices.has(key) || worlds.scopeGrammar.conditionals.has(key))) return [];
+  const separators=ts.slice(head.next+1,end).flatMap((_,offset)=>{
+    const at=head.next+1+offset;
+    const width=markers.find(marker=>marker.every((term,i)=>ts[at+i]?.[0]===term))?.length;
+    return width && at+width<end ? [{at,after:at+width}] : [];
+  });
+  if (separators.length!==1) return [];
+  const [{at,after}]=separators, backwards=head.object==='replacement';
+  const text=(start,stop)=>span(ts[start][2],ts[stop-1][3]);
+  const [start,stop]=backwards ? [after,end] : [head.next,at];
+  const selected=knownTargets(ts,start,stop,head.act,worlds);
+  const particles=worlds.referenceCommands.particles;
+  if (!selected.det && (particles.has(ts[start][0]) ||
+      worlds.lookup(ts[start][0]).some(([role])=>role==='marker' || role==='act'))) return [];
+  if (selected.phrase?.next!==stop && particles.has(ts[stop-1][0])) return [];
+  const stateTails=worlds.fixedProperties.get(head.surface) ?? [];
+  if (stateTails.some(frame=>frame.tails.some(tail=>tail.length<stop-start &&
+      tail.every((term,i)=>ts[stop-tail.length+i][0]===term)))) return [];
+  const targetWords=text(start,stop), replacementWords=backwards ? text(head.next,at) : text(at,end);
+  const request='@r1 w.request.request act='+encode(head.act)+' mode=replace mood=do predicate='+encode(span(head.start,head.end));
+  const prefix=span(0,head.start).trim().replace(/,$/u,'');
+  const unread=(id,words,role)=>'@'+id+' w.request.unread request=$r1 text='+quote(words)+' note='+quote(role);
+  const common=[request,unread('r1.replacement',replacementWords,'replacement operand')];
+  if (prefix) common.push('@r1.lead w.request.filler text='+quote(prefix));
+  if (backwards) common.push('@r1.marker w.request.filler text='+quote(text(at,after)));
+  const targets=(selected.phrase?.next===stop ? selected.targets : [])
+    .filter(([, ,family,mode])=>mode==='existing' && worlds.literalGrammar.licenses(family,head.act))
+    .map(([, ,family,,sort])=>({family,sort,sortWords:span(selected.phrase.start,selected.phrase.end)}));
+  const phrase=(a,b)=>ts.slice(a,b).map(([key])=>key).join(' ');
+  const nominal=phrase(selected.startNominal,stop);
+  const lookup=noun=>(worlds.ownerInventory.get(quote([head.act,noun])) ?? [])
+    .map(({family,sort})=>['target',head.act,family,'existing',sort]);
+  const direct=lookup(nominal);
+  for (const [,,family,,sort] of direct.length ? direct : worlds.nominalInflection(nominal,lookup)) {
+    if (!worlds.literalGrammar.licenses(family,head.act) || targets.some(t=>t.family===family && t.sort===sort)) continue;
+    targets.push({family,sort,sortWords:text(selected.startNominal,stop)});
+  }
+  const selectorRules=worlds.nominalSelectorRules.filter(rule=>worlds.literalGrammar.licenses(rule.family,head.act));
+  for (const rule of selectorRules) {
+    for (const target of nominalSelectors([rule],selected.startNominal,stop,phrase,text)) {
+      targets.push({...target,family:rule.family});
+    }
+  }
+  const make=lines=>({sop:lines.join('\n'),source:'written-replacement',status:'partial'});
+  if (!targets.length) return [make([...common,unread('r1.affected',targetWords,'replaced operand')])];
+  return targets.map(({family,sort,sortWords,selector})=>make([...common,
+    '@r1.t w.request.target request=$r1 family='+encode(family)+' mode=existing fill=description description='+quote(targetWords)+
+      (selected.det ? ' determiner='+selected.det : '')+
+      (sort ? ' sort='+encode(sort)+' sort_words='+quote(sortWords) : ''), ...nominalSelectorLines(selector)]));
 }
 
 function keysForCue(worlds, surface, family) {
@@ -354,6 +412,6 @@ export function literalRoleCandidates(text, ts, quotes, worlds) {
       ...declaredCreation(span,ts,quotes,head,worlds),
       ...(quotes.length ? creation(span,ts,quotes,head,worlds) : [])
     ];
-    return quotes.length ? replacement(span,ts,quotes,head,worlds) : [];
+    return quotes.length ? replacement(span,ts,quotes,head,worlds) : writtenReplacement(span,ts,head,worlds);
   })];
 }

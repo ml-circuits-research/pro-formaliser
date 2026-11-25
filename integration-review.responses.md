@@ -843,3 +843,11 @@ The purpose reader now consults the verb-specific markers declared in `k.actions
 The canonical language distinguishes replacement operands from positional exchange. The current `w.request.intent` roles cover purpose and destination. This change leaves unbound replacement operands as unread in the partial readings. Typed replacement endpoints and reciprocal placement still need a shared representation and separate proof. The reader must keep the distinction between a replacement such as “swap the paper kite for a live bird” and a positional exchange such as “swap the red block with the blue block on the row”.
 
 The actual default-model before/after replay processed 100 texts with replacement wording and 40 with possible purpose. Six texts lost an incorrect purpose reading. Each retained other proposals. The other 134 returned identical ordered SOP lists, including all 40 purpose controls. All 521 release tests passed. The aggregate benchmark remains paused.
+
+## Bulk findings fixed — direction of a written replacement
+
+The reader uses the written verb's declared object role and separator to distinguish the replaced target and the replacement operand. “Replace the hat with a crown” and “substitute a crown for the hat” both target the hat. A complete target phrase can bind through existing catalogue nouns, inventory morphology and nominal selectors. Examples include a zebra, bushes and the red cat. The remaining operand stays in an owner-linked unread wire with its exact written text. If the target is also open, both spans remain unread with separate roles. [Replacement regressions](test/literal-roles.test.mjs)
+
+The proposal uses the declared replacement mode. It coexists with other readings of ambiguous exchange verbs. A positional swap, a typed replacement endpoint and an undeclared particle construction still need their respective proofs. No new schema or catalogue declarations were added.
+
+In 140 default-model WebMeet replays, 17 texts gained exact partial replacement proposals and three of those also bound the replaced object on the same request. All 40 purpose controls and all previously evidence-complete semantic alternatives were retained. All 522 release tests passed. The aggregate benchmark remains paused.
