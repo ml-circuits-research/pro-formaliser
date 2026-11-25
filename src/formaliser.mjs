@@ -35,7 +35,7 @@ import { coordinatedPacket,effectReading } from './coordinated-effects.mjs';
 import { detachedDiscourse,discourseBody } from './trailing-discourse.mjs';
 import { memberActionPackets,memberActionReadings } from './member-actions.mjs';
 import { affectedTargetCandidates } from './affected-target.mjs';
-import { ownerPropertyReadings } from './owner-property.mjs';
+import { fitsNumericAssignment,numericAssignmentReadings,numericAssignmentRoles,ownerPropertyReadings } from './owner-property.mjs';
 import { serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { alternateBodies } from './request-alternations.mjs';
 import { evidenceReport } from './evidence.mjs';
@@ -183,11 +183,25 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     prefixes:clausePrefixes([...(worlds.literalGrammar?.leads ?? []),
       ...(worlds.discourse ?? []).filter(({class:kind})=>kind==='politeness' || kind==='interjection').map(({text})=>text)]),
   };
+  let lastAssignmentText, lastAssignment;
+  function assignmentRole(text) {
+    if (lastAssignmentText!==text) {
+      lastAssignment=numericAssignmentRoles(text,worlds);
+      lastAssignmentText=text;
+    }
+    return lastAssignment;
+  }
   function admissibleKey(text, sop) {
     if (!sop || !validate(sop,worlds) || !evidenceInText(text,sop,worlds)) return;
     const wires = parse(sop);
     if (wires.some(wire=>wire.type==='w.request.previous' ||
         wire.type==='w.request.lookup' && valueOf(wire,'from')==='previous')) return;
+    const requests=wires.filter(wire=>wire.type==='w.request.request');
+    for (const request of requests) {
+      const clause=valueOf(request,'words');
+      const role=(requests.length===1 ? assignmentRole(text) : undefined) ?? (clause && assignmentRole(clause));
+      if (role && !fitsNumericAssignment(role,request,wires)) return;
+    }
     if (catalogIssues(wires,worlds).length) return;
     return JSON.stringify(signatures(wires,true));
   }
@@ -304,6 +318,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       if (key && readingScope.restricted && !readingScope.permits(parse(answer.sop))) return;
       if (key && !seen.has(key)) { seen.add(key); candidates.push(answer); }
     }
+    const assignment=!scope.restricted && assignmentRole(text);
+    if (assignment) for (const reading of numericAssignmentReadings(text,assignment)) retain(reading);
     for (const candidate of namedArgumentCandidates(text,ts,quotes,worlds,sequenceOptions)) retain(candidate);
     for (const candidate of literalRoleCandidates(text,ts,quotes,worlds)) retain(candidate);
     if (!scope.restricted && !quotes.length) {

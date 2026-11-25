@@ -626,6 +626,14 @@ function compile(facts) {
     .map(([id])=>JSON.stringify(JSON.parse(id).slice(1))));
   const frames=argumentSequences(type=>type==='pro.reader.argument_sequence' ?
     [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys,argumentFormats);
+  const propertyOperands=compileOwnerPropertyOperands(facts,requestKeys,words);
+  const numericAssignmentFamilies=new Map();
+  for (const [id,labels] of propertyLabels) {
+    const [surface,family]=JSON.parse(id);
+    if (!labels.some(label=>label.kinds.includes('number') ||
+        propertyOperands.ownerPropertyNumeric.has(JSON.stringify([family,label.attribute])))) continue;
+    index(numericAssignmentFamilies,surface,family);
+  }
   const universalAgreement=compileUniversalAgreement(facts);
   const nominalSelectorRules=compileNominalSelectors(facts,requestKeys,words);
   const nominalPositions=nominalPositionForms(facts,requestKeys,words);
@@ -678,7 +686,7 @@ function compile(facts) {
     argumentZones:structuredZones(facts),
     ownerPropertyFrames:facts('pro.reader.owner_property').map(w=>({act:one(w,'act'),owner:one(w,'owner'),value:one(w,'value')})),
     ...effectGrammar(facts,requestKeys),
-    ...compileOwnerPropertyOperands(facts,requestKeys,words),
+    ...propertyOperands,
     nativePropertyFrames:compileNativePropertyFrames(facts),
     preservationAdjuncts:compilePreservationAdjuncts(facts,requestKeys),
     nominalSelectorRules, directionalResults:compileDirectionalResults(facts,requestKeys,words,nominalSelectorRules),
@@ -698,6 +706,7 @@ function compile(facts) {
     argumentLabels:Map.groupBy(facts('pro.reader.argument_label').flatMap(w=>
       values(w,'text').map(text=>({key:one(w,'key'),words:tokens(text).map(t=>t[0])}))).filter(entry=>entry.key && entry.words.length),entry=>entry.key),
     ownerPropertyLabels:propertyLabels,
+    numericAssignmentFamilies,
     ownerPropertyValues:compatibleValues,
     declaredValueAlias(family,key,text,value) {
       const meanings=closedValueAliases.get(JSON.stringify([family,key,phrase(text)]));

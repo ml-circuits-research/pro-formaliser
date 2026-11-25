@@ -1,6 +1,7 @@
 import {nativeInventory} from './native-inventory.mjs';
 import { tokens } from './lexicon.mjs';
 import { parse } from './schema.mjs';
+import { quotedSpans } from './literal-roles.mjs';
 
 const form = text => tokens(text).map(([key])=>key).join(' ');
 const quote = JSON.stringify;
@@ -180,6 +181,126 @@ function closedValue(worlds,key,surface) {
     if (decoded(attrs.attribute?.[0])===key.name && key.values.includes(value)) values.add(value);
   }
   return values.size===1 ? [...values][0] : undefined;
+}
+
+function describedAssignmentFamilies(keys,from,to,worlds) {
+  for (let head=from;head<to;head++) {
+    const phrase=keys.slice(head,to).join(' ');
+    const native=worlds.ownerInventory?.get(identity('change',phrase)) ?? [];
+    const families=[...native.map(({family})=>family),...worlds.lookup(phrase).flatMap(([role,act,family,mode])=>
+      role==='target' && act==='change' && mode==='existing' ? [family] : [])];
+    if (families.length) return [...new Set(families)];
+    const term=keys[head];
+    if (!word.test(term) || worlds.lookup(term).some(([role])=>role==='marker') || worlds.joiners[term]) break;
+  }
+}
+
+// A value-frame predicate and catalogue label can prove the role of words
+// that a copied template otherwise consumes as an opaque object name.
+export function numericAssignmentRoles(text,worlds) {
+  if (!worlds.numericAssignmentFamilies?.size || /["'“‘]/u.test(text) && quotedSpans(text).length) return;
+  const ts=tokens(text), chars=Array.from(text), keys=ts.map(([key])=>key);
+  const end=keys.length-Number(/^[.!?]$/u.test(keys.at(-1) ?? ''));
+  const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
+  const words=(a,b)=>keys.slice(a,b).join(' ');
+  if (end<4 || end>24) return;
+  const verbs=[];
+  for (let a=0;a<Math.min(end-3,6);a++) {
+    const lead=words(0,a).replace(/ ,$/u,'');
+    if (a && !worlds.literalGrammar.leads.has(lead) && !worlds.fillerPhrases.has(lead)) continue;
+    if (keys.at(-1)==='?' && !worlds.literalGrammar.leads.has(lead)) continue;
+    for (let b=a+1;b<=Math.min(a+5,end-3);b++) {
+      const senses=worlds.lookup(words(a,b));
+      if (senses.some(([role,act,mood])=>role==='act' && act==='change' && (!mood || mood==='do')) &&
+          senses.some(([role,act,slot])=>role==='frame' && act==='change' && slot==='value')) verbs.push([a,b]);
+    }
+  }
+  if (verbs.length!==1) return;
+  const [[verbStart,verbEnd]]=verbs;
+  const det=worlds.determiners[keys[verbEnd]];
+  if (!['possessive','definite','demonstrative'].includes(det)) return;
+  const start=verbEnd+1;
+  const proposals=[];
+  for (const {act,value:separator,owner:connector} of worlds.ownerPropertyFrames) {
+    if (act!=='change' || !separator || !connector) continue;
+    const valueKeys=tokens(separator).map(([key])=>key);
+    const ownerKeys=tokens(connector).map(([key])=>key);
+    for (let pivot=start+1;pivot+valueKeys.length<end;pivot++) {
+      if (!valueKeys.every((key,i)=>key===keys[pivot+i])) continue;
+      const operand=span(pivot+valueKeys.length,end);
+      const interpretations=[];
+      if (det==='possessive') {
+        interpretations.push({label:words(start,pivot),propertyWords:span(start,pivot),reference:true});
+      } else {
+        for (let i=start+1;i<pivot;i++) {
+          const known=describedAssignmentFamilies(keys,start,i,worlds);
+          if (known) interpretations.push({label:words(i,pivot),propertyWords:span(i,pivot),noun:span(verbEnd,i),known});
+          const after=i+ownerKeys.length;
+          if (after<pivot && ownerKeys.every((key,j)=>key===keys[i+j]) &&
+              keys.slice(after,pivot).every(key=>word.test(key) && !worlds.joiners[key])) {
+            const ownerStart=after+Number(Boolean(worlds.determiners[keys[after]]));
+            interpretations.push({label:words(start,i),propertyWords:span(start,i),
+              known:describedAssignmentFamilies(keys,ownerStart,pivot,worlds)});
+          }
+        }
+      }
+      for (const interpretation of interpretations) {
+        const {label,known}=interpretation;
+        const properties=(worlds.numericAssignmentFamilies.get(label) ?? []).flatMap(family=>
+          known && !known.includes(family) ? [] : catalogProperties(worlds,family,label).flatMap(key=>{
+            if (key.values.length || !key.head.split('+').includes('number') &&
+                !worlds.ownerPropertyNumeric?.has(identity(family,key.name))) return [];
+            const result=resolveWrittenMeasurement(operand,worlds,family,key.name);
+            return result?.value ? [{family,key:key.name,...result}] : [];
+          }));
+        if (properties.length) proposals.push({...interpretation,properties,operand,
+          predicate:span(verbStart,verbEnd),head:words(verbStart,verbEnd),
+          fragment:span(verbEnd,end),lead:verbStart ? span(0,verbStart).replace(/,$/u,'') : undefined});
+      }
+      break; // A later marker may belong to a separate coordinated value.
+    }
+  }
+  const unique=new Map(proposals.map(role=>[JSON.stringify(role),role]));
+  if (unique.size===1) return unique.values().next().value;
+}
+
+export function fitsNumericAssignment(role,request,wires) {
+  const predicate=decoded(request.attrs.predicate?.[0]);
+  if (decoded(request.attrs.act?.[0])!=='change' || predicate && form(predicate)!==role.head) return false;
+  const owned=wires.filter(w=>decoded(w.attrs.request?.[0])==='$'+request.id);
+  const targets=owned.filter(w=>w.type==='w.request.target');
+  const effects=owned.filter(w=>w.type==='w.request.constraint' && decoded(w.attrs.phase?.[0])!=='selector');
+  if (role.reference) return !targets.length && !effects.length;
+  if (targets.some(w=>['name','description','family_words','sort_words'].some(slot=>{
+    const value=decoded(w.attrs[slot]?.[0]), name=value && form(value);
+    return name===role.head || name?.startsWith(role.head+' ');
+  }))) return false;
+  return effects.every(w=>role.properties.some(({family,key,value})=>{
+    const actual=decoded(w.attrs.value?.[0]);
+    return decoded(w.attrs.attribute?.[0])===key && [undefined,'eq'].includes(decoded(w.attrs.operator?.[0])) &&
+      (actual===value || actual===role.operand ||
+        decimal.test(actual ?? '') && decimal.test(value) && Number(actual)===Number(value)) &&
+      (!targets.length || targets.some(t=>decoded(t.attrs.family?.[0])===family));
+  }));
+}
+
+export function numericAssignmentReadings(text,role) {
+  const request='@r1 w.request.request act=change mood=do predicate='+quote(role.predicate)+' words='+quote(text);
+  const lead=role.lead ? ['@f1 w.request.filler text='+quote(role.lead)] : [];
+  if (role.reference) return [{sop:[request+' refers=thing',...lead,
+    '@r1.u1 w.request.unread request=$r1 text='+quote(role.fragment)].join('\n'),
+  source:'unresolved-property-owner',status:'partial'}];
+  if (!role.noun) return [];
+  return role.properties.map(({family,key,value,measurement})=>({sop:[
+    request,
+    '@r1.t w.request.target request=$r1 family='+quote(family)+' mode=existing fill=description description='+quote(role.noun),
+    '@r1.l w.request.lookup request=$r1 target=$r1.t key=thing from=page',
+    '@r1.c1 w.request.constraint request=$r1 on=attribute attribute='+quote(key)+
+      ' operator=eq phase=result key_words='+quote(role.propertyWords)+' words='+quote(role.operand)+
+      ' value='+(decimal.test(value) ? value : quote(value))+(measurement ? ' measure='+measurement.measure+' unit='+quote(measurement.unit)+
+        ' measure_words='+quote(measurement.words) : ''),
+    ...lead,
+  ].join('\n'),source:'numeric-property-assignment',status:'matched'}));
 }
 
 function scaledProperty(worlds,family,source,result,multiplier) {

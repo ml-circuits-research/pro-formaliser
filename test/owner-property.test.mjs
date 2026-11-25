@@ -33,6 +33,57 @@ function check(text,candidate,configured,description,attribute,value,keyWords,va
   assert.equal(field(constraint,'phase'),'result');
 }
 
+test('keeps numeric assignment roles distinct from learned names and unresolved possessives',async t=>{
+  const point=(name,amount)=>[
+    '@r w.request.request act=change mood=do',
+    '@t w.request.target request=$r family=point mode=existing determiner=definite fill=written name='+JSON.stringify(name),
+    '@s w.request.constraint request=$r on=attribute attribute=chart.labels value='+JSON.stringify(name)+' operator=eq phase=selector',
+    '@c w.request.constraint request=$r on=attribute attribute=point.value value='+JSON.stringify(amount)+' operator=eq phase=result',
+  ].join('\n');
+  const examples=[
+    ['Set its width to 12','Set its width','12'],['Set its height to 19','Set its height','19'],
+    ['Set the width of House to 12','Set the width of House','12'],['North to 12','North','12'],
+  ].map(([text,name,value])=>({text,sop:point(name,value),count:4}));
+  const reader=createReader({version:1,examples,templates:[],lexicon:{}},worlds);
+  t.after(()=>reader.close());
+  for (const [text,fragment] of [
+    ['Set its width to 12','its width to 12'],
+    ['Set its height to 19','its height to 19'],
+    ['Could you change its height to nineteen?','its height to nineteen'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const correct=candidates.find(candidate=>candidate.source==='unresolved-property-owner');
+    assert.ok(correct,text);
+    assert.equal(correct.status,'partial');
+    const wires=parse(correct.sop);
+    assert.equal(field(wires.find(w=>w.type==='w.request.request'),'refers'),'thing');
+    assert.equal(field(wires.find(w=>w.type==='w.request.unread'),'text'),fragment);
+    assert.deepEqual(correct.evidence.missing,[]);
+    assert.ok(candidates.every(candidate=>parse(candidate.sop).every(w=>
+      w.type!=='w.request.target' && w.type!=='w.request.constraint')),text);
+  }
+  const house=await reader.propose('Set the width of House to 12');
+  assert.ok(house.candidates.some(({sop})=>{
+    const wires=parse(sop);
+    return wires.some(w=>['House'].includes(field(w,'name') ?? field(w,'description'))) &&
+      wires.some(w=>field(w,'attribute')==='drawn.width' && field(w,'value')==='12');
+  }));
+  assert.ok(house.candidates.every(({sop})=>!sop.includes('name="Set the width of House"')));
+  const box=await reader.propose('Set the box width to twelve');
+  check('Set the box width to twelve',box.candidates.find(c=>c.source==='numeric-property-assignment' &&
+    c.sop.includes('attribute="node.width"')),
+    worlds,'the box','node.width','12','width','twelve');
+  const eye=await reader.propose('Set the left eye height to 10');
+  check('Set the left eye height to 10',eye.candidates.find(c=>c.source==='numeric-property-assignment' &&
+    c.sop.includes('attribute="part.height"')),
+    worlds,'the left eye','part.height','10','height');
+  const pointResult=await reader.propose('North to 12');
+  assert.ok(pointResult.candidates.some(({sop})=>sop.includes('name="North"') && sop.includes('attribute=point.value')));
+  const quoteResult=await reader.propose('Set the title of this chart to “Set its width”');
+  assert.ok(quoteResult.candidates.some(({sop})=>parse(sop).some(w=>
+    field(w,'attribute')==='chart.title' && field(w,'value')==='Set its width')));
+});
+
 test('reads open and closed properties of described owners with native action and connector licensing', async () => {
   const cases=[
     ['Could you set the y axis title on the regional revenue chart to Headcount?',
