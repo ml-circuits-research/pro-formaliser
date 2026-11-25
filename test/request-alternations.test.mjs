@@ -197,3 +197,50 @@ test('a proved command in an ability wrapper keeps the courtesy and unresolved o
     assert.ok(candidates.every(candidate=>candidate.source!=='language-alternation'),text);
   }
 });
+
+test('proves commands inside leading and trailing courtesy with exact filler evidence',async t=>{
+  const reader=createReader({
+    version:1,examples:[],templates:[],
+    lexicon:{please:[['act','place','do',10000]],make:[['act','make','do',10000]]},
+  });
+  t.after(()=>reader.close());
+  const field=(wire,key)=>{
+    const value=wire.attrs[key]?.[0];
+    return value?.startsWith('"') ? JSON.parse(value) : value;
+  };
+  for (const [text,act,predicate,fillers] of [
+    ['Please make a copy of the chart.','copy','make a copy of',['Please']],
+    ['Make a copy of the chart, please.','copy','Make a copy of',['please']],
+    ['Kindly save the chart as PNG.','save','save',['Kindly']],
+    ['Save the chart as PNG, please?','save','Save',['please']],
+    ['Remove the grass pls.','remove','Remove',['pls']],
+    ['Please remove the grass, please.','remove','remove',['Please','please']],
+    ['Select the daffodils, please.','pick','Select',['please']],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const wrapped=candidates.find(candidate=>{
+      if (candidate.source!=='language-alternation') return false;
+      const actual=parse(candidate.sop).filter(w=>w.type==='w.request.filler').map(w=>field(w,'text'));
+      return JSON.stringify(actual)===JSON.stringify(fillers);
+    });
+    assert.ok(wrapped,text);
+    const wires=parse(wrapped.sop), request=wires.find(w=>w.type==='w.request.request');
+    assert.equal(field(request,'words'),text);
+    assert.equal(field(request,'predicate'),predicate,text);
+    assert.equal(field(request,'act'),act,text);
+    assert.deepEqual(wrapped.catalog.issues,[],text);
+    assert.deepEqual(wrapped.evidence.missing,[],text);
+    if (act==='save') assert.ok(wires.some(w=>w.type==='w.request.unread' &&
+      field(w,'text').replace(/\.$/u,'')==='the chart as PNG'),text);
+  }
+
+  for (const text of [
+    'Please do not remove the grass.', 'Please remove the grass if it is dry.',
+    'Please remove the grass or ask first.', 'Could she remove the grass, please?',
+    'Write "Please remove the grass."',
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>candidate.source!=='language-alternation' ||
+      !parse(candidate.sop).some(w=>w.type==='w.request.filler' && /^please$/i.test(field(w,'text')))),text);
+  }
+});

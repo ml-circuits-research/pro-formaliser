@@ -32,7 +32,7 @@ import { verbEffectIndex,verbEffectReading } from './verb-effects.mjs';
 import { transformationReadings } from './transformation.mjs';
 import { numberedCreationReadings, numberedQualifierReadings } from './numbered-qualifier.mjs';
 import { coordinatedPacket,effectReading } from './coordinated-effects.mjs';
-import { detachedDiscourse,discourseBody } from './trailing-discourse.mjs';
+import { detachedDiscourse,discourseBody,politeBody } from './trailing-discourse.mjs';
 import { memberActionPackets,memberActionReadings } from './member-actions.mjs';
 import { affectedTargetCandidates } from './affected-target.mjs';
 import { fitsNumericAssignment,numericAssignmentReadings,numericAssignmentRoles,ownerPropertyReadings } from './owner-property.mjs';
@@ -843,26 +843,35 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
   async function formalise(text) {
     return attachIntents(text,await formaliseBase(text),formaliseBase);
   }
-  // The canonical ability wrapper exposes a potential command. Only a
-  // complete native body frame can displace conflicting learned readings.
+  // A courtesy wrapper only displaces competing learned readings when the
+  // independently read command body establishes its action.
   function politeCommandBody(text,body) {
-    if (body.mode!=='request' || body.family!=='ability question' || !body.prefix ||
-        (body.suffix && body.suffix!=='?')) return;
-    let result=body;
+    if (body.mode!=='request') return;
+    if (body.family==='polite word') {
+      const fillers=body.fillers ?? [
+        body.prefix.replace(/,\s*$/u,''),
+        body.suffix.replace(/^[\s,]+|[.!?。！？\s]+$/gu,''),
+      ].filter(Boolean);
+      return fillers.length ? {...body,fillers} : undefined;
+    }
+    if (body.family!=='ability question' || !body.prefix || (body.suffix && body.suffix!=='?')) return;
+    let result={...body,fillers:[body.prefix]};
     for (;;) {
       const nested=alternateBodies(result.text,worlds.alternations);
       if (nested.length!==1) return result;
       const [next]=nested;
       if (next.mode!=='request' || next.family!=='polite word' || !next.prefix || next.suffix) return result;
       const start=result.start+next.start, end=result.start+next.end;
-      result={...body,text:next.text,start,end,prefix:text.slice(0,start).trim()};
+      const prefix=text.slice(0,start).trim();
+      result={...body,text:next.text,start,end,prefix,fillers:[prefix]};
     }
   }
   function provedCommand(text,choices) {
-    for (const {language} of choices) {
+    for (const {language,source,status} of choices) {
       if (!language?.discriminating || language.conflicts.length || !text.startsWith(language.predicate)) continue;
       const surface=tokens(language.predicate).map(([key])=>key).join(' ');
-      if (!nativeHead(surface,language.act)) continue;
+      const inventory=source==='frame-target-inventory' && status==='matched';
+      if (!nativeHead(surface,language.act) && !inventory) continue;
       const declared=worlds.lookup(surface).filter(([role])=>role==='act');
       if (declared.length && declared.every(([,act])=>act===language.act)) return language;
     }
@@ -871,8 +880,16 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     const base=await formalise(text);
     const {alternatives,[conditionalScope]:conditional,...first}=base;
     const candidates=first.sop ? [first,...alternatives] : [];
-    const bodies=languageFrames ? alternateBodies(text,worlds.alternations) : [];
-    if (!bodies.length || conditional) return candidates;
+    if (!languageFrames || conditional) return candidates;
+    const bodies=alternateBodies(text,worlds.alternations);
+    if (!bodies.length) {
+      const ts=tokens(text);
+      if (ts.some(([key])=>/^["“”‘’']$/u.test(key))) return candidates;
+      const courtesy=politeBody(text,ts,politeness,2);
+      if (!courtesy?.fillers.length) return candidates;
+      bodies.push({text:courtesy.span(courtesy.start,courtesy.end),mode:'request',family:'polite word',
+        prefix:'',suffix:'',fillers:courtesy.fillers});
+    }
     const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),true))));
     for (const original of bodies) {
       const modal=politeCommandBody(text,original);
@@ -880,6 +897,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       const {alternatives,...head}=await formalise(body.text);
       const choices=[head,...alternatives];
       const command=modal && provedCommand(body.text,choices);
+      if (original.fillers && !command) continue;
       const grounded=new Map();
       const boundaries=sequenceParts(body.text,tokens(body.text),worlds.joiners,sequenceOptions);
       for (const choice of choices) {
@@ -903,9 +921,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
         if (command) {
           const ids=new Set(wires.map(wire=>wire.id));
-          let id='f1', suffix=1;
-          while (ids.has(id)) id='f'+(++suffix);
-          wires.push({id,type:'w.request.filler',attrs:{text:[JSON.stringify(body.prefix)]}});
+          let suffix=1;
+          for (const filler of body.fillers) {
+            while (ids.has('f'+suffix)) suffix++;
+            wires.push({id:'f'+suffix++,type:'w.request.filler',attrs:{text:[JSON.stringify(filler)]}});
+          }
         }
         const sop=serialize(wires);
         const key=admissibleKey(text,sop);
@@ -917,12 +937,22 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         }
       }
       if (grounded.size) {
+        const courtesyWord=modal.family==='polite word';
         const retained=candidates.filter(candidate=>{
           const wires=parse(candidate.sop), requests=wires.filter(wire=>wire.type==='w.request.request');
-          return requests.length===1 && valueOf(requests[0],'act')===command.act &&
-            valueOf(requests[0],'predicate')===command.predicate &&
-            !grounded.has(JSON.stringify(signatures(wires,true)));
+          if (requests.length!==1 || valueOf(requests[0],'act')!==command.act) return false;
+          const predicate=valueOf(requests[0],'predicate');
+          if (courtesyWord) {
+            // An independently parsed command can bind additional argument
+            // markers and keep a different evidence layout.
+            return predicate && literalRanges(predicate,command.predicate).length>0;
+          }
+          return predicate===command.predicate && !grounded.has(JSON.stringify(signatures(wires,true)));
         });
+        if (courtesyWord) {
+          const originalSops=new Set(retained.map(candidate=>candidate.sop));
+          return [...grounded.values()].filter(candidate=>!originalSops.has(candidate.sop)).concat(retained);
+        }
         return [...grounded.values(),...retained];
       }
     }

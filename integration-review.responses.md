@@ -775,3 +775,15 @@ The actual before/after replay used 257 texts. Six direct requests gained native
 This uses the installed source-marker and container declarations and the existing optional source-scope relation. Default output preserves the written source as unread pending a canonical source relation. Unknown or incompatible containers, quoted tails, questions, and conditions do not supply this proof. No aggregate benchmark ran. [Regressions](test/source-container.test.mjs)
 
 All 509 isolated release tests passed.
+
+## Bulk findings fixed — courtesy before or after a proved command
+
+The existing wrapper path now retains native command proofs under a standalone leading or trailing courtesy. It records the exact courtesy words as filler and preserves the written predicate and unread operands. When there is no explicit alternation, an installed courtesy word such as “pls” can expose the same proof. A complete guarded inventory target can support an otherwise unambiguous native alias such as “select”. Questions, conditions and disjunctions still require their own interpretation.
+
+The actual default-model before/after replay used 136 texts, including 108 WebMeet inputs and 28 targeted requests and controls. Sixteen inputs gained exact courtesy-backed proposals, of which one was from the WebMeet slice. Eleven of the sixteen have a new candidate with no unread span. Examples preserve the chart source in “Make a copy of the chart, please”, the daffodil target in “Select the daffodils, please”, and the written but unresolved operand in “Kindly save the chart as PNG”. The other 120 texts returned identical ordered SOP candidates. No aggregate benchmark ran.
+
+The first full run exposed a regression in named endpoints because courtesy lifting replaced an independent named-arguments proposal. The final read preserves that proposal and its lexical alternatives while adding the courtesy evidence. The existing named-endpoint regression and the new courtesy tests pass.
+
+The main remaining gap in the targeted slice is body interpretation for creation, placement and other aliases without a complete native command proof. This change consumes existing grammar and vocabulary. [Regressions](test/request-alternations.test.mjs)
+
+All 510 release tests passed after the correction.

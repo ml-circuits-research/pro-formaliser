@@ -549,3 +549,7 @@
 ## Existing inventory targets with written sources
 - A declared source tail now bounds native object recognition and stays exact in the request.
 - The real 257-text replay added six direct and three composed readings. The optional module verified all six direct source links. All 509 tests passed.
+
+## Courtesy before and after a command
+- Declared courtesy now preserves independently proved command readings and exact filler words.
+- The real 136-text replay added 16 readings and kept 120 candidate lists equal. The named-endpoint regression was corrected. All 510 tests passed.
