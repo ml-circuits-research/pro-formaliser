@@ -47,14 +47,35 @@ test('keeps both scatter role connectors and trailing courtesy outside the purpo
   }));
 });
 
-test('retains both coordinated axis readings and leaves an unbound suffix intact',async t=>{
+test('retains both axis readings and binds supported configuration after an unknown phrase',async t=>{
   const reader=createReader();
   t.after(()=>reader.close());
-  const suffix='with uncertainty bands, with the y axis starting at zero';
-  const scatter=await readings(reader,'Draw a scatter plot of heater load and fuel consumption '+suffix);
+  const scatter=await readings(reader,'Draw a scatter plot of heater load and fuel consumption '+
+    'with uncertainty bands, with gridlines behind it, with the y axis starting at zero');
   for (const [x,y] of [['heater load','fuel consumption'],['fuel consumption','heater load']]) {
     assert.ok(scatter.some(({properties,unread,status})=>properties['chart.xField']===x &&
-      properties['chart.yField']===y && status==='partial' && unread.includes(suffix)));
+      properties['chart.yField']===y && properties['chart.grid']==='show' && properties['chart.min']==='0' &&
+      status==='partial' && unread.length===1 && unread[0]==='with uncertainty bands'));
+  }
+});
+
+test('keeps explicit settings on the created chart and does not guess other axes or conflicting bounds',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  const base='Draw a scatter plot of ad spend against revenue';
+  const supported=await readings(reader,base+
+    ', with a regression line, with the legend on the right, with the y axis ending at nine');
+  assert.ok(supported.some(({properties,unread,status})=>properties['chart.xField']==='revenue' &&
+    properties['chart.yField']==='ad spend' && properties['chart.trendLine']==='show' &&
+    properties['chart.legend']==='right' && properties['chart.max']==='9' && status==='matched' && !unread.length));
+  for (const suffix of [
+    'with the x axis starting at zero, with gridlines behind it',
+    'with the y axis starting at zero, with the y axis starting at one, with gridlines behind it',
+    'with the y axis starting at 1,000, with gridlines behind it',
+  ]) {
+    const data=await readings(reader,base+', '+suffix);
+    assert.ok(data.some(({properties,unread})=>properties['chart.grid']==='show' &&
+      properties['chart.min']===undefined && unread.length===1),suffix);
   }
 });
 

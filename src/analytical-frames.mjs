@@ -1,5 +1,6 @@
 import { str } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { tokens } from './lexicon.mjs';
+import { resolveWrittenMeasurement } from './owner-property.mjs';
 
 const surface=text=>tokens(text).map(([key])=>key).join(' ');
 const ownerId=(family,key,value,words)=>JSON.stringify([family,key,value,surface(words)]);
@@ -124,4 +125,101 @@ export function analyticalOwnerBindings(text,proof,worlds) {
     proof.owned.ownerKey,proof.owned.ownerValue,span));
   return [...(fields ?? [])].flatMap(([key,values])=>values.size===1 &&
     !proof.bindings.some(([occupied])=>occupied===key) ? [[key,[...values][0],start,end]] : []);
+}
+
+export function compileAnalyticalAdjuncts(facts,catalog) {
+  const frames=new Map();
+  for (const {attrs} of facts('pro.reader.analytical_adjunct')) {
+    const [tab,family,key,value]=['tab','family','key','value'].map(name=>str(attrs[name]?.[0]));
+    const property=catalog.find(row=>row.tab===tab && row.family===family && row.name===key);
+    if (!property) continue;
+    for (const pattern of (attrs.pattern ?? []).map(str)) {
+      const [before,after,...repeated]=pattern.split('{number}');
+      if (repeated.length || /[{}]/u.test(before+(after ?? ''))) continue;
+      if (after===undefined ? !property.values.includes(value) :
+          value!==undefined || property.values.length || !property.head.split('+').includes('number')) continue;
+      const lead=surface(before).split(' '), tail=after?.trim() ? surface(after).split(' ') : [];
+      if (!lead[0]) continue;
+      const entries=frames.get(family) ?? [];
+      entries.push({key,lead,tail,value});
+      frames.set(family,entries);
+    }
+  }
+  return frames;
+}
+
+function adjunctValue({key,lead,tail,value},part,span,worlds,family) {
+  const stop=part.length-tail.length;
+  if (stop<lead.length || !lead.every((word,i)=>part[i][0]===word) ||
+      !tail.every((word,i)=>part[stop+i][0]===word)) return;
+  if (value!==undefined) return stop===lead.length ? value : undefined;
+  if (stop===lead.length) return;
+  const result=resolveWrittenMeasurement(span(part[lead.length][2],part[stop-1][3]),worlds,family,key);
+  if (!result?.measurement) return result?.value;
+}
+
+export function analyticalAdjunctAlias(worlds,family,key,text,value) {
+  const rules=worlds.analyticalAdjuncts?.get(family)?.filter(rule=>rule.key===key);
+  if (!rules?.length) return false;
+  const chars=Array.from(text), part=tokens(text);
+  const matches=new Set(rules.map(rule=>adjunctValue(rule,part,(a,b)=>chars.slice(a,b).join(''),worlds,family))
+    .filter(result=>result!==undefined));
+  return matches.size===1 && matches.has(value);
+}
+
+export function analyticalAdjunctBindings(text,proof,worlds,baseBindings) {
+  const rules=worlds.analyticalAdjuncts?.get(proof.family);
+  if (!rules?.length || !proof.owned.ownerKey || proof.mode!=='new') return;
+  const end=proof.owned.politeTail ?? proof.owned.utteranceEnd;
+  if (proof.end>=end) return;
+  const chars=Array.from(text);
+  const span=(a,b)=>chars.slice(a,b).join('');
+  const ts=tokens(span(proof.end,end));
+  const parts=[];
+  let start=0;
+  for (let i=0;i<=ts.length;i++) {
+    if (i<ts.length) {
+      const [word,,a,b]=ts[i], around=span(proof.end+a-1,proof.end+b+1);
+      if ((word==='.' && !/\d\.\d/u.test(around)) || [';','!','?'].includes(word)) {
+        parts.push(ts.slice(start));
+        break;
+      }
+      if (word!==',' || /\d,\d/u.test(around)) continue;
+    }
+    if (i>start) parts.push(ts.slice(start,i));
+    start=i+1;
+  }
+  const occupied=new Set([...proof.bindings,...baseBindings].map(([key])=>key));
+  let crossedRequest=false;
+  const results=parts.map(part=>{
+    const from=proof.end+part[0][2], to=proof.end+part.at(-1)[3];
+    if (crossedRequest) return {from,to};
+    const choices=new Map();
+    for (const rule of rules) {
+      if (occupied.has(rule.key)) continue;
+      const canonical=adjunctValue(rule,part,(a,b)=>span(proof.end+a,proof.end+b),worlds,proof.family);
+      if (canonical!==undefined) choices.set(JSON.stringify([rule.key,canonical]),[rule.key,canonical,from,to]);
+    }
+    if (!choices.size) {
+      let first=0;
+      while (worlds.joiners[part[first]?.[0]]) first++;
+      crossedRequest=part.slice(first,first+4).some((_,i)=>
+        worlds.lookup(part.slice(first,first+i+1).map(([word])=>word).join(' '))
+          .some(([role,act,mood])=>role==='act' && act!=='ask' && (!mood || mood==='do')));
+    }
+    return {from,to,binding:choices.size===1 ? choices.values().next().value : undefined};
+  });
+  const counts=new Map();
+  for (const {binding} of results) if (binding) counts.set(binding[0],(counts.get(binding[0]) ?? 0)+1);
+  const bindings=[], unread=[];
+  let remainder;
+  for (const {from,to,binding} of results) {
+    if (binding && counts.get(binding[0])===1) {
+      if (remainder) unread.push(span(...remainder));
+      remainder=undefined;
+      bindings.push(binding);
+    } else remainder=[remainder?.[0] ?? from,to];
+  }
+  if (remainder) unread.push(span(...remainder));
+  if (bindings.length) return {bindings,unread};
 }

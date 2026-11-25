@@ -542,3 +542,7 @@ The owner authorized resuming benchmarks on coherent versions. Published reader 
 ## Current-text quantified references
 
 The published benchmark exposed a previous-turn lookup on “I want to slant all of them by 15” (WebMeet `drawing/scenes-20.csv` logical row 1783). Replaying the same text with the frozen model now retains “all of them”, the universal quantifier and the relative slant of 15, with `from=any` deferring the group lookup. The common proposal gate also rejects explicit previous-turn wires and lookups, including a native-valid stored example with written evidence. The focused replay has clean catalog and evidence checks and no previous-turn candidate. All 463 release tests passed. No benchmark rerun.
+
+## Declared settings on an analytical creation
+
+Before the common-adapter handoff, the prepared analytical change passed all 464 release tests. Once an argument frame proves a new owner, catalogued adjuncts can attach finite settings and numeric operands from the trailing phrases, retaining the written evidence and unknown portions. The frozen charts-05 row 2411 now binds grid visibility and y-axis minimum zero in both field-order readings. Ordinary least squares remains unread because the catalog does not describe the fit method. WebMeet charts-05 logical rows 2353 and 2446 now have complete model-free proposals with ordered fields and regression-line visibility, absent in the previous model-free reader. An independent overlay adds its own numerical limit through the same interface. No aggregate rerun.

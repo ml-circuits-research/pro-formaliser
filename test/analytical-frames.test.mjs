@@ -113,12 +113,14 @@ test('loads a distinct analytical layout through a normal reader overlay', async
     '@partition w.request.key tab=audit family=screen name=screen.partition head=span',
     '@window w.request.key tab=audit family=screen name=screen.window head=span',
     '@style w.request.key tab=audit family=screen name=screen.style head=class value=grid',
+    '@screen.limit w.request.key tab=audit family=screen name=screen.limit head=number',
     '@frame pro.reader.analytical_frame tab=audit family=screen layout=trailing_owner prefix=build owner="a weekly matrix" owner_key=screen.view owner_value=weekly owner_marker=as measure=screen.subject grouping=screen.partition group_marker=across operation=screen.combine operation_marker=of',
-    '@ordered pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="{$owner} for {screen.subject}, partitioned across {screen.partition}, combined by {screen.combine}"',
+    '@ordered pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly tail="," pattern="{$owner} for {screen.subject}, partitioned across {screen.partition}, combined by {screen.combine}"',
     '@fronted pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=assemble owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="during {screen.window}, {$predicate} {$owner} for {screen.subject} across {screen.partition}"',
     '@adjacent pro.reader.analytical_frame tab=audit family=screen layout=ordered_fields prefix=merge owner="a weekly matrix" owner_key=screen.view owner_value=weekly pattern="{$owner} for {screen.subject} {screen.partition}"',
     '@boundary pro.reader.analytical_boundary tab=audit family=screen text="capped at" numeric_modifier=deep',
     '@matrix.style pro.reader.analytical_owner_property tab=audit family=screen owner_key=screen.view owner_value=weekly text="a weekly matrix" key=screen.style value=grid',
+    '@matrix.limit pro.reader.analytical_adjunct tab=audit family=screen key=screen.limit pattern="capped at {number} rows"',
     '@union core.word text=unioned means=union of=screen.combine'
   ].join('\n'));
   const reader=createReader(undefined,loadWorlds({paths:[path]}));
@@ -127,6 +129,8 @@ test('loads a distinct analytical layout through a normal reader overlay', async
     {'screen.view':'weekly','screen.combine':'union','screen.subject':'inspection results','screen.partition':'delivery teams','screen.style':'grid'});
   await proves(reader,'Assemble a weekly matrix for repair results, partitioned across shift teams, combined by unioned',
     {'screen.view':'weekly','screen.combine':'union','screen.subject':'repair results','screen.partition':'shift teams','screen.style':'grid'});
+  await proves(reader,'Assemble a weekly matrix for repair results, partitioned across shift teams, combined by unioned, capped at seven rows',
+    {'screen.view':'weekly','screen.combine':'union','screen.limit':'7'});
   await proves(reader,'During spring inventory, assemble a weekly matrix for defect reports across warehouses',
     {'screen.view':'weekly','screen.window':'spring inventory','screen.subject':'defect reports','screen.partition':'warehouses'});
   for (const text of [
@@ -241,8 +245,9 @@ test('opt-in scatter grammar binds canonical axis fields and preserves the writt
   for (const key of ['chart.x','chart.y','chart.xLabel','chart.yLabel','chart.measure','chart.dimension','chart.compare']) {
     assert.equal(props[key],undefined,key);
   }
-  assert.ok((await original.propose(source)).candidates.every(candidate=>
-    !properties(parse(candidate.sop))['chart.xField']));
+  const defaults=(await original.propose(source)).candidates.map(candidate=>properties(parse(candidate.sop)));
+  assert.ok(defaults.some(props=>props['chart.xField']==='elapsed minutes' && props['chart.yField']==='defect rate'));
+  assert.ok(defaults.every(props=>props['chart.colourBy']===undefined));
 
   await proves(reader,'Display net repairs against technician tenure, coloured by office in a scatter plot',{
     'chart.type':'scatter','chart.xField':'technician tenure','chart.yField':'net repairs','chart.colourBy':'office',
@@ -261,7 +266,6 @@ test('opt-in scatter grammar binds canonical axis fields and preserves the writt
 
   for (const text of [
     'Make a scatter plot of defect rate against elapsed minutes shown together, colored by repair crew',
-    'Make a scatter plot of defect rate against elapsed minutes, labeled by repair crew',
     'Make a scatter plot of defect rate against elapsed minutes, colored by repair crew if asked',
     'Make a line plot of defect rate against elapsed minutes, colored by repair crew',
     'Do not make a scatter plot of defect rate against elapsed minutes, colored by repair crew',
@@ -269,8 +273,10 @@ test('opt-in scatter grammar binds canonical axis fields and preserves the writt
     const {candidates}=await reader.propose(text);
     assert.ok(candidates.every(candidate=>!properties(parse(candidate.sop))['chart.xField']),text);
   }
+  const labelled=await reader.propose('Make a scatter plot of defect rate against elapsed minutes, labeled by repair crew');
+  assert.ok(labelled.candidates.every(candidate=>properties(parse(candidate.sop))['chart.colourBy']===undefined));
   const followup=await reader.propose(source+' and delete the plot');
-  const mappings=followup.candidates.filter(candidate=>properties(parse(candidate.sop))['chart.xField']);
+  const mappings=followup.candidates.filter(candidate=>properties(parse(candidate.sop))['chart.colourBy']==='repair crew');
   assert.ok(mappings.length);
   assert.ok(mappings.every(({sop})=>{
     const wires=parse(sop);

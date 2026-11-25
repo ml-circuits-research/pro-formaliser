@@ -19,7 +19,7 @@ import {createTopicCommands,topicCommandPacket,topicCommandReading} from './topi
 import {postposedCause,postposedClauseReadings,readsCauseAsCommand,withPostposedCause} from './postposed-clause.mjs';
 import {standingPositionReadings,trailingStandingReadings} from './standing-position.mjs';
 import {incidentalModifier,withIncidentalModifier} from './incidental-modifiers.mjs';
-import {analyticalOwnerBindings} from './analytical-frames.mjs';
+import {analyticalAdjunctBindings,analyticalOwnerBindings} from './analytical-frames.mjs';
 import {orientationLandmarkReadings} from './orientation-landmark.mjs';
 import {reciprocalReading} from './reciprocal-reading.mjs';
 import {spatialAnchorReadings} from './spatial-anchor.mjs';
@@ -484,7 +484,9 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     }
     for (const proof of response.sequences ?? []) {
       if (proof.owned) {
-        const reading=sequenceFrameReading(text,proof,analyticalOwnerBindings(text,proof,worlds),worlds.argumentLabels);
+        const ownerBindings=analyticalOwnerBindings(text,proof,worlds);
+        const adjuncts=analyticalAdjunctBindings(text,proof,worlds,ownerBindings);
+        const reading=sequenceFrameReading(text,proof,ownerBindings,worlds.argumentLabels,adjuncts);
         if (reading) {
           const reparsed=scope.restricted && sequenceScopeText(text,proof);
           if (reparsed) {

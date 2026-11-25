@@ -17,7 +17,7 @@ import {compileTopicCommandDeclarations} from './topic-commands.mjs';
 import {compilePostposedClauses} from './postposed-clause.mjs';
 import {compileStandingPositions,standingClosings} from './standing-position.mjs';
 import {incidentalModifiers} from './incidental-modifiers.mjs';
-import {analyticalArgumentFacts,compileAnalyticalOwnerProperties} from './analytical-frames.mjs';
+import {analyticalAdjunctAlias,analyticalArgumentFacts,compileAnalyticalAdjuncts,compileAnalyticalOwnerProperties} from './analytical-frames.mjs';
 import {compileOrientationLandmarks} from './orientation-landmark.mjs';
 import {compileValidationModules} from './schema.mjs';
 import {compileReciprocal} from './reciprocal-reading.mjs';
@@ -659,6 +659,7 @@ function compile(facts) {
       .flatMap(wire=>values(wire,'item').map(text=>phrase(text).split(' '))).filter(words=>words.length>1),
     fixedProperties:compileFixedProperties(facts,requestKeys),
     analyticalOwnerProperties:compileAnalyticalOwnerProperties(facts,requestKeys),
+    analyticalAdjuncts:compileAnalyticalAdjuncts(facts,requestKeys),
     dialogueCoverage:compileDialogueCoverage(facts),
     dependentOperands:compileDependentOperands(facts,requestKeys),
     ownedEffects:compileOwnedEffects(facts,requestKeys,propertyLabels),
@@ -695,9 +696,9 @@ function compile(facts) {
       values(w,'text').map(text=>({key:one(w,'key'),words:tokens(text).map(t=>t[0])}))).filter(entry=>entry.key && entry.words.length),entry=>entry.key),
     ownerPropertyLabels:propertyLabels,
     ownerPropertyValues:compatibleValues,
-    declaredValueAlias: (family,key,text,value) => {
+    declaredValueAlias(family,key,text,value) {
       const meanings=closedValueAliases.get(JSON.stringify([family,key,phrase(text)]));
-      return meanings?.size===1 && meanings.has(value);
+      return meanings?.size===1 && meanings.has(value) || analyticalAdjunctAlias(this,family,key,text,value);
     },
     compoundReferences:facts('pro.reader.compound_reference').map(w=>({family:one(w,'family'),firstKey:one(w,'first_key'),secondKey:one(w,'second_key'),delimiter:one(w,'delimiter')})),
     universalAgreement, universalInventory:compileUniversalInventory(facts,words,targetFamilies,universalAgreement),

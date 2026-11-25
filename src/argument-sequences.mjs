@@ -310,7 +310,7 @@ export function sequenceScopeText(text,proof) {
   return chars.join('');
 }
 
-export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
+export function sequenceFrameReading(text,proof,extraBindings=[],labels,adjuncts) {
   if (!proof.owned) return;
   const chars=Array.from(text), span=(start,end)=>chars.slice(start,end).join('');
   const {ownerKey,ownerValue,predicateStart,predicateEnd,utteranceEnd,contextual,requestMode,modeMarkerStart}=proof.owned;
@@ -332,7 +332,7 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
     (ownerKey ? [[ownerKey,ownerValue,owner[2],owner[3]]] : []) :
     binding[0]===scopePart ? [[proof.owned.scopeAttribute,'',proof.anchor,binding[3]]] :
     binding===identity || binding[0]===unreadPart || binding[0].startsWith('=') ? [] : [binding]);
-  for (const [i,[key,canonical,a,b]] of [...bindings,...extraBindings].entries()) {
+  for (const [i,[key,canonical,a,b]] of [...bindings,...extraBindings,...adjuncts?.bindings ?? []].entries()) {
     const words=span(a,b), measurement=canonical?.measurement, value=measurement ? canonical.value : canonical || words;
     let keyWords='';
     if (labels?.has(key)) {
@@ -370,7 +370,8 @@ export function sequenceFrameReading(text,proof,extraBindings=[],labels) {
   const remainder=span(proof.end,politeTail ?? utteranceEnd).replace(/^\s*,?\s*/u,'');
   const unread=proof.bindings.filter(([key])=>key===unreadPart).map(([, ,a,b])=>span(a,b));
   if (proof.owned.locationEnd) unread.unshift(span(0,proof.owned.locationEnd).trim());
-  if (remainder) unread.push(remainder);
+  if (adjuncts) unread.push(...adjuncts.unread);
+  else if (remainder) unread.push(remainder);
   for (const [i,raw] of unread.entries()) lines.push('@r1.u'+i+' w.request.unread request=$r1 text='+encode(raw));
   return {sop:lines.join('\n'),source:'argument-frame',status:unread.length ? 'partial' : 'matched'};
 }

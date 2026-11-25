@@ -461,3 +461,7 @@
 ## Current-text quantified references
 - Frozen scenes-20 row 1783 now keeps the written quantified group and slant delta with an unresolved lookup.
 - Blocked previous-turn lookups at the proposal gate, including a stored-candidate regression control. All 463 isolated release tests passed.
+
+## Analytical creation settings
+- Frozen charts-05 row 2411 retains both field orders and adds the grid and zero minimum. The fit method remains unread.
+- Two further WebMeet requests now have complete world-only scatter/regression proposals. All 464 release tests passed.
