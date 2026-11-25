@@ -2,6 +2,36 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Request intents and grouped effects on the 1% holdout
+
+Reader `f2c73fd` ran on all 1,915 rows in bucket 0 of WebMeet `a85de79`, with canonical knowledge `ae80c054`, the default worlds, and the written text alone. The model was trained on the remaining partition. Spelling correction and application context were off. The L0–L4 table covers the same seeded 1,000-request subset as the preceding paired audit. Each grade considers the entire set of proposals. Previous reasoning carried forward where the set was identical or the previously graded success was provably retained. Three LLM reviewers regraded the other 39 cases against the written request and reference. [Subset and legend](THOUSAND-AUDIT.md) · [Individual reassessments](INTENT-BUCKET0-REPLAY.tsv)
+
+| Grade | Requests |
+| --- | ---: |
+| L0 – Fail | 1.3% |
+| L1 – Wrong, total | 9.3% |
+| L1a – Wrong intent | 1.9% |
+| L1b – Wrong target | 2.1% |
+| L1c – Wrong detail or role | 3.7% |
+| L1d – Invented instruction | 1.6% |
+| L2 – Incomplete, total | 37.6% |
+| L2a – Missing action or step | 6.1% |
+| L2b – Missing target or reference | 9.8% |
+| L2c – Missing detail, placement or condition | 21.7% |
+| L3 – Reasonable and identical to the dataset | 20.9% |
+| L4 – Reasonable alternative | 30.9% |
+| **L3 + L4 – Reasonable** | **51.8%** |
+
+The previous default-text result was 51.7%. The one additional reasonable request sets the whole scene to a snowy dusk. One candidate now sets both snow and dusk. The annotation omits dusk. Review found material reference issues on **24.8%** of the 1,000 reviewed requests. **3.3%** of all reviewed requests have both a reasonable proposal and a material reference issue. Missing details, especially values and placement, account for the largest group of failures to reach L3 or L4.
+
+On the complete 1% holdout, the WebMeet checker reported errors in 293 of 1,891 nonempty first proposals. That check uses the reference family and evaluates the first proposal. The semantic table uses every proposal and judges the text. Reproduce the full inference and checker pass with the pinned setup and this command.
+
+```sh
+env -u SOP_WORLDS .cache/node/bin/node eval/benchmark.mjs --bucket 0 --context text \
+  --model .cache/intent-bucket0-model.json --report .cache/intent-bucket0-metrics.json \
+  --details .cache/intent-bucket0-details.jsonl
+```
+
 ## Target qualifiers and movement
 
 The all-staged reader reaches **55.1% L3 + L4** on the primary 1,000 requests including spelling and **46.0%** on the independent 1,000 original texts. The replay uses the same frozen samples and trained models. The reader receives text only, and the grade considers the full set of proposals. [Changed sets and judgments](QUALIFIED-MOTION-REPLAY.tsv)

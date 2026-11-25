@@ -1,0 +1,40 @@
+sample	source	row	previous	current	reference_issue	new_reference_issue	reason
+14	diagram/charts-05.csv	1039	L2a	L2a	1	0	Creates the sales-by-month line chart in a retained reading. The new purpose is faithful, but no circuit asks for the above-target count with its filter or binds the grid and zero baseline.
+73	drawing/objects-01.csv	409	L2c	L2c	1	0	A retained change identifies the avatar but leaves glasses and persistence unread. Added purpose readings invert the stated reason by treating daily changes as wanted.
+76	drawing/objects-01.csv	232	L2c	L2a	1	0	Recognizes setting the avatar but leaves the elderly-lady choice unread and has no avatar retention step for the next opening on this machine.
+125	diagram/nodes-12.csv	1278	L2b	L2b	0	0	Recognizes placing an existing node but loses the written name Valid?. The coordinates are unread or mislabeled as purpose rather than assigned as x and y.
+181	diagram/nodes-12.csv	3901	L4	L4	0	0	A retained change sets curved routing on all existing connections. Its SOP differs from the reference.
+188	diagram/diagrams-03.csv	1280	L1d	L1d	0	0	The chart-oriented combinations invent undo or a stand creation from the lead-in and supply neither a negative-range log setting nor a grid visibility change.
+234	drawing/placement-01.csv	4552	L2b	L2b	1	0	A circuit makes a small cat near the bench and recognizes a tree-group move, but leaves the whole-group binding, block scope and rightward direction ungrounded.
+245	diagram/charts-05.csv	3362	L2c	L2c	1	0	A circuit keeps the slide purpose and right-hand legend and binds revenue, but drops the stacked-column form and collapses category and segment into one value.
+247	diagram/nodes-01.csv	3449	L1a	L1a	1	0	Redo and generic changes never repeat the swap for the Start pair. The added reading creates an object and treats the pair as a purpose.
+261	drawing/scenes-11.csv	4665	L2c	L2c	0	0	A retained page placement identifies the picture, but no circuit sets its bordered art-print composition. Added readings treat the picture as purpose.
+262	drawing/scenes-05.csv	2278	L1a	L1a	1	0	No circuit swaps the two people. Added readings make swapping a purpose of unrelated actions and fail to bind the colour-qualified pair.
+265	diagram/diagrams-03.csv	3712	L2b	L2b	0	0	A retained change applies orange in a chart-associated reading but leaves March unread. The added purpose readings do not recover the data item.
+275	drawing/scenes-03.csv	795	L2c	L2c	0	0	A retained change targets the man but leaves the sad expression unread. Added readings use sadness as a selector and the man as purpose.
+301	drawing/scenes-21.csv	919	L1a	L1a	0	0	Changes or places a house instead of selecting both the house and the circle.
+306	diagram/charts-05.csv	3525	L2c	L2c	1	0	Creates a scatter plot coloured by channel but leaves order value and margin unbound as data fields.
+419	diagram/charts-02.csv	1308	L2a	L2a	1	1	Recognizes both grid axes but omits shrinking the bars. The reference enables a generic grid and leaves the named chart in filler.
+475	diagram/diagrams-01.csv	741	L1b	L1b	1	0	Treats Slide as an edit target or places an invented object by Slide, leaving Sample unmoved.
+488	drawing/scenes-05.csv	1382	L2a	L2a	0	0	Places the cat near the dog but omits the lasting preference and the small bird at the top.
+516	document/text-07.csv	52	L2b	L2b	0	0	Finds the first paragraph for selection but leaves Hello unbound as the span to select.
+524	diagram/nodes-04.csv	2075	L2c	L2c	1	0	Creates a yellow box and a caption but misses the caption size, placement under each box, and nonoverlap.
+534	diagram/diagrams-03.csv	1848	L2c	L2c	1	0	Recognizes a matrix edit but leaves the row and column labels unread.
+547	calendar/meetings-03.csv	130	L2c	L2c	1	0	Captures the Main title but leaves meeting type, start, duration, and clearing notes unbound.
+556	diagram/charts-05.csv	2714	L2a	L2a	0	0	Captures the first chart's title but fails to create its Q2 counterpart on the shared y axis.
+590	drawing/scenes-05.csv	221	L2a	L2a	1	0	Creates a small cat near the bench but omits the swap of the woman in red and the man in green.
+600	diagram/charts-05.csv	2718	L2a	L2a	0	0	Recognizes chart creation or copying but never produces the two quarter charts with synchronized y axes.
+636	drawing/scenes-03.csv	3909	L2c	L2c	1	0	Recovers shirt and jacket fragments but leaves the wearer, denim and layering unbound.
+650	diagram/nodes-07.csv	1097	L2b	L2c	1	1	The new-group reading leaves Review Draft unbound, while the reference assigns Review as a name and Draft as an existing ID without textual support.
+669	drawing/scenes-07.csv	2778	L2c	L4	1	0	One proposal sets both snow and dusk for the whole scene.
+724	diagram/charts-05.csv	3496	L2c	L2c	0	0	The usable bar-chart creation omits average profit, both grouping dimensions and visible mark values.
+739	calendar/meetings-03.csv	122	L2c	L2c	1	0	The meeting title is Main, but Intro, start at 3, duration 1 and reuse of notes remain unbound.
+754	diagram/charts-02.csv	2787	L2c	L2c	0	0	The chart change leaves the logarithmic value-axis scale over the negative range unspecified.
+759	diagram/nodes-12.csv	1568	L2b	L2b	0	0	The connect reading leaves both the rectangle and n3 endpoints unread.
+776	diagram/nodes-03.csv	500	L2a	L2a	1	0	The arrow-change fragment omits bolding the arrow label and leaves placement and readability unresolved.
+778	diagram/charts-05.csv	2366	L2c	L2c	1	0	The scatter plot with a regression line leaves profit and sales unbound as data fields.
+779	diagram/diagrams-05.csv	385	L2a	L2a	1	0	The undo reading omits the subsequent request to try the other size for the error.
+807	diagram/diagrams-03.csv	2010	L2c	L2a	1	0	The proposal recognizes a question about the diagram for print but leaves the export operation and vector PDF unread.
+816	diagram/charts-06.csv	857	L2c	L2b	0	0	The placement reading leaves the y axis and its chart unresolved and omits the left-side position.
+849	drawing/scenes-03.csv	1582	L1b	L2c	0	0	The placement proposal identifies the boy in the orange jacket but leaves the one-spot left offset unread.
+965	drawing/scenes-07.csv	2824	L4	L4	1	0	The open weather value preserves the full wild stormy night phrase.
