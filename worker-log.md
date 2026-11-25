@@ -591,3 +591,7 @@
 ## Property state and purpose
 - One request now keeps a proved property state with its written nominal or infinitive purpose.
 - Three worlds-only controls gained complete circuits. The 218-row WebMeet replay was unchanged and all 523 tests passed.
+
+## Inventory ownership and shapes
+- Native inventory modifiers now require the same family and compatible act. Canonical shape words preserve diagram-node owners.
+- The optional `shape-target-pilot` is staged for shared review. The default full suite passed all 524 tests.

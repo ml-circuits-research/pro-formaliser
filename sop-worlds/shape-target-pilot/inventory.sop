@@ -1,0 +1,7 @@
+# The shared drawing object role already licenses these operations. Geometry
+# supplies names for that role, independently of any active application view.
+@reader.shapes.existing_argument pro.reader.target_inventory family=drawn act=pick act=remove mode=existing provider=k.shapes.shape identity=name argument_role=thing
+@reader.shapes.property_owner pro.reader.owner_inventory family=drawn act=change provider=k.shapes.shape
+
+# The installed cube alias already supplies one geometric reading of block.
+@reader.shapes.word.block.cuboid core.word of=k.shapes.shape.name text=block means=cuboid
