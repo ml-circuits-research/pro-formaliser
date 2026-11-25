@@ -54,6 +54,54 @@ test('does not change literal, conditional, selecting, or otherwise unlicensed c
   assert.deepEqual(direct(frown,sop.replace('phase=result','phase=result want=no')),[]);
 });
 
+test('preserves a finite reason outside the action and leaves a following comment separate',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [reason,comment] of [
+    ['because it looks cluttered',undefined],
+    ['because the draft disappeared',undefined],
+    ['because she overlaps the chart','the way the drawing looks so far'],
+  ]) {
+    const text=`Sorry, set the node height to 40, ${reason}${comment ? ' — '+comment : ''}.`;
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const found=candidates.find(c=>c.sop.includes('note="stated reason"') && c.sop.includes('attribute="node.height"'));
+    assert.ok(found,text);
+    const wires=parse(found.sop);
+    assert.equal(wires.filter(w=>w.type==='w.request.request').length,1);
+    assert.equal(wires.find(w=>w.type==='w.request.request').attrs.predicate[0],'"set"');
+    assert.deepEqual(wires.filter(w=>w.type==='w.request.unread').map(w=>JSON.parse(w.attrs.text[0])),
+      comment ? [reason,comment+'.'] : [reason]);
+    assert.deepEqual(found.evidence.missing,[]);
+    assert.deepEqual(found.catalog.issues,[]);
+    assert.ok(!found.evidence.counts.uncovered);
+  }
+  for (const text of [
+    'Set the node label to "because it looks cluttered".',
+    'Do not set the node height to 40 because it looks cluttered.',
+    'Set the node height to 40 because it ideas.',
+    'Set the node height to 40 because it looks cluttered — delete the chart.',
+    'Set the node height to 40 because it looks cluttered if that is safe.',
+  ]) assert.ok((await reader.propose(text)).candidates.every(c=>!c.sop.includes('note="stated reason"')),text);
+});
+
+test('removes a request attributed to a separately grounded explanation',async t=>{
+  const main='Set the node height to 40', reason='because it looks cluttered';
+  const text=main+', '+reason;
+  const spurious=[
+    '@r w.request.request act=change mood=do predicate=Set words='+JSON.stringify(main),
+    '@t w.request.target request=$r family=node mode=existing fill=description description="the node"',
+    '@c w.request.constraint request=$r on=attribute attribute=node.height value=40 phase=result operator=eq',
+    '@r2 w.request.request act=change mood=do predicate=because words='+JSON.stringify(reason),
+    '@t2 w.request.target request=$r2 family=node mode=existing fill=context',
+  ].join('\n');
+  const reader=createReader(model(text,spurious));
+  t.after(()=>reader.close());
+  const {candidates}=await reader.propose(text);
+  assert.ok(candidates.some(c=>c.source==='postposed-cause'));
+  assert.ok(candidates.every(c=>!parse(c.sop).some(w=>w.type==='w.request.request' &&
+    w.attrs.predicate?.[0]?.replaceAll('"','')==='because')));
+});
+
 test('cuts a licensed speech comparison away from an open scene value and preserves it as unread',async t=>{
   const worlds=loadWorlds();
   const text='swap the scenery behind everything for a rugged volcano slope exactly as I said, thanks';

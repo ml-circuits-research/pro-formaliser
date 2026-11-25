@@ -1,4 +1,4 @@
-import { parse, serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
+import { analyse, morphOf, parse, serialize } from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
 import { literalField, literalRanges } from './evidence.mjs';
 import { quotedSpans } from './literal-roles.mjs';
 import { tokens } from './lexicon.mjs';
@@ -17,8 +17,8 @@ const get=(wire,key)=>fields(wire,key)[0];
 const shape=text=>tokens(text ?? '').map(([key])=>key==='’' ? "'" : key).join(' ');
 const word=/^[\p{L}\p{M}\p{N}_]+$/u;
 
-export function compilePostposedClauses(facts,requestKeys,words=facts('core.word')) {
-  const finite=new Set(facts('w.lang.en.irregular_form').filter(wire=>get(wire,'vform')==='past')
+export function compilePostposedClauses(facts,requestKeys,words,hasVerb) {
+  const finite=new Set(facts('w.lang.en.irregular_form').filter(wire=>['past','third'].includes(get(wire,'vform')))
     .flatMap(wire=>fields(wire,'form').map(shape)));
   for (const wire of facts('w.lang.en.aux')) for (const form of fields(wire,'text').map(shape)) finite.add(form);
   const speakers=new Set(facts('w.lang.en.pron').filter(wire=>get(wire,'person')==='1' &&
@@ -43,7 +43,17 @@ export function compilePostposedClauses(facts,requestKeys,words=facts('core.word
     bindings.push({kind,family,attribute,reasonKey,operand,markers,
       inventory:inventories.get(valueType) ?? new Map()});
   }
-  return {bindings,finite,speakers,reported};
+  const types={cls:'w.lang.en.class',ending:'w.lang.en.ending',irregular:'w.lang.en.irregular_form'};
+  const morphology=morphOf({ofType:facts},{types});
+  const checked=new Map();
+  const finiteVerb=form=>{
+    if (finite.has(form)) return true;
+    if (!checked.has(form)) checked.set(form,analyse(morphology,form).some(row=>
+      row.exact && ['third','past'].includes(row.features.vform) && hasVerb(row.lemma)));
+    return checked.get(form);
+  };
+  const markers=[...new Set(bindings.filter(b=>b.kind==='causal').flatMap(b=>b.markers))];
+  return {bindings,finiteVerb,speakers,reported,markers};
 }
 
 function actual(text,words,left=0,right=text.length) {
@@ -86,9 +96,10 @@ function clauseAfter(text,scope,binding,grammar,worlds) {
       })
       : input.slice(start+1,after).some((token,j)=>{
         const predicate=start+j+1, subject=form(start,predicate);
-        return grammar.finite.has(token.key) && (worlds.scopeGrammar.subjects.has(subject) ||
+        return (worlds.scopeGrammar.subjects.has(subject) ||
         predicate>start+1 && Object.hasOwn(worlds.determiners,input[start].key) &&
-          input.slice(start+1,predicate).every(({key})=>!worlds.evidenceVocabulary.grammar.has(key)));
+          input.slice(start+1,predicate).every(({key})=>!worlds.evidenceVocabulary.grammar.has(key))) &&
+          grammar.finiteVerb(token.key);
       });
     if (!clause) continue;
     const split=input[i].start, bodyEnd=input[i-1].key===',' ? input[i-1].start : split;
@@ -97,6 +108,74 @@ function clauseAfter(text,scope,binding,grammar,worlds) {
   }
   return readings.filter(reading=>!readings.some(other=>other.split<reading.split &&
     other.end===reading.end && other.clause===reading.clause));
+}
+
+export function postposedCause(text,worlds) {
+  const grammar=worlds.postposedClauses, written=' '+shape(text)+' ';
+  const markers=grammar.markers.filter(marker=>written.includes(' '+marker+' '));
+  if (!markers.length) return;
+  const binding={kind:'causal',markers};
+  const tails=clauseAfter(text,[0,text.length],binding,grammar,worlds);
+  if (!tails.length) for (const dash of text.matchAll(/[—–]/gu)) {
+    const aside=text.slice(dash.index+1).trim(), input=tokens(aside);
+    if (worlds.determiners[input[0]?.[0]]!=='definite' || input.length<3 ||
+        input.some(([key],i)=>!word.test(key) && !(i===input.length-1 && ['.','!'].includes(key)) ||
+          worlds.scopeGrammar.modals.has(key) || worlds.scopeGrammar.conditionals.has(key) ||
+          ['coordination','sequence','condition','addition'].includes(worlds.joiners[key]))) continue;
+    for (const tail of clauseAfter(text,[0,dash.index],binding,grammar,worlds)) {
+      if (!tail.courtesy && !text.slice(tail.end,dash.index).trim()) {
+        tails.push({...tail,aside,textEnd:text.trimEnd().length});
+      }
+    }
+  }
+  if (tails.length!==1) return;
+  const [tail]=tails;
+  return {...tail,body:text.slice(0,tail.bodyEnd).trimEnd()};
+}
+
+export function withPostposedCause(text,tail,candidate,worlds) {
+  const wires=parse(candidate.sop), requests=wires.filter(w=>w.type===requestType);
+  const request=requests.at(-1), owner='$'+request?.id;
+  if (!request || !get(request,'predicate') || ![undefined,'do'].includes(get(request,'mood')) ||
+      request.attrs.polarity) return;
+  const targets=wires.filter(w=>w.type===targetType && get(w,'request')===owner);
+  if (targets.length!==1) return;
+  const scope=get(request,'words') ?? (requests.length===1 ? tail.body : undefined);
+  const location=scope && actual(tail.body,scope);
+  if (!location || location[1]!==tail.body.length) return;
+  const effects=wires.filter(w=>w.type===constraintType && get(w,'request')===owner && get(w,'phase')==='result');
+  if (!effects.length && wires.some(w=>w.type===unreadType && get(w,'request')===owner)) return;
+  const keys=new Set(worlds.postposedClauses.bindings.filter(binding=>binding.kind==='causal' &&
+    binding.family===get(targets[0],'family') && binding.markers.includes(shape(tail.marker)) &&
+    effects.some(w=>get(w,'attribute')===binding.attribute) &&
+    !effects.some(w=>get(w,'attribute')===binding.reasonKey)).map(binding=>binding.reasonKey));
+  request.attrs.words=[quote(text.slice(location[0],tail.textEnd ?? tail.end))];
+  let id=request.id+'.cause';
+  while (wires.some(w=>w.id===id || w.id.startsWith(id+'.'))) id+='_';
+  if (keys.size===1) {
+    wires.push({id,type:constraintType,attrs:{request:[owner],on:['attribute'],attribute:[...keys],
+      value:[quote(tail.clause)],key_words:[quote(tail.marker)],operator:['eq'],phase:['result']}});
+  } else {
+    wires.push({id,type:unreadType,attrs:{request:[owner],text:[quote(text.slice(tail.split,tail.end))],
+      note:[quote('stated reason')]}});
+  }
+  if (tail.courtesy) wires.push({id:id+'.courtesy',type:fillerType,attrs:{text:[quote(tail.courtesy)]}});
+  if (tail.aside) wires.push({id:id+'.aside',type:unreadType,attrs:{request:[owner],text:[quote(tail.aside)],
+    note:[quote('following comment')]}});
+  return {sop:serialize(wires),source:'postposed-cause',
+    status:wires.some(w=>w.type===unreadType) ? 'partial' : 'matched'};
+}
+
+export function readsCauseAsCommand(text,tail,candidate) {
+  return parse(candidate.sop).some(wire=>{
+    const phrase=wire.type===requestType ? get(wire,'predicate') :
+      wire.type==='w.request.intent' && get(wire,'role')==='purpose' ? get(wire,'words') : undefined;
+    if (!phrase) return false;
+    const scope=wire.type===requestType && get(wire,'words');
+    const [left,right]=scope && actual(text,scope) || [0,text.length];
+    const range=actual(text,phrase,left,right);
+    return range && range[0]>=tail.split && range[1]<=(tail.textEnd ?? tail.end);
+  });
 }
 
 function headValue(text,[start,end],headEnd,binding) {

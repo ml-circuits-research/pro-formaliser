@@ -16,7 +16,7 @@ import {ownedEffectReadings} from './owned-effects.mjs';
 import {createAppositiveSelectorReader} from './appositive-selector.mjs';
 import {quantifiedVerbReadings} from './quantified-verb.mjs';
 import {createTopicCommands,topicCommandPacket,topicCommandReading} from './topic-commands.mjs';
-import {postposedClauseReadings} from './postposed-clause.mjs';
+import {postposedCause,postposedClauseReadings,readsCauseAsCommand,withPostposedCause} from './postposed-clause.mjs';
 import {analyticalOwnerBindings} from './analytical-frames.mjs';
 import {orientationLandmarkReadings} from './orientation-landmark.mjs';
 import {reciprocalReading} from './reciprocal-reading.mjs';
@@ -931,8 +931,22 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         for (const candidate of candidates) additional.delete(JSON.stringify(signatures(parse(candidate.sop),true)));
         candidates.push(...additional.values());
       }
-      return {candidates,candidateCount:candidates.length,multipleInterpretations:candidates.length>1,
-        ...(!candidates.length ? {unread:text} : {})};
+      const cause=postposedCause(text,worlds);
+      const separated=[];
+      let groundedCause=false;
+      if (cause && permit(cause.body,quotedSpans(cause.body))) {
+        const seen=new Set(candidates.map(c=>JSON.stringify(signatures(parse(c.sop),false))));
+        for (const candidate of (await propose(cause.body,independent)).candidates) {
+          const reading=withPostposedCause(text,cause,candidate,worlds);
+          const key=reading && admissibleKey(text,reading.sop) && JSON.stringify(signatures(parse(reading.sop),false));
+          if (!key) continue;
+          groundedCause=true;
+          if (!seen.has(key)) {seen.add(key);separated.push(reading);}
+        }
+      }
+      const output=groundedCause ? [...candidates.filter(c=>!readsCauseAsCommand(text,cause,c)),...separated] : candidates;
+      return {candidates:output,candidateCount:output.length,multipleInterpretations:output.length>1,
+        ...(!output.length ? {unread:text} : {})};
     },
     close:worker.close
   };

@@ -364,3 +364,7 @@
 ## Scoped retention
 - Frozen control 76 now formalizes the requested appearance and bound retention with the exact next-launch and device scope. The same grammar works for a diagram node.
 - All 434 isolated release tests passed. The declaration and downstream scope dependency are recorded for integration.
+
+## Causal tails
+- Frozen 822 and 945 retain the main edit and the explanation separately. The typed cause in 942 still passes. The remaining appearance construction and staged vocabulary are recorded for review.
+- All 436 isolated release tests passed. The benchmark remains paused.

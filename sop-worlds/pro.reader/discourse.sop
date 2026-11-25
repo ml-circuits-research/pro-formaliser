@@ -9,7 +9,7 @@
 @pro.reader.discourse_edge core.type of=pro.reader.discourse_edge closed=true
 @pro.reader.discourse_edge.position core.slot of=pro.reader.discourse_edge key=position enum=before enum=after required=true
 @pro.reader.discourse_edge.text core.slot of=pro.reader.discourse_edge key=text kind=string many=true required=true
-@reader.discourse.turn_open pro.reader.discourse_edge position=before text="by the way" text="before I forget" text="one more thing" text="while you're at it" text="while you are at it" text="same session, next ask" text="excuse me" text="sorry to interrupt" text="sorry to nag"
+@reader.discourse.turn_open pro.reader.discourse_edge position=before text="by the way" text="before I forget" text="one more thing" text="while you're at it" text="while you are at it" text="same session, next ask" text="excuse me" text=sorry text="sorry to interrupt" text="sorry to nag"
 @reader.discourse.turn_close pro.reader.discourse_edge position=after text="if you please" text="if you would be so kind" text="please and thank you" text="much appreciated"
 
 # Additive transitions at an independent sentence boundary.

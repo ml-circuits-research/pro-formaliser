@@ -158,9 +158,9 @@ function* boundLexicon(facts) {
 
 const senseType = 'k.words.sense';
 const stativeSenses = new Set([senseType]);
-const stativeShards = new Map();
+const lexicalSenseShards = new Map();
 
-function stativeVerbAliases(facts) {
+function lexicalSenses(facts) {
   const overlays = facts(senseType);
   const overrides = new Set(overlays.map(wire => wire.id));
   const byWord = new Map();
@@ -168,14 +168,11 @@ function stativeVerbAliases(facts) {
     const word = one(wire, 'word');
     if (word) index(byWord, phrase(word), wire);
   }
-  const cache = new Map();
   return surface => {
     const word = phrase(surface);
-    if (cache.has(word)) return cache.get(word);
     // k.words groups lexical senses by the first two letters of the lemma.
-    // Open a shard only after an otherwise complete preservation frame matches.
     const shard = /^[a-z]+$/u.test(word) ? word.slice(0, 2) : null;
-    if (shard && !stativeShards.has(shard)) {
+    if (shard && !lexicalSenseShards.has(shard)) {
       const words = new Map();
       try {
         const path = join(pinned, 'k.words', 'shards', shard + '.sop');
@@ -186,12 +183,20 @@ function stativeVerbAliases(facts) {
       } catch (error) {
         if (error.code !== 'ENOENT') throw error;
       }
-      stativeShards.set(shard,words);
+      lexicalSenseShards.set(shard,words);
     }
-    const wires = [...(stativeShards.get(shard)?.get(word) ?? []).filter(wire => !overrides.has(wire.id)),
+    return [...(lexicalSenseShards.get(shard)?.get(word) ?? []).filter(wire => !overrides.has(wire.id)),
       ...(byWord.get(word) ?? [])];
+  };
+}
+
+function stativeVerbAliases(senses) {
+  const cache = new Map();
+  return word => {
+    word = phrase(word);
+    if (cache.has(word)) return cache.get(word);
     const synonyms = new Set(), parents = new Set();
-    for (const wire of wires) {
+    for (const wire of senses(word)) {
       if (one(wire,'pos') !== 'verb' || one(wire,'supersense') !== 'verb.stative') continue;
       for (const synonym of values(wire,'synonym')) synonyms.add(phrase(synonym));
       for (const parent of values(wire,'is_a')) parents.add(phrase(parent));
@@ -204,6 +209,7 @@ function stativeVerbAliases(facts) {
 
 function compile(facts) {
   const nominalInflection = createNominalInflection(facts);
+  const senses=lexicalSenses(facts);
   const knownWords = new Set();
   const acts = new Map(), targets = new Map(), constraints = new Map(), markers = new Map();
   const familyTabs = new Map(), familyActs = new Map();
@@ -625,7 +631,7 @@ function compile(facts) {
     discourseReasons:compileDiscourseReasons(facts),
     singularArticles:new Set(facts('w.lang.en.det').filter(w=>one(w,'kind')==='article' &&
       one(w,'number')==='sg' && one(w,'definite')==='no').flatMap(w=>values(w,'text').map(phrase))),
-    stativeVerbAliases:stativeVerbAliases(facts),
+    stativeVerbAliases:stativeVerbAliases(senses),
     languageFrames:languageFrames(facts),
     alternations:compileAlternations(facts),
     scopeGrammar:scopeGrammar(facts),
@@ -654,7 +660,8 @@ function compile(facts) {
     quantifiedVerbs:compileQuantifiedVerbs(facts,requestKeys),
     requestIntents:compileRequestIntents(facts,frames),
     topicCommands:compileTopicCommandDeclarations(facts,requestKeys),
-    postposedClauses:compilePostposedClauses(facts,requestKeys,words),
+    postposedClauses:compilePostposedClauses(facts,requestKeys,words,lemma=>
+      senses(lemma).some(wire=>one(wire,'pos')==='verb')),
     orientationLandmarks:compileOrientationLandmarks(facts,requestKeys),
     argumentSequences:frames,
     argumentZones:structuredZones(facts),
