@@ -270,3 +270,6 @@
 ## Repeated operands and grouping ambiguity
 - Ordered Prolog frames can require a second written mention to match a previously bound open operand. A fully matched closed contrast can be bound to a result while independent negation and conditional checks remain in force.
 - Bare chart conjunctions offer both group/series role assignments. The native checker accepted the held-out share request, and all 381 tests passed.
+
+## Repeated operands replay
+- All 1,000 primary and 1,000 independent inputs replayed. All-staged coverage 55.0% including spelling and 45.7% on independent originals. See eval/RESULTS.md for grades and limitations.

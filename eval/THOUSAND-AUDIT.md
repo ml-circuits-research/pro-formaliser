@@ -1,5 +1,7 @@
 # Text-only formalisation on 1,000 random requests
 
+At `bf65865` the all-staged reader reaches **55.0% including spelling** and **53.6% on originals**. [Full grade table](RESULTS.md#repeated-operands-and-grouping-alternatives)
+
 At `bd61926` the all-staged reader reaches **54.9% including spelling** and **53.5% on originals**. [Full grade table](RESULTS.md#data-fields-and-chart-series)
 
 At `f7352fd`, the combined reader reaches **54.4% including spelling**, **53.0% on originals**. [Current per-grade percentages](RESULTS.md#independent-sentences-and-written-visibility-cues)

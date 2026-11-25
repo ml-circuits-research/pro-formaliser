@@ -2,6 +2,35 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Repeated operands and grouping alternatives
+
+Reader `bf65865` reaches **55.0% L3 + L4** on the primary 1,000 requests including spelling. The independent 1,000 original texts reach **45.7%**. The comparison uses the same held-out requests, trained models and judging rules. The reader receives text only, with no active tab or discussion history. [Changed proposal sets and semantic judgments](REPEATED-OPERAND-REPLAY.tsv)
+
+| Profile | Primary original | Primary including spelling | Independent original |
+| --- | ---: | ---: | ---: |
+| Default | 51.6% | 53.1% | 45.2% |
+| All staged worlds | 53.6% | **55.0%** | **45.7%** |
+
+| Grade | All staged worlds, original or corrected |
+| --- | ---: |
+| L0 – Fail | 1.3% |
+| L1 – Wrong | 9.3% |
+| L1a – Wrong intent | 1.9% |
+| L1b – Wrong target | 2.2% |
+| L1c – Wrong detail or role | 3.6% |
+| L1d – Invented instruction | 1.6% |
+| L2 – Incomplete | 34.4% |
+| L2a – Missing action, question or step | 6.0% |
+| L2b – Missing object, endpoint or reference | 8.3% |
+| L2c – Missing value, property, placement, scope or condition | 20.1% |
+| L3 – Identical and reasonable | 20.5% |
+| L4 – Reasonable alternative | 34.5% |
+| **L3 + L4 – Reasonable** | **55.0%** |
+
+A bare conjunction allows either mapping of its two fields to group and series roles. Explicit “across” and “for each” retain their written assignment. In the primary request for profit by region and ship mode, the new circuit requests each ship mode's share within its region. Prolog requires both repeated field mentions in the explanatory comparison to match their originals before accepting percentage stacking. The frame records the written contrast, and separate prohibition and conditional controls continue to constrain the output. A workbench calibration overlay reproduced the same repeat and contrast rules with unrelated field names. [Frame contract](../sop-worlds/chart-series-pilot/README.md)
+
+The reference audit identifies **24.6%** of requests with a material issue. **4.1%** of all primary requests have both a material reference issue and a reasonable proposal. The share request's reference preserves the preference for shares as unread.
+
 ## Data fields and chart series
 
 Reader `bd61926` reaches **54.9% L3 + L4** on the primary 1,000 requests including spelling. The independent 1,000 original texts reach **45.7%**. The comparison uses the same held-out requests, trained models and judging rules. The reader receives text only, with no active tab or discussion history. [Changed proposal sets and semantic judgments](SERIES-REPLAY.tsv)

@@ -1,0 +1,7 @@
+profile	sample	source	row	previous	current	reference_note	reason
+primary	245	diagram/charts-05.csv	3362	L4	L4		Both assignments are now available. The added circuit swaps the main grouping and series roles while keeping the requested effects.
+primary	724	diagram/charts-05.csv	3496	L4	L4		Both assignments are now available. The added circuit swaps the main grouping and series roles while keeping the requested effects.
+primary	733	diagram/charts-05.csv	2516	L2c	L4	The reference retains the request for relative shares as unread.	The new chart stacks percentage shares of ship mode inside each region while retaining profit as the measure. The contrast checks repeat the same series field and measure.
+primary-spell	245	diagram/charts-05.csv	3362	L4	L4		Both assignments are now available. The added circuit swaps the main grouping and series roles while keeping the requested effects.
+primary-spell	724	diagram/charts-05.csv	3496	L4	L4		Both assignments are now available. The added circuit swaps the main grouping and series roles while keeping the requested effects.
+primary-spell	733	diagram/charts-05.csv	2516	L2c	L4	The reference retains the request for relative shares as unread.	The new chart stacks percentage shares of ship mode inside each region while retaining profit as the measure. The contrast checks repeat the same series field and measure.

@@ -1,5 +1,9 @@
 # Independent bucket 37 replication
 
+## Repeated operands and grouping alternatives at bf65865
+
+Original-text coverage is **45.7%** with all staged worlds and **45.2%** with default worlds. [Changed sets](REPEATED-OPERAND-REPLAY.tsv)
+
 ## Data fields and chart series at bd61926
 
 Original-text coverage is **45.7%** with all staged worlds and **45.2%** with default worlds. [Changed sets](SERIES-REPLAY.tsv)
