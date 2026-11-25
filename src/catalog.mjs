@@ -7,7 +7,7 @@ function keyIndex(worlds) {
     const index=new Map();
     for (const key of worlds.requestKeys) {
       if (!index.has(key.name)) index.set(key.name,[]);
-      index.get(key.name).push({tab:key.tab,values:new Set(key.values.map(s=>s.toLowerCase()))});
+      index.get(key.name).push({tab:key.tab,family:key.family,values:new Set(key.values.map(s=>s.toLowerCase()))});
     }
     indexes.set(worlds,index);
   }
@@ -29,7 +29,13 @@ export function catalogIssues(wires,worlds,tab) {
       issues.push({wire:id,slot:'attribute',value:name??null,code:'unlicensed_key'});
       continue;
     }
-    if (value(attrs.open_value?.[0])==='true') continue;
+    const open=value(attrs.open_value?.[0])==='true';
+    if (value(attrs.phase?.[0])==='result' && (open || !attrs.value?.length) &&
+        declarations.every(key=>worlds.ownedEffects?.closedChoices?.has(JSON.stringify([key.family,name])))) {
+      issues.push({wire:id,slot:'value',value:value(attrs.value?.[0]) ?? null,attribute:name,code:'unresolved_finite_choice'});
+      continue;
+    }
+    if (open) continue;
     for (const item of attrs.value ?? []) {
       const v=value(item);
       if (!declarations.some(k=>!k.values.size || k.values.has(v.toLowerCase())))

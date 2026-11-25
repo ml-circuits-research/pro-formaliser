@@ -407,3 +407,8 @@
 - Frozen 559 retains the written target on both moves and keeps their respective combined directions and stopping clause verbatim.
 - Single-axis control grounds the target and movement. The integrated response records the missing executable vector and stopping contracts.
 - All 450 isolated release tests passed. No benchmark rerun.
+
+## Finite axis choices and local exclusion
+- Frozen 70 sets X inversion and preserves the unsupported Z phrase on its own request. Frozen 168 offers X exclusion after spelling correction.
+- The reader keeps the closed choice and the written assertion separate. The X-specific scale and downstream exclusion remain open.
+- All 451 isolated release tests passed. No benchmark rerun.

@@ -144,3 +144,39 @@ test('requires a real catalog key and supports a separately loaded owner family'
   }
   assert.deepEqual(ownedEffectReadings('Stamp the main modulator "Ready" and set the pace to six',worlds,grammar),[]);
 });
+
+test('binds a finite named choice, keeps local exclusion, and preserves an unsupported choice',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  const field=(wire,key)=>{
+    const raw=wire.attrs[key]?.[0];
+    return raw?.startsWith('"') ? JSON.parse(raw) : raw;
+  };
+  const inversion=candidate=>parse(candidate.sop).filter(wire=>field(wire,'attribute')==='chart.invert' &&
+    field(wire,'phase')==='result');
+  for (const [text,choice,polarity] of [
+    ['Invert the y axis','y',undefined],
+    ['Could you set the x axis not inverted?','x','no'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const reading=candidates.find(candidate=>inversion(candidate).some(wire=>
+      field(wire,'value')===choice && field(wire,'want')===polarity));
+    assert.ok(reading,text);
+    assert.deepEqual(reading.catalog.issues,[]);
+    assert.deepEqual(reading.evidence.missing,[]);
+    assert.equal(reading.evidence.counts.uncovered ?? 0,0);
+  }
+  const text='How about inverted x axis? plus how about inverted z axis?';
+  const {candidates}=await reader.propose(text,{evidence:true});
+  const combined=candidates.find(candidate=>candidate.source==='sentence-requests' &&
+    inversion(candidate).some(wire=>field(wire,'value')==='x') && candidate.sop.includes('text="inverted z axis"'));
+  assert.ok(combined);
+  assert.equal(combined.status,'partial');
+  assert.equal(combined.evidence.counts.uncovered ?? 0,0);
+  assert.deepEqual(combined.evidence.missing,[]);
+  assert.ok(candidates.every(candidate=>inversion(candidate).every(wire=>field(wire,'value')!=='z')));
+  for (const query of ['Did you set the x axis not inverted?', 'Set the x axis not inverted if ready']) {
+    const {candidates}=await reader.propose(query);
+    assert.ok(!candidates.some(candidate=>candidate.source==='negative-owned-effect'),query);
+  }
+});

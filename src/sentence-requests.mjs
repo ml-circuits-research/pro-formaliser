@@ -84,15 +84,17 @@ function credible(text,candidate,worlds,coordinated=false) {
   if (!act || !worlds.literalGrammar.licenses(one(target,'family'),act) &&
       (!coordinated || !declaresArgumentRoles(worlds,act,target,constraints))) return;
   if (coordinated && !leadsClause(text,request,target,candidate.source,worlds)) return;
+  const typedPartial=!coordinated && candidate.source==='unresolved-owned-choice' && candidate.status==='partial' &&
+    act==='change' && mode==='existing' && one(request,'predicate') && leadsClause(text,request,target,candidate.source,worlds);
   const result=constraints.some(wire=>one(wire,'phase')==='result' && !one(wire,'want'));
   if (act==='ask') {
     if (!one(request,'asked') && !one(request,'question') && !constraints.length) return;
     if (coordinated && !one(request,'asked') && !one(request,'question') &&
         !worlds.lookup(tokens(one(request,'predicate') ?? '').map(([key])=>key).join(' '))
           .some(([role,sense])=>role==='act' && sense==='ask')) return;
-  } else if (!result && (act==='change' || !one(request,'predicate') ||
+  } else if (!result && !typedPartial && (act==='change' || !one(request,'predicate') ||
       !['name','description','sort','ids'].some(key=>one(target,key)))) return;
-  if (wires.some(wire=>wire.type==='w.request.previous' || wire.type===unreadType &&
+  if (wires.some(wire=>wire.type==='w.request.previous' || wire.type===unreadType && !typedPartial &&
       tokens(one(wire,'text') ?? '').some(([key])=>word.test(key) &&
         !Object.hasOwn(worlds.determiners,key) && !worlds.evidenceVocabulary.filler.has(key)))) return;
   if (catalogIssues(wires,worlds).length || !evidenceInText(text,candidate.sop,worlds)) return;
@@ -208,7 +210,7 @@ export async function combineIndependentRequests(parts,worlds,read,permit) {
     beam=beam.flatMap(previous=>options.map(option=>[...previous,...option])).slice(0,12);
   }
   return beam.map(wires=>serialize(wires)).filter(sop=>validate(sop,worlds))
-    .map(sop=>({sop,source:'sentence-requests',status:'matched'}));
+    .map(sop=>({sop,source:'sentence-requests',status:sop.includes(' w.request.unread ') ? 'partial' : 'matched'}));
 }
 
 export async function sentenceRequestReadings(text,worlds,read,permit) {

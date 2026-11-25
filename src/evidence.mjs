@@ -6,7 +6,7 @@ const normalized = text => text.toLowerCase().replaceAll('’',"'");
 const lexemes = text => [...text.matchAll(words)].map(m=>normalized(m[0]));
 
 export function evidenceVocabulary(facts) {
-  const grammar = new Set(), filler = new Set(), endings = new Set();
+  const grammar = new Set(), filler = new Set(), endings = new Set(), sentenceAdditions=new Set();
   const values = (w,k)=>(w.attrs[k] ?? []).map(decode);
   const add = (set,w)=>values(w,'text').forEach(v=>set.add(normalized(v)));
   for (const w of facts('w.lang.en.closed')) {
@@ -24,7 +24,8 @@ export function evidenceVocabulary(facts) {
   for (const w of facts('w.lang.en.contraction.ending')) values(w,'ending').forEach(v=>endings.add(normalized(v)));
   for (const w of facts('w.lang.en.contraction'))
     if (values(w,'expands').some(v=>lexemes(v).every(t=>grammar.has(t)))) add(grammar,w);
-  return {grammar,filler,endings};
+  for (const w of facts('pro.reader.sentence_addition')) add(sentenceAdditions,w);
+  return {grammar,filler,endings,sentenceAdditions};
 }
 
 function previousChar(text,end) {
@@ -96,6 +97,16 @@ export function evidenceReport(text,wires,vocabulary) {
       }
     }
   }
+  const bounds=[...scopes.values()];
+  const sentenceConnector=span=>{
+    if (!vocabulary.sentenceAdditions?.has(normalized(span.text))) return false;
+    const [[start,end]]=span.ranges;
+    return bounds.some(([,finish],i)=>{
+      const after=bounds[i+1]?.[0];
+      return after!==undefined && finish<=start && end<=after &&
+        /^[\s,;]*$/u.test(text.slice(finish,start)) && /^\s*$/u.test(text.slice(end,after));
+    });
+  };
   const counts={},tokens=[];
   for (const match of text.matchAll(words)) {
     const start=match.index,end=start+match[0].length;
@@ -104,7 +115,7 @@ export function evidenceReport(text,wires,vocabulary) {
     const term=normalized(match[0]),suffix=term.indexOf("'");
     const grammatical=vocabulary.grammar.has(term) || (suffix>0 && vocabulary.grammar.has(term.slice(0,suffix)) && vocabulary.endings.has(term.slice(suffix)));
     const validFiller=s=>vocabulary.filler.has(normalized(s.text)) ||
-      vocabulary.filler.has(normalized(s.text.replace(/[.!。！]+$/u,''))) || vocabulary.filler.has(term) || grammatical;
+      vocabulary.filler.has(normalized(s.text.replace(/[.!。！]+$/u,''))) || vocabulary.filler.has(term) || grammatical || sentenceConnector(s);
     let status;
     if (unique.some(s=>s.kind==='grounded')) status='grounded';
     else if (unique.some(s=>s.kind==='unread')) status='unread';

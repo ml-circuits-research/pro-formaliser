@@ -357,6 +357,11 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     if (scope.restricted) for (const reading of directionalResultCandidates(text,ts,quotes,worlds,model.lexicon)) {
       if (reading.source==='directional-prohibition') retain(reading);
     }
+    if (scope.restricted) {
+      for (const reading of ownedEffectReadings(text,worlds)) {
+        if (reading.source==='negative-owned-effect') retain(reading);
+      }
+    }
     if (!scope.restricted) {
       for (const candidate of compounds(text,ts,quotes)) retain(candidate);
       for (const candidate of endpoints(text,ts,quotes)) retain(candidate);
