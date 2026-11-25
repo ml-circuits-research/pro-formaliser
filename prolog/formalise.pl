@@ -30,7 +30,7 @@ main :- repeat,
 answer(Q, Plans) :- get_dict(landmarkPair,Q,Packet), !, landmark_pair_plans(Packet,Plans).
 answer(Q, Plans) :- get_dict(setExclusion,Q,Packet), !, exclusion_plans(Packet,Plans).
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,frontedCandidates:Fronted,frameTargets:FrameTargets,universalCandidates:Universal,proofs:Proofs,groundedPredicates:Grounded,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
+answer(Q, _{candidates:Answers,frontedCandidates:Fronted,frameTargets:FrameTargets,splitTargets:SplitTargets,universalCandidates:Universal,proofs:Proofs,groundedPredicates:Grounded,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
     topic_commands(Q,Topics),
     native_property_frames(Q,NativeProperties),
     verb_effects(Q,VerbEffects),
@@ -57,6 +57,8 @@ answer(Q, _{candidates:Answers,frontedCandidates:Fronted,frameTargets:FrameTarge
     ; Fronted=[] ),
     findall(Candidate, frame_target_candidate(WithProperties,Proofs,Candidate), FrameTargetCandidates),
     list_to_set(FrameTargetCandidates,FrameTargets),
+    findall(Candidate, split_target_candidate(WithProperties,Candidate), SplitCandidates),
+    list_to_set(SplitCandidates,SplitTargets),
     universal_inventory_plans(WithProperties, Plans),
     findall(CleanUniversal,
             ( member(Plan, Plans), Target=Plan.targetHit,
@@ -93,6 +95,21 @@ frame_target_context(Q, _, Proof, Scoped) :-
     member(Plan,Q.sourceFrames), frame_proofs(Plan.language,Proofs), member(Proof,Proofs),
     memberchk(Proof.act,Plan.acts),
     Scoped=Q.put(_{scopes:[[0,Plan.boundary,"action",""]],frameFamilies:Plan.families}).
+
+split_target_candidate(Q, Clean) :-
+    member(Plan,Q.splitPlans), member(Act,Plan.acts),
+    member([Start,End,Entry],Q.splitNominals),
+    Entry=["target",Act,_,"existing"|_], End=:=Plan.nounEnd,
+    Start>=Plan.nounStart, nominal_prefix(Q,Plan.nounStart,Start),
+    Head=[Plan.start,Plan.headEnd,["act",Act,"do",0],0],
+    Hit=[Start,End,Entry,0],
+    Scope=Q.put(_{actHits:[Head],targetHits:[Hit|Q.targetHits],requiredTarget:Hit,
+                  groundedPredicates:[],scopes:[[Plan.start,Plan.particleStart,"action",""]],
+                  splitPredicate:Plan}),
+    lexical_candidate(Scope,_,Candidate), clean_candidate(Candidate,Base),
+    findall(Filler,(nth1(I,Plan.fillers,Words), encode(Words,Encoded),
+      format(string(Filler),'@r1.f~d w.request.filler text=~s',[I,Encoded])),Fillers),
+    atomics_to_string([Base.sop|Fillers],"\n",Sop), Clean=Base.put(sop,Sop).
 
 clean_candidate(C, Clean) :- (del_dict(binding,C,_,Clean) -> true ; Clean=C).
 
@@ -131,7 +148,8 @@ lexical_candidate(Q, score(Tier, Score, 0), Candidate) :-
     predicate_admitted(Q, Start, End, Act),
     request_window(Q,Start-End,Act,WindowStart-WindowEnd,Intent,Question),
     Scoped = Q.put(scopeEnd,WindowEnd),
-    span(Q.text, Start, End, Predicate), encode(Act, A), encode(Predicate, P),
+    predicate_evidence(Q,Start,End,Predicate,ExtraBounds),
+    encode(Act, A), encode(Predicate, P),
     ( Mood == "" -> M = "" ; format(string(M), ' mood=~s', [Mood]) ),
     ( Question == "" -> Query = "" ; format(string(Query),' question=~s',[Question]) ),
     format(string(Req), '@r1 w.request.request act=~s~s predicate=~s~s', [A,M,P,Query]),
@@ -161,7 +179,7 @@ lexical_candidate(Q, score(Tier, Score, 0), Candidate) :-
       attached_roles(Scoped,Act,none,"existing",RE,Attached,Used,_,Fit,_),
       Bounds = [Start-End,RS-RE|Used], Wires = [ReferenceRequest,ReferenceLookup|Attached], Extra is 4 + Fit, Tier=1
     ; \+ get_dict(requiredTarget,Q,_), Bounds = [Start-End], Wires = [Req], Extra = 0, Tier=1 ),
-    sort(Bounds, Sorted), string_length(Q.text, Length),
+    append(Bounds,ExtraBounds,CompleteBounds), sort(CompleteBounds, Sorted), string_length(Q.text, Length),
     residuals(Sorted, Q.text, 0, Length, 1, Unread),
     append(Wires, Unread, All), atomics_to_string(All, "\n", Sop),
     findall(1,(member([_,_,B,F],Q.tokens), once((member(L-R,Sorted),B>=L,F=<R))),CoveredTokens),
@@ -172,6 +190,12 @@ lexical_candidate(Q, score(Tier, Score, 0), Candidate) :-
     ( nonvar(Family), memberchk([S,E,Families],Q.ambiguousTargets), memberchk(Family,Families)
     -> Candidate=Base.put(binding,[Start,End,Act,S,E,Family]) ; Candidate=Base ),
     Score is 12*Coverage + Extra + ActPrior + log(1+N) + min(12,End-Start)/4 - Start/3.
+
+predicate_evidence(Q, Start, End, Predicate, Bounds) :-
+    ( get_dict(splitPredicate,Q,Plan) ->
+        span(Q.text,Start,Plan.end,Predicate), string_length(Q.text,Length),
+        Bounds=[0-Start,Plan.particleStart-Length]
+    ; span(Q.text,Start,End,Predicate), Bounds=[] ).
 
 % Preserve the whole proved predicate, including fixed multiword verbs.
 % Other independently proved spans and declared senses outside it still compete.

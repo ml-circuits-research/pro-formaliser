@@ -795,3 +795,13 @@ The semantic signature now retains `words` on a request-owned thing lookup with 
 The focused comparator and reader tests passed. In a six-message default-model smoke run, the actual copy-it circuit matched itself on both semantic wires. The actual copy-that and copy-those circuits, and the copy-it circuit with the literal removed, matched only the shared request wire. No aggregate benchmark ran. [Comparison regressions](test/reference-circuits.test.mjs)
 
 All 512 release tests passed.
+
+## Bulk findings fixed — targets inside separable verbs
+
+Prolog now reads a written noun between a declared verb and its final particle. “Pick the red daffodils out” preserves the pick action, the existing daffodil target, the red selector, and the exact written span. The same path accepts “take all the clouds out” with an explicit universal quantifier. Equivalent learned circuits yield to the native proof when it grounds more of the written evidence. Each path uses existing verb and object-role declarations.
+
+In the actual default-model replay of 100 WebMeet inputs selected for this construction, 11 inputs gained a circuit with no unread span and clean evidence and catalogue checks. The other 89 returned identical SOP lists. The separate 235-input replay changed nine lists and preserved the other 226. Neither set is a random accuracy benchmark. The clear gains include trees, dogs, and universally quantified clouds, birds, boats, and flowers. In “take the values away” and “take the markers away”, several catalogue senses remain plausible. The generic aliases alone cannot establish which settings or object kinds the speaker meant.
+
+The special path leaves unresolved names and ordinals to the ordinary proposals. For example, it does not claim to have resolved “Start” in “take the Start box out” or “last” in “put the last step back”. Declared attribute effects and required continuations keep their existing proof requirements. The canonical `w.request` schema has no new commit to consume. [Regressions](test/reference-commands.test.mjs)
+
+All 514 release tests passed.

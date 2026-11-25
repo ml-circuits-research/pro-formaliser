@@ -557,3 +557,8 @@
 ## Semantic comparison of unresolved references
 - The comparator now preserves the literal words of an unresolved thing lookup.
 - The default-model controls distinguished it, that and those. All 512 tests passed.
+
+## Existing targets inside separable verbs
+- Native verb and object-role declarations now ground the written target before a terminal particle.
+- The default reader improved written evidence on 11 of 100 targeted WebMeet inputs. The separate 235-input replay changed nine lists.
+- All 514 release tests passed.

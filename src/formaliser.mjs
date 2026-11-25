@@ -63,7 +63,7 @@ import { catalogIssues } from './catalog.mjs';
 import { frameSupport } from './language-frames.mjs';
 import { closedRequestReadings } from './closed-requests.mjs';
 import { removalWishReadings } from './removal-wishes.mjs';
-import { referenceCommandReadings } from './reference-commands.mjs';
+import { referenceCommandReadings, splitTargetPlans } from './reference-commands.mjs';
 import { contextScores } from './context.mjs';
 import { prologWorker } from './prolog-worker.mjs';
 import { requestScope } from './request-scope.mjs';
@@ -244,6 +244,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     // Its span remains available to property binding in Prolog.
     const quotes = quotedSpans(text);
     const language = languageFrames ? worlds.languageFrames.prepare(ts,quotes,worlds) : {length:ts.length,events:[],frames:[]};
+    const splitPlans=languageFrames && !quotes.length ? splitTargetPlans(text,ts,worlds,politeness) : [];
+    const splitNominals=[];
     const scopeText = maskQuoted(text,quotes);
     const outside = scopeText === text ? null : new Set(tokens(scopeText).map(t => t[2]));
     const amounts=ts.flatMap((_,start)=>worlds.motionAmountPhrases.flatMap(words=>
@@ -272,6 +274,14 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const learned = Object.hasOwn(model.lexicon ?? {},words) ? model.lexicon[words] : [];
         const local = new Set(learned.map(e => JSON.stringify(e.slice(0,-1))));
         const declared = worlds.lookup(words);
+        if (splitPlans.some(plan=>ts[i][2]>=plan.nounStart && ts[j][3]===plan.nounEnd)) {
+          const lookup=surface=>[...worlds.frameTargets(surface),...worlds.lookup(surface)]
+            .filter(([role,, ,mode])=>role==='target' && mode==='existing');
+          const entries=lookup(words);
+          for (const entry of entries.length ? entries : worlds.nominalInflection(words,lookup)) {
+            splitNominals.push([ts[i][2],ts[j][3],entry.slice(0,6)]);
+          }
+        }
         if (language.frames.length) {
           const direct=worlds.frameTargets(words);
           const entries=direct.length ? direct : worlds.nominalInflection(words,worlds.frameTargets);
@@ -338,12 +348,26 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         acts:[...new Set(worlds.spatialBindings.flatMap(binding=>binding.namedActs))],
         modifiers:[...worlds.spatialModifiers.rules.keys()].map(words=>words.split(/\s+/u)),
       } : undefined;
-    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,splitPlans:scope.restricted?[]:splitPlans,splitNominals,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
-    function retain(answer,readingScope=scope) {
+    function retain(answer,readingScope=scope,preferCompleteEvidence=false) {
       const key = admissibleKey(text,answer.sop);
-      if (key && readingScope.restricted && !readingScope.permits(parse(answer.sop))) return;
-      if (key && !seen.has(key)) { seen.add(key); candidates.push(answer); return true; }
+      if (!key || readingScope.restricted && !readingScope.permits(parse(answer.sop))) return;
+      if (!seen.has(key)) { seen.add(key); candidates.push(answer); return true; }
+      if (!preferCompleteEvidence) return;
+      // A learned or shorter predicate can have the same meaning while
+      // leaving the written particle unread. Keep the complete native proof.
+      const wires=parse(answer.sop);
+      if (wires.some(wire=>wire.type==='w.request.unread')) return;
+      const current=evidenceReport(text,wires,worlds.evidenceVocabulary);
+      if (current.missing.length || current.counts.uncovered || current.counts.ambiguous_occurrence) return;
+      const index=candidates.findIndex(candidate=>JSON.stringify(signatures(parse(candidate.sop),true))===key);
+      if (index<0) return;
+      const previous=evidenceReport(text,parse(candidates[index].sop),worlds.evidenceVocabulary);
+      if ((current.counts.grounded ?? 0)>(previous.counts.grounded ?? 0)) {
+        candidates[index]=answer;
+        return true;
+      }
     }
     const nominalRoles=new Set();
     let exclusive=false;
@@ -411,6 +435,15 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       for (const sop of resolveRelationKeys.targetlessAlternatives(answer.sop)) {
         contextualTargets.push({...plain,sop});
       }
+    }
+    const incompleteSplitTargets=[];
+    for (const answer of response.splitTargets ?? []) {
+      const sop=resolveRelationKeys(answer.sop);
+      const reading={...answer,sop,source:'split-target-frame'};
+      // An exact contiguous predicate encloses the nominal. Publish it only
+      // after the enclosed words have an interpretation of their own.
+      if (parse(sop).some(wire=>wire.type==='w.request.unread')) incompleteSplitTargets.push(reading);
+      else retain({...reading,status:'matched'},scope,true);
     }
     for (const answer of response.frameTargets ?? []) {
       const sop=resolveRelationKeys(answer.sop);
@@ -484,9 +517,14 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     for (const candidate of prefixSetQuestions(text,ts,worlds,hits,quotes)) retain(candidate);
     for (const candidate of postfixSetQuestions(text,ts,worlds,hits,quotes)) retain(candidate);
     if (!scope.restricted && ts.some(t=>worlds.scopeGrammar.universalHeads.has(t[0]))) {
-      for (const candidate of [...candidates]) {
+      for (const candidate of [...candidates,...incompleteSplitTargets]) {
         const universal=universalTargetReading(text,ts,worlds,candidate,quotes);
-        if (universal) retain(universal);
+        if (!universal) continue;
+        const split=candidate.source==='split-target-frame';
+        if (!split) retain(universal);
+        else if (!parse(universal.sop).some(wire=>wire.type==='w.request.unread')) {
+          retain({...universal,status:'matched'},scope,true);
+        }
       }
     }
     if (!scope.restricted && ts.some(t=>knownModifiers.has(t[0]))) {
@@ -623,6 +661,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       .map(([start,end])=>[chars.slice(0,start).join('').length,chars.slice(0,end).join('').length]);
     if (groundedPredicates.size) {
       for (let i=candidates.length-1;i>=0;i--) {
+        if (candidates[i].source==='split-target-frame') continue;
         const requests=parse(candidates[i].sop).filter(wire=>wire.type==='w.request.request');
         if (requests.length!==1) continue;
         const predicate=valueOf(requests[0],'predicate');
