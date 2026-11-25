@@ -27,6 +27,7 @@ export function catalogIssues(wires,worlds) {
     }
     if (type!=='w.request.constraint') continue;
     const name=value(attrs.attribute?.[0]);
+    if (name===undefined && value(attrs.on?.[0])==='manner') continue;
     const group=targets.get(value(attrs.request?.[0])) ?? [];
     const families=new Set(group.map(wire=>value(wire.attrs.family?.[0])));
     const available=index.get(name) ?? [];

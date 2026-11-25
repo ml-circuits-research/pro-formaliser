@@ -25,6 +25,48 @@ function intentFields(wire) {
     read(wire, key) ?? (key === 'want' ? 'yes' : undefined));
 }
 
+test('opposite superlatives on one scale supply a literal ordering requirement',async t=>{
+  const reader=createReader();
+  t.after(()=>reader.close());
+  for (const [text,predicate,object,order] of [
+    ['Sort it from highest to lowest.','Sort','it','from highest to lowest'],
+    ['Please rank them from the oldest to the youngest.','rank','them','from the oldest to the youngest'],
+    ['Order the marks from smallest to largest.','Order','the marks','from smallest to largest'],
+    ['Rearrange this chart from lowest to highest.','Rearrange','this chart','from lowest to highest'],
+    ['Sort from fastest to slowest.','Sort',undefined,'from fastest to slowest'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const candidate=candidates.find(reading=>reading.sop.includes('mode=order') && reading.sop.includes('on=manner'));
+    assert.ok(candidate,text);
+    const wires=parse(candidate.sop);
+    const request=wires.find(wire=>wire.type==='w.request.request');
+    const reference=wires.find(wire=>wire.type==='w.request.lookup');
+    const constraint=wires.find(wire=>wire.type==='w.request.constraint');
+    assert.deepEqual(['act','mode','predicate'].map(key=>read(request,key)),['change','order',predicate],text);
+    assert.equal(owns(constraint,request),true,text);
+    assert.deepEqual(['on','value','words'].map(key=>read(constraint,key)),['manner',order,order],text);
+    if (object) {
+      assert.equal(owns(reference,request),true,text);
+      assert.deepEqual(['key','words','from'].map(key=>read(reference,key)),['thing',object,undefined],text);
+    } else assert.equal(reference,undefined,text);
+    assert.ok(wires.every(wire=>!['w.request.target','w.request.unread','w.request.intent'].includes(wire.type)),text);
+    assert.deepEqual(candidate.catalog.issues,[],text);
+    assert.deepEqual(candidate.evidence.missing,[],text);
+    assert.equal(candidate.evidence.counts.uncovered ?? 0,0,text);
+  }
+  for (const text of ['Move it from highest to lowest.', 'Sort it from Friday to Monday.',
+    'Sort it from highest to youngest.', 'Sort it from largest to biggest.',
+    'Sort it from highest to lowest?', 'Do not sort it from highest to lowest.',
+    'Sort it from highest to lowest if needed.', 'Sort it from highest to lowest or keep it.',
+    'Sort it from highest to lowest speed.', 'Sort it from "highest" to "lowest".']) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.every(candidate=>!candidate.sop.includes('on=manner')),text);
+  }
+  const {candidates}=await reader.propose('Draw a circle and sort it from smallest to biggest.');
+  assert.ok(candidates.some(candidate=>candidate.sop.includes('mode=order') &&
+    candidate.sop.includes('key=thing words=it') && candidate.sop.includes('from smallest to biggest')),true);
+});
+
 test('native modal placement keeps the literal moving subject separate from the destination',async t=>{
   const reader=createReader();
   t.after(()=>reader.close());

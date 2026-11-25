@@ -52,6 +52,11 @@ test('catalog distinguishes unknown keys, domains, and explicitly open values',a
   sample[1].attrs.family=['unknown_family'];
   sample[2].attrs.attribute=['unknown.attribute'];
   assert.deepEqual(catalogIssues(sample,worlds).map(x=>x.code),['unlicensed_family','unlicensed_key']);
+  sample[1].attrs.family=['drawn'];
+  sample[2].attrs.on=['manner'];
+  assert.deepEqual(catalogIssues(sample,worlds).map(x=>x.code),['unlicensed_key']);
+  delete sample[2].attrs.attribute;
+  assert.deepEqual(catalogIssues(sample,worlds),[]);
 });
 
 test('catalog accepts mixed semantic request families and does not merge same-name value banks',async()=>{

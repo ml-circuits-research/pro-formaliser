@@ -2,6 +2,7 @@ import {measuredMotionReadings} from './measured-motion.mjs';
 import {landmarkPairReadings} from './landmark-pairs.mjs';
 import {coordinatedRequestReadings,sentenceRequestReadings} from './sentence-requests.mjs';
 import {relativePlacementPacket,requestIntentPlans,resultRequestReading,unresolvedDestinationReadings,withRequestIntents} from './request-intents.mjs';
+import {orderingPacket} from './ordering.mjs';
 import {namedTupleReading,tupleAssignments,tupleTargetNames} from './tuple-assignments.mjs';
 import {benefactiveReadings} from './benefactive.mjs';
 import {participantAdjunctReadings} from './participant-adjunct.mjs';
@@ -353,7 +354,8 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         acts:[...new Set(worlds.spatialBindings.flatMap(binding=>binding.namedActs))],
         modifiers:[...worlds.spatialModifiers.rules.keys()].map(words=>words.split(/\s+/u)),
       } : undefined;
-    const request = {text,relativePlacement:scope.restricted?undefined:relativePlacement,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,splitPlans:scope.restricted?[]:splitPlans,splitNominals,splitNumbers,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const ordering=languageFrames && !scope.restricted ? orderingPacket(ts,quotes,worlds) : undefined;
+    const request = {text,ordering,relativePlacement:scope.restricted?undefined:relativePlacement,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,nominalHeads,frameTargets,sourceFrames,splitPlans:scope.restricted?[]:splitPlans,splitNominals,splitNumbers,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer,readingScope=scope,preferCompleteEvidence=false) {
       const key = admissibleKey(text,answer.sop);
@@ -689,6 +691,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     for (const {sop,hasSource} of response.relativePlacements ?? []) {
       retain({sop,source:hasSource?'placement-with-source':'relative-placement',status:hasSource?'partial':'matched'});
     }
+    for (const sop of response.orderings ?? []) retain({sop,source:'comparative-order',status:'matched'});
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
     if (response.proofs.length) {
       for (const c of candidates) {

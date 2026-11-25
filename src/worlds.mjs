@@ -52,6 +52,7 @@ import { compileReferenceCommands } from './reference-commands.mjs';
 import { evidenceVocabulary } from './evidence.mjs';
 import { scopeGrammar } from './scope-grammar.mjs';
 import { tokens } from './lexicon.mjs';
+import { compileOrdering } from './ordering.mjs';
 import { createNominalInflection, nominalInflectionTypes } from './nominal-inflection.mjs';
 import { nativeTargetInventory, nativeTargetInventoryType, nativeTargetProviderTypes } from './native-target-inventory.mjs';
 
@@ -747,6 +748,7 @@ function compile(facts) {
       parts:facts('w.lang.en.part'), fixed:facts('w.lang.en.fixed'),
     },
     nominalScales:nominalScaleForms(facts,requestKeys),
+    ordering:compileOrdering(facts,lemma=>senses(lemma).some(wire=>one(wire,'pos')==='noun')),
     nominalPositions, strictNominalSubjects:strictNominalSubjects(nominalPositions),
     standingPositions:compileStandingPositions(facts,requestKeys),
     standingClosings:standingClosings(facts),

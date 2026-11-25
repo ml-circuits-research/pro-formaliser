@@ -608,3 +608,8 @@
 ## Placement source and destination
 - A unique written source and destination now stay separate on one placement request with a literal mover.
 - Five controls gained the partial circuit. The 257-row replay was unchanged and all 527 tests passed.
+
+## Comparative ordering
+- The declared order frame now retains opposite extremes and a written object on one request.
+- The targeted replay recovered ordering in 141 of 542 WebMeet messages. Evidence-complete proposals rose from 37.8% to 41.3%.
+- The independent review found remaining chart argument errors. All 528 release tests passed.

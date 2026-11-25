@@ -30,13 +30,14 @@ main :- repeat,
 answer(Q, Plans) :- get_dict(landmarkPair,Q,Packet), !, landmark_pair_plans(Packet,Plans).
 answer(Q, Plans) :- get_dict(setExclusion,Q,Packet), !, exclusion_plans(Packet,Plans).
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,relativePlacements:RelativePlacements,frontedCandidates:Fronted,frameTargets:FrameTargets,splitTargets:SplitTargets,universalCandidates:Universal,proofs:Proofs,groundedPredicates:Grounded,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
+answer(Q, _{candidates:Answers,orderings:Orderings,relativePlacements:RelativePlacements,frontedCandidates:Fronted,frameTargets:FrameTargets,splitTargets:SplitTargets,universalCandidates:Universal,proofs:Proofs,groundedPredicates:Grounded,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
     topic_commands(Q,Topics),
     native_property_frames(Q,NativeProperties),
     verb_effects(Q,VerbEffects),
     coordinated_effects(Q,Effects),
     member_actions(Q,Members),
     argument_sequences(Q,Sequences),
+    findall(Order, comparative_order(Q,Order), RawOrders), list_to_set(RawOrders,Orderings),
     frame_proofs(Q.language,Proofs),
     findall([Start,End,Act],
             ( member(Proof,Proofs), offsets(Q.tokens,Proof.predicate,Start,End),
@@ -77,6 +78,30 @@ answer(Q, _{candidates:Answers,relativePlacements:RelativePlacements,frontedCand
     findall(C, member(_-[C|_],Groups), Reps),
     append(Head,Reps,Combined), maplist(clean_candidate,Combined,Clean),
     property_commands(Q, PropertyCommands), append(Clean,PropertyCommands,All), list_to_set(All, Answers).
+
+comparative_order(Q, Sop) :-
+    get_dict(ordering,Q,Plan),
+    member(Command,Plan.commands),
+    From is Command.start+1, End=Plan.end,
+    once((member([From,To,Scale,First],Plan.extremes), memberchk(To,Plan.separators),
+      SecondAt is To+1, member([SecondAt,End,Scale,Second],Plan.extremes),
+      opposite_extremes(First,Second))),
+    ordering_words(Q,Command.predicate,Predicate),
+    ordering_words(Q,[Command.start,End],Order),
+    ordering_object(Q,Command.object,Refers,Lookup),
+    format(string(Sop),'@r w.request.request act=~s mode=~s mood=do predicate=~s~s~n@r.order w.request.constraint request=$r on=manner value=~s words=~s phase=result~s',
+           [Command.act,Command.mode,Predicate,Refers,Order,Order,Lookup]).
+
+opposite_extremes("up","down").
+opposite_extremes("down","up").
+
+ordering_words(Q, Range, Encoded) :-
+    offsets(Q.tokens,Range,Start,End), span(Q.text,Start,End,Words), encode(Words,Encoded).
+
+ordering_object(_, [At,At], "", "") :- !.
+ordering_object(Q, Range, " refers=thing", Lookup) :-
+    ordering_words(Q,Range,Words),
+    format(string(Lookup),'~n@r.ref w.request.lookup request=$r key=thing words=~s',[Words]).
 
 relative_placement(Q, _{sop:Sop,hasSource:HasSource}) :-
     get_dict(relativePlacement,Q,Plan),
