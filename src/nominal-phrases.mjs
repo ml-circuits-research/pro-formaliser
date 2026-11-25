@@ -207,7 +207,7 @@ function detached(wires, removable) {
   return wires.some(w=>!drop.has(w) && Object.values(w.attrs).flat().some(value=>refs.has(value))) ? [] : removable;
 }
 
-function coarseRegion(wires,owned,family,key,text,from,to,worlds) {
+function coarseRegion(wires,owned,family,key,text,from,to,worlds,creates) {
   const relations=new Set(worlds.spatialBindings.filter(binding=>binding.family===family).map(binding=>binding.relationKey));
   const pieces=owned.filter(wire=>{
     const attribute=field(wire,'attribute');
@@ -219,8 +219,17 @@ function coarseRegion(wires,owned,family,key,text,from,to,worlds) {
     return spans.length===1 && (attribute===key ? from<spans[0][0] && spans[0][1]===to :
       spans[0][0]===from && spans[0][1]<to);
   });
-  if (pieces.length!==2 || pieces.filter(wire=>field(wire,'attribute')===key).length!==1) return [];
-  return detached(wires,pieces);
+  if (pieces.length===2 && pieces.filter(wire=>field(wire,'attribute')===key).length===1) return detached(wires,pieces);
+  if (pieces.length || !creates) return [];
+  const directions=new Set(worlds.directionalResults.bindings.filter(binding=>binding.family===family).map(binding=>binding.directionKey));
+  const partial=owned.filter(wire=>{
+    if (!directions.has(field(wire,'attribute')) || field(wire,'on')!=='attribute' || field(wire,'operator')!=='eq' ||
+        field(wire,'phase')!=='result' || wire.attrs.value?.length!==1 || wire.attrs.key_words ||
+        Object.keys(wire.attrs).some(slot=>!allowedFields.has(slot))) return false;
+    const positions=normalSpans(text,field(wire,'words') ?? field(wire,'value'));
+    return positions.length===1 && positions[0][0]===from && positions[0][1]<to;
+  });
+  return partial.length===1 ? detached(wires,partial) : [];
 }
 
 function normalSpans(text, value) {
@@ -424,7 +433,7 @@ function attachPhrase(text, ts, quotes, wires, request, target, start, at, entry
   const owned = constraints.filter(w => field(w, 'request') === ref);
   const spatial=spatialPair(wires, owned, family, keys.join(' '), worlds, operator==='region');
   const fragments=operator==='region' && field(target,'mode')==='new' && !spatial.length
-    ? coarseRegion(wires,owned,family,key,text,from,to,worlds) : [];
+    ? coarseRegion(wires,owned,family,key,text,from,to,worlds,field(request,'act')==='make') : [];
   if (constraints.some(w=>field(w,'attribute')===key && !fragments.includes(w))) return;
   const phase=requestedPhase ?? (spatial.length ? field(spatial[0],'phase') ?? 'result'
     : field(target,'mode')==='new' || field(request,'act')==='place' ? 'result' : undefined);

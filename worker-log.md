@@ -387,3 +387,8 @@
 - Frozen 462 now has a complete proposal retaining the boat and binding the forbidden direction to it. Frozen 16 adds the same result with the separately written pause unread.
 - The scoped reader uses the canonical imperative-negation and direction facts. Canonical routing is recorded in the review responses.
 - All 443 isolated release tests passed. No benchmark rerun.
+
+## Trailing scope and independent continuation
+- Frozen 488 keeps the scope on the cat and separately creates the small bird at the top. Frozen 399 retains the exact tree and landmark relation. The final remarks stay unread.
+- Shared grammar routing and the different-family control are recorded for review.
+- All 444 isolated release tests passed. No benchmark rerun.

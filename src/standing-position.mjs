@@ -1,4 +1,7 @@
-import {serialize,str} from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
+import {parse,serialize,str} from '../.cache/knowledge/tools/sopworld/sopworld.mjs';
+import {evidenceReport,literalRanges} from './evidence.mjs';
+import {composeParts} from './composition.mjs';
+import {consumeUnread} from './nominal-evidence.mjs';
 import {tokens} from './lexicon.mjs';
 import {quotedSpans} from './literal-roles.mjs';
 
@@ -9,6 +12,8 @@ const terminal=new Set(['.','!']);
 const values=(wire,key)=>(wire.attrs[key] ?? []).map(str);
 const terms=text=>tokens(text).map(([term])=>term);
 const matches=(input,at,words)=>words.every((term,i)=>input[at+i]===term);
+const one=(wire,key)=>str(wire.attrs[key]?.[0]);
+const separators=new Set([',','—','–']);
 
 export function compileStandingPositions(facts,catalog) {
   return facts('pro.reader.standing_position').flatMap(wire=>{
@@ -17,12 +22,145 @@ export function compileStandingPositions(facts,catalog) {
       key.head==='span' && !key.values.length).map(key=>key.tab));
     if (!tabs.size) return [];
     const scopes=values(wire,'scope').map(terms).filter(words=>words.length);
+    const trailingScopes=values(wire,'trailing_scope').map(terms).filter(words=>words.length);
     const wrappers=[[],...values(wire,'wrapper').map(terms)];
     const predicates=values(wire,'predicate').map(terms).filter(words=>words.length);
     const bodyLeads=[[],...values(wire,'body_lead').map(terms)];
     const exclusions=values(wire,'exclusion').map(terms).filter(words=>words.length);
-    return [{tabs,scopeKey,scopes,wrappers,predicates,bodyLeads,exclusions}];
+    return [{tabs,scopeKey,scopes,trailingScopes,wrappers,predicates,bodyLeads,exclusions}];
   });
+}
+
+export function standingClosings(facts) {
+  return facts('w.lang.en.cue').filter(wire=>one(wire,'on')==='reaction' && one(wire,'value')==='thanks')
+    .flatMap(wire=>values(wire,'lead').map(terms)).filter(words=>words.length);
+}
+
+function trailingStandingPlan(text,worlds) {
+  const ts=tokens(text), chars=Array.from(text), input=ts.map(([term])=>term);
+  if (!input.some(term=>separators.has(term)) || input.includes('?') || quotedSpans(text).length) return;
+  const stop=input.length-Number(terminal.has(input.at(-1)));
+  const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
+  const conditional=[...worlds.scopeGrammar.conditionals.keys()].some(form=>
+    input.some((_,i)=>matches(input,i,form.split(' '))));
+  if (conditional) return;
+  const plans=[];
+  for (const frame of worlds.standingPositions) for (const scope of frame.trailingScopes) {
+    for (let at=3;at<stop;at++) {
+      const end=at+scope.length;
+      if (!separators.has(input[at-1]) || !matches(input,at,scope) || end<stop && !separators.has(input[end]) ||
+          !frame.predicates.some(verb=>input.some((_,i)=>i>0 && i+verb.length<at-1 && matches(input,i,verb)))) continue;
+      let start=end+1;
+      const coordinated=worlds.joiners[input[start]]==='coordination';
+      if (coordinated) start++;
+      let finish=stop;
+      for (let i=start+1;i<stop-1;i++) {
+        if (!['—','–'].includes(input[i])) continue;
+        const first=i+1+Number(worlds.joiners[input[i+1]]==='coordination');
+        if (worlds.standingClosings.some(lead=>{
+          if (!matches(input,first,lead)) return false;
+          const rest=input.slice(first+lead.length,stop);
+          return !rest.length || worlds.requestIntents.intents.some(({cue,form,role,want})=>
+            form==='nominal' && role==='purpose' && want==='yes' && matches(rest,0,cue) &&
+            Object.hasOwn(worlds.determiners,rest[cue.length]) && rest.length>cue.length+1 &&
+            rest.slice(cue.length+1).every(term=>word.test(term) && !worlds.joiners[term] && !worlds.negatives.has(term) &&
+              !worlds.scopeGrammar.modals.has(term) && !worlds.lookup(term).some(([role])=>role==='act')));
+        })) {finish=i;break;}
+      }
+      plans.push({frame,body:span(0,at-1),head:span(0,end),scope:span(at,end),
+        following:coordinated && start<finish ? span(start,finish) : undefined,
+        closing:finish<stop ? span(finish+1,stop) : undefined,
+        remainder:end<stop ? span(end+1,stop) : undefined,
+        tail:coordinated && start<finish ? span(start,stop) : undefined});
+    }
+  }
+  return plans.length===1 ? plans[0] : undefined;
+}
+
+function scopedPosition(plan,candidate,worlds) {
+  let wires=parse(candidate.sop);
+  const requests=wires.filter(w=>w.type===type('request')), targets=wires.filter(w=>w.type===type('target'));
+  if (requests.length!==1 || targets.length!==1) return;
+  const [request]=requests,[target]=targets, owner='$'+request.id, family=one(target,'family');
+  const predicate=one(request,'predicate');
+  if (!['change','place'].includes(one(request,'act')) || one(request,'mood')!=='do' ||
+      one(target,'mode')!=='existing' || one(target,'request')!==owner ||
+      !predicate || !plan.frame.predicates.some(words=>words.join(' ')===terms(predicate).join(' '))) return;
+  const hits=literalRanges(plan.body,predicate);
+  if (hits.length!==1) return;
+  const [[before,after]]=hits;
+  const subject=plan.body.slice(0,before).trimEnd(), nominal=terms(subject);
+  const targetWords=one(target,'description') ?? one(target,'sort_words') ?? one(target,'sort') ?? one(target,'family_words');
+  if (!targetWords || !literalRanges(subject,targetWords).length ||
+      !['definite','demonstrative','possessive'].includes(worlds.determiners[nominal[0]]) ||
+      nominal.some(term=>!word.test(term) || worlds.joiners[term] || worlds.negatives.has(term))) return;
+  const effects=wires.filter(w=>w.type===type('constraint') && one(w,'request')===owner);
+  if (effects.some(w=>one(w,'attribute')===plan.frame.scopeKey || one(w,'want')==='no')) return;
+  const position=terms(plan.body.slice(after)).join(' ');
+  const licensed=new Set();
+  for (const bind of worlds.spatialBindings.filter(b=>b.family===family && plan.frame.tabs.has(b.tab))) {
+    for (const effect of effects) {
+      const words=one(effect,'words') ?? one(effect,'value');
+      if (one(effect,'attribute')===bind.regionKey && words && terms(words).join(' ')===position &&
+          one(effect,'operator')==='region') licensed.add(effect);
+      if (one(effect,'attribute')===bind.relationKey && one(effect,'operator')==='relation' &&
+          words && effects.some(anchor=>one(anchor,'attribute')===bind.anchorKey && one(anchor,'phase')==='selector' &&
+            one(anchor,'value') && terms(words+' '+one(anchor,'value')).join(' ')===position)) licensed.add(effect);
+    }
+  }
+  if (licensed.size!==1) return;
+  const [effect]=licensed;
+  effect.attrs.phase=['result'];
+  target.attrs.fill=['description'];
+  target.attrs.description=[quote(subject)];
+  wires=consumeUnread(wires,plan.body,0,before,w=>one(w,'request')===owner);
+  const coverage=evidenceReport(plan.body,wires,worlds.evidenceVocabulary);
+  if (wires.some(w=>w.type===type('unread')) || coverage.missing.length || coverage.counts.uncovered) return;
+  request.attrs.words=[quote(plan.head)];
+  let id='scope';
+  while (wires.some(w=>w.id===id)) id+='_';
+  wires.push({id,type:type('constraint'),attrs:{request:[owner],on:['attribute'],attribute:[plan.frame.scopeKey],
+    value:[quote(plan.scope)],operator:['eq'],phase:['result']}});
+  return {wires,request};
+}
+
+export async function trailingStandingReadings(text,worlds,read,permit,admissible) {
+  const plan=trailingStandingPlan(text,worlds);
+  if (!plan || !permit(plan.body,[])) return [];
+  const heads=(await read(plan.body)).flatMap(candidate=>{
+    const scoped=scopedPosition(plan,candidate,worlds);
+    return scoped ? [scoped] : [];
+  });
+  if (!heads.length) return [];
+  const continuations=plan.following && permit(plan.following,[]) ? (await read(plan.following)).flatMap(candidate=>{
+    const wires=parse(candidate.sop), requests=wires.filter(w=>w.type===type('request'));
+    if (requests.length!==1 || !wires.some(w=>w.type===type('target')) ||
+        wires.some(w=>w.type===type('unread')) || evidenceReport(plan.following,wires,worlds.evidenceVocabulary).counts.uncovered) return [];
+    if (plan.closing) {
+      requests[0].attrs.words=[quote(plan.tail)];
+      let id='closing';
+      while (wires.some(w=>w.id===id)) id+='_';
+      wires.push({id,type:type('unread'),attrs:{request:['$'+requests[0].id],text:[quote(plan.closing)],note:[quote('closing remark')]}});
+    }
+    return [{...candidate,sop:serialize(wires)}];
+  }) : [];
+  const output=[];
+  for (const {wires,request} of heads.slice(0,8)) {
+    const first={sop:serialize(wires),source:'standing-position'};
+    for (const next of continuations.slice(0,8)) {
+      const sop=composeParts([plan.head,plan.following],[first,next]);
+      if (sop && admissible(text,sop)) output.push({sop,source:'trailing-standing-position',status:plan.closing ? 'partial' : 'matched'});
+    }
+    if (plan.remainder) {
+      request.attrs.words=[quote(text.trim())];
+      let id='following';
+      while (wires.some(w=>w.id===id)) id+='_';
+      wires.push({id,type:type('unread'),attrs:{request:['$'+request.id],text:[quote(plan.remainder)]}});
+    }
+    const sop=serialize(wires);
+    if (admissible(text,sop)) output.push({sop,source:'trailing-standing-position',status:plan.remainder ? 'partial' : 'matched'});
+  }
+  return output;
 }
 
 function owners(input,from,to,worlds,learned) {

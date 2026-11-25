@@ -15,7 +15,7 @@ import {compileAppositiveSelectors} from './appositive-selector.mjs';
 import {compileQuantifiedVerbs} from './quantified-verb.mjs';
 import {compileTopicCommandDeclarations} from './topic-commands.mjs';
 import {compilePostposedClauses} from './postposed-clause.mjs';
-import {compileStandingPositions} from './standing-position.mjs';
+import {compileStandingPositions,standingClosings} from './standing-position.mjs';
 import {incidentalModifiers} from './incidental-modifiers.mjs';
 import {analyticalArgumentFacts,compileAnalyticalOwnerProperties} from './analytical-frames.mjs';
 import {compileOrientationLandmarks} from './orientation-landmark.mjs';
@@ -706,6 +706,7 @@ function compile(facts) {
     nominalScales:nominalScaleForms(facts,requestKeys),
     nominalPositions:nominalPositionForms(facts,requestKeys),
     standingPositions:compileStandingPositions(facts,requestKeys),
+    standingClosings:standingClosings(facts),
     incidentalModifiers:incidentalModifiers(facts),
     instanceBindings: facts('pro.reader.instance_code').map(wire => ({
       family:one(wire,'family'), prefix:one(wire,'prefix')?.toLowerCase(),

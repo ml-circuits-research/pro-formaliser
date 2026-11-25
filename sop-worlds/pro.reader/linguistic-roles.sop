@@ -126,3 +126,5 @@
 @reader.effects.make pro.reader.coordinated_effects part=make part=owner part=effect part=join part=effect
 @reader.effects.turn pro.reader.coordinated_effects part=turn part=owner part=effect part=join part=effect
 @reader.english.immediate_vicinity pro.reader.spatial_surface base="next to" relation=next_to text="right next to" text="directly next to" text="immediately next to"
+@reader.english.relative_left pro.reader.spatial_surface base="left of" relation=left_of text="on the left of" text="to the left of"
+@reader.english.relative_right pro.reader.spatial_surface base="right of" relation=right_of text="on the right of" text="to the right of"
