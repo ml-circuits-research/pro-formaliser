@@ -835,3 +835,11 @@ The word “figures” is supported by the learned noun inventory in the default
 Prolog flags a declared numeral before the matched noun even if the noun parser consumed the number as a determiner. The reader now waits for the nominal proof before publishing that native circuit. The worlds-only controls verify that every native proposal for “Take two dogs out”, “Take the two dogs out” and “Take 2 dogs out” keeps `count=2`. The mechanism also checks the written number inside an ordered group. [Cardinality regressions](test/reference-commands.test.mjs)
 
 The 242-request default-model replay returned identical ordered SOP lists to the initial ordered-group run. All 520 release tests passed.
+
+## Bulk findings fixed — replacement operands do not become purpose
+
+The purpose reader now consults the verb-specific markers declared in `k.actions.marking`. In “swap the paper kite for a live bird”, `for` introduces the replacement. In “substitute a crown for the hat”, it introduces the thing being replaced. When an independently written clause supplies the replacement verb, a noisy learned predicate like “in” does not turn its operand into purpose. A separately written purpose can still follow the verb's own complement. [Role regressions](test/request-intents.test.mjs)
+
+The canonical language distinguishes replacement operands from positional exchange. The current `w.request.intent` roles cover purpose and destination. This change leaves unbound replacement operands as unread in the partial readings. Typed replacement endpoints and reciprocal placement still need a shared representation and separate proof. The reader must keep the distinction between a replacement such as “swap the paper kite for a live bird” and a positional exchange such as “swap the red block with the blue block on the row”.
+
+The actual default-model before/after replay processed 100 texts with replacement wording and 40 with possible purpose. Six texts lost an incorrect purpose reading. Each retained other proposals. The other 134 returned identical ordered SOP lists, including all 40 purpose controls. All 521 release tests passed. The aggregate benchmark remains paused.

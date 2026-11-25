@@ -579,3 +579,7 @@
 ## Split cardinality review
 - Every native split proposal now requires proof for a written number preceding its target noun.
 - The 242-request replay preserved its SOP lists. All 520 tests passed.
+
+## Replacement complement boundaries
+- Verb-specific grammatical roles keep replacement complements out of purpose.
+- The default-model replay removed incorrect purpose on six of 140 targeted inputs. All 521 tests passed.

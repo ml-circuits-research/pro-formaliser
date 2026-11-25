@@ -25,6 +25,32 @@ function intentFields(wire) {
     read(wire, key) ?? (key === 'want' ? 'yes' : undefined));
 }
 
+test('a verb-specific replacement marker keeps the operand out of purpose', async t => {
+  const reader=createReader();
+  t.after(()=>reader.close());
+  const cases=[
+    ['Substitute a crown for the hat.','for the hat'],
+    ['Swap the box for the circle.','for the circle'],
+    ['Exchange the chart for the table.','for the table'],
+    ['Move the circle, then swap the box for the chart.','for the chart'],
+    ['Swap the box in red for the circle, then move it.','for the circle'],
+  ];
+  for (const [text,words] of cases) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.length,text);
+    assert.ok(candidates.every(candidate=>intents(parse(candidate.sop)).every(intent=>
+      read(intent,'role')!=='purpose' || read(intent,'words')!==words)),text);
+  }
+  for (const [text,value] of [
+    ['Draw a box for the workshop.','the workshop'],
+    ['Replace the title with "Welcome" for the workshop.','the workshop'],
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.some(candidate=>intents(parse(candidate.sop)).some(intent=>
+      read(intent,'role')==='purpose' && read(intent,'value')===value)),text);
+  }
+});
+
 test('delivers purpose and destination on the independent analytical request', async t => {
   const reader = createReader();
   t.after(() => reader.close());

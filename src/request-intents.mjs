@@ -14,6 +14,48 @@ const terms = text => tokens(text).map(([key]) => key);
 const matches = (keys, at, sequence) => sequence.every((key, i) => key === keys[at + i]);
 const quote = JSON.stringify;
 
+function replacementMarkers(facts) {
+  const replacementFirst=new Set(facts('k.actions.verb').filter(wire=>one(wire,'object')==='replacement')
+    .flatMap(wire=>(wire.attrs.text ?? []).map(raw=>terms(str(raw)).join(' '))));
+  const byVerb=new Map();
+  for (const wire of facts('k.actions.marking')) {
+    const verb=terms(one(wire,'verb') ?? '').join(' '), role=one(wire,'role');
+    if (!verb || role!=='replacement' && !(role==='thing' && replacementFirst.has(verb))) continue;
+    const marker=terms(one(wire,'marker') ?? '');
+    if (!marker.length) continue;
+    const markers=byVerb.get(verb) ?? [];
+    markers.push(marker);
+    byVerb.set(verb,markers);
+  }
+  return byVerb;
+}
+
+function reservesReplacement(scope,predicate,intents,worlds) {
+  const purposes=intents.filter(intent=>intent.role==='purpose' && intent.form==='nominal');
+  if (!purposes.length) return false;
+  const ts=tokens(scope), keys=visibleTokens(Array.from(scope),ts), bank=worlds.requestIntents.replacementMarkers;
+  let head;
+  for (let i=0;i<keys.length;i++) {
+    const previous=keys[i-1];
+    if (i && ![',',';'].includes(previous) && !['coordination','sequence','clause'].includes(worlds.joiners[previous])) continue;
+    for (let end=i+1;end<=Math.min(i+8,keys.length);end++) {
+      const markers=bank.get(keys.slice(i,end).join(' '));
+      if (markers) head={end,markers};
+    }
+  }
+  if (!head) {
+    const markers=bank.get(terms(predicate).join(' ')), locations=literalRanges(scope,predicate);
+    if (!markers || locations.length!==1) return false;
+    head={end:tokens(scope.slice(0,locations[0][1])).length,markers};
+  }
+  const {end,markers}=head;
+  if (!purposes.some(intent=>markers.some(marker=>matches(intent.cue,0,marker))) ||
+      !ts.slice(end).some(token=>word.test(token[0]))) return false;
+  // A later purpose remains possible after the predicate's own complement.
+  return !keys.some((_,i)=>i>end && markers.some(marker=>matches(keys,i,marker) &&
+    ts.slice(i+marker.length).some(token=>word.test(token[0]))));
+}
+
 function unresolvedDestinationFrames(facts) {
   const list=(wire,key)=>(wire.attrs[key] ?? []).map(value=>terms(str(value)));
   const repetition=new Set(facts('w.lang.en.ellipsis.repeat').flatMap(wire=>list(wire,'text'))
@@ -92,6 +134,7 @@ export function compileRequestIntents(facts, argumentSequences) {
   return {
     results,
     unresolvedDestinations:unresolvedDestinationFrames(facts),
+    replacementMarkers:replacementMarkers(facts),
     predicates: new Set(results.map(frame => frame.cue.join(' '))),
     intents: frames('pro.reader.request_intent_frame', ['role', 'form', 'owner', 'want', 'resolution'])
       .sort((a, b) => b.cue.length - a.cue.length),
@@ -208,6 +251,8 @@ export function withRequestIntents(text, plan, candidate, worlds) {
     .map(wire => one(wire, 'family')));
   if (!families.size && !one(owner, 'asked_words')) return;
   const scope = one(owner, 'words') ?? plan.body;
+  const predicate=one(owner,'predicate');
+  if (reservesReplacement(scope,predicate,plan.intents,worlds)) return;
   const scopeStart = plan.body.length - scope.length;
   const pendingCommand=wires.some(wire=>{
     if (wire.type!=='w.request.unread' || one(wire,'request')!==ref) return false;
