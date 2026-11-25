@@ -250,3 +250,7 @@ For the style aliases, `git blame` traces both rows in `sop-worlds/vocabulary/vi
 The optional relational module now represents “next move it halfway between Deploy and Plan” with one affected target, independent selector lookups for Deploy and Plan, and a relation that records the midpoint requirement. The SOP checker validates schema, catalog and written evidence. The same contract distinguishes an ordinary interval from an exact midpoint and rejects aliased selector references and references to a result wire.
 
 A read-only run through `psys2/official-dataset/sop_dataset.py::parse` retains the one contextual node target, both anchors, and the surface “halfway between”. The converter drops the typed landmark-pair relation and the association of each lookup with its selector. Resolving and applying interval geometry still needs the typed relation to survive the application path. [Schema and reproduction](sop-worlds/README.md)
+
+## Measured placement and displacement
+
+The staged declarations keep the distance from a written boundary separate from displacement along a stated direction. On the held-out “can you place a large sun about one inch from the right border”, the SOP checker accepted the emitted shape, size, amount, anchor, approximation and source spans. A read-only PSys2 dataset conversion retained the measure, unit, boundary and approximation. Applying those boundary and precision constraints is still an application check. [Pilot contract and reproduction](sop-worlds/measured-motion-pilot/README.md)

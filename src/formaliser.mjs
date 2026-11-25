@@ -1,3 +1,4 @@
+import {measuredMotionReadings} from './measured-motion.mjs';
 import {landmarkPairReadings} from './landmark-pairs.mjs';
 import {sentenceRequestReadings} from './sentence-requests.mjs';
 import {benefactiveReadings} from './benefactive.mjs';
@@ -740,6 +741,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         !requestScope(words,maskQuoted(words,quotes),worlds,[]).restricted;
       const qualify=clauseQualifiers(text,worlds,model,permit);
       const additional=new Map();
+      for (const reading of await measuredMotionReadings(text,worlds,wrapped,permit)) {
+        const key=admissibleKey(text,reading.sop);
+        if (key) additional.set(key,reading);
+      }
       for (const reading of await landmarkPairReadings(text,worlds,wrapped,permit,packet=>worker.request({landmarkPair:packet}))) {
         const key=admissibleKey(text,reading.sop);
         if (key) additional.set(key,reading);

@@ -12,9 +12,20 @@ const decimal = /^[+-]?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)$/u;
 const valuesOf=(wire,key)=>(wire.attrs[key] ?? []).map(decoded);
 const identity=(family,key)=>JSON.stringify([family,key]);
 
+export function resolvePropertyUnit(worlds,family,key,normalized,written) {
+  const dimensions=worlds.ownerPropertyUnits?.get(identity(family,key));
+  if (dimensions?.size!==1) return;
+  const units=new Map([
+    ...(worlds.ownerPropertyUnitNames?.get(normalized) ?? []),
+    ...(worlds.ownerPropertyUnitSymbols?.get(written) ?? []),
+  ]);
+  if (units.size!==1) return;
+  const [unit]=units.values();
+  if (dimensions.has(unit.quantity)) return unit.name;
+}
+
 export function resolveWrittenMeasurement(text,worlds,family,key) {
   const ts=tokens(text), chars=Array.from(text);
-  const dimensions=worlds.ownerPropertyUnits?.get(identity(family,key));
   const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
   const before=(a,b)=>ts.slice(a,b).map(([term])=>term).join(' ');
   let measurement;
@@ -24,16 +35,12 @@ export function resolveWrittenMeasurement(text,worlds,family,key) {
     if (!literal && !(numeral?.kind==='cardinal' && /^\d+$/u.test(numeral.value))) continue;
     const number=literal ? written : numeral.value;
     if (j===ts.length) return {value:number};
-    const units=new Map([
-      ...(worlds.ownerPropertyUnitNames?.get(before(j,ts.length)) ?? []),
-      ...(worlds.ownerPropertyUnitSymbols?.get(span(j,ts.length)) ?? [])
-    ]);
-    if (dimensions?.size!==1 || units.size!==1 || written.startsWith('-')) continue;
-    const [unit]=units.values();
-    if (!dimensions.has(unit.quantity)) continue;
+    if (written.startsWith('-')) continue;
+    const unit=resolvePropertyUnit(worlds,family,key,before(j,ts.length),span(j,ts.length));
+    if (!unit) continue;
     if (measurement) return null;
     const measure=number.replace(/^\+/u,'').replace(/^\./u,'0.');
-    measurement={measure,unit:unit.name,words:written};
+    measurement={measure,unit,words:written};
   }
   return measurement ? {value:text,measurement} : {};
 }

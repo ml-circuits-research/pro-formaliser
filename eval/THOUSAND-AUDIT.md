@@ -1,5 +1,7 @@
 # Text-only formalisation on 1,000 random requests
 
+With the written-distance pilot, the all-staged reader reaches **55.0% including spelling** and **53.6% on originals**. [Full grade table](RESULTS.md#written-distances-and-placement)
+
 At `59dd222` the all-staged reader reaches **55.0% including spelling** and **53.6% on originals**. [Full grade table](RESULTS.md#placement-between-two-landmarks)
 
 At `bf65865` the all-staged reader reaches **55.0% including spelling** and **53.6% on originals**. [Full grade table](RESULTS.md#repeated-operands-and-grouping-alternatives)

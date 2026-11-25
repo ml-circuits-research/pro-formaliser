@@ -284,3 +284,8 @@
 
 ## Landmark-pair replay
 - All 1,000 primary and 1,000 independent inputs replayed. All-staged coverage 55.0% including spelling and 45.8% on independent originals. See eval/RESULTS.md for grades and limitations.
+
+## Written distances and placement
+- Staged worlds declare measured placement, displacement and precision. Units and amount evidence survive native validation and PSys2 dataset conversion.
+- All 387 tests passed. Replayed both 1,000-request samples. Primary including spelling 55.0%, independent originals 45.9%. The changed set and judgment are in eval/MEASURED-MOTION-REPLAY.tsv.
+- Applying measured placement in PSys2 and binding separate measured actions within multi-clause requests remain open.

@@ -32,7 +32,7 @@ export function compileDirectionalResults(facts,requestKeys,words=facts('core.wo
     const keys=requestKeys.filter(key=>key.tab===tab && key.family===family);
     const direction=keys.find(key=>key.name===directionKey && key.head.split('+').includes('class'));
     if (!act || !direction?.values.length) continue;
-    bindings.push({family,act,directionKey,directions:new Map([...directions].flatMap(([form,names])=>{
+    bindings.push({tab,family,act,directionKey,directions:new Map([...directions].flatMap(([form,names])=>{
       const allowed=[...names].filter(name=>atom.test(name) && direction.values.includes(name));
       return allowed.length===1 ? [[form,allowed[0]]] : [];
     })),degreeKey:keys.some(key=>key.name===degreeKey && key.head==='candidate' && !key.values.length) ? degreeKey : undefined,
@@ -42,7 +42,7 @@ export function compileDirectionalResults(facts,requestKeys,words=facts('core.wo
   return {predicates,degrees,bindings};
 }
 
-function targetIn(worlds,binding,start,end,phrase,span) {
+export function writtenMotionTarget(worlds,binding,start,end,phrase,span) {
   const description=span(start,end), whole=phrase(start,end);
   if (worlds.isReference(whole)) return ' fill=context family_words='+quote(description);
   let first=start, determiner;
@@ -96,7 +96,7 @@ export function directionalResultCandidates(text,ts,quotes,worlds) {
             if (!direction || (to<stop && !motion.degrees.has(phrase(to,stop)))) continue;
             for (let end=head+1;end<=from;end++) {
               if (end<from && (to<stop || !motion.degrees.has(phrase(end,from)))) continue;
-              const target=targetIn(worlds,binding,head,end,phrase,span);
+              const target=writtenMotionTarget(worlds,binding,head,end,phrase,span);
               if (!target) continue;
               const degree=end<from ? span(end,from) : to<stop ? span(to,stop) : undefined;
               const directionWords=span(from,to);
