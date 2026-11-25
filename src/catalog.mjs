@@ -1,5 +1,7 @@
 // The request catalog is evaluated separately from native SOP type validity.
 // With no tab, any loaded domain can license the reading.
+import {tokens} from './lexicon.mjs';
+
 const indexes=new WeakMap();
 const value=v=>v?.startsWith('"') ? JSON.parse(v) : v;
 function keyIndex(worlds) {
@@ -16,6 +18,9 @@ function keyIndex(worlds) {
 
 export function catalogIssues(wires,worlds,tab) {
   const issues=[],index=keyIndex(worlds);
+  const subjectRules=worlds.strictNominalSubjects;
+  const targets=subjectRules?.size ? Map.groupBy(wires.filter(wire=>wire.type==='w.request.target'),
+    wire=>value(wire.attrs.request?.[0])) : undefined;
   for (const {id,type,attrs} of wires) {
     if (type==='w.request.target') {
       const family=value(attrs.family?.[0]);
@@ -28,6 +33,16 @@ export function catalogIssues(wires,worlds,tab) {
     if (!declarations.length) {
       issues.push({wire:id,slot:'attribute',value:name??null,code:'unlicensed_key'});
       continue;
+    }
+    const group=targets?.get(value(attrs.request?.[0]));
+    if (group?.length===1) {
+      const family=value(group[0].attrs.family?.[0]), sort=value(group[0].attrs.sort?.[0]);
+      if (sort) for (const raw of attrs.value ?? []) {
+        const allowed=subjectRules.get(JSON.stringify([family,name,value(raw).toLowerCase()]));
+        if (allowed && !allowed.has(tokens(sort).map(([key])=>key).join(' '))) {
+          issues.push({wire:id,slot:'value',value:value(raw),attribute:name,code:'unlicensed_value_subject'});
+        }
+      }
     }
     const open=value(attrs.open_value?.[0])==='true';
     if (value(attrs.phase?.[0])==='result' && (open || !attrs.value?.length) &&

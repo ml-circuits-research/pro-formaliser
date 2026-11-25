@@ -1,5 +1,6 @@
 import { supportedMeaning } from './training-evidence.mjs';
 import { literalField, literalRanges } from './evidence.mjs';
+import { nativeInventory } from './native-inventory.mjs';
 import { tokens } from './lexicon.mjs';
 import { quotedSpans } from './literal-roles.mjs';
 import { consumeUnread } from './nominal-evidence.mjs';
@@ -290,7 +291,7 @@ function regionSurfaces(facts) {
   return phrases;
 }
 
-export function nominalPositionForms(facts, requestKeys) {
+export function nominalPositionForms(facts, requestKeys, words=facts('core.word')) {
   const cues = regionSurfaces(facts);
   for (const wire of facts('w.lang.en.cue')) {
     const on=field(wire,'on'), value=field(wire,'value'), relation=field(wire,'relation');
@@ -311,6 +312,26 @@ export function nominalPositionForms(facts, requestKeys) {
     if (!byLead.has(words[0])) byLead.set(words[0],new Map());
     byLead.get(words[0]).set(JSON.stringify(entry),entry);
   };
+  const subjectsByType=new Map();
+  function subjectKinds(wire) {
+    const types=(wire.attrs.subject_type ?? []).map(decode);
+    if (!types.length) return;
+    const subjects=new Set();
+    for (const type of types) {
+      if (!subjectsByType.has(type)) {
+        const names=nativeInventory(facts,type,words);
+        subjectsByType.set(type,[...names.values()].flatMap(choices=>[...choices].map(normalize)));
+      }
+      for (const name of subjectsByType.get(type)) subjects.add(name);
+    }
+    return [...subjects].sort();
+  }
+  const addValue=(family,wire,words,key,value)=>{
+    const subjects=subjectKinds(wire);
+    if (subjects?.length===0) return;
+    const entry=[words,key,value,'attribute','eq','result'];
+    add(family,subjects ? [...entry,subjects,field(wire,'strict_subject')==='true'] : entry);
+  };
   for (const wire of facts('pro.reader.nominal_pattern')) {
     const family=field(wire,'family'), tab=field(wire,'tab'), key=field(wire,'key');
     const bank=requestKeys.find(prop=>prop.family===family && prop.tab===tab && prop.name===key &&
@@ -321,7 +342,7 @@ export function nominalPositionForms(facts, requestKeys) {
       if (!/^(?:[\p{L}\p{M}]+ )*\{value\}(?: [\p{L}\p{M}]+)*$/u.test(pattern)) continue;
       for (const value of bank.values) {
         const words=lexicalWords(pattern.replace('{value}',()=>value));
-        if (words) add(family,[words,key,value,'attribute','eq','result']);
+        if (words) addValue(family,wire,words,key,value);
       }
     }
   }
@@ -333,7 +354,7 @@ export function nominalPositionForms(facts, requestKeys) {
       prop.values.includes(value))) continue;
     for (const text of wire.attrs.text ?? []) {
       const words=lexicalWords(decode(text));
-      if (words) add(family,[words,key,value,'attribute','eq','result']);
+      if (words) addValue(family,wire,words,key,value);
     }
   }
   for (const wire of facts('pro.reader.spatial')) {
@@ -354,6 +375,20 @@ export function nominalPositionForms(facts, requestKeys) {
   }
   return new Map([...indexes].map(([family,byLead])=>[family,new Map([...byLead].map(([lead,options])=>
     [lead,[...options.values()]]))]));
+}
+
+export function strictNominalSubjects(positions) {
+  const index=new Map();
+  for (const [family,byLead] of positions) {
+    for (const entries of byLead.values()) for (const [,key,value,,,,subjects,strict] of entries) {
+      if (!strict) continue;
+      const id=JSON.stringify([family,key,value.toLowerCase()]);
+      const known=index.get(id) ?? new Set();
+      for (const subject of subjects) known.add(subject);
+      index.set(id,known);
+    }
+  }
+  return index;
 }
 
 export function nominalPhraseReadings(text, ts, quotes, candidate, forms, worlds) {
@@ -480,8 +515,11 @@ export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, 
   const placement=at=>groundedPlacementEnd(owned(),ts,at,worlds,family);
   // An explicit phase marks a value on a newly created nominal. Spatial
   // forms still use the phase of their existing local relation.
-  const options=at=>(byLead.get(ts[at]?.[0]) ?? []).filter(([words,,,,,phase])=>
-    (!phase || createsTarget) && matchesAt(ts,at,words));
+  const targetKind=normalize(field(target,'sort') ?? head);
+  const options=at=>[...new Map((byLead.get(ts[at]?.[0]) ?? [])
+    .filter(([words,,,,,phase,subjects])=>
+      (!phase || createsTarget) && (!subjects || subjects.includes(targetKind)) && matchesAt(ts,at,words))
+    .map(entry=>[JSON.stringify(entry.slice(0,6)),entry])).values()];
   let revised;
   // A sentence-initial region before a comma can modify the one target in
   // this local packet. Its phrase must end before the target nominal starts.
@@ -499,7 +537,7 @@ export function nativeNominalPhraseReadings(text, ts, quotes, candidate, index, 
     const [entry]=best, [covered]=existing;
     if (covered) {
       const agrees=covered.meaning && (!entry || covered.words.join(' ')===entry[0].join(' ') &&
-        JSON.stringify(JSON.parse(covered.meaning).slice(0,entry.length-1))===JSON.stringify(entry.slice(1)));
+        JSON.stringify(JSON.parse(covered.meaning).slice(0,entry[5] ? 5 : 4))===JSON.stringify(entry.slice(1,entry[5] ? 6 : 5)));
       if (agrees) {
         at+=covered.words.length;
         continue;

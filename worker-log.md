@@ -442,3 +442,8 @@
 - Frozen diagrams-01 rows 1613 and 1709 now have complete arrangement proposals in both reader profiles, with contextual and written group descriptions respectively.
 - Ordered argument frames retain the exact edge and mode marker. Group identity stays deferred.
 - All 460 isolated release tests passed. No benchmark rerun.
+
+## Subject applicability for noun-phrase poses
+- Frozen placement-01 row 666 has a default proposal with kicking, middle placement and leftward facing on the boy. Two spans remain unread.
+- The optional kneeling value applies to people and rejects explicitly typed houses and dogs.
+- All 461 isolated release tests passed. No benchmark rerun.

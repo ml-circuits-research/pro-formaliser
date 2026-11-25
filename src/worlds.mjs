@@ -39,7 +39,7 @@ import { compileAlternations } from './request-alternations.mjs';
 import {nominalScaleForms,nominalScaleTypes} from './nominal-scales.mjs';
 import {argumentSequences} from './argument-sequences.mjs';
 import { compileFixedProperties } from './fixed-properties.mjs';
-import { nominalPositionForms } from './nominal-phrases.mjs';
+import { nominalPositionForms,strictNominalSubjects } from './nominal-phrases.mjs';
 import { spatialAliases } from './spatial-aliases.mjs';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, delimiter, dirname, extname, join, resolve } from 'node:path';
@@ -625,6 +625,7 @@ function compile(facts) {
     [...facts(type),...analyticalArgumentFacts(facts)] : facts(type),requestKeys);
   const universalAgreement=compileUniversalAgreement(facts);
   const nominalSelectorRules=compileNominalSelectors(facts,requestKeys,words);
+  const nominalPositions=nominalPositionForms(facts,requestKeys,words);
   return {
     bodyLeads:{neutral:leadForms('neutral'),nominal:leadForms('nominal'),actionOnly:leadForms('action_only')},
     knownWords, requestKeys, negatives, fillerPhrases, discourse,
@@ -706,7 +707,7 @@ function compile(facts) {
       parts:facts('w.lang.en.part'), fixed:facts('w.lang.en.fixed'),
     },
     nominalScales:nominalScaleForms(facts,requestKeys),
-    nominalPositions:nominalPositionForms(facts,requestKeys),
+    nominalPositions, strictNominalSubjects:strictNominalSubjects(nominalPositions),
     standingPositions:compileStandingPositions(facts,requestKeys),
     standingClosings:standingClosings(facts),
     incidentalModifiers:incidentalModifiers(facts),
@@ -760,6 +761,9 @@ function providerTypes(facts, effective=facts) {
   for (const frame of facts.get('pro.reader.orientation')?.values() ?? []) sources.push(one(frame,'landmark_type'));
   for (const frame of facts.get('pro.reader.motion')?.values() ?? []) sources.push(one(frame,'target_type'));
   for (const selector of facts.get(nominalSelectorType)?.values() ?? []) sources.push(...nominalSelectorProviders(selector));
+  for (const type of ['pro.reader.nominal_pattern','pro.reader.nominal_value']) {
+    for (const frame of facts.get(type)?.values() ?? []) sources.push(...values(frame,'subject_type'));
+  }
   for (const frame of facts.get('pro.reader.benefactive')?.values() ?? []) sources.push(one(frame,'name_provider'),one(frame,'name_blocker'));
   for (const binding of facts.get('pro.reader.owner_inventory')?.values() ?? []) sources.push(one(binding,'provider'));
   const providerFacts=type=>[...(([nativeTargetInventoryType,universalInventoryType].includes(type) ? facts : effective)

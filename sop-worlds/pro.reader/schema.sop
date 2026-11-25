@@ -230,3 +230,19 @@
 @pro.reader.body_lead core.type of=pro.reader.body_lead closed=true
 @pro.reader.body_lead.role core.slot of=pro.reader.body_lead key=role enum=neutral enum=action_only enum=nominal required=true
 @pro.reader.body_lead.text core.slot of=pro.reader.body_lead key=text kind=string many=true required=true
+
+# Written finite values can be limited to a native subject inventory.
+@pro.reader.nominal_pattern core.type of=pro.reader.nominal_pattern closed=true
+@pro.reader.nominal_pattern.tab core.slot of=pro.reader.nominal_pattern key=tab kind=atom required=true
+@pro.reader.nominal_pattern.family core.slot of=pro.reader.nominal_pattern key=family kind=atom required=true
+@pro.reader.nominal_pattern.key core.slot of=pro.reader.nominal_pattern key=key kind=atom required=true
+@pro.reader.nominal_pattern.pattern core.slot of=pro.reader.nominal_pattern key=pattern kind=string required=true many=true
+@pro.reader.nominal_value core.type of=pro.reader.nominal_value closed=true
+@pro.reader.nominal_value.tab core.slot of=pro.reader.nominal_value key=tab kind=atom required=true
+@pro.reader.nominal_value.family core.slot of=pro.reader.nominal_value key=family kind=atom required=true
+@pro.reader.nominal_value.key core.slot of=pro.reader.nominal_value key=key kind=atom required=true
+@pro.reader.nominal_value.value core.slot of=pro.reader.nominal_value key=value kind=atom required=true
+@pro.reader.nominal_value.text core.slot of=pro.reader.nominal_value key=text kind=string many=true required=true
+@pro.reader.nominal_pattern.subject_type core.slot of=pro.reader.nominal_pattern key=subject_type kind=atom many=true
+@pro.reader.nominal_value.subject_type core.slot of=pro.reader.nominal_value key=subject_type kind=atom many=true
+@pro.reader.nominal_value.strict_subject core.slot of=pro.reader.nominal_value key=strict_subject kind=boolean

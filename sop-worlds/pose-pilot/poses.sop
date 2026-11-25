@@ -1,14 +1,7 @@
 # Optional replacement for the same catalog row in snapshot ba7cbcf2.
 @w.request.key.drawing.drawn.pose w.request.key tab=drawing family=drawn name=drawn.pose head=class value="arms up" value=clapping value="cross legged" value=dancing value="hands on hips" value=holding value=jumping value=kicking value=pointing value="reaching up" value=running value=sitting value=standing value=walking value=waving value=kneeling value="lying down" value="curled up" value=perched about="the pose of a drawn person's figure (\"sitting on a bench\")" core.source="hand-core 1"
 
-@pro.reader.nominal_value core.type of=pro.reader.nominal_value closed=true
-@pro.reader.nominal_value.tab core.slot of=pro.reader.nominal_value key=tab kind=atom required=true
-@pro.reader.nominal_value.family core.slot of=pro.reader.nominal_value key=family kind=atom required=true
-@pro.reader.nominal_value.key core.slot of=pro.reader.nominal_value key=key kind=atom required=true
-@pro.reader.nominal_value.value core.slot of=pro.reader.nominal_value key=value kind=atom required=true
-@pro.reader.nominal_value.text core.slot of=pro.reader.nominal_value key=text kind=string many=true required=true
-
-@reader.nominal.pose.kneeling pro.reader.nominal_value tab=drawing family=drawn key=drawn.pose value="kneeling" text="kneeling"
+@reader.nominal.pose.kneeling pro.reader.nominal_value tab=drawing family=drawn key=drawn.pose value="kneeling" text="kneeling" strict_subject=true subject_type=k.people.kind subject_type=k.people.role
 @reader.nominal.pose.lying-down pro.reader.nominal_value tab=drawing family=drawn key=drawn.pose value="lying down" text="lying down"
 @reader.nominal.pose.curled-up pro.reader.nominal_value tab=drawing family=drawn key=drawn.pose value="curled up" text="curled up"
 @reader.nominal.pose.perched pro.reader.nominal_value tab=drawing family=drawn key=drawn.pose value="perched" text="perched"

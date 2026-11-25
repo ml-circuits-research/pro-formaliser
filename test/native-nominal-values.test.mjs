@@ -70,3 +70,21 @@ test('a postnominal frame reads current members of an independently installed fi
     assert.equal(hit,value!=='unlisted',value);
   }
 });
+
+test('uses the installed person inventory for postnominal poses',async t=>{
+  const inventory=fileURLToPath(new URL('../sop-worlds/drawable-inventory-pilot/',import.meta.url));
+  const standard=createReader(undefined,loadWorlds({paths:[inventory]}));
+  const extended=createReader(undefined,loadWorlds({paths:[inventory,pilot]}));
+  t.after(()=>Promise.all([standard.close(),extended.close()]));
+  const values=({candidates})=>candidates.flatMap(candidate=>parse(candidate.sop)
+    .filter(wire=>field(wire,'attribute')==='drawn.pose'));
+  const kick=values(await standard.propose('Draw a boy mid kick'));
+  assert.ok(kick.some(wire=>field(wire,'value')==='kicking' && field(wire,'words')==='mid kick'));
+  assert.deepEqual(values(await standard.propose('Draw a house mid kick')),[]);
+  assert.deepEqual(values(await standard.propose('Draw a girl kneeling')),[]);
+  const kneel=values(await extended.propose('Draw a girl kneeling'));
+  assert.ok(kneel.some(wire=>field(wire,'value')==='kneeling'));
+  assert.deepEqual(values(await extended.propose('Draw a house kneeling')),[]);
+  assert.deepEqual(values(await extended.propose('Draw a dog kneeling')),[]);
+  assert.deepEqual(values(await extended.propose('Draw a girl "kneeling"')),[]);
+});
