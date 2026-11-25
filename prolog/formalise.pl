@@ -30,7 +30,7 @@ main :- repeat,
 answer(Q, Plans) :- get_dict(landmarkPair,Q,Packet), !, landmark_pair_plans(Packet,Plans).
 answer(Q, Plans) :- get_dict(setExclusion,Q,Packet), !, exclusion_plans(Packet,Plans).
 answer(Q, Proofs) :- get_dict(languageOnly,Q,Packet), !, frame_proofs(Packet,Proofs).
-answer(Q, _{candidates:Answers,frontedCandidates:Fronted,universalCandidates:Universal,proofs:Proofs,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
+answer(Q, _{candidates:Answers,frontedCandidates:Fronted,universalCandidates:Universal,proofs:Proofs,groundedPredicates:Grounded,topicCommands:Topics,sequences:Sequences,memberActions:Members,coordinatedEffects:Effects,verbEffects:VerbEffects,nativeProperties:NativeProperties}) :-
     topic_commands(Q,Topics),
     native_property_frames(Q,NativeProperties),
     verb_effects(Q,VerbEffects),
@@ -38,9 +38,13 @@ answer(Q, _{candidates:Answers,frontedCandidates:Fronted,universalCandidates:Uni
     member_actions(Q,Members),
     argument_sequences(Q,Sequences),
     frame_proofs(Q.language,Proofs),
+    findall([Start,End,Act],
+            ( member(Proof,Proofs), offsets(Q.tokens,Proof.predicate,Start,End),
+              Act=Proof.act, memberchk([Start,End,[Act],true], Q.declaredActs) ), Matches),
+    sort(Matches,Grounded),
     property_constraints(Q, ExtraHits), append(Q.hits,ExtraHits,Hits),
     findall(B, (member(P,Proofs), target_scope(Q.tokens,Q.targetRoles,P,B)), RawBounds), sort(RawBounds, Bounds),
-    reset_role_cache, index_roles(Q.put(roleScopes,Bounds), Hits, WithProperties),
+    reset_role_cache, index_roles(Q.put(_{roleScopes:Bounds,groundedPredicates:Grounded}), Hits, WithProperties),
     ( get_dict(frontedPlan, Q, Clause) ->
       findall(CleanFront,
               ( member(ActHit,WithProperties.actHits),
@@ -102,6 +106,7 @@ candidate(Q, Score, Candidate) :- lexical_candidate(Q, Score, Candidate).
 
 lexical_candidate(Q, score(Tier, Score, 0), Candidate) :-
     member([Start,End,["act",Act,Mood,N],ActPrior], Q.actHits),
+    predicate_admitted(Q, Start, End, Act),
     request_window(Q,Start-End,Act,WindowStart-WindowEnd,Intent,Question),
     Scoped = Q.put(scopeEnd,WindowEnd),
     span(Q.text, Start, End, Predicate), encode(Act, A), encode(Predicate, P),
@@ -143,6 +148,14 @@ lexical_candidate(Q, score(Tier, Score, 0), Candidate) :-
     ( nonvar(Family), memberchk([S,E,Families],Q.ambiguousTargets), memberchk(Family,Families)
     -> Candidate=Base.put(binding,[Start,End,Act,S,E,Family]) ; Candidate=Base ),
     Score is 12*Coverage + Extra + ActPrior + log(1+N) + min(12,End-Start)/4 - Start/3.
+
+% An exact canonical action name backed by a complete frame cannot be
+% replaced by a learned sense or by an unlicensed head inside its operands.
+% Other independently declared senses still compete.
+predicate_admitted(Q, Start, End, Act) :-
+    ( Q.groundedPredicates == [] -> true
+    ; memberchk([Start,End,Grounded], Q.groundedPredicates) -> Act == Grounded
+    ; memberchk([Start,End,Declared,_], Q.declaredActs), memberchk(Act,Declared) ).
 
 request_window(Q,S-E,Act,A-B,Intent,Question) :-
     ( get_dict(scopes,Q,Scopes) ->

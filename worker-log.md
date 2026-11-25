@@ -521,3 +521,7 @@
 ## Existence, listing and description of written collections
 - Declared frames now keep the question type, grounded member selectors and exact written collection descriptions.
 - The default reader added six matched readings on 106 existing warning texts. Ten contrast outputs compared equal. All 498 release tests passed.
+
+## Canonical action admission
+- The Prolog search now uses complete native frames to reject learned action conflicts on exact canonical commands.
+- The actual 116-text replay recovered the two save acts, and the optional typed target proposal preserved chart format evidence. All 500 release tests passed.

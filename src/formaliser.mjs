@@ -234,7 +234,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
     if (typeof text !== 'string') throw Error('Expected a text string');
     const ts = tokens(text), chars = Array.from(text);
     const ambiguousTargets = [], templates = [], hits = [], determiners = [], properties = [], predicateModes=[];
-    const inflectionHits = [], inflectionTargets = [];
+    const inflectionHits = [], inflectionTargets = [], declaredActs = [];
     // A quoted label may itself contain punctuation, negation or a sequence word.
     // Its span remains available to property binding in Prolog.
     const quotes = quotedSpans(text);
@@ -266,6 +266,10 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         const learned = Object.hasOwn(model.lexicon ?? {},words) ? model.lexicon[words] : [];
         const local = new Set(learned.map(e => JSON.stringify(e.slice(0,-1))));
         const declared = worlds.lookup(words);
+        const nativeActs = [...new Set(declared.filter(([role])=>role==='act').map(([,act])=>act))];
+        if (nativeActs.length) {
+          declaredActs.push([ts[i][2],ts[j][3],nativeActs,nativeActs.length===1 && nativeActs[0]===words]);
+        }
         const families = new Set(declared.filter(e=>e[0]==='target').map(e=>e[2]));
         if (!families.size && !learned.some(([role]) => role === 'target')) {
           const senses = worlds.nominalInflection(words, worlds.lookup);
@@ -318,7 +322,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         acts:[...new Set(worlds.spatialBindings.flatMap(binding=>binding.namedActs))],
         modifiers:[...worlds.spatialModifiers.rules.keys()].map(words=>words.split(/\s+/u)),
       } : undefined;
-    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
+    const request = {text,frontedPlan,universalInventory,topicCommands,titleConnectors,nativeProperties,verbEffects,coordinatedEffects,memberActions,argumentSequences,propertyCommands,predicateModes,scopes:scope.windows,language,declaredActs,targetRoles,ambiguousTargets,allowConstraints,tokens:ts,templates,hits,examples:exact,transfers,determiners,properties};
     const candidates = [], seen = new Set();
     function retain(answer,readingScope=scope) {
       const key = admissibleKey(text,answer.sop);
@@ -588,6 +592,21 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
         if (reading) retain(reading);
       }
       if (lexical>=0) candidates.splice(lexical,0,...candidates.splice(offset));
+    }
+    const groundedPredicates=new Map((response.groundedPredicates ?? []).map(([start,end,act])=>
+      [chars.slice(start,end).join(''),act]));
+    if (groundedPredicates.size) {
+      for (let i=candidates.length-1;i>=0;i--) {
+        const requests=parse(candidates[i].sop).filter(wire=>wire.type==='w.request.request');
+        if (requests.length!==1) continue;
+        const predicate=valueOf(requests[0],'predicate');
+        const act=valueOf(requests[0],'act');
+        const groundedAct=groundedPredicates.get(predicate);
+        const declared=worlds.lookup(tokens(predicate ?? '').map(([key])=>key).join(' '));
+        if (groundedAct ? groundedAct!==act : predicate && !declared.some(([role,licensed])=>role==='act' && licensed===act)) {
+          candidates.splice(i,1);
+        }
+      }
     }
     if (!candidates.length) return {status:'unresolved',sop:'',unread:text,alternatives:[],[conditionalScope]:scope.preventsSplitting};
     if (response.proofs.length) {

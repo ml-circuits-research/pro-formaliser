@@ -1,6 +1,6 @@
 # Propuneri pentru lumile SOP
 
-Pachetul se poate revizui și integra pe bucăți. Piloții pentru posturi și expresii păstrează identificatorul intrării de catalog din versiunea fixată, iar celelalte propuneri au identificatori noi. Declarațiile din lumile instalate rămân sursa pentru tipurile, proprietățile și valorile existente.
+Pachetul se poate revizui și integra pe bucăți. Piloții pentru posturi, expresii și salvare păstrează identificatorii declarațiilor pe care le extind. Declarațiile din lumile instalate rămân sursa pentru tipurile, proprietățile și valorile existente.
 
 | Fișier | Ce adaugă | Ce funcționează azi |
 | --- | --- | --- |
@@ -16,6 +16,7 @@ Pachetul se poate revizui și integra pe bucăți. Piloții pentru posturi și e
 | [Distanță și direcție](measured-motion-pilot/README.md) | Chei de catalog, unități și expresii pentru deplasări și plasări cu distanță explicită. | „About one inch from the right border” păstrează aproximația, măsura și marginea scrisă. |
 | [Expresii ale figurilor](expression-pilot/README.md) | Cinci valori și o regulă gramaticală pentru o expresie scrisă după numele figurii. | Regula folosește valorile catalogului instalat. |
 | [Posturi ale figurilor](pose-pilot/README.md) | Patru valori suplimentare pentru catalogul închis de posturi. | Același model citește „kneeling” după obiectul descris. La integrare se adaugă doar valorile lipsă în intrarea curentă. |
+| [Ținte pentru salvare](save-target-pilot/README.md) | Extinde actele declarate ale paginii, diagramei și graficului cu `save`. | „Save the chart as PNG” păstrează graficul ca țintă și lasă „as PNG” pentru contractul canonic. |
 | [w.relational](w.relational/schema.sop) și [predicatele sale](w.relational/shards/predicates.sop) | Un modul opțional pentru relații între participanți, proprietăți și sursa unei selecții. | Motorul SOP nativ încarcă modulul și validează grafurile descrise mai jos. Cititorul poate propune orientarea reciprocă, raportul între proprietățile unui obiect, sursa unei selecții și poziția între două repere scrise. Emiterea relației de proprietate comună și execuția relațiilor rămân deschise. |
 
 ## Folosire în pro-formaliser

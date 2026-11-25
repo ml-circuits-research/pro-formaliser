@@ -705,3 +705,13 @@ For the canonical language handoff, extend the reviewed count/container inventor
 The new save-quality review is reproducible at the predicate/target boundary. The installed lookup returns only `save` for the predicate `save`, and it already licenses `document` for that act. The current family inventory does not license save for `page`, `drawn`, `chart` or `diagram`. Predicate admission and native target applicability therefore need separate fixes. The canonical role for save names the affected input, while format and output name remain separately scoped. Preserve pending format evidence when the target is readable.
 
 All 498 isolated release tests passed.
+
+## Bulk findings fixed — canonical action admission before lexical ranking
+
+A complete native frame with an exact, unambiguous canonical action name now constrains the Prolog search. Learned hits that replace that act or use an undeclared operand as a predicate no longer occupy its bounded alternatives. The same evidence also governs single-request proposals from templates and alignment. Independent declared senses remain available. Ordinary placement and the existing proposals for “Write the heading” and “Keep the blue tree” compared equal in the real default-model replay.
+
+The actual current reader replayed 116 texts, including the 106 warning texts. “Save the picture” and “Save the chart as PNG” now each return a single save request with the unsupported operand text retained. Seven of the warning texts changed, all in the exercised removal or revision families. In the direct copy control, the reader dropped its unrelated creation and change guesses and retained copy, while the written tree still needs target applicability.
+
+The optional save-target proposal demonstrates the canonical addition separately. With the same model and no retraining, the picture yields a page target and the chart yields a chart target with exact unread “as PNG”. Diagram save is covered by the same kind declaration. The proposal extends the same installed contract used by documents and preserves each kind's existing acts. The Ledger check keeps “the Ledger” unread until the named input can be grounded and keeps format/name evidence separately unread. “Could you save the picture?” still permits learned alternatives because question-mark forms do not enter this complete imperative-frame proof. No aggregate benchmark ran. [Save applicability proposal](sop-worlds/save-target-pilot/README.md) · [Regression cases](test/language.test.mjs)
+
+All 500 isolated release tests passed.

@@ -1,0 +1,4 @@
+# Extend the same native save applicability already declared for w.document.document.
+@w.drawing.kind.page std.schema.kind of=w.drawing.page world=w.drawing acts=make acts=remove acts=change acts=save core.source="save-target proposal"
+@w.chart.kind.chart std.schema.kind of=w.chart.chart world=w.chart acts=make acts=remove acts=change acts=pick acts=ask acts=copy acts=save core.source="save-target proposal"
+@w.diagram.kind.diagram std.schema.kind of=w.diagram.diagram world=w.diagram acts=make acts=remove acts=change acts=pick acts=ask acts=copy acts=save core.source="save-target proposal"

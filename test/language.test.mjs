@@ -51,3 +51,50 @@ test('the reader exposes an attested syntactic frame without claiming to resolve
     assert.deepEqual(r.language.roles,[{role:'thing',text:'triangle'}]);
   }finally{await reader.close();}
 });
+
+test('an exact canonical predicate with a full frame excludes conflicting learned acts and operand heads',async t=>{
+  const reader=createReader({
+    version:1,examples:[],templates:[],
+    lexicon:{save:[['act','place','do',10000]],as:[['act','make','do',10000]],
+      copy:[['act','change','do',10000]]},
+  });
+  t.after(()=>reader.close());
+  for (const [text,act,predicate] of [
+    ['Save the chart as PNG','save','Save'],
+    ['Save the document','save','Save'],
+    ['Copy the chart','copy','Copy'],
+  ]) {
+    const {candidates}=await reader.propose(text);
+    assert.ok(candidates.length,text);
+    for (const {sop} of candidates) {
+      const [request]=parse(sop);
+      assert.equal(request.attrs.act[0],act,text);
+      assert.equal(request.attrs.predicate[0],predicate,text);
+    }
+  }
+  const {candidates}=await reader.propose('Save the chart as PNG');
+  assert.ok(candidates.some(({sop})=>parse(sop).some(wire=>
+    wire.type==='w.request.unread' && wire.attrs.text[0]==='"the chart as PNG"')));
+});
+
+test('a native target declaration licenses saving that family and keeps an unsupported format unread',async t=>{
+  const worlds=loadWorlds({paths:['sop-worlds/save-target-pilot']});
+  const reader=createReader(undefined,worlds);
+  t.after(()=>reader.close());
+  for (const [text,family,unread] of [
+    ['Save the picture','page'],
+    ['Save the chart as PNG','chart','"as PNG"'],
+    ['Save the diagram','diagram'],
+  ]) {
+    const {candidates}=await reader.propose(text,{evidence:true});
+    const matching=candidates.find(({sop})=>parse(sop).some(wire=>
+      wire.type==='w.request.target' && wire.attrs.family[0]===family));
+    assert.ok(matching,text);
+    const wires=parse(matching.sop);
+    assert.equal(wires[0].attrs.act[0],'save',text);
+    assert.deepEqual(wires.filter(wire=>wire.type==='w.request.unread').map(wire=>wire.attrs.text[0]),
+      unread ? [unread] : [],text);
+    assert.deepEqual(matching.catalog.issues,[],text);
+    assert.deepEqual(matching.evidence.missing,[],text);
+  }
+});
