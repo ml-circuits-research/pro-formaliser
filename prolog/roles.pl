@@ -1,4 +1,4 @@
-:- module(roles, [index_roles/3, reset_role_cache/0, nominal_prefix/3, direct_target/5, direct_reference/4, target_determiner/6, attached_roles/10, constraint_phase/8, set_phase/3, role_fit/8]).
+:- module(roles, [index_roles/3, reset_role_cache/0, nominal_prefix/3, native_nominal_prefix/5, direct_target/5, direct_reference/4, target_determiner/6, attached_roles/10, constraint_phase/8, set_phase/3, role_fit/8]).
 :- use_module(library(http/json)).
 :- use_module(library(ordsets)).
 :- use_module(library(pcre)).
@@ -151,6 +151,8 @@ find_nominal_anchor(Q, From, Limit, Start, End) :-
     sort(Ends, Sorted), last(Sorted, End).
 
 nominal_prefix(Q, Start, End) :- reachable_prefix(Q, nominal, [Start], End).
+native_nominal_prefix(Q, Act, Family, Start, End) :-
+    reachable_prefix(Q, native_nominal(Act,Family), [Start], End).
 
 % Offsets strictly increase. Visit the smallest pending offset once and
 % collapse duplicate edges from learned/world hits and ambiguous word senses.
@@ -163,7 +165,10 @@ reachable_prefix(Q, Scope, [Start|Pending], End) :-
 
 modifier_end(Q, nominal, Start, End) :-
     ( member([Start,End,_], Q.determiners)
-    ; member([Start,End,["constraint",_,_,Body,_],_], Q.constraintHits), string(Body)
+    ; member([Start,End,["constraint",_,_,Body,_],_], Q.constraintHits), string(Body) ).
+modifier_end(Q, native_nominal(Act,Family), Start, End) :-
+    ( member([Start,End,_], Q.determiners)
+    ; modifier_end(Q, family(Act,Family), Start, End)
     ; get_dict(splitPredicate,Q,_), member([Start,End],Q.splitNumbers) ).
 modifier_end(Q, family(Act,Family), Start, End) :-
     member([Start,End,["constraint",Licence,Family,Body,_],_], Q.constraintHits), string(Body),

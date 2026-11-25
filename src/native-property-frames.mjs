@@ -2,6 +2,7 @@ import { tokens } from './lexicon.mjs';
 import { parse } from './schema.mjs';
 import { universalOwner } from './universal-inventory.mjs';
 import { nominalSelectorLines } from './nominal-selectors.mjs';
+import { inventoryModifiers } from './owner-property.mjs';
 
 const decode=value=>value?.startsWith('"') ? JSON.parse(value) : value;
 const fields=(wire,slot)=>(wire.attrs[slot] ?? []).map(decode);
@@ -165,7 +166,8 @@ function ownerBindings(worlds,act,ts,words,span,plain,det,start,end) {
   }
   for (let from=next;from<end;from++) {
     const surface=words(from,end);
-    const native=worlds.ownerInventory?.get(identity(act,surface)) ?? [];
+    const native=(worlds.ownerInventory?.get(identity(act,surface)) ?? []).filter(({family})=>
+      inventoryModifiers(worlds,act,family,words,next,from));
     const lexical=worlds.lookup(surface).flatMap(([role,sense,family,mode,sort])=>
       role==='target' && sense===act && mode==='existing' && !native.some(item=>item.family===family) ? [{family,sort}] : []);
     const descriptors=words(next,from);

@@ -102,11 +102,17 @@ export function compileOwnerPropertyOperands(facts,requestKeys,words) {
     const [family,act,slot]=['family','act','slot'].map(key=>valuesOf(binding,key)[0]);
     if (!act || !slot || !requestKeys.some(key=>key.family===family && key.means===slot)) continue;
     const allowed=new Set(slots.filter(w=>w.id===slot).flatMap(w=>valuesOf(w,'enum')));
+    const labels=new Map([...allowed].map(sort=>[form(sort.replaceAll('_',' ')),sort]));
     for (const wire of words) {
-      if (!valuesOf(wire,'of').includes(slot)) continue;
-      const [sort]=valuesOf(wire,'means');
-      if (!allowed.has(sort)) continue;
-      for (const surface of valuesOf(wire,'text')) addOwner(act,form(surface),family,sort);
+      const of=valuesOf(wire,'of'), means=valuesOf(wire,'means');
+      if (of.includes(slot) && allowed.has(means[0])) {
+        for (const surface of valuesOf(wire,'text')) addOwner(act,form(surface),family,means[0]);
+      } else if (!of.length && means.includes(slot)) {
+        for (const surface of valuesOf(wire,'text').map(form)) {
+          const sort=labels.get(surface);
+          if (sort) addOwner(act,surface,family,sort);
+        }
+      }
     }
   }
   const unitsByName=new Map(), unitNames=new Map(), unitSymbols=new Map(), ownerPropertyUnits=new Map();
@@ -183,12 +189,30 @@ function closedValue(worlds,key,surface) {
   return values.size===1 ? [...values][0] : undefined;
 }
 
+export function inventoryModifiers(worlds,act,family,words,start,end) {
+  const reachable=new Set([start]);
+  for (let left=start;left<end;left++) {
+    if (!reachable.has(left)) continue;
+    for (let right=left+1;right<=end;right++) {
+      const surface=words(left,right);
+      if (Object.hasOwn(worlds.determiners,surface) || worlds.lookup(surface).some(([role,licence,owner])=>
+          role==='constraint' && (licence==='*' || licence===act) && owner===family)) reachable.add(right);
+    }
+  }
+  return reachable.has(end);
+}
+
 function describedAssignmentFamilies(keys,from,to,worlds) {
+  const words=(a,b)=>keys.slice(a,b).join(' ');
   for (let head=from;head<to;head++) {
-    const phrase=keys.slice(head,to).join(' ');
-    const native=worlds.ownerInventory?.get(identity('change',phrase)) ?? [];
-    const families=[...native.map(({family})=>family),...worlds.lookup(phrase).flatMap(([role,act,family,mode])=>
-      role==='target' && act==='change' && mode==='existing' ? [family] : [])];
+    const phrase=words(head,to);
+    const lookup=surface=>[
+      ...(worlds.ownerInventory?.get(identity('change',surface)) ?? [])
+        .filter(({family})=>inventoryModifiers(worlds,'change',family,words,from,head))
+        .map(({family,sort})=>['target','change',family,'existing',sort]),
+      ...worlds.lookup(surface).filter(([role,act,,mode])=>role==='target' && act==='change' && mode==='existing'),
+    ];
+    const families=[...lookup(phrase),...worlds.nominalInflection(phrase,lookup)].map(([, ,family])=>family);
     if (families.length) return [...new Set(families)];
     const term=keys[head];
     if (!word.test(term) || worlds.lookup(term).some(([role])=>role==='marker') || worlds.joiners[term]) break;
