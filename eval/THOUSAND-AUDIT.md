@@ -1,5 +1,7 @@
 # Text-only formalisation on 1,000 random requests
 
+The published default reader at `a7b9a18` reaches **54.5% L3 + L4** on the same frozen text-only sample, up from **51.8%**. [Full grade table](RESULTS.md#published-reader-replay-at-1654)
+
 With target qualifiers and a separate search for combinations of matched clauses, the all-staged reader reaches **55.1% including spelling** and **53.7% on originals**. [Full grade table](RESULTS.md#target-qualifiers-and-movement)
 
 With coordinated clause composition and newly created targets, the all-staged reader reaches **55.1% including spelling** and **53.7% on originals**. [Full grade table](RESULTS.md#coordinated-requests-and-newly-created-targets)

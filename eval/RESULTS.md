@@ -2,6 +2,28 @@
 
 [1,000-request L0–L4 audit with the current reader](THOUSAND-AUDIT.md) · [Earlier 100-request review](CANDIDATE-AUDIT.md)
 
+## Published reader replay at 16:54
+
+Reader `a7b9a18` generated proposals for the same 1,915 rows in WebMeet `a85de79` bucket 0 with the frozen training model, default worlds and text-only input. Installed knowledge was `3b2deebd`, with the latest request-schema revision at `ae80c054`. The 1,000 graded rows use the same seeded order as the preceding report. Reviews assess all proposals per request. Prior judgments were carried where graph meanings and unread spans were equivalent or the previously reasonable graph remained provably available. Four LLM reviewers covered 99 remaining judgments. A separate scan of all outputs exposed one retained candidate using a previous-turn lookup, which was then reassessed. [Individual reassessments](A7B9A18-BUCKET0-REPLAY.tsv)
+
+| Grade | 13:47 | 16:54 |
+| --- | ---: | ---: |
+| L0 – Fail | 1.3% | 1.1% |
+| L1 – Wrong, total | 9.3% | 9.2% |
+| L1a – Wrong intent | 1.9% | 2.0% |
+| L1b – Wrong target or reference | 2.1% | 2.1% |
+| L1c – Wrong detail or role | 3.7% | 3.5% |
+| L1d – Invented instruction | 1.6% | 1.6% |
+| L2 – Incomplete, total | 37.6% | 35.2% |
+| L2a – Missing action or step | 6.1% | 5.0% |
+| L2b – Missing target or reference | 9.8% | 9.4% |
+| L2c – Missing detail, placement or condition | 21.7% | 20.8% |
+| L3 – Reasonable and identical to the dataset | 20.9% | 20.9% |
+| L4 – Reasonable alternative | 30.9% | 33.6% |
+| **L3 + L4 – Reasonable** | **51.8%** | **54.5%** |
+
+Twenty-nine requests gained a reasonable proposal. The closed chart catalog no longer gives a complete reading of “inverted z axis” and keeps that part unresolved. The second loss in the score comes from correcting the previous grading of the retained slant proposal, which assumes its written group comes from a previous turn. Material reference issues have been identified on **27.2%** of the sample, and **4.9%** have both a reasonable proposal and a flagged reference. These reference flags combine prior reviews and the new targeted reviews. Some holdout failures informed development, so a fresh sample is needed to estimate gains independently. This replay grades the candidate sets and does not run the legacy first-proposal checker.
+
 ## Request intents and grouped effects on the 1% holdout
 
 Reader `f2c73fd` ran on all 1,915 rows in bucket 0 of WebMeet `a85de79`, with canonical knowledge `ae80c054`, the default worlds, and the written text alone. The model was trained on the remaining partition. Spelling correction and application context were off. The L0–L4 table covers the same seeded 1,000-request subset as the preceding paired audit. Each grade considers the entire set of proposals. Previous reasoning carried forward where the set was identical or the previously graded success was provably retained. Three LLM reviewers regraded the other 39 cases against the written request and reference. [Subset and legend](THOUSAND-AUDIT.md) · [Individual reassessments](INTENT-BUCKET0-REPLAY.tsv)

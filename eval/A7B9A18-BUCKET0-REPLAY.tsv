@@ -1,0 +1,101 @@
+sample	source	row	previous	current	reference_issue	reason
+16	drawing/scenes-03.csv	2958	L0	L4	1	Keeps the boat in place and forbids shifting it left, with the pause preserved and it left literal. The reference imports an absent previous instruction and treats the boat staying put as filler.
+30	drawing/scenes-10.csv	2396	L2c	L2c	0	Correct block 12 placement to the right of block 10. Top and bottom alignment remains unread.
+38	diagram/diagrams-01.csv	1613	L2c	L4	0	Arranges the contextual existing nodes by their horizontal centres, the declared alignment edge.
+45	diagram/nodes-06.csv	2705	L4	L4	0	Creates the ellipse labelled Survey chart and links it to Q1.
+55	diagram/nodes-06.csv	2818	L4	L4	0	Creates the labelled Funds hexagon, then connects Funds to Fund A.
+70	diagram/charts-06.csv	2399	L4	L2c	0	Represents both requests and X inversion, but leaves the requested Z inversion unread.
+73	drawing/objects-01.csv	409	L2c	L4	1	Keeps the avatar as a person with glasses across diagram-tab activities and preserves the stated reason as unread. The reference leaves the appearance unread and treats the persistence scope as filler.
+76	drawing/objects-01.csv	232	L2a	L4	1	One proposal sets the elderly-woman avatar preset and keeps it through the next opening on this machine, retaining literal it. The reference leaves the requested avatar preset unread.
+119	document/text-03.csv	167	L2c	L2c	1	Finds the underline intent but never binds enabled Main and attrs Second together on the requested block set.
+125	diagram/nodes-12.csv	1278	L2b	L4	0	Binds the written node name Valid? and sets x to 340 and y to 110.
+127	drawing/objects-02.csv	2558	L1a	L1a	0	Offers placement or undo without the requested ungrouping.
+131	drawing/scenes-02.csv	141	L2c	L4	1	Sets scale 0.8 on the written face part. The reference changes whole-figure drawn.scale.
+150	document/text-03.csv	1585	L2b	L2b	1	Preserves add and paragraph but leaves Main Track 3 unread. Reference assumes existing definite target despite add a paragraph and assigns an unlabeled 3 to level rather than retaining the ambiguous span.
+179	diagram/nodes-12.csv	946	L2c	L2c	0	Names node n3 but leaves the result value 3 unread.
+183	drawing/scenes-13.csv	1264	L2c	L4	0	Creates a plane in the sky facing left with all requested semantics.
+202	drawing/scenes-05.csv	1350	L2c	L4	0	Preserves the girl, persistent scope, staying left, and exclusion of the right side. The trailing drawing aside is nonoperative.
+207	drawing/scenes-10.csv	2438	L2b	L2b	0	Names the Mercedes block but leaves the two independently written landmark bindings unread.
+245	diagram/charts-05.csv	3362	L2c	L4	1	Creates vertical stacked bars of revenue by category and segment for the summary slide with the legend on the right. The reference collapses stack mode into chart type and omits the slide purpose.
+251	drawing/scenes-07.csv	1953	L2b	L2b	1	No proposal links the cat by the bench to the house as its orientation landmark while preserving the remaining layout. The reference invents prior orientation and omits preservation.
+275	drawing/scenes-03.csv	795	L2c	L4	0	Sets a sad expression on the existing man.
+291	diagram/nodes-12.csv	4866	L1d	L1d	0	The proposed new moves or changes substitute for selecting written g1 first.
+300	diagram/nodes-07.csv	13	L2c	L2c	0	Changes the named Intro link to solid yellow, while the Main label and forward arrows stay unread.
+305	drawing/objects-04.csv	2778	L4	L4	1	Resolves the apparent spelling error to boat and preserves boaat as lexical evidence. The exact reference keeps boaat as the object sort.
+306	diagram/charts-05.csv	3525	L2c	L4	1	Binds order value as the plotted measure against margin, retains overlay and colouring by channel, and gives the client-call purpose. Reference uses display labels where data fields are requested.
+308	diagram/diagrams-03.csv	2585	L2b	L2c	0	Inserts the cloud shape and recognizes the placement request, but leaves the left-of relation and Rota table anchor unread.
+324	diagram/charts-06.csv	2287	L1b	L1b	1	A proposal recovers Revenue by month as the title, but targets a hat instead of the y axis for the shift. The reference drops the literal it and assigns the title to an existing chart even though the y axis is the immediate antecedent.
+343	drawing/people-01.csv	18	L4	L4	1	One proposal selects the head and applies small size. The reference makes head identity a result.
+368	diagram/nodes-01.csv	3111	L1b	L1b	0	The coordinated circle proposals assign circular layouts to groups instead of changing the shape of the named Root and Grow nodes.
+385	drawing/scenes-20.csv	1783	L4	L1b	1	The relative slant and amount are correct only in the variant whose lookup assumes previous interaction. No faithful variant leaves the written group reference unresolved.
+387	drawing/people-08.csv	27	L2c	L4	0	Changes the existing written avatar to the robot preset.
+399	drawing/scenes-05.csv	1429	L1c	L2c	0	Retains the big tree to the left of the house and the persistent scope, but leaves the little drawing scope unread.
+413	diagram/charts-02.csv	443	L2c	L2c	1	A proposal inserts a new bar chart and leaves same-data reuse unread. The exact reference changes an existing chart and leaves the reused datasets unbound.
+423	diagram/charts-05.csv	2411	L2c	L2c	1	Finds the scatter fields but omits fit, gridlines and zero minimum in the same proposal. The reference uses axis labels for the requested data fields.
+445	drawing/scenes-13.csv	11	L2a	L2c	1	A split proposal places the row and preserves blocks, but leaves the edge destination unread and loses the row restriction on the blocks. The reference imports a prior instruction.
+456	drawing/scenes-10.csv	2940	L2b	L2b	0	The slide proposal identifies block 19 but leaves the first and second blocks and the one-space offset from centre unread.
+462	drawing/scenes-03.csv	2957	L0	L4	1	Keeps the boat in place and represents the prohibition on moving it left with literal it. Reference discards the keep clause as filler and imports previous text.
+471	document/text-01.csv	248	L2c	L4	0	Replaces the named section with the exact quoted sentence and treats the polite tail as discourse.
+488	drawing/scenes-05.csv	1382	L2a	L4	0	A single proposal keeps the cat beside the dog from now on and adds a small bird at the top, with the closing words preserved.
+494	calendar/meetings-08.csv	39	L2b	L4	0	Creates Planning with the written ID, date, time, UTC and measured 30-minute duration.
+498	calendar/meetings-08.csv	81	L2b	L4	0	Uses the written meeting identifier, replacement title, date, start and end times, UTC, and the declared notes-to-agenda binding.
+510	drawing/scenes-11.csv	2614	L2a	L2c	1	Both tower actions survive but their relative heights, support relation, and left/right positions remain incomplete. The reference similarly omits taller and right, and preserves the north wall anchor without an on relation.
+523	diagram/charts-02.csv	2478	L2a	L2a	0	Recognises both chart clauses but leaves the colour mapping and horizontal adjustment unbound.
+524	diagram/nodes-04.csv	2075	L2c	L2c	1	A proposal creates a yellow box and a caption, but misses the emphasis fill, caption size, placement under each box, nonoverlap and label clarity. The reference misframes box creation as grouping and omits placement and readability.
+547	calendar/meetings-03.csv	130	L2c	L2c	1	Sets the Main title but leaves start, duration and removing notes unread; the reference omits the explicit note removal.
+549	diagram/nodes-07.csv	289	L2c	L2c	1	Selects link Intro and leaves the Main-side selector unread, as does the reference.
+551	diagram/nodes-07.csv	2165	L2c	L2c	1	Reads ID labels as a cue for temporary mode, but does not express turning the labels on. The reference also omits enabling labels.
+553	diagram/nodes-13.csv	153	L1b	L1b	0	The dimensional changes target a generic chart. The target-free change leaves the written identifier and both dimensions unread.
+555	drawing/scenes-13.csv	3125	L1c	L1c	0	Binds a oa as a landmark while dropping the stated count of three in that step.
+559	drawing/scenes-10.csv	2511	L1c	L2c	1	Keeps the two shifts on the written block and leaves both vectors and stopping condition unresolved. The reference invents a distance grade from 11 block.
+571	drawing/scenes-06.csv	1050	L4	L4	1	A proposal draws the literal BAKERY above the gate. The reference treats the surrounding phrase as literal text.
+589	document/text-07.csv	851	L2a	L2a	1	A proposal recognises replacement of an existing list but leaves the new items unread and reads checking as a question. The reference applies checked to the list without selecting its first item.
+596	diagram/diagrams-02.csv	70	L2b	L2b	0	One proposal thickens this line and recognizes the reminder as a question, but treats the requested preference list as a generic node query.
+601	calendar/meetings-03.csv	326	L1a	L2c	1	The count query targets humans but leaves the guest-list restriction unread. The reference treats that restriction as filler.
+608	document/text-01.csv	2229	L2b	L4	0	A proposal replaces the named Story section content with the exact quoted sentence, preserving its punctuation.
+625	diagram/charts-01.csv	2702	L4	L4	1	Creates a pie chart of races split by class. The exact reference adds see as a second measure.
+634	drawing/scenes-10.csv	2682	L1c	L1c	1	No proposal cleanly represents the two distinct participants in the swap and the second move distance. The reference applies both colour selectors to one target and treats one unit of movement as object count.
+660	diagram/charts-04.csv	3549	L2a	L1a	1	The proposals recognizing a chart remove or pick it, while the change fragments leave both axis ranges unread. The reference also leaves both ranges unread.
+665	drawing/objects-02.csv	2377	L2a	L2a	1	Selects part Intro but leaves row 2 and the zoom action unread. The reference treats zoom as filler.
+669	drawing/scenes-07.csv	2778	L4	L4	1	Sets both snow and dusk for the whole scene. The exact reference captures snow alone.
+675	drawing/placement-01.csv	2217	L2b	L2b	1	Reading retains the little girl, coat, left region, sitting and smile but lacks the bench as a placement landmark. The reference also omits this anchor.
+684	diagram/diagrams-03.csv	1083	L2a	L4	1	A single proposal sets bar width to 0.6 and the y axis to the right on Revenue by department. The reference leaves the second chart an independent contextual target.
+685	document/text-03.csv	130	L2b	L2b	0	A change proposal leaves the heading at Intro and its new name, level and alignment unresolved. Other proposals reinterpret the heading as a hat or the name as text creation.
+686	drawing/scenes-13.csv	1654	L2a	L2b	1	Best segmented proposal retains two distances but leaves block 11 and right unread in both requests. Reference imports previous text.
+689	diagram/nodes-04.csv	796	L2b	L2b	1	A feasibility reading identifies the addressed arrow and arrowhead but leaves the left edge of Confirm unbound. The reference assumes Payment is the source endpoint of the arrow.
+700	drawing/scenes-07.csv	3128	L2c	L4	1	A proposal keeps the tree on the left across every picture. The reference misreads the rule is simple as a second preference scope.
+701	drawing/scenes-07.csv	2747	L4	L4	1	Replaces the background with a cave with stalactites. The reference relies on prior text.
+711	drawing/placement-06.csv	912	L4	L4	0	Creates the road with the written tree as its left-of landmark.
+713	drawing/scenes-11.csv	3738	L2a	L2c	1	Removes a green block and creates a three-block green tower in the corner, but leaves the top-block selector unread. The reference injects a prior instruction.
+719	drawing/scenes-16.csv	2779	L4	L4	0	Names the new fish Turtle, then places the written Turtle below Rock 3.
+722	diagram/charts-05.csv	362	L2a	L1a	1	Only remove or copy candidates appear for a request to create a bar chart. The reference leaves the per-order ranking key unread and scopes the zero minimum to a separately resolved existing chart.
+724	diagram/charts-05.csv	3496	L2c	L4	1	A proposal groups bars of average profit by ship mode and customer segment, shows values on the marks and retains the summary slide as purpose. The reference treats that purpose as filler and leaves visible values on a separate contextual chart.
+733	diagram/charts-05.csv	2516	L2c	L4	1	Creates a percent-stacked bar chart of profit with ship mode as the series and region as the grouping. The reference leaves the requested share calculation unread.
+735	calendar/meetings-02.csv	274	L4	L4	0	Creates Work 8 then schedules Review in it with the written date, time, zone and duration.
+739	calendar/meetings-03.csv	122	L2c	L2c	1	Captures Main but omits the start, duration and same-notes request. The reference makes the notes literally Main.
+741	drawing/scenes-13.csv	4608	L4	L4	1	Sets the background to a rugged volcano slope and preserves the comparison phrase unresolved. The reference imports an unrelated prior movement.
+755	diagram/diagrams-05.csv	355	L4	L4	0	Applies dotted link style to all existing arrows.
+770	drawing/placement-06.csv	1209	L4	L4	0	Creates a big fairy at the right of the written hill anchor.
+776	diagram/nodes-03.csv	500	L2a	L2c	1	The closest proposal draws labels near a start and bolds the label, but leaves the line anchor, nonoverlap and label clarity unread. The reference also leaves the placement, bolding and readability unread.
+778	diagram/charts-05.csv	2366	L2c	L4	1	Binds profit and sales as Y and X data fields, includes the regression line and preserves the client-deck purpose. Reference imports previous text, uses display labels, and leaves the regression line unread.
+822	drawing/scenes-13.csv	1952	L2c	L2c	1	The move to the left for the girl is correct, but the stated overlap reason is still unread. The reference imports previous text and treats the stated reason as filler.
+830	drawing/objects-02.csv	442	L2b	L2b	1	A new drawn object is available but Intro remains unread, as does the rough placement. The reference discards the deictic placement as filler.
+832	drawing/scenes-13.csv	4243	L2c	L4	0	Preserving shown values on a contextually selected chart is a reasonable complete reading of the short directive.
+833	drawing/scenes-11.csv	1106	L2a	L2a	1	A proposal recognises clearing green blocks but leaves both ends unread and conflates the two preservation scopes. The reference imports a prior command and treats the remaining scene's preservation as filler.
+835	diagram/diagrams-01.csv	1709	L2c	L4	0	Aligns the boxes using the written top edges.
+838	document/text-03.csv	327	L1a	L1a	1	Candidates change objects instead of choosing them. The reference puts three equality selectors on a single written target named Intro rather than distinguishing the block selections.
+846	diagram/nodes-12.csv	2075	L2b	L2b	0	Recognizes a link-change request, but fails to bind the End-to-n3 endpoints and the width decrease.
+857	drawing/placement-01.csv	666	L2c	L4	0	Creates a boy kicking in the middle and facing left.
+873	drawing/objects-02.csv	2341	L2c	L2c	0	Removes part Intro but leaves row 2 unread.
+877	diagram/charts-04.csv	3416	L4	L4	1	Places the specified regional bar chart's legend on the right. The reference includes a prior chart command.
+923	drawing/scenes-07.csv	539	L4	L4	1	A proposal uses the red hat and tall grade as selectors and sets facing left. The reference set the attire as an effect.
+927	drawing/placement-02.csv	4129	L1c	L2c	1	Keeps both groups of written clothing selectors distinct but leaves both placements unresolved. The reference changes clothing colours into object colours and adds a new boy.
+942	drawing/scenes-13.csv	597	L4	L4	1	The alternative correctly separates frown from the reason the sandcastle fell down. The exact reference treats the entire causal clause as part of the expression value.
+960	diagram/diagrams-01.csv	4071	L2c	L4	1	One proposal creates a stacked bar chart of revenue by region, groups series by channel and places its legend on the right. The reference leaves channel unread and treats revenue as an axis label.
+965	drawing/scenes-07.csv	2824	L4	L4	1	An open weather value preserves the requested wild stormy night. The exact reference reduces it to storm.
+981	drawing/scenes-11.csv	1728	L2c	L2c	1	Creates the small cat near the bench, identifies the man by his clothing, and preserves the remaining positions, but leaves the move destination unread. The reference miscasts clothing colours as character colours and omits preservation.
+989	diagram/diagrams-03.csv	4098	L2c	L2c	1	Removes the Grow step but leaves the scope from this tree unread. The reference omits the tree scope.
+990	drawing/scenes-09.csv	360	L2a	L1c	1	Best candidates include pose, styling and keeping other objects in place, but attach top to bottom to the style value or the object description. Reference treats the keep condition as filler.
+995	calendar/meetings-07.csv	367	L1b	L4	0	Updates the meeting identified by design critique to an explicitly measured hour.
+999	drawing/objects-02.csv	1855	L2b	L2b	0	Retains a description of object Idea but has no new named object with the approximately stated size.
+1000	drawing/objects-01.csv	131	L2c	L4	1	A proposal sets the speaker's avatar to the elderly-man preset. The reference leaves that requested preset unread.
