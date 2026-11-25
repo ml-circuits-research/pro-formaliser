@@ -432,3 +432,8 @@
 - Frozen meetings-07 row 367 now has a complete meeting duration proposal in both reader profiles, with no matching proposal from the previous model-free reader.
 - The reader reuses declared quantities to narrow competing keys and keeps exact unit evidence. Face-scale source coordinates and circuits are in the review response.
 - All 458 isolated release tests passed. No benchmark rerun.
+
+## Nominal counts with written scope
+- Frozen meetings-03 row 326 now offers an ask/count proposal with the exact guest-list scope unread in both profiles. Neither replay emits a mutation.
+- Declared count openings feed the interrogative guard. Unqualified participant and chart controls are complete.
+- All 459 isolated release tests passed. No benchmark rerun.

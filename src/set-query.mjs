@@ -11,6 +11,53 @@ const keyOf=items=>items.map(([key])=>key).join(' ');
 const quotation=JSON.stringify;
 const nominal=/^[\p{L}\p{M}\p{N}_]+$/u;
 
+export function* prefixSetQuestions(text,ts,worlds,hits,quotes) {
+  const forms=worlds.scopeGrammar.setCounts;
+  if (!forms?.size || quotes.length || ts.length<3 || ts.length>45) return;
+  const phrase=(a,b)=>keyOf(ts.slice(a,b));
+  const chars=Array.from(text);
+  const span=(a,b)=>chars.slice(ts[a][2],ts[b-1][3]).join('');
+  const end=ts.length-Number(['.','!','?'].includes(ts.at(-1)?.[0]));
+  for (let head=Math.min(12,end-1);head>0;head--) {
+    const form=forms.get(phrase(0,head));
+    if (!form) continue;
+    const at=ts.findIndex(([term],index)=>index>=head && index<end && term===',');
+    const stop=at<0 ? end : at;
+    if (at>=0 && !form.closers.has(phrase(at+1,end))) return;
+    const start=head+Number(worlds.determiners[ts[head]?.[0]]==='definite');
+    if (start>=stop || ts.slice(start,stop).some(([term],i)=>!nominal.test(term) || worlds.negatives.has(term) ||
+        worlds.joiners[term] || Array.from({length:Math.min(5,stop-start-i)},(_unused,n)=>phrase(start+i,start+i+n+1))
+          .some(surface=>worlds.scopeGrammar.conditionals.has(surface) || worlds.scopeGrammar.negatives.has(surface)))) return;
+    for (let nounEnd=stop;nounEnd>start;nounEnd--) {
+      const scoped=nounEnd<stop;
+      if (scoped && ![...form.scopes].some(scope=>nounEnd+scope.split(' ').length<stop &&
+          phrase(nounEnd,nounEnd+scope.split(' ').length)===scope)) continue;
+      const noun=phrase(start,nounEnd);
+      const native=surface=>(worlds.ownerInventory?.get(JSON.stringify(['change',surface])) ?? [])
+        .map(({family,sort})=>['target','change',family,'existing',sort]);
+      const matching=hits.filter(([a,b])=>a===ts[start][2] && b===ts[nounEnd-1][3]).map(([, ,hit])=>hit);
+      const plural=worlds.nominalInflection(noun,lemma=>[...worlds.lookup(lemma),...native(lemma)]);
+      const options=new Map([...matching,...native(noun),...plural]
+        .flatMap(([role,act,family,mode,sort])=>role==='target' && mode==='existing' &&
+          ['ask','pick','change','place'].includes(act) && worlds.literalGrammar.licenses(family,'ask') ?
+          [[JSON.stringify([family,sort]),{family,sort}]] : []));
+      if (!options.size) continue;
+      for (const {family,sort} of options.values()) {
+        const nounWords=span(start,nounEnd);
+        yield {source:'prefix-set-query',status:scoped?'partial':'matched',sop:[
+          '@r1 w.request.request act=ask mood=ask question=count predicate='+quotation(span(0,head))+' words='+quotation(text),
+          '@r1.t w.request.target request=$r1 family='+quotation(family)+' mode=existing fill=all quantifier=all'+
+            (sort ? ' sort='+quotation(sort)+' sort_words='+quotation(nounWords) : ' family_words='+quotation(nounWords)),
+          ...(scoped ? ['@r1.u w.request.unread request=$r1 text='+quotation(span(nounEnd,stop))+' note="unresolved counting scope"'] : []),
+          ...(at>=0 ? ['@f1 w.request.filler text='+quotation(span(at+1,end))] : []),
+        ].join('\n')};
+      }
+      return;
+    }
+    return;
+  }
+}
+
 export function* postfixSetQuestions(text, ts, worlds, hits, quotes) {
   if (quotes.length || ts.at(-1)?.[0]!=='?' || ts.length<3) return;
   const words=Array.from(text);

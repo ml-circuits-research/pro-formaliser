@@ -46,6 +46,8 @@ function firstContent(ts, worlds, polite = false) {
 function speech(ts, start, worlds, hits) {
   const head=ts[start]?.[0], second=ts[start+1]?.[0];
   const {questions,subjects,auxiliary,modals,addressees,plainImperatives,copulas,existentialSubjects,proposals,removals}=worlds.scopeGrammar;
+  const setCountEnd=leadEnd(ts,start,worlds.scopeGrammar.setCounts);
+  if (setCountEnd>start) return {intent:'question',type:'count',head:ts.slice(start,setCountEnd)};
   const proposalEnd=leadEnd(ts,start,proposals);
   if (proposalEnd>start) return {intent:'proposal',lead:ts.slice(start,proposalEnd),after:proposalEnd};
   const courtesyEnd=leadEnd(ts,start,worlds.scopeGrammar.courtesyLeads);

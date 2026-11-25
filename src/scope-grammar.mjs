@@ -7,7 +7,7 @@ const phrase=text=>tokens(text).map(token=>token[0]).join(' ');
 
 export function scopeGrammar(facts) {
   const conditionals=new Map();
-  const questions=new Map();
+  const questions=new Map(), setCounts=new Map();
   const auxiliary=new Set(), modals=new Set(), copulas=new Set(), plainImperatives=new Set();
   const subjects=new Set(), addressees=new Set(), existentialSubjects=new Set(), singularReferents=new Set();
   const presentSingularCopulas=new Set(), predicateNegators=new Set();
@@ -49,6 +49,14 @@ export function scopeGrammar(facts) {
     const type=questionKinds.get(one(wire,'asks'));
     if (type) for (const text of all(wire,'text')) questions.set(phrase(text),{type});
   }
+  for (const wire of facts('pro.reader.set_count')) {
+    const scopes=new Set(all(wire,'scope_lead').map(phrase));
+    const closers=new Set(all(wire,'closer').map(phrase));
+    for (const text of all(wire,'text')) {
+      const surface=phrase(text);
+      if (surface) setCounts.set(surface,{scopes,closers});
+    }
+  }
   const vocabulary={auxiliary,modals,copulas,subjects,addressees,courtesy,courtesyLeads,universals,countedUniversals,negatives,proposals,rejections,removals,predicateNegators};
   for (const wire of facts('pro.reader.scope_cue')) {
     const kind=one(wire,'kind'), type=one(wire,'question');
@@ -62,7 +70,7 @@ export function scopeGrammar(facts) {
   for (const form of copulas) auxiliary.add(form);
   const endings=new Set(facts('w.lang.en.neg').flatMap(wire=>all(wire,'ending')).map(text=>text.toLowerCase().replaceAll('’',"'")));
   return {
-    conditionals, questions, auxiliary, modals, copulas, plainImperatives, subjects,
+    conditionals, questions, setCounts, auxiliary, modals, copulas, plainImperatives, subjects,
     addressees, existentialSubjects, singularReferents, courtesy, courtesyLeads, universals, countedUniversals,
     universalHeads:new Set([...universals].map(form=>form.split(" ")[0])), negatives, proposals, rejections, removals, presentSingularCopulas, predicateNegators, endings,
   };

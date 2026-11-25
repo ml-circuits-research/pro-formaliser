@@ -512,3 +512,9 @@ The alternative replay from `384bc09` was:
 ```
 
 The component reading follows the explicit noun and the part property in the request catalog. The dataset is unchanged. The benchmark remains paused.
+
+## Nominal counts with written scope
+
+Frozen `calendar/meetings-03.csv` row 326, “Give us a headcount of humans on the guest list, would you?”, now yields an ask/count proposal over people using the written noun. The actual list restriction remains exact as `on the guest list` on the count request. The polite closer is separate. The circuit does not establish guest-list membership because the text supplies no grounded owner and membership operand. Both the installed-world and trained replays returned the scoped count and no mutations. The independent participant and chart counts are complete without a scope clause. [Count controls](test/set-query.test.mjs)
+
+Route the anchored nominal count introductions, allowed restriction leads and bounded closing tags in `pro.reader/set-counts.sop` through the shared English count grammar. The scope reader uses an accepted introduction as interrogative evidence before considering mutation. The typed noun and any retained restriction remain independent. Questions, quotations, conditions and compound requests have separate guards. No output schema keys or benchmark measurements change. All 459 isolated release tests passed.

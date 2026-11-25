@@ -52,7 +52,7 @@ import { openPairReadings } from './open-pairs.mjs';
 import { clauseQualifiers } from './clause-qualifiers.mjs';
 import { nativeNominalPhraseReadings, nominalPhraseReadings } from './nominal-phrases.mjs';
 import { sequenceNameReadings } from './sequence-names.mjs';
-import { postfixSetQuestions, universalTargetReading } from './set-query.mjs';
+import { postfixSetQuestions, prefixSetQuestions, universalTargetReading } from './set-query.mjs';
 import { modifierReading } from './nominal-modifiers.mjs';
 import { literalAttachments, quotedLiteralCleanup } from './literal-attachment.mjs';
 import { createNearExample } from './near-example.mjs';
@@ -391,6 +391,7 @@ export function createFormaliser(model = {version:1,examples:[],templates:[]}, w
       const reading=universalTargetReading(text,ts,worlds,candidate,quotes,answer.requiresResult);
       if (reading) retain({...reading,source:'universal-inventory'});
     }
+    for (const candidate of prefixSetQuestions(text,ts,worlds,hits,quotes)) retain(candidate);
     for (const candidate of postfixSetQuestions(text,ts,worlds,hits,quotes)) retain(candidate);
     if (!scope.restricted && ts.some(t=>worlds.scopeGrammar.universalHeads.has(t[0]))) {
       for (const candidate of [...candidates]) {
