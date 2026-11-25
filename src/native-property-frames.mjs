@@ -102,7 +102,9 @@ export function compileNativePropertyFrames(facts) {
         pattern.at(-1)?.role!=='context_value' || pattern.findIndex(part=>part.mark==='predicate')>pattern.indexOf(compiledRoles[0]))) continue;
     frames.push({name,act,numberOnly:needs==='number',implicitOwner,finiteOnly,pattern,...(questions ? {questions} : {})});
   }
-  return frames;
+  // A catalogue shard's position should not put a contextual owner ahead of
+  // an explicitly written owner. Keep both frames available to the reader.
+  return frames.sort((a,b)=>Number(a.implicitOwner)-Number(b.implicitOwner));
 }
 
 function catalogKey(worlds,family,name) {

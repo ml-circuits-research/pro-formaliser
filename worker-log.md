@@ -351,3 +351,7 @@
 ## Exact replacement of a written named target
 - The trained replay finds complete proposals for frozen controls 471 and 608, with the exact written target name and replacement content. A novel schema overlay confirms that the property binding is data-driven.
 - All 430 isolated release tests passed. The same-meaning courtesy variant preserves the original lexical proposal.
+
+## INTEGRATE-4 canonical consumption
+- Installed `3b2deebd` and retired the 25 local frame and weather declarations. All eight reviewed outputs match the previous installation.
+- The native compiler preserves explicit owner precedence across shard order. All 24 focused and 430 isolated release tests passed.

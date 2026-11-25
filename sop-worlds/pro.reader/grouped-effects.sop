@@ -6,15 +6,3 @@
 @reader.effects.bundle.into.article pro.reader.coordinated_effects part=assignment part=owner part=into part=article part=bundle
 
 @reader.effect.scene.owner pro.reader.effect_owner family=page text=scene text=picture text="whole scene" text="entire scene" text="whole picture" text="entire picture" text="whole page" text="entire page" text=weather
-@reader.effect.weather.sun core.word of=w.drawing.page.weather text=sunny means=sun
-@reader.effect.weather.cloud core.word of=w.drawing.page.weather text=cloudy means=cloud
-@reader.effect.weather.mist core.word of=w.drawing.page.weather text=misty means=mist
-@reader.effect.weather.fog core.word of=w.drawing.page.weather text=foggy means=fog
-@reader.effect.weather.haze core.word of=w.drawing.page.weather text=hazy means=haze
-@reader.effect.weather.rain core.word of=w.drawing.page.weather text=rainy means=rain
-@reader.effect.weather.snow core.word of=w.drawing.page.weather text=snowy means=snow
-@reader.effect.weather.frost core.word of=w.drawing.page.weather text=frosty means=frost
-@reader.effect.weather.ice core.word of=w.drawing.page.weather text=icy means=ice
-@reader.effect.weather.breeze core.word of=w.drawing.page.weather text=breezy means=breeze
-@reader.effect.weather.wind core.word of=w.drawing.page.weather text=windy means=wind
-@reader.effect.weather.storm core.word of=w.drawing.page.weather text=stormy means=storm
